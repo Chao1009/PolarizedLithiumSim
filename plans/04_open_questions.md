@@ -88,6 +88,21 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
 10. **Radiative corrections on tensor observables** (A_zz, cos 2φ).
     Vector-case tools exist (DJANGOH/HERACLES); tensor RC uncharted.
     *Default:* RC band from vector-case studies (Phase-1 step 1.4).
+14. **Complete inclusive structure-function basis for spin-3/2** (⁷Li):
+    rank-2 (b₁-analog) and rank-3 functions are not classified anywhere we
+    can adopt; needed by the doubly polarized generator (plans/05 §5.2).
+    *Engage:* Cloët, Cosyn — co-author opportunity.
+    *Default:* rank ≤ 2 truncation, rank-2 shapes as scenarios.
+15. **VMC two-cluster overlaps with m-dependence** (α+d S/D for ⁶Li,
+    α+t P for ⁷Li) to replace the two-parameter radial forms whose tail
+    dominates tagged acceptances (e+d control: BeAGLE tails 2–13× Hulthén).
+    *Engage:* R.B. Wiringa (ANL, local). *Default:* β = 0.20–0.40 band.
+16. **FSI for cluster spectators beyond IA** (α rescattering off DIS
+    debris; deuteron case solved in PRC 97:035209, pole extrapolation).
+    *Engage:* Cosyn, Sargsian. *Default:* IA, quoted at small |t′|.
+17. **HepMC3 convention for ion spin states** — none exists; plans/05
+    step 5.D defines named attributes and proposes them upstream.
+    *Engage:* ePIC MC/software group. *Default:* our attribute schema.
 
 ## Still open — detector / software
 
@@ -112,3 +127,5 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
 | 7 | BeAGLE access+guidance | open | SDCC/ifarm accounts + email authors — **long pole, start now** |
 | 8–10 | theory inputs | open | Cloët/Cosyn/Miller engagement |
 | 11–13 | software checks | scheduled | inside Phase-1/2 steps |
+| 14–16 | generator theory inputs (plans/05) | open | Cloët/Cosyn (14), Wiringa (15), Cosyn/Sargsian (16) |
+| 17 | HepMC3 ion-spin convention | scheduled | plans/05 step 5.D → ePIC MC group |

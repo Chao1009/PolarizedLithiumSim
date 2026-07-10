@@ -12,6 +12,7 @@ brings to the EIC, in support of the ANL polarized ⁶,⁷Li ion-source program
 | [02_phase1_event_generation.md](02_phase1_event_generation.md) | Phase 1: fast simulation + BeAGLE — phase space, rates, FOMs, spectator-tagging purity. Step-by-step with effort estimates |
 | [03_phase2_full_simulation.md](03_phase2_full_simulation.md) | Phase 2: full ePIC chain (eic-shell → npsim → EICrecon) — far-forward acceptance for Li fragments, reconstructed-level closure tests |
 | [04_open_questions.md](04_open_questions.md) | External dependencies: ring spin dynamics, optics for Li, BeAGLE validity, theory curves — each with owner and default assumption |
+| [05_doubly_polarized_generator.md](05_doubly_polarized_generator.md) | "polligen": doubly polarized e+⁶,⁷Li event generator — spin-density-matrix ⊗ cluster-IA kernel, reweighting + native modes, tagged spin observables, HepMC3 for ePIC |
 
 ## The physics in three lines
 
@@ -45,6 +46,32 @@ brings to the EIC, in support of the ANL polarized ⁶,⁷Li ion-source program
    with partial snakes; ~138/~117 GeV/u top energies.
 5. **Calendar anchor**: INT program on polarized ion beams at EIC,
    March 22 – April 2, 2027 — target for Phase-1 money plots.
+
+## Development run 3 (2026-07-07): fast-sim evaluation + plans/05
+
+- ☑ Fast-sim re-evaluated end-to-end on this machine: 15/15 tests pass
+  (grid tests included after installing `parton` + CT18NLO/NNPDFpol11
+  grids); all scripts rerun and reproduce the README headline numbers
+  (⁷Li α-tag 96–99%, ⁶Li 3–9%/HA optics, gluonometry L_5σ = 15–22 fb⁻¹/u
+  toy, δΔR ≈ 3.5% at x = 0.3); toy-vs-CT18 F2 within ±37% as documented.
+  Findings (kept as report, not yet fixed): two inert test assertions
+  (`test_smoke.py:17`, `test_spectator.py:68`); FOMs implicitly give each
+  observable the full luminosity in its own spin configuration (run-plan
+  split not modeled); no γ²/A₂ target-mass terms at high x, low Q²;
+  F2 uses 5 flavors vs g1's 3; `money_delta` applies its min-events cut at
+  the 1 fb⁻¹ reference (mildly conservative); RP z in `farforward.py`
+  docstring (26/28 m) predates the 32.5/34.3 m geometry (windows in θ/R
+  unchanged); DIS kinematics and spectator kinematics are sampled
+  independently (fixed by plans/05 tagged mode).
+- ☑ **plans/05 added — doubly polarized e+Li event generation
+  ("polligen")**: reuse-vs-reinvent decision (reinvent only the
+  polarized-nucleus vertex + spin-correlated cluster spectator; reuse
+  PYTHIA/DJANGOH/BeAGLE for hadronization/RC/backgrounds), three-mode
+  architecture (reweight | native cluster-IA | RC bands), Cosyn–Weiss
+  (arXiv:2006.03033, 2603.23699/23700) as the tagged formalism, step plan
+  5.A–5.E (~7–9 weeks) with validation gates, money plot 4 (first tagged
+  tensor asymmetry for A > 2) and a tagged-α alignment-polarimetry bonus;
+  open questions #14–17 added to plans/04.
 
 ## Development run 2 (2026-06-12, autonomous; commits abd2bce…)
 
