@@ -2,18 +2,20 @@
 
 Event-level Monte Carlo for the *doubly polarized* eA process (plans/05):
 polarized electrons on vector/tensor-polarized ⁶,⁷Li, spin-labeled events,
-run-plan bookkeeping. Step 5.A (physics kernel + inclusive sampler) is
-implemented; tagged mode (5.B), the BeAGLE reweighter (5.C) and HepMC3
-output (5.D) come next. Imports `../fastsim/polli_fastsim` — nothing there
-is duplicated.
+run-plan bookkeeping. Step 5.A (physics kernel + inclusive sampler) and
+Step 5.B (tagged mode — spin ⊗ cluster-spectator correlation) are
+implemented; the BeAGLE reweighter (5.C) and HepMC3 output (5.D) come
+next. Imports `../fastsim/polli_fastsim` — nothing there is duplicated.
 
 ## Quick start
 
 ```bash
 cd evgen
-python3 -m pytest tests/ -q            # 35 tests (grid tests auto-skip)
+python3 -m pytest tests/ -q            # 54 tests (grid tests auto-skip)
 python3 scripts/closure_fom.py --ion 6Li --events 200000 --trials 200
 python3 scripts/closure_fom.py --ion 7Li --events 200000 --trials 200
+python3 scripts/money_tagged_azz.py --events 400000       # money plot 4
+python3 scripts/tagged_polarimetry_7li.py --events 300000
 ```
 
 ## Modules
@@ -25,6 +27,7 @@ python3 scripts/closure_fom.py --ion 7Li --events 200000 --trials 200
 | `polligen/bookkeeping.py` | run plans (helicity flips, tensor thirds, transverse fills), relative-luminosity offsets + first-order bias formulas, polarimetry smearing, per-(run,bunch) rng streams |
 | `polligen/sample.py` | grid inverse-CDF sampler: per-spin-state Poisson rates (φ-averaged modulation shifts counting rates), φ accept-reject, Mode-W weight matrices |
 | `polligen/estimators.py` | analysis-side estimators: helicity-flip, tensor thirds, cos 2φ moment + binned LSQ fit (holey-φ robust), luminosity-corrected yields |
+| `polligen/tagged.py` | two-cluster spin model: CG-coupled L-waves → m-dependent spectator densities n_M(k,k̂), embedded-cluster spin populations, pair decomposition; TaggedSampler = spin ⊗ spectator ⊗ DIS ⊗ far-forward routing |
 
 ## Step-5.A validation gates (plans/05 §5.4) — all passing
 
