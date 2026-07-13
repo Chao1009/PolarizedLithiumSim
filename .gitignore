@@ -18,3 +18,6 @@ fastsim/out/
 
 # external / upstream code trees (do not commit; use a submodule if needed)
 BeAGLE_jz/
+
+# generated evgen outputs (reproduce with evgen/scripts/closure_fom.py)
+evgen/out/

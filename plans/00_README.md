@@ -47,6 +47,28 @@ brings to the EIC, in support of the ANL polarized ⁶,⁷Li ion-source program
 5. **Calendar anchor**: INT program on polarized ion beams at EIC,
    March 22 – April 2, 2027 — target for Phase-1 money plots.
 
+## Development run 4 (2026-07-13): polligen Step 5.A
+
+- ☑ **`evgen/polligen` created — plans/05 step 5.A complete** (kernel +
+  inclusive sampler): spin-density machinery (J = 1, 3/2, any axis,
+  Wigner-d/CG, population solvers incl. spin-temperature fills), doubly
+  polarized inclusive master formula (HJM tensor sector + vector sector
+  on the fastsim SF backends, spin-3/2 rank-2 scenario slots), run-plan
+  bookkeeping (helicity flips, tensor thirds, rel-lumi offsets,
+  polarimetry smear), Poisson spin-labeled sampler + Mode-W weight hook,
+  analysis estimators. 35 new tests; all §5.4 inclusive gates pass
+  (master formula ↔ asymmetries.py at rtol 1e-12 on toy AND PDF-grid
+  backends; pseudo-experiment spreads close on every analytic FOM map,
+  `evgen/closure_fom_{6,7}Li.png`; cos 2φ recovery unbiased with holey
+  φ acceptance where the naive moment demonstrably fails).
+- ☑ First systematics numbers: naive-estimator biases from a 10⁻⁴
+  relative-luminosity offset are ≈1×10⁻⁴ on both A_zz and A∥
+  (analytic formulas validated by MC at δ = 2%); lumi-corrected
+  estimators remove them exactly.
+- Physics guard discovered by the machinery: spin-3/2 vector fills with
+  zero tensor/octupole moments violate positivity for P_z > ~0.55 —
+  spin-temperature populations are now the default fill model.
+
 ## Development run 3 (2026-07-07): fast-sim evaluation + plans/05
 
 - ☑ Fast-sim re-evaluated end-to-end on this machine: 15/15 tests pass

@@ -178,14 +178,21 @@ Layout: `evgen/polligen/{spin,xsec,tagged,sample,bookkeeping,reweight,io_hepmc,h
 
 ## 5.3 Steps
 
-### Step 5.A ☐ Kernel + inclusive sampler (2 weeks)
-`spin.py`, `xsec.py`, `sample.py`, `bookkeeping.py`; tests: ρ-matrix
-moments, master-formula ↔ `asymmetries.py` bin-wise identity, estimator
-closure (extend `test_closure.py` to full pseudo-experiments with bunch
+### Step 5.A ☑ Kernel + inclusive sampler (done 2026-07-13)
+`spin.py`, `xsec.py`, `sample.py`, `bookkeeping.py` (+ `estimators.py`);
+tests: ρ-matrix moments, master-formula ↔ `asymmetries.py` bin-wise
+identity, estimator closure (full pseudo-experiments with bunch
 patterns and a 10⁻⁴ relative-luminosity offset — first systematics number).
 **Deliverable:** inclusive doubly polarized e+⁷Li/⁶Li pseudo-experiments
 reproducing every Phase-1 analytic FOM map (δA∥, δA_zz, δA_cos2φ) —
 the fastsim↔generator closure that certifies both.
+**Done (see `evgen/README.md`):** 35 tests, all four §5.4 inclusive gates
+pass (identities at rtol 1e-12 on toy + CT18/NNPDFpol backends; FOM-map
+closure over ~65 x-bins per isotope, `evgen/closure_fom_{6,7}Li.png`);
+rel-lumi systematics: bias(A_zz) = −(2/3)δ/P_zz, bias(A∥) = δ/(2P_eP_z),
+≈1×10⁻⁴ at the reference δ = 10⁻⁴ — removed exactly by lumi-corrected
+estimators. Spin-temperature (max-ent) fills added after positivity ruled
+out naive (P_z, 0-tensor) spin-3/2 fills.
 
 ### Step 5.B ☐ Tagged mode (2–3 weeks, the core novelty)
 `tagged.py`: spin-correlated (e′, spectator) events for the four Li
