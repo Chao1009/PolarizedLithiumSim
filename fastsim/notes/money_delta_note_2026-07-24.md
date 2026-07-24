@@ -193,7 +193,7 @@ compute cost compared to re-evaluating per (s, L) combination.
 
 The scaling relation for the combined significance-squared is:
 
-    σ²(s, L) = σ²_ref · (s / S₀)² · L                                  (10a)
+    σ²(s, L) = σ²_ref · (s / S₀)² · L                                  (10)
 
 where σ²_ref is computed once at reference values s = S₀ = 10⁻³ and
 L = 1 fb⁻¹/nucleon. The resulting fractional asymmetry uncertainty is:
