@@ -334,10 +334,12 @@ LUMINOSITIES_FB = [10.0, 100.0]
 
 # Grid parameters
 # Anchor SCALES range to bag sum-rule reference for MID+mid_x under Interpretation B.
-# Under Interpretation B: A = c / B(α+2, β+1) is purely analytic (no F₁, no Q²).
-# For mid_x (α=0.7, β=3): A_bag = -0.012 / B(2.7, 4.0). Compute exactly:
-_S0_BAG_REF = abs(C_BAG / beta_func(0.7 + 2.0, 3.0 + 1.0))   # ≈ 0.5353
-# Range: 0.1 * |A_bag_ref| to 10 * |A_bag_ref| = [~0.0535, ~5.353]
+# Under Interpretation B: A = c · _PEAK_VALS / B(α+2, β+1) is purely analytic (no F₁, no Q²).
+# For mid_x (α=0.7, β=3): A_bag = -0.012 · _PEAK_VALS["mid_x"] / B(2.7, 4.0).
+# Note: _PEAK_VALS factor is required to match the actual solve_A_from_sum_rule
+# convention (peak-normalized delta_shape from polli_fastsim/polarized.py line 143).
+_S0_BAG_REF = abs(C_BAG * _PEAK_VALS["mid_x"] / beta_func(0.7 + 2.0, 3.0 + 1.0))   # ≈ 0.0890
+# Range: 0.1 * |A_bag_ref| to 10 * |A_bag_ref| = [~0.0089, ~0.890]
 SCALES = np.logspace(np.log10(0.1 * _S0_BAG_REF), np.log10(10.0 * _S0_BAG_REF), 15)
 S0 = 1e-3           # reference scale for analytic rescaling
 
