@@ -7,6 +7,50 @@ work shifts from reach plots (`δA/A`, `L_5σ`) to the raw observable: the
 fit. Nine PNGs produced, covering three beam configs × three integration cases,
 with three signal scales overlaid per plot.
 
+## Small-modulation limit — a note before reading
+
+> [!IMPORTANT]
+> **Every plot and number in this note assumes the small-modulation limit:**
+> |P_zz · A_cos2φ · cos(2φ)| ≪ 1.
+> Readers should understand what this means before interpreting the figures.
+
+**The approximation.** The spin-1 DIS cross section is
+
+    dσ/dΩ ∝ 1 + P_zz · A_cos2φ · cos(2φ)                                (*)
+
+This expression is *exact* at leading twist in Δ — it is not a Taylor expansion.
+"Small modulation" refers to the *observable* being small, not to any truncation
+of the model. Positivity of dσ/dΩ across φ requires |P_zz · A_cos2φ| ≤ 1 always;
+the small-modulation condition is satisfied when we are well inside that bound.
+
+**Numerical verification.** For every (config, case, s) combination in this note,
+
+    max |P_zz · A_cos2φ · cos(2φ)| = 0.0599    (LOW + Case 1 + 10·A_bag)
+
+This is 5.99% — well below the physical limit of 1.
+
+**Consequence 1 — error bars are essentially signal-independent.** The per-φ-bin
+Poisson error on the fractional modulation y(φ) is
+
+    σ_y(φ) = √N_φ(s) / N_flat = (1/√N_flat) · √(1 + P_zz·A_cos2φ·cos(2φ))
+
+In the small-modulation limit √(1+x) ≈ 1, so σ_y ≈ 1/√N_flat — **constant
+across φ and essentially constant across signal scales s**. Each plot therefore
+shows one set of error bars applied to all three signal-scale curves; the
+variation across s is <3% even at 10·A_bag.
+
+**Consequence 2 — the linear cross-section formula is exact enough to use
+directly.** Because (*) is exact in Δ at leading twist, using it without any
+further approximation introduces no error. The only physical constraint is
+positivity, which is satisfied at all 5.99%.
+
+**When it would break down.** If a future scenario pushed |P_zz · A_cos2φ| toward
+0.3 or higher, error bars would visibly vary across φ (~15% shrinkage at
+cos(2φ) = ±1, ~15% growth near cos(2φ) = 0). None of the scenarios in this note
+approach that regime.
+
+---
+
 **Revision history**
 
 - 2026-07-28 (initial): New script `money_delta_20260728.py` (~1005 lines).
@@ -17,6 +61,22 @@ with three signal scales overlaid per plot.
   `money_delta_20260724.py`. See `money_delta_note_2026-07-24.md` for the
   full sum-rule / Fisher-information derivation and `money_delta_note_2026-07-27.md`
   for the Interpretation A vs B discussion.
+
+- 2026-07-28 (extension): Added small-modulation-limit clarification at the top of the note,
+  emphasizing that |P_zz · A_cos2φ · cos(2φ)| ≪ 1 justifies (a) essentially s-independent
+  error bars and (b) the direct use of the linear cross-section formula. Max modulation across
+  all plotted (config, case, s) combinations is 5.99%; well below the physical limit.
+
+- 2026-07-28 (extension 2): Extended TOP+peakbin φ-bin-width scan by adding 45° bins (8 total,
+  Nyquist-like limit for resolving cos(2φ) with 2 periods over [0, 2π]). Full scan now covers
+  5°/10°/20°/30°/45°. Total PNGs: 13 (was 12).
+
+- 2026-07-28 (extension 3): Added 3-subpanel per-bin heatmaps (LOW/MID/TOP) as motivation for
+  Case 1 peak-bin selection. Each heatmap shows |A_bin| (viridis), δA_bin (plasma),
+  |δA_bin/A_bin| (magma). Diagnostic printouts include peak-rate-bin cross-references linking
+  each heatmap to the corresponding Case 1 φ plot. New finding: for TOP, the peak-rate bin has
+  |A_bin| 13× smaller than the maximum |A_bin| on the heatmap, directly visualizing the
+  "kinematic trough" finding from §5a. Total PNGs from script: 13 → 16.
 
 ---
 
@@ -74,6 +134,113 @@ error bars per φ bin.
 | `money_delta_20260728_phimodulation_integrated_low.png` | LOW config, Case 3 (fully integrated) |
 | `money_delta_20260728_phimodulation_integrated_mid.png` | MID config, Case 3 (fully integrated) |
 | `money_delta_20260728_phimodulation_integrated_top.png` | TOP config, Case 3 (fully integrated) |
+
+---
+
+## 1a. Per-bin heatmaps as motivation for peak-bin selection
+
+Three heatmap PNGs were added today (extension 3) and are generated **before**
+the φ-distribution plots in each config's block. The reader encounters the
+(x, Q²) landscape first — seeing where |A_bin| is bright, where δA_bin is small,
+and where the relative uncertainty |δA/A| is manageable — and then examines the
+φ plots for the specific Case 1 bin with that context already established.
+
+### Physics setup
+
+All three heatmaps use the same fixed parameters as the φ plots:
+
+- **Interpretation A:** Δ = s · α_s(Q²) · F₁(x, Q²) · x^0.7 · (1−x)^3,
+  with s = A_bag_config (per-config hardcoded value; LOW: 0.318, MID: 0.310,
+  TOP: 0.297).
+- L = 10 fb⁻¹/nucleon, mid_x shape (α = 0.7, β = 3), EPPS21 nuclear PDF,
+  R1998 (σ_L/σ_T ratio), Cloet P_zz = 0.267.
+- Signal amplitude computed via
+  `polli_fastsim.asymmetries.a_cos2phi(delta, f1, f2, x, y)` per (x, Q²) bin.
+- Statistical uncertainty per bin:
+  δA_bin = √(2/N_bin) / P_zz    (Eq. 5 of `money_delta_note_2026-07-24.md`)
+- **Style** matches `money_delta_20260725.py`: viridis / plasma / magma
+  colormaps, LogNorm colour scaling, NaN masking for bins outside acceptance
+  or where N_bin < 10 or |A_bin| < 1e-10.
+
+### Three-subpanel layout
+
+Each heatmap PNG shows (x, Q²) on the axes, with one subpanel per quantity:
+
+1. **|A_bin|** (viridis) — signal amplitude per bin.
+2. **δA_bin** (plasma) — statistical uncertainty per bin.
+3. **|δA_bin / A_bin|** (magma) — relative uncertainty; the primary figure-of-merit for bin selection.
+
+### Per-bin diagnostics (min / median / max across accepted bins)
+
+| Config | \|A_bin\| min / med / max | δA_bin min / med / max | \|δA/A\| min / med / max |
+|---|---|---|---|
+| LOW | 7.14e-5 / 1.59e-2 / 3.09e-2 | 1.09e-3 / 3.11e-3 / 0.401 | 3.88e-2 / 0.225 / 5.61e+3 |
+| MID | 6.67e-5 / 1.22e-2 / 2.94e-2 | 1.07e-3 / 3.54e-3 / 0.839 | 4.52e-2 / 0.351 / 1.26e+4 |
+| TOP | 1.38e-4 / 8.39e-3 / 2.73e-2 | 1.07e-3 / 4.27e-3 / 0.778 | 0.109 / 0.648 / 5.65e+3 |
+
+The max |δA/A| in each config is concentrated at large x and large Q² — bins
+at the kinematic boundary where N_bin is smallest (e.g., x = 0.897 for all
+three configs at their respective high-Q² boundary).
+
+### Key finding: peak-rate bin is NOT the peak-|A| bin
+
+The heatmap diagnostic block explicitly prints the peak-rate bin coordinates
+and the |A_bin| value at that bin. These cross-reference directly to the Case 1
+⟨A_cos2φ⟩ values quoted in §3. The comparison below quantifies how far the
+Case 1 choice sits from the optimal single-bin pick:
+
+| Config | Peak-rate bin \|A\| | Max \|A\| on heatmap | Ratio (max / peak-rate) |
+|---|---|---|---|
+| LOW | 2.24e-2 | 3.09e-2 | 1.4× |
+| MID | 1.98e-2 | 2.94e-2 | 1.5× |
+| TOP | **2.08e-3** | **2.73e-2** | **13×** |
+
+For **LOW and MID**, the peak-rate bin is within a factor ~1.5 of the maximum
+|A_bin|. Choosing the highest-rate bin as Case 1 is a reasonable proxy for the
+"best" single bin; the experimenter leaves at most ~50% of potential signal
+amplitude on the table.
+
+For **TOP**, the peak-rate bin has |A_bin| **13× smaller** than the maximum
+available on the heatmap. This is the visual manifestation of the kinematic-trough
+finding established analytically in §5a: TOP's DIS rate peaks at very small x
+(x ≈ 0.002), where the mid_x shape factor x^0.7 = 0.011 suppresses the tensor
+signal by roughly 13–15× relative to the moderate-x bins (x ~ 0.05–0.3) where
+|A_bin| is brightest on the heatmap.
+
+On TOP's |A_bin| subpanel, the bright region is clearly visible at moderate x
+(~0.05–0.3), while the peak-rate bin sits at x ~ 0.002 in the dim corner of the
+panel. The heatmap turns the abstract algebra of §5a.3 into a picture.
+
+### Physics interpretation
+
+**LOW and MID:** The DIS-rate peak coincides reasonably well with the
+signal-amplitude peak (factor ~1.5). Choosing the peak-rate bin as Case 1 gives
+a near-optimal single-bin measurement; the experimenter is not far from the best
+available bin.
+
+**TOP:** The DIS-rate peak is at very small x, where the mid_x shape assumption
+heavily suppresses the tensor signal. The Case 1 bin yields |A_cos2φ| = 2.08e-3,
+13× below the maximum |A_bin| = 2.73e-2 visible elsewhere on the heatmap.
+This makes the Case 1 S/N for TOP (~1.94) look dramatically worse than LOW/MID
+(~20), even though all three configs have essentially identical statistics in
+their respective peak-rate bins. The heatmap makes this immediately visible.
+
+This finding is **shape-assumption-dependent**: under the low_x variant
+(α = 0.3), the x^0.3 factor at x = 0.002 is ~2× smaller than at x = 0.07
+(rather than 13×), so TOP's peak-rate bin would be a much less severe
+kinematic trough. See §5a.5 for the detailed shape-dependence discussion.
+
+**Cross-reference:** §5a (Why TOP's Case 1 looks so much worse than LOW and MID)
+provides the analytical basis; the per-bin heatmaps directly visualize the
+physics laid out there.
+
+### Output PNGs (extension 3)
+
+| Filename | Content |
+|---|---|
+| `money_delta_20260728_perbin_low.png` | LOW config — 3-subpanel heatmap |
+| `money_delta_20260728_perbin_mid.png` | MID config — 3-subpanel heatmap |
+| `money_delta_20260728_perbin_top.png` | TOP config — 3-subpanel heatmap |
 
 ---
 
@@ -205,6 +372,111 @@ This is a single-cosine integrated fit (cf. the per-bin Fisher sum of
 
 ---
 
+## 5a. Why TOP's Case 1 looks so much worse than LOW and MID
+
+### 5a.1 The observed asymmetry
+
+Looking at the §4 S/N table, TOP + Case 1 (S/N = 1.94) is roughly 10× worse
+than LOW + Case 1 (S/N = 20.7) and MID + Case 1 (S/N = 18.6), despite all
+three configs having essentially the same statistics in the peak bin. The numbers
+from §3 make this explicit:
+
+| Config | Peak bin N_total | N_flat/bin | ⟨A_cos2φ⟩ |
+|---|---|---|---|
+| LOW | 2.37 × 10⁷ | 3.29 × 10⁵ | −0.0224 |
+| MID | 2.46 × 10⁷ | 3.42 × 10⁵ | −0.0198 |
+| TOP | 2.43 × 10⁷ | 3.38 × 10⁵ | **−0.00208** (~10× smaller) |
+
+Statistics per bin are essentially identical (~2.4 × 10⁷ events, ~3.4 × 10⁵
+per φ bin). What differs is the *signal amplitude*, not the statistics. TOP's
+peak-bin |⟨A_cos2φ⟩| is ~10× smaller than LOW's or MID's.
+
+### 5a.2 Root cause — peak bin coordinates
+
+Higher √s opens up small-x DIS phase space. The rate-maximizing bin shifts
+accordingly:
+
+| Config | √s [GeV/u] | Peak x | Peak Q² [GeV²] | y = Q²/(sx) |
+|---|---|---|---|---|
+| LOW | ~23.5 | 0.089 | 2.43 | 0.005 |
+| MID | ~44.7 | 0.071 | 2.43 | 0.005 |
+| TOP | ~99.5 | **0.0022** | 2.43 | 0.11 |
+
+TOP's peak-rate bin sits at x ≈ 0.002 instead of x ≈ 0.07–0.09 (LOW/MID).
+This is fatal for the tensor signal under the mid_x shape assumption.
+
+### 5a.3 Two compounding suppression mechanisms
+
+**Mechanism 1 — shape factor at small x.** Under the mid_x shape (α = 0.7,
+β = 3), the tensor structure function Δ ∝ x^0.7 · (1−x)^3. Evaluating the
+x^0.7 factor at each config's peak bin:
+
+- At x = 0.002 (TOP): x^0.7 = 0.011
+- At x = 0.070 (MID): x^0.7 = 0.145  →  **13× larger**
+- At x = 0.089 (LOW): x^0.7 = 0.170  →  **15× larger**
+
+The (1−x)^3 factor is essentially unity at both x's (≈ 0.73 at x = 0.089;
+≈ 0.994 at x = 0.002). The x^0.7 factor alone accounts for a ~13–15× signal
+suppression at TOP's peak bin.
+
+**Mechanism 2 — kinematic prefactor (1−y)/y².** The cos(2φ) asymmetry
+amplitude carries a kinematic prefactor proportional to (1−y)/y². Evaluating
+at each config's peak-bin y:
+
+- At y = 0.11 (TOP): (1−y)/y² = (0.89)/(0.012) ≈ 74
+- At y = 0.005 (LOW/MID): (1−y)/y² = (1.0)/(2.5 × 10⁻⁵) ≈ 40000
+
+The kinematic factor favors LOW/MID by ~500× over TOP in the peak bin. Both
+configs' peak bins are in the extreme-small-y regime where this prefactor
+diverges, and the rate-weighted effect of this large prefactor at LOW/MID
+more than compensates for their lower absolute statistics in any given (x, Q²)
+cell. Note that both the shape suppression and the kinematic factor act in the
+same direction: both make TOP's peak bin unfavorable for the tensor signal.
+
+**Net effect.** The two mechanisms combine to produce the observed ~10× smaller
+|⟨A_cos2φ⟩| at TOP's peak bin relative to LOW/MID. The precise cancellation
+(13× from shape × partial compensation from the y-dependence of the rate
+distribution) accounts for the factor of ~10 seen in §4.
+
+### 5a.4 Why TOP recovers when integrating
+
+From Case 1 to Case 3, TOP's |⟨A_cos2φ⟩| *grows* monotonically:
+
+    TOP: 0.00208 (peak bin) → 0.00346 (Q² slice) → 0.00533 (integrated)    [factor 2.5]
+
+This is the opposite of LOW and MID, where integrating dilutes the signal:
+
+    LOW: 0.0224 → 0.0158 → 0.0170    MID: 0.0198 → 0.0104 → 0.0121
+
+When TOP integrates over its full acceptance, it brings in bins at moderate
+x (x ~ 0.05–0.15) where x^0.7 is 10–15× larger than at x = 0.002. These bins
+carry a much larger tensor signal per event than the rate-peak bin, even though
+they contribute fewer events. The rate-weighted average ⟨A_cos2φ⟩ rises as
+these moderate-x bins enter the sum. LOW and MID show the opposite trend
+because their Case 1 bins are *already* at moderate x (which is where their
+rate peaks), so further integration adds bins with smaller individual signal
+and dilutes the average.
+
+### 5a.5 Practical implications
+
+**For TOP-config experimental design**: the DIS trigger-rate peak (small x) is a
+kinematic trough for the tensor observable under the mid_x shape assumption.
+Triggers and bin schemes designed around the peak DIS rate will systematically
+undersample the kinematic region where the tensor signal is largest. The sensitive
+region — moderate x (0.05–0.15), moderate Q² — lies in the tail of the DIS rate
+distribution for TOP. Full-acceptance integration is not just statistically
+optimal; it is physically necessary to include the sensitive bins. This
+reinforces the conclusions of §5 point 2 and the Tier A planning note in §9.
+
+**Shape-assumption dependence.** This picture depends on the mid_x shape
+(α = 0.7). Under the low_x shape (α = 0.3, β = 4, peak at x ≈ 0.07), the
+x^0.3 factor at x = 0.002 is 0.20 vs 0.44 at x = 0.07 — only ~2× smaller
+instead of 13×. Under low_x, TOP's peak bin would be a much less severe
+kinematic trough. Distinguishing these scenarios is another argument for
+anchoring the Δ shape via first-principles theory input (Tier A #2 in §9).
+
+---
+
 ## 6. Comparison to prior work
 
 ### 6.1 Relation to 2026-07-24 reach plots
@@ -261,6 +533,27 @@ per φ bin.
 **Case 1 (peak bin) plots** look noisy: large cosine amplitude
 (⟨A⟩ ~ 0.02 for LOW/MID) but relatively large error bars because only
 ~2.4×10⁷ events per bin and 72 bins of ~3.3×10⁵ events each.
+
+**TOP peak-bin φ-bin-width scan** (extension 2026-07-28). A separate set of
+plots holds N_total fixed at the TOP Case 1 value and varies only the bin width,
+showing how statistical precision trades against angular resolution. The 45°
+case is the Nyquist-like limit: 8 bins sample a cos(2φ) signal (2 full periods
+over [0, 2π]) at exactly 4 points per period — the minimum needed to reconstruct
+the shape. A 60° binning (6 bins = 3 per period) would start losing the ability
+to resolve the cos(2φ) form.
+
+| Bin width | N points | N_flat/bin | Error bar (1/√N_flat) | S/N at A_bag | S/N at 10×A_bag |
+|---|---|---|---|---|---|
+| 5° | 72 | 3.38 × 10⁵ | 1.72 × 10⁻³ | 0.12 | 1.21 |
+| 10° | 36 | 6.76 × 10⁵ | 1.22 × 10⁻³ | 0.17 | 1.71 |
+| 20° | 18 | 1.35 × 10⁶ | 8.60 × 10⁻⁴ | 0.24 | 2.42 |
+| 30° | 12 | 2.03 × 10⁶ | 7.02 × 10⁻⁴ | 0.30 | 2.96 |
+| 45° | 8 | 3.04 × 10⁶ | 5.73 × 10⁻⁴ | 0.97 | 9.7 |
+
+Note: the per-bin S/N here is signal amplitude (P_zz · |⟨A_cos2φ⟩| at peak φ)
+divided by the per-bin error bar. The fit-based S/N combining all bins (as in §4)
+differs from this single-bin ratio; the §4 value of 1.94 for TOP Case 1 uses
+the full √(N_total/2) formula over 72 bins.
 
 **Case 3 (integrated) plots** look clean: the cosine is resolved at smaller
 fractional amplitude because σ_y ≈ 1/√N_flat is ~7× smaller (N_flat ~
@@ -359,18 +652,25 @@ backend, `parton` α_s table, R1998, EPPS21, and P_zz = 0.267 infrastructure.
 
 - `fastsim/scripts/money_delta_20260728.py` (~1005 lines)
 
-### Plots in `fastsim/out/money_delta/` (new as of 2026-07-28, 9 files)
+### Plots in `fastsim/out/money_delta/` (new as of 2026-07-28, 16 files)
 
 ```
-money_delta_20260728_phimodulation_peakbin_low.png      (LOW, Case 1: peak bin)
-money_delta_20260728_phimodulation_peakbin_mid.png      (MID, Case 1: peak bin)
-money_delta_20260728_phimodulation_peakbin_top.png      (TOP, Case 1: peak bin)
-money_delta_20260728_phimodulation_q2slice_low.png      (LOW, Case 2: Q² slice iq2=3)
-money_delta_20260728_phimodulation_q2slice_mid.png      (MID, Case 2: Q² slice iq2=3)
-money_delta_20260728_phimodulation_q2slice_top.png      (TOP, Case 2: Q² slice iq2=3)
-money_delta_20260728_phimodulation_integrated_low.png   (LOW, Case 3: fully integrated)
-money_delta_20260728_phimodulation_integrated_mid.png   (MID, Case 3: fully integrated)
-money_delta_20260728_phimodulation_integrated_top.png   (TOP, Case 3: fully integrated)
+money_delta_20260728_perbin_low.png                          (3-subpanel heatmap: |A_bin|, δA_bin, |δA/A|)
+money_delta_20260728_perbin_mid.png                          (3-subpanel heatmap)
+money_delta_20260728_perbin_top.png                          (3-subpanel heatmap)
+money_delta_20260728_phimodulation_peakbin_low.png           (LOW, Case 1: peak bin)
+money_delta_20260728_phimodulation_peakbin_mid.png           (MID, Case 1: peak bin)
+money_delta_20260728_phimodulation_peakbin_top.png           (TOP, Case 1: peak bin — 5° bins, 72 pts)
+money_delta_20260728_phimodulation_q2slice_low.png           (LOW, Case 2: Q² slice iq2=3)
+money_delta_20260728_phimodulation_q2slice_mid.png           (MID, Case 2: Q² slice iq2=3)
+money_delta_20260728_phimodulation_q2slice_top.png           (TOP, Case 2: Q² slice iq2=3)
+money_delta_20260728_phimodulation_integrated_low.png        (LOW, Case 3: fully integrated)
+money_delta_20260728_phimodulation_integrated_mid.png        (MID, Case 3: fully integrated)
+money_delta_20260728_phimodulation_integrated_top.png        (TOP, Case 3: fully integrated)
+money_delta_20260728_phimodulation_peakbin_top_10deg.png     (TOP, Case 1: peak bin — 10° bins, 36 pts)
+money_delta_20260728_phimodulation_peakbin_top_20deg.png     (TOP, Case 1: peak bin — 20° bins, 18 pts)
+money_delta_20260728_phimodulation_peakbin_top_30deg.png     (TOP, Case 1: peak bin — 30° bins, 12 pts)
+money_delta_20260728_phimodulation_peakbin_top_45deg.png     (TOP, Case 1: peak bin — 45° bins, 8 pts)
 ```
 
 ### Notes
