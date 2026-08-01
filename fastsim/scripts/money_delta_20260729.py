@@ -44,10 +44,12 @@ Physics setup (identical to money_delta_20260728.py):
   P_zz: 0.267  (Cloet convention)
   Interp. A:  Δ = s · α_s(Q²) · F₁ · x^α · (1-x)^β
 
-A_bag values (hardcoded from money_delta_20260724.py mid_x output):
-  LOW (5 × 27.5 GeV/u): |A_bag| = 0.318
-  MID (10 × 50 GeV/u):  |A_bag| = 0.310
-  TOP (18 × 137.5 GeV/u): |A_bag| = 0.297
+A_bag values (solved internally at startup from bag sum rule):
+  c_bag = -0.012, mid_x (α=0.7, β=3), Interpretation A.
+  Reference magnitudes (previous hardcoded values, reproduced within 1%):
+    LOW ≈ 0.318, MID ≈ 0.310, TOP ≈ 0.297. Signed values are negative
+    (Δ ∝ c_bag < 0). See solve_A_from_sum_rule() below (copied verbatim
+    from money_delta_20260724.py).
 
 Detector model:
   Tracking momentum resolution: σ_p/p = √(a²·p² + b²), piecewise in η.
@@ -274,6 +276,9 @@ def r_override(r_func):
 # P_zz: Cloet per-nucleon-normalized convention = 0.8 / 3
 PZZ = 0.267
 
+# Sum-rule coefficient (bag model; matches money_delta_20260724.py line 313)
+C_BAG = -0.012
+
 # Fixed integrated luminosity [fb⁻¹/nucleon]
 LUMI_FB = 10.0
 
@@ -312,12 +317,15 @@ def reco_analysis_mask(proj, n_reco, min_events=MIN_EVENTS):
     return proj.accepted & (np.asarray(n_reco) >= float(min_events))
 
 
-# Hardcoded A_bag values (abs) from money_delta_20260724.py mid_x output
-A_BAG = {
-    "low": 0.318,  # 5 × 27.5 GeV/u
-    "mid": 0.310,  # 10 × 50 GeV/u
-    "top": 0.297,  # 18 × 137.5 GeV/u
-}
+# Populated once per run in main() via solve_A_from_sum_rule.
+# Values are SIGNED: for Interpretation A with C_BAG = -0.012, all entries
+# are negative. Reference magnitudes from the previous hardcoded convention:
+#   |A_bag| ≈ {"low": 0.318, "mid": 0.310, "top": 0.297}  (mid_x, verified
+#   in money_delta_20260724.py output; reproduced within rounding).
+# The observable pipeline (smear_config, compute_A_cos2phi_at_bin,
+# build_phi_plot, build_perbin_heatmap, summary table) consumes
+# abs(A_BAG_SIGNED[config_tag]) — see main() for the sign-flow contract.
+A_BAG_SIGNED: dict[str, float] = {}
 
 # Number of φ bins (5° each, full 2π)
 N_PHI = 72
@@ -398,6 +406,88 @@ def alpha_s(q2, base=None):
 
 
 # ══════════════════════════════════════════════════════════════════════════════
+# Sum-rule solver: A = c / ∫₀¹ x F₁(x, <Q²>) shape(x) dx
+# (copied verbatim from money_delta_20260724.py — keep in sync if the parent
+# solver is ever revised. Interpretation A: Δ = A · α_s · F₁ · x^α (1-x)^β.)
+# ══════════════════════════════════════════════════════════════════════════════
+
+def solve_A_from_sum_rule(cfg, nf2_obj, base, variant, c_coef):
+    """Solve for A = scale such that the sum rule ∫ x Δ dx = c · α_s(Q²) holds.
+
+    Because Δ = scale · α_s(Q²) · F₁ · x^α · (1-x)^β, the α_s(Q²) cancels:
+        scale · ∫₀¹ x · F₁(x, <Q²>) · x^α · (1-x)^β dx = c
+    where <Q²> is the rate-weighted mean Q² of the accepted phase space.
+
+    Parameters
+    ----------
+    cfg      : BeamConfig
+    nf2_obj  : NuclearF2FromGrid  pre-constructed EPPS21 object
+    base     : PartonF2           CT18NLO backend (for α_s; not used in integral)
+    variant  : str                shape variant ('low_x', 'mid_x', 'high_x')
+    c_coef   : float              sum-rule coefficient (c_bag or c_lat; negative)
+
+    Returns
+    -------
+    float : A = c_coef / integral  (negative for both bag and lattice)
+    float : <Q²>  (rate-weighted mean Q² of accepted bins, in GeV²)
+    """
+    # Run project_rates at unit luminosity to get the acceptance mask and rates
+    sc   = fom.Scenario(lumi_fb_per_nucleon=1.0, pol_ion_tensor=PZZ, q2_min=2.0)
+    proj = fom.project_rates(cfg, sc, nuclear_f2=nf2_obj)
+
+    # Rate-weighted mean Q² over accepted bins
+    n_events = proj.n_events   # shape (nx, nq2)
+    accepted = proj.accepted   # bool mask
+
+    n_acc = n_events[accepted]
+    q2_acc = proj.q2[accepted]
+
+    total_events = n_acc.sum()
+    if total_events <= 0:
+        raise RuntimeError(
+            f"No accepted events in solve_A_from_sum_rule for config {cfg.label()}"
+        )
+    q2_mean = float((n_acc * q2_acc).sum() / total_events)
+
+    # Numerical integral: ∫₀¹ x · F₁(x, <Q²>) · x^α · (1-x)^β dx
+    # Use the accepted x-grid plus a fine extension to x → 0
+    # Grid centers from project_rates: proj.x is shape (nx, nq2), proj.x[:, 0] is x-centers
+    x_grid_accepted = np.unique(proj.x[accepted])   # sorted unique x values
+
+    # Extend to smaller x for the low-x tail (important for low_x variant)
+    x_lo_ext = np.logspace(np.log10(1e-5), np.log10(x_grid_accepted.min() * 0.99), 50)
+    x_hi_ext = np.linspace(x_grid_accepted.max() * 1.001, 0.9999, 30)
+    x_full = np.concatenate([x_lo_ext, x_grid_accepted, x_hi_ext])
+    x_full = np.sort(np.unique(x_full))
+    x_full = x_full[(x_full > 0) & (x_full < 1.0)]
+
+    # Evaluate F₁ per nucleon at <Q²>
+    q2_arr = np.full_like(x_full, q2_mean)
+    f1_arr = nf2_obj.f1a(x_full, q2_arr) / cfg.ion.A   # per nucleon
+
+    alpha_v, beta_v = _VARIANTS[variant]
+    integrand = (x_full
+                 * f1_arr
+                 * np.power(np.maximum(x_full, 1e-12), alpha_v)
+                 * np.power(np.maximum(1.0 - x_full, 0.0), beta_v)
+                 / _PEAK_VALS[variant])   # includes the 1/_PEAK normalization
+    # _PEAK_VALS normalization: the shape function here is
+    # x^α (1-x)^β / _PEAK_VALS[variant]  so that at x_peak the shape is 1
+    # matching the convention in delta_shape / delta_shape_with_alphas
+
+    integral = float(np.trapezoid(integrand, x_full))
+
+    if abs(integral) < 1e-30:
+        raise RuntimeError(
+            f"Sum-rule integral nearly zero for variant={variant}, "
+            f"config={cfg.label()}"
+        )
+
+    A = c_coef / integral
+    return A, q2_mean
+
+
+# ══════════════════════════════════════════════════════════════════════════════
 # Δ with α_s(Q²) prefactor (copied verbatim from money_delta_20260728.py)
 # ══════════════════════════════════════════════════════════════════════════════
 
@@ -441,6 +531,11 @@ def sig2_per_fb_at_sumrule(cfg, scale, pzz, nf2_obj, base, variant="mid_x",
     """Sig² per fb⁻¹/nucleon using Δ = scale · α_s(Q²) · F₁ · x^α · (1-x)^β.
 
     The R-override must be active in the calling context.
+
+    Note (sign convention): any future caller should pass
+    ``scale = abs(A_BAG_SIGNED[config_tag])`` to match the "solve signed /
+    consume abs" convention used throughout the observable pipeline. No
+    main-path caller in this script currently passes the scale argument.
     """
     sc   = fom.Scenario(lumi_fb_per_nucleon=1.0, pol_ion_tensor=pzz, q2_min=2.0)
     proj = fom.project_rates(cfg, sc, nuclear_f2=nf2_obj)
@@ -943,10 +1038,9 @@ def compute_A_cos2phi_at_bin(proj, nf2, cfg, ix, iq2, A_bag_config, base):
     f1_val = float(nf2.f1a(x_val, q2_val)) / cfg.ion.A
     f2_val = float(nf2.f2a(x_val, q2_val)) / cfg.ion.A
 
-    # Use A_bag as the scale (signed convention: negative A_bag → negative Δ;
-    # we use the abs value per the plan since A_bag is pre-negated in the
-    # hardcoded constants)
-    scale = A_bag_config   # already absolute value from A_BAG dict
+    # Use A_bag as the scale: callers pass abs(A_BAG_SIGNED[tag]) so scale is
+    # always positive, matching the "solve signed / consume abs" convention.
+    scale = A_bag_config   # absolute value (|A_bag| from main loop alias)
     delta_val = float(delta_shape_with_alphas(
         np.array([x_val]), np.array([q2_val]), np.array([f1_val]),
         scale=scale, variant=VARIANT, base=base
@@ -1572,8 +1666,10 @@ def main():
             "  mid: 10 GeV e × 50 GeV/u ⁶Li\n"
             "  top: 18 GeV e × 137.5 GeV/u ⁶Li\n\n"
             "Physics: Δ(x,Q²) = s · α_s(Q²) · F₁(x,Q²) · x^α (1-x)^β (mid_x).\n"
-            "A_bag hardcoded from money_delta_20260724.py mid_x output:\n"
-            "  LOW=0.318, MID=0.310, TOP=0.297\n\n"
+            "A_bag solved internally from bag sum rule (c_bag=-0.012, mid_x, Interp. A);\n"
+            "signed values are negative. Reference magnitudes (within 1% of previous\n"
+            "hardcoded convention): LOW≈0.318, MID≈0.310, TOP≈0.297.\n"
+            "Downstream pipeline consumes |A_bag|; signed value shown at startup for audit.\n\n"
             "ECal note: ECal resolution not implemented; tracking-only per user\n"
             "decision. See module docstring for details."
         ),
@@ -1615,9 +1711,8 @@ def main():
     print("  ECal: NOT implemented (tracking-only per user decision)")
     print(f"  MC events per true bin: {n_mc}")
     print()
-    print("Hardcoded |A_bag| values:")
-    for k, v in A_BAG.items():
-        print(f"  {k.upper()}: {v}")
+    print("A_bag values (solved internally from bag sum rule, mid_x, Interp. A):")
+    print("(banner values printed after solver runs below)")
     print()
 
     # ── Load CT18NLO backend ──────────────────────────────────────────────────
@@ -1690,12 +1785,70 @@ def main():
     )
 
     with r_override(r1998):
+        # ── Solve A_bag for each config (once; cached in A_BAG_SIGNED) ────────
+        # Solver returns the SIGNED value (negative under Interpretation A with
+        # C_BAG < 0). The signed value is printed here for transparency; the main
+        # config loop below consumes abs(A_BAG_SIGNED[tag]) so downstream numerics
+        # and plots remain identical to the previous hardcoded-magnitude behavior.
+        print("Solving A_bag from bag sum rule (c = {:+.3f}, mid_x, Interpretation A)"
+              .format(C_BAG))
+        print("(reference magnitudes previously hardcoded: LOW=0.318, MID=0.310, TOP=0.297)")
+        print("(downstream pipeline uses |A_bag|; signed value shown here for audit)")
+        REFERENCE_ABS_A_BAG = {"low": 0.318, "mid": 0.310, "top": 0.297}   # audit-only
+        for cfg_pre, cfg_tag_pre, _label_pre in all_configs:
+            nf2_pre = NuclearF2FromGrid(cfg_pre.ion, EPPS21_SET)
+            A_signed, q2_mean = solve_A_from_sum_rule(
+                cfg_pre, nf2_pre, base, VARIANT, C_BAG
+            )
+            # ── Guard 1: solver must return a finite value ────────────────────
+            if not np.isfinite(A_signed):
+                raise RuntimeError(
+                    f"solve_A_from_sum_rule returned non-finite A_bag "
+                    f"({A_signed!r}) for config {cfg_tag_pre!r}. "
+                    f"Check the sum-rule integral and F₁ grid."
+                )
+            # ── Guard 2: sign must be negative (C_BAG < 0, Interpretation A) ─
+            if A_signed >= 0.0:
+                raise RuntimeError(
+                    f"Solved A_bag = {A_signed:+.6f} for config {cfg_tag_pre!r} "
+                    f"has wrong sign (expected < 0 for C_BAG = {C_BAG:+.3f}). "
+                    f"Check sign convention in solve_A_from_sum_rule."
+                )
+            A_BAG_SIGNED[cfg_tag_pre] = float(A_signed)
+            ref_abs = REFERENCE_ABS_A_BAG[cfg_tag_pre]
+            delta_pct = 100.0 * abs(abs(A_signed) - ref_abs) / ref_abs
+            # ── Guard 3: delta_pct must be finite before the drift check ─────
+            if not np.isfinite(delta_pct):
+                raise RuntimeError(
+                    f"delta_pct is non-finite ({delta_pct!r}) for config "
+                    f"{cfg_tag_pre!r} (A_signed={A_signed:+.6f}, "
+                    f"ref_abs={ref_abs}). Cannot perform reference-drift check."
+                )
+            print(
+                f"  {cfg_tag_pre.upper()}: A_bag (signed) = {A_signed:+.4f}   "
+                f"|A_bag| (consumed) = {abs(A_signed):.4f}   "
+                f"<Q²> = {q2_mean:.2f} GeV²   "
+                f"(vs prior hardcoded |A_bag| = {ref_abs:.3f}: Δ = {delta_pct:.2f}%)"
+            )
+            # Hard-fail if the solver disagrees with the historical value by more
+            # than 1% — protects against silent regressions in the solver / PDFs.
+            if delta_pct >= 1.0:
+                raise RuntimeError(
+                    f"Solved |A_bag| for {cfg_tag_pre} disagrees with hardcoded "
+                    f"reference by {delta_pct:.2f}% (>1% tolerance). Investigate "
+                    f"before proceeding."
+                )
+        print()
+
         for cfg, config_tag, config_label in all_configs:
             print(f"{'='*72}")
             print(f"Config: {config_tag.upper()} — {config_label}")
             print(f"{'='*72}")
 
-            a_bag_config = A_BAG[config_tag]
+            # Solver returns signed value; observable pipeline consumes |A_bag|.
+            a_bag_signed = A_BAG_SIGNED[config_tag]
+            abs_a_bag    = abs(a_bag_signed)
+            a_bag_config = abs_a_bag       # backwards-compatible alias for existing call sites
             nf2_obj = NuclearF2FromGrid(cfg.ion, EPPS21_SET)
 
             print(f"  Running project_rates at L = {LUMI_FB:g} fb⁻¹/nucleon …",
@@ -1994,7 +2147,7 @@ def main():
     for row in summary_rows:
         if row["config"] != current_config:
             current_config = row["config"]
-            a_bag_val = A_BAG[current_config.lower()]
+            a_bag_val = abs(A_BAG_SIGNED[current_config.lower()])
             print(f"Config: {current_config}  (|A_bag| = {a_bag_val:.3f})")
 
         print(f"  {row['case']}:")

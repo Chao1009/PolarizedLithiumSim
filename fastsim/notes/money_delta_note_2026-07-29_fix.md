@@ -1,21 +1,29 @@
 # Reco-Selection Consistency Fix for `money_delta_20260729.py`
 
 **Date:** 2026-07-31 (fix audit; original script dated 2026-07-29)
-**Scope:** `fastsim/scripts/money_delta_20260729.py` — reco-side analysis path only.
+**Addendum:** 2026-07-31 — `A_bag` provenance cleanup (§11; later follow-on change)
+**Scope:** `fastsim/scripts/money_delta_20260729.py` — reco-side analysis path (§1–§10)
+and `A_bag` internal-solver provenance (§11).
 **Status:** COMPLETE. Phase B (code fix) and Phase C (full production rerun) both
-complete. V1 smoke test (`--n-mc 200`), V2 static analysis (S1–S6), V3 production
-rerun (`--n-mc 1000`, default), and V4 positivity checks all pass. Post-fix
-Case 1/2/3 ⟨A_cos2φ⟩ values are recorded in §6.
+complete for the reco-mask fix (§1–§10). V1 smoke test (`--n-mc 200`), V2 static
+analysis (S1–S6), V3 production rerun (`--n-mc 1000`, default), and V4 positivity
+checks all pass against the reco-mask-fixed script. Post-fix Case 1/2/3 ⟨A_cos2φ⟩
+values from that Phase C rerun are recorded in §6. The later `A_bag` provenance
+cleanup and its separate solver-active rerun are documented in §11; they were
+validated independently after the reco-mask fix was complete.
 
 > [!NOTE]
-> **Phase C production rerun is complete.** The command
+> **Phase C production rerun (reco-mask fix) is complete.** The command
 > `python3 scripts/money_delta_20260729.py --outdir out/money_delta`
-> was run from `fastsim/` and completed without error: all 16 files written,
-> all positivity checks OK, reco-accepted bins equal true-accepted bins in all
-> three configs. Post-fix numerical results are in §6; they are sourced from
+> was run from `fastsim/` with the hardcoded-`|A_bag|` version of the script
+> (i.e., before the `A_bag` provenance cleanup in §11) and completed without
+> error: all 16 files written, all positivity checks OK, reco-accepted bins
+> equal true-accepted bins in all three configs. Post-fix numerical results are
+> in §6; they are sourced from
 > `fastsim/out/money_delta/money_delta_20260729_fix_rerun.log`. The pre-fix
 > results quoted in `money_delta_note_2026-07-29.md` §3.3 are retained as
-> the baseline for comparison.
+> the baseline for comparison. The later solver-active rerun described in §11
+> is a separate run performed after the `A_bag` provenance cleanup.
 
 **See also:** `fastsim/notes/money_delta_note_2026-07-29.md` for physics context,
 sign-convention fix history, and the smearing-diagnostic numbers produced by the
@@ -36,6 +44,7 @@ pre-fix script. The approved fix plan is at
 8. What did NOT change
 9. Follow-ups and open questions
 10. File inventory
+11. Addendum — `A_bag` provenance cleanup (later follow-on change)
 
 ---
 
@@ -312,7 +321,10 @@ truth-accepted bins received at least `MIN_EVENTS = 10` reco events.
 ### Phase C production-rerun results (V3 — default `--n-mc 1000`, command below)
 
 **Provenance:** All Phase C numerical values in this section are taken directly
-from `fastsim/out/money_delta/money_delta_20260729_fix_rerun.log`.
+from `fastsim/out/money_delta/money_delta_20260729_fix_rerun.log`. This log was
+produced by the reco-mask-fixed script running with hardcoded `|A_bag|` magnitudes
+(before the later `A_bag` provenance cleanup in §11); it is the sole provenance
+for the §6 ⟨A_cos2φ⟩ values.
 
 **Run command** (executed from `fastsim/`):
 
@@ -443,6 +455,10 @@ documented in `money_delta_note_2026-07-29.md`:
 
 - **Physics model.** Interpretation A, mid_x shape (α=0.7, β=3), bag
   sum-rule constraint (c = −0.012), Cloet P_zz = 0.267, L = 10 fb⁻¹/nucleon.
+  Note: `A_bag` itself is no longer hardcoded; it is now solved internally at
+  startup. That change is a later follow-on and is documented separately in §11.
+  The physics inputs (c, mid_x, Interp. A) and the magnitudes consumed by the
+  observable pipeline are unchanged.
 
 - **Smearing kernel.** Tracking-only σ_p/p and σ_θ piecewise in η (7 regions),
   1000 MC events per accepted true bin, `seed=42`. The smearing loop and the
@@ -528,7 +544,8 @@ must either ensure a non-empty mask or add its own guard.
 - `fastsim/scripts/_check_reco_mask_invariants.py` — created: AST-based S1–S6
   static checker; regression guard for the reco-mask invariants. Compiles
   cleanly.
-- `fastsim/notes/money_delta_note_2026-07-29_fix.md` — this note.
+- `fastsim/notes/money_delta_note_2026-07-29_fix.md` — this note (reco-mask fix
+  audit §1–§10; `A_bag` provenance cleanup addendum §11).
 
 ### Output produced by Phase C production rerun:
 
@@ -555,5 +572,80 @@ must either ensure a non-empty mask or add its own guard.
 - `fastsim/notes/money_delta_note_2026-07-29.md` — Phase IV: detector smearing,
   sign-convention fix, pre-fix results.
 - `fastsim/notes/money_delta_note_2026-07-29_fix.md` — this file: reco-selection
-  consistency fix audit and Phase C verification.
+  consistency fix audit and Phase C verification (§1–§10); `A_bag` provenance
+  cleanup and internal-solver validation (§11).
 - `fastsim/notes/money_delta_uptodate.md` — master synthesis through 2026-07-29.
+
+---
+
+## 11. Addendum — `A_bag` provenance cleanup (later follow-on change)
+
+**Date of change:** 2026-07-31 (after the reco-mask fix in §1–§10 was complete)
+**Scope within script:** startup solver block and `A_BAG_SIGNED` dictionary in
+`main()`; observable pipeline unchanged.
+
+### What changed
+
+Previously `money_delta_20260729.py` imported hardcoded `|A_bag|` magnitudes
+(LOW=0.318, MID=0.310, TOP=0.297) that had been computed by the earlier
+`money_delta_20260724.py` mid-x run and copied by hand. The updated script
+eliminates that manual step: `A_bag` is now **solved internally at startup**
+from the bag sum rule via `solve_A_from_sum_rule(cfg, nf2, base, VARIANT, C_BAG)`
+for each of the three EIC beam configs before the main analysis loop begins.
+
+The solved values are **signed and negative** (expected under Interpretation A
+with `C_BAG < 0`). Two runtime guards enforce this:
+
+1. A finiteness guard — `RuntimeError` if the solver returns NaN or ±inf.
+2. A sign guard — `RuntimeError` if the solved value is ≥ 0.
+
+Solved values are cached in `A_BAG_SIGNED[tag]`. The observable pipeline
+consumes `abs(A_BAG_SIGNED[tag])` (i.e., `|A_bag|`) everywhere, so the
+downstream numerics, plots, and modulation formulae use `|A_bag|` in the same
+way as the previous hardcoded-magnitude path.
+
+A third guard compares the freshly solved `|A_bag|` against the prior hardcoded
+reference magnitudes and raises `RuntimeError` if the discrepancy exceeds 1%.
+This protects against silent regressions in the solver or PDF grids.
+
+The prior hardcoded values are retained in the script as `REFERENCE_ABS_A_BAG`
+for audit and drift-detection only; they are no longer used as inputs to any
+calculation.
+
+### Separation from the reco-mask fix (§1–§10)
+
+These two changes are independent: the reco-mask fix (§1–§10) touches helper
+signatures and mask construction; the `A_bag` provenance cleanup touches only
+the startup solver block. They do not interact and were validated separately.
+§1–§10 of this note remain unmodified and fully accurate after §11 was applied.
+
+### Production-rerun validation
+
+A production rerun with the internal solver active (`--n-mc 1000`, default, run
+from `fastsim/`) printed the following solved values and comparisons against the
+prior hardcoded references:
+
+| Config | Solved A_bag (signed) | \|A_bag\| consumed | Prior hardcoded \|A_bag\| | Δ |
+|---|---|---|---|---|
+| LOW | −0.3178 | 0.3178 | 0.318 | 0.07% |
+| MID | −0.3100 | 0.3100 | 0.310 | 0.01% |
+| TOP | −0.2967 | 0.2967 | 0.297 | 0.08% |
+
+All three deltas are well within the 1% hard-fail threshold. Sign guards and
+finiteness guards passed for all configs. Because the solved `|A_bag|` magnitudes
+differ from the prior hardcoded values by ≤0.08%, the detector-realistic
+conclusions documented in §6 are qualitatively stable: no shift of this magnitude
+would overturn the Case 1 vs Case 3 comparisons or the config-to-config trends.
+No direct file-level or visual comparison between the two runs was performed.
+
+### What this change does NOT affect
+
+- The `reco_analysis_mask` function and all reco-selection helpers (§2–§4).
+- The S1–S6 static-analysis checks (§5); those do not inspect the solver block.
+- The Phase C ⟨A_cos2φ⟩ values in §6, which were obtained with the hardcoded
+  `|A_bag|` magnitudes (the `A_bag` provenance cleanup postdates that rerun).
+  The §11 solver-active rerun confirms those magnitudes are reproduced within
+  ~0.1%, leaving the §6 detector conclusions qualitatively unchanged.
+- The Tier-A/B/C roadmap and all open follow-ups in §9.
+- The physics inputs (c = −0.012, mid_x α=0.7 β=3, Interp. A, P_zz = 0.267,
+  L = 10 fb⁻¹/nucleon) and any file outside `money_delta_20260729.py`.

@@ -47,13 +47,18 @@ plots. The detector-smeared plots stay within the same regime.
 - 2026-07-29 (initial): New script `money_delta_20260729.py` (~1870 lines).
   Detector-realistic extension of `money_delta_20260728.py`. Same physics
   configuration: Interpretation A, mid_x shape (α=0.7, β=3), R1998, EPPS21,
-  Cloet P_zz = 0.267, L = 10 fb⁻¹/nucleon. New additions: ePIC tracking-only
-  momentum and angular resolution (piecewise in η, 7 regions each), η-dependent
-  electron-ID efficiency (ATHENA + ECCE synthesis, 9 anchor points), 1000 MC
-  events per accepted true bin. A sign-convention bug in the reconstructed Q² and
-  y formulas was diagnosed and fixed mid-session (§5). 16 PNGs produced with
-  `_20260729_` prefix. See `money_delta_note_2026-07-24.md` for the full formula
-  derivation and `money_delta_note_2026-07-28.md` for the pre-detector baseline.
+  Cloet P_zz = 0.267, L = 10 fb⁻¹/nucleon. A_bag is solved at startup via
+  `solve_A_from_sum_rule()` (c_bag = −0.012, mid_x, Interpretation A); the
+  solved values are signed and negative. The observable pipeline consumes
+  |A_bag|; signed values are printed at startup for audit. Reference magnitudes
+  (LOW ≈ 0.318, MID ≈ 0.310, TOP ≈ 0.297) are retained in the script as
+  regression guards only. New additions: ePIC tracking-only momentum and angular
+  resolution (piecewise in η, 7 regions each), η-dependent electron-ID efficiency
+  (ATHENA + ECCE synthesis, 9 anchor points), 1000 MC events per accepted true
+  bin. A sign-convention bug in the reconstructed Q² and y formulas was diagnosed
+  and fixed mid-session (§5). 16 PNGs produced with `_20260729_` prefix. See
+  `money_delta_note_2026-07-24.md` for the full formula derivation and
+  `money_delta_note_2026-07-28.md` for the pre-detector baseline.
 
 - 2026-07-29 (extension): Added raw (efficiency-independent) same-bin diagnostic
   alongside the existing efficiency-weighted one. New numbers: raw 88/76/64% for
@@ -67,10 +72,13 @@ plots. The detector-smeared plots stay within the same regime.
 
 Script: `fastsim/scripts/money_delta_20260729.py` (~1870 lines). All figures land
 in `fastsim/out/money_delta/` with `_20260729_` filename prefix. Ion is ⁶Li
-throughout. Physics configuration (Interpretation A, mid_x shape, A_bag values)
-is identical to `money_delta_20260728.py`. The detector model is new: scattered
-electron kinematics are smeared using 1000 MC events per accepted true `(x, Q²)`
-bin, each weighted by the η-dependent electron-ID efficiency.
+throughout. Physics configuration (Interpretation A, mid_x shape, R1998, EPPS21,
+P_zz = 0.267) is identical to `money_delta_20260728.py`. A_bag is now solved at
+startup from the bag sum rule (c_bag = −0.012, mid_x, Interpretation A) rather
+than hardcoded; the solved |A_bag| values reproduce the previous hardcoded
+magnitudes to within 1% (see §1 A_bag table). The detector model is new:
+scattered electron kinematics are smeared using 1000 MC events per accepted true
+`(x, Q²)` bin, each weighted by the η-dependent electron-ID efficiency.
 
 **Note on the initial run.** The first run of the script produced pathological
 output: 0% of events landing in their original reco bin and peak-rate reco bins
@@ -92,9 +100,22 @@ displaced by factors of 100+ in Q². The bug was a sign-convention error in the
 - Interpretation A: Δ = s · α_s(Q²) · F₁(x, Q²) · x^α (1−x)^β
 - R1998 (σ_L/σ_T ratio), EPPS21 (nuclear PDF), Cloet P_zz = 0.267
 
-### Hardcoded A_bag values (carried from `money_delta_20260724.py`, Interpretation A, mid_x)
+### A_bag values (Interpretation A, mid_x)
 
-| Config | \|A_bag\| |
+At startup, `money_delta_20260729.py` calls `solve_A_from_sum_rule()` for each
+beam configuration and stores the result in `A_BAG_SIGNED`. The solved values are
+**signed and negative** (Δ ∝ c_bag = −0.012 < 0 under Interpretation A). The
+observable pipeline — `smear_config`, `compute_A_cos2phi_at_bin`,
+`build_phi_plot`, `build_perbin_heatmap`, and the summary table — consumes
+`abs(A_BAG_SIGNED[config_tag])`, so downstream plot and sign behavior is
+identical to the previous hardcoded-magnitude convention.
+
+The table below lists the historical hardcoded magnitudes retained in the script
+as `REFERENCE_ABS_A_BAG` for audit and regression-guard purposes only. The
+solver must reproduce these values to within 1%; a larger discrepancy raises a
+`RuntimeError` at startup.
+
+| Config | Historical \|A_bag\| (audit reference) |
 |---|---|
 | LOW | 0.318 |
 | MID | 0.310 |
