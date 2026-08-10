@@ -31,6 +31,7 @@ yes | python3 -m parton install NNPDFpol11_100
 | `kinematics.py` | DIS variables, scattered-electron lab kinematics, acceptance masks |
 | `structure.py` | **TOY** F2 (±40% vs CT18, see validate_inputs) + `PartonF2` grid backend, nuclear builder, NC cross section |
 | `polarized.py` | **TOY** g1 + `PartonG1` (NNPDFpol11); scenario curves: CBT 2× / TMT 1× polarized EMC, HERMES-like vs convolution b1, Δ scenarios |
+| `delta_models.py` | **unified Δ(x,Q²) model registry** — single home for all double-helicity-flip models: `toy`, sum-rule-constrained `moment_A`/`moment_B` (ported from the `money_delta` suite; ∫xΔdx = −0.012·α_s), shape variants, per-nucleon dilution convention (plans/04 #6); every consumer switches by name |
 | `asymmetries.py` | spin-1 master-formula asymmetries (A∥, A_zz, A_cos2φ) + error estimators (toy-MC validated, `tests/test_closure.py`) |
 | `fom.py` | luminosity scenarios → events/bin → δ(observable); Q²-combination helper |
 | `spectator.py` | α+d / α+t cluster momentum densities (S/P-wave), lab boost → (pT, θ, R) |
