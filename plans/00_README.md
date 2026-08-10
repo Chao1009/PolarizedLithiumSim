@@ -48,6 +48,31 @@ brings to the EIC, in support of the ANL polarized ⁶,⁷Li ion-source program
 5. **Calendar anchor**: INT program on polarized ion beams at EIC,
    March 22 – April 2, 2027 — target for Phase-1 money plots.
 
+## Development run 5 addendum (2026-08-10, later): merge + unified Δ models + 1/10-year projections
+
+- ☑ **Merged the parallel `money_delta` line** (TooLate0800/
+  PolarizedLithiumSim, 12 commits, July 2026): moment-constrained Δ
+  ansätze, dated study scripts + notes in `fastsim/`, NumPy-2.0 grid
+  fix. Disjoint from the evgen work; merge commit ffd6e52; all suites
+  pass.
+- ☑ **Unified Δ-model registry** `polli_fastsim/delta_models.py` —
+  single home for every Δ(x,Q²) model behind one (x,q2,f1) interface:
+  `toy`, `moment_A` (Δ = A·α_s·F₁·x^a(1−x)^b, A solved from
+  ∫xΔdx = −0.012·α_s; ported from `money_delta_20260729.py`),
+  `moment_B` (no F₁, analytic Beta solver, the conservative reading);
+  shape variants; explicit per-nucleon `dilution` (plans/04 #6 mapping:
+  their P_zz = 0.267 ≡ our P_zz = 0.8 × dilution 1/3). 7 new tests
+  (22 fastsim total).
+- ☑ **Money plots 5–6 re-cut with the moment constraint and separate
+  1-year (10 fb⁻¹/u) / 10-year (100 fb⁻¹/u) projections**: inclusive
+  amplitudes now (0.7–1.4)×10⁻² at the sweet spots (moment_A, dilution
+  1/3, P_zz 0.6) vs per-bin δA ≈ (1.5–4.5)×10⁻⁴ in year 1 — the
+  A-vs-B interpretation spread (the dominant ansatz systematic) is
+  itself resolvable; coherent tag: N_tag = 1.1×10⁷ (1 yr) / 1.1×10⁸
+  (10 yr), best-bin δA = 1.9×10⁻³ / 6×10⁻⁴.
+- ☑ Top-level README; physics note `docs/note_cos2phi_coherent_6Li.md`
+  (50 verified references); PDF report in `reports/`.
+
 ## Development run 5 (2026-08-10): cos 2φ money plots + coherent channel
 
 - ☑ **Money plots 5–6 — cos 2φ as projected data points** (user request):

@@ -17,12 +17,17 @@ far-forward systems can see; the channel of primary interest keeps the
 Headline numbers (mid energy e10×⁶Li50, L = 100 fb⁻¹/u, P_zz = 0.6,
 scenario inputs):
 
-- **Inclusive:** per-super-bin δA ≈ (0.4–1.2)×10⁻⁴ → the Δ/F₁ = 10⁻³
-  scenario amplitude (≈1.4×10⁻⁴ at the sweet spots) is a 2.5–2.7σ
-  effect per bin in the three low/mid-Q² panels (1.2σ at Q² ≈ 14), 4.6σ
-  combining the four displayed bins, and 9.7σ combining the full
-  accepted (x,Q²) map — consistent with the `money_delta` reach curves
-  (numbers verified by the 2026-08-10 adversarial review).
+- **Inclusive:** with the unified Δ registry
+  (`polli_fastsim/delta_models`, default `moment_A`: sum-rule-
+  constrained, ∫xΔdx = −0.012·α_s, dilution 1/3) the sweet-spot
+  amplitudes are (0.7–1.4)×10⁻² against per-bin δA ≈ (1.5–4.5)×10⁻⁴
+  already at the 1-year program (10 fb⁻¹/u; ÷√10 at 10 years) — the
+  measurement resolves the moment_A-vs-moment_B ansatz spread, not just
+  a null. [Historical toy-model numbers, kept for reference and
+  verified by the 2026-08-10 adversarial review: at Δ/F₁ = 10⁻³ flat
+  scale, per-bin δA (0.4–1.2)×10⁻⁴ at 100 fb⁻¹/u gave 2.5–2.7σ per
+  low/mid-Q² bin, 4.6σ over the four displayed bins, 9.7σ over the
+  full map.]
 - **Coherent:** the intact ⁶Li has exactly beam rigidity (A/Z = 2,
   R = 1.000), so at IP6 it is visible **only** in the Roman-Pot
   near-beam pT tail: acceptance exp(−B·pT_cut²) = **13.5%**

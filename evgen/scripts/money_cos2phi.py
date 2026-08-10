@@ -2,23 +2,27 @@
 """Money plot 5: the cos 2phi gluonometry measurement as projected data.
 
 Left 2x2: phi'-modulation pseudo-data (points with statistical error bars
-at the reference luminosity) in the four sweet-spot (x, Q2) super-bins --
+at the 1-YEAR EIC luminosity) in the four sweet-spot (x, Q2) super-bins --
 the bins with the highest projected cos 2phi significance, spread in
 (x, Q2).  Right: the extracted amplitude vs x along the sweet-spot Q2
-slice, with Delta/F1 scenario curves.
+slice with 1-year AND 10-year error bars and the Delta-model curves.
 
-Detection assumption: scattered electron only (the inclusive gluonometry
-needs no other tag; the Scenario e' acceptance cuts are applied).  The
-companion coherent-channel plot (money_cos2phi_coherent.py) adds the
-intact-6Li far-forward tag.
+The Delta(x, Q2) input comes from the unified model registry
+`polli_fastsim.delta_models` (single home for all Delta models and
+constraints): default `moment_A` -- the sum-rule-constrained ansatz of
+the money_delta suite, Delta = A alpha_s F1 x^a(1-x)^b with A solved
+from int x Delta dx = -0.012 alpha_s (Sather-Schmidt bag moment) --
+with the 6Li per-nucleon dilution 1/3 (plans/04 #6 convention; the
+whole-nucleus P_zz stays a separate factor).  `moment_B` (no F1 factor,
+the conservative reading) and the legacy `toy` shape are one flag away.
 
-Statistics are generated as per-phi-bin Poisson draws from the exact
-expected yields (sample.phi_histogram_pseudo) -- identical to event-level
-sampling for the binned estimator, at any luminosity.  The whole
-luminosity is assigned to the transverse-tensor fill (same convention as
-the analytic FOM maps).
+Detection assumption: scattered electron only (Scenario e' cuts).
+Statistics via per-phi-bin Poisson draws from exact expected yields
+(sample.phi_histogram_pseudo) -- identical to event-level sampling for
+the binned estimator at any luminosity.  The whole luminosity is
+assigned to the transverse-tensor fill (FOM-map convention).
 
-Usage:  python3 scripts/money_cos2phi.py --lumi 100 --scale 1e-2
+Usage:  python3 scripts/money_cos2phi.py --delta-model moment_A
 """
 
 import argparse
@@ -39,13 +43,15 @@ from polligen.estimators import cos2phi_fit_binned  # noqa: E402
 from polligen.sample import InclusiveSampler, phi_histogram_pseudo  # noqa: E402
 from polligen.xsec import InclusiveKernel  # noqa: E402
 
-from polli_fastsim import beams, fom  # noqa: E402
+from polli_fastsim import beams, delta_models as dm, fom  # noqa: E402
 from polli_fastsim.asymmetries import (a_cos2phi,  # noqa: E402
                                        err_cos2phi_amplitude)
 from polli_fastsim.kinematics import kinematic_mask, y_from_xq2  # noqa: E402
-from polli_fastsim.polarized import toy_b1, toy_delta_gluon  # noqa: E402
+from polli_fastsim.polarized import toy_b1  # noqa: E402
+from polli_fastsim.structure import NuclearF2  # noqa: E402
 
-# Okabe-Ito (colorblind-safe): blue = truth, vermillion = fit, green = alt
+# Okabe-Ito (colorblind-safe): blue = injected, vermillion = fit/1-yr,
+# green = alternative interpretation
 C_TRUTH, C_FIT, C_ALT = "#0072B2", "#D55E00", "#009E73"
 
 
@@ -92,44 +98,71 @@ def superbin_mask(sampler, xlo, xhi, q2lo, q2hi):
 
 
 def measure(sampler, cat, mask, lumi_pb, pzz, rng, nbins=24):
-    """One full-luminosity binned pseudo-measurement on a super-bin.
-
-    Returns dict with N, truth amplitude (physics convention, i.e. the
-    P_zz-divided a_cos2phi), extracted amplitude, its error, and the
-    phi histogram (counts, edges)."""
+    """One full-luminosity binned pseudo-measurement on a super-bin."""
     sigma_pb, _a1, a2_eff = sampler.effective_modulation(cat, mask=mask)
     n_exp = lumi_pb * sigma_pb
     counts, edges = phi_histogram_pseudo(n_exp, a2_eff, nbins=nbins, rng=rng)
     amp_hat = cos2phi_fit_binned(counts, edges, pzz)
     return {"n": n_exp, "truth": a2_eff / pzz, "amp": amp_hat,
             "err": err_cos2phi_amplitude(n_exp, pzz),
-            "counts": counts, "edges": edges, "a2_eff": a2_eff}
+            "counts": counts, "edges": edges, "a2_eff": a2_eff,
+            "sigma_pb": sigma_pb}
+
+
+def build_delta_model(args, config, scenario):
+    """Delta model from the unified registry; moment_A needs the
+    rate-weighted <Q2> of the accepted phase space and a per-nucleon
+    F1 handle."""
+    if args.delta_model == "toy":
+        return dm.make("toy", scale=args.scale), None
+    nf2 = NuclearF2(beams.LI6)
+    if args.delta_model == "moment_B":
+        return dm.make("moment_B", variant=args.variant,
+                       dilution=args.dilution), None
+    proj0 = fom.project_rates(config, scenario)
+    acc = proj0.accepted
+    q2_ref = float((proj0.n_events[acc] * proj0.q2[acc]).sum()
+                   / proj0.n_events[acc].sum())
+    model = dm.make(
+        "moment_A", f1_func=lambda x, q2: nf2.f1a(x, q2) / beams.LI6.A,
+        q2_ref=q2_ref, variant=args.variant, dilution=args.dilution)
+    return model, q2_ref
 
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--config", type=int, default=1, choices=(0, 1, 2),
                     help="beam-energy point (default mid, e10 x 6Li50)")
-    ap.add_argument("--lumi", type=float, default=100.0,
-                    help="integrated luminosity [fb^-1/nucleon]")
-    ap.add_argument("--pzz", type=float, default=0.60)
+    ap.add_argument("--delta-model", default="moment_A",
+                    choices=dm.available())
+    ap.add_argument("--variant", default="mid_x",
+                    choices=sorted(dm.VARIANTS))
+    ap.add_argument("--dilution", type=float, default=1.0 / 3.0,
+                    help="6Li per-nucleon dilution folded into Delta "
+                         "(plans/04 #6); P_zz stays whole-nucleus")
     ap.add_argument("--scale", type=float, default=1e-2,
-                    help="Delta/F1 scenario scale generated as truth")
+                    help="peak Delta/F1 (toy model only)")
+    ap.add_argument("--lumi-1yr", type=float, default=10.0,
+                    help="1-year EIC program [fb^-1/nucleon]")
+    ap.add_argument("--lumi-10yr", type=float, default=100.0,
+                    help="10-year EIC program [fb^-1/nucleon]")
+    ap.add_argument("--pzz", type=float, default=0.60)
     ap.add_argument("--nspots", type=int, default=4)
     ap.add_argument("--seed", type=int, default=20260810)
     ap.add_argument("--outdir", default=".")
     args = ap.parse_args()
 
     config = beams.default_configs("6Li")[args.config]
-    lumi_pb = args.lumi * 1e3
+    lumi1_pb = args.lumi_1yr * 1e3
+    lumi10_pb = args.lumi_10yr * 1e3
     rng = np.random.default_rng(args.seed)
 
-    def delta_func(x, q2, f1):
-        return toy_delta_gluon(x, q2, f1, scale=args.scale)
+    scenario = fom.Scenario(lumi_fb_per_nucleon=args.lumi_1yr,
+                            pol_ion_tensor=args.pzz)
+    model, q2_ref = build_delta_model(args, config, scenario)
+    delta_func = model  # DeltaModel is (x, q2, f1)-callable
 
     # --- sweet spots from the analytic significance map -------------------
-    scenario = fom.Scenario(lumi_fb_per_nucleon=args.lumi,
-                            pol_ion_tensor=args.pzz)
     proj = fom.project_rates(config, scenario)
     kern = InclusiveKernel(beams.LI6, b1_func=toy_b1, delta_func=delta_func)
     obs = fom.project_observables(config, scenario, proj,
@@ -150,7 +183,9 @@ def main():
         ax = fig.add_subplot(gs[k // 2, k % 2])
         xlo, xhi, q2lo, q2hi = superbin_edges(proj, i, j)
         mask = superbin_mask(sampler, xlo, xhi, q2lo, q2hi)
-        m = measure(sampler, cat, mask, lumi_pb, plan.pzz_true, rng)
+        m = measure(sampler, cat, mask, lumi1_pb, plan.pzz_true, rng)
+        err10 = err_cos2phi_amplitude(lumi10_pb * m["sigma_pb"],
+                                      plan.pzz_true)
         centers = 0.5 * (m["edges"][:-1] + m["edges"][1:])
         nbar = m["counts"].mean()
         mod = 1e3 * (m["counts"] / nbar - 1.0)
@@ -163,8 +198,6 @@ def main():
         fit_amp = m["amp"] * plan.pzz_true
         ax.plot(phi, 1e3 * fit_amp * np.cos(2 * phi), "--", color=C_FIT,
                 lw=1.4)
-        ax.plot(phi, 1e3 * 0.1 * m["a2_eff"] * np.cos(2 * phi), "-",
-                color="0.55", lw=0.9)
         ax.set_xlim(0, 2 * np.pi)
         ax.set_xticks([0, np.pi, 2 * np.pi])
         ax.set_xticklabels(["0", r"$\pi$", r"$2\pi$"])
@@ -176,27 +209,22 @@ def main():
         ax.axhline(0.0, color="0.85", lw=0.6, zorder=0)
         ax.annotate(
             (r"$x\approx%.3g$, $Q^2\approx%.3g$ GeV$^2$" "\n"
-             r"$N=%.1f\times10^{%d}$;  "
-             r"$\hat A=(%.2f\pm%.2f)\times10^{-3}$")
-            % (xs, qs, m["n"] / 10 ** int(np.log10(m["n"])),
-               int(np.log10(m["n"])), 1e3 * m["amp"], 1e3 * m["err"]),
+             r"$\hat A=(%.2f\pm%.2f)\times10^{-3}$ [1 yr]; "
+             r"$\pm%.2f$ [10 yr]")
+            % (xs, qs, 1e3 * m["amp"], 1e3 * m["err"], 1e3 * err10),
             xy=(0.5, 1.02), xycoords="axes fraction", ha="center",
             fontsize=7.5)
         if k == 0:
-            # direct labels (fixed spots; the modulation shape is common)
-            ax.annotate(r"injected $\Delta/F_1{=}%g$" % args.scale,
+            ax.annotate("injected (%s)" % args.delta_model,
                         xy=(0.03, 0.93), xycoords="axes fraction",
                         color=C_TRUTH, fontsize=7)
             ax.annotate("binned fit", xy=(0.03, 0.84),
                         xycoords="axes fraction", color=C_FIT, fontsize=7)
-            ax.annotate(r"$\Delta/F_1{=}%g$" % (0.1 * args.scale),
-                        xy=(0.60, 0.57), xycoords="axes fraction",
-                        color="0.4", fontsize=7)
         summary.append(
-            "spot %d: x=%.3g Q2=%.3g  N=%.2e  A_truth=%+.2e  "
-            "A_hat=%+.2e +- %.1e  (5sig min amp %.1e)"
+            "spot %d: x=%.3g Q2=%.3g  N_1yr=%.2e  A_truth=%+.2e  "
+            "A_hat=%+.2e +- %.1e (1yr) +- %.1e (10yr)"
             % (k + 1, xs, qs, m["n"], m["truth"], m["amp"], m["err"],
-               5 * m["err"]))
+               err10))
 
     # --- right: amplitude vs x along the sweet-spot Q2 slice --------------
     ax = fig.add_subplot(gs[:, 2])
@@ -207,18 +235,26 @@ def main():
     for i0 in range(0, xe.size - 2, 2):  # merge pairs of x bins
         xc = np.sqrt(xe[i0] * xe[i0 + 2])
         if not kinematic_mask(xc, q2_spot, sampler.s):
-            continue  # keep points on the fixed-Q2 curve's kinematic range
+            continue
         mask = superbin_mask(sampler, xe[i0], xe[i0 + 2], q2lo, q2hi)
         if not mask.any():
             continue
-        m = measure(sampler, cat, mask, lumi_pb, plan.pzz_true, rng)
-        if m["n"] < 1e4 or m["err"] > 8e-3:
+        m = measure(sampler, cat, mask, lumi1_pb, plan.pzz_true, rng)
+        if m["n"] < 1e3 or m["err"] > 8e-3:
             continue
+        m["err10"] = err_cos2phi_amplitude(lumi10_pb * m["sigma_pb"],
+                                           plan.pzz_true)
         pts.append((xc, m))
+    xoff = 1.045  # slight offset so the two series stay legible
     ax.errorbar([p[0] for p in pts], [1e3 * p[1]["amp"] for p in pts],
-                yerr=[1e3 * p[1]["err"] for p in pts], fmt="o",
-                color="black", ms=4, capsize=2, lw=1, zorder=3,
-                label="projected data")
+                yerr=[1e3 * p[1]["err"] for p in pts], fmt="s",
+                mfc="none", color=C_FIT, ms=4, capsize=2, lw=1, zorder=3,
+                label=r"1-year EIC (%g fb$^{-1}$/u)" % args.lumi_1yr)
+    ax.errorbar([p[0] * xoff for p in pts],
+                [1e3 * p[1]["amp"] for p in pts],
+                yerr=[1e3 * p[1]["err10"] for p in pts], fmt="o",
+                color="black", ms=4, capsize=2, lw=1, zorder=4,
+                label=r"10-year EIC (%g fb$^{-1}$/u)" % args.lumi_10yr)
 
     xg = np.logspace(np.log10(2e-4), np.log10(0.8), 250)
     q2g = np.full_like(xg, q2_spot)
@@ -226,15 +262,17 @@ def main():
     f2 = kern.nf2.f2a(xg, q2g) / kern.ion.A
     f1 = kern.nf2.f1a(xg, q2g) / kern.ion.A
     y = y_from_xq2(xg, q2g, sampler.s)
-    for sc, color, ls, lab in (
-            (args.scale, C_TRUTH, "-",
-             r"$\Delta/F_1=%g$ (injected)" % args.scale),
-            (args.scale * 0.3, C_ALT, "-",
-             r"$\Delta/F_1=%g$" % (0.3 * args.scale)),
-            (args.scale * 0.1, "0.45", "--",
-             r"$\Delta/F_1=%g$" % (0.1 * args.scale))):
-        amp = a_cos2phi(toy_delta_gluon(xg, q2g, f1, scale=sc),
-                        f1, f2, xg, y)
+    curves = [(delta_func, C_TRUTH, "-",
+               "%s (injected)" % args.delta_model)]
+    if args.delta_model != "moment_B":
+        alt = dm.make("moment_B", variant=args.variant,
+                      dilution=args.dilution)
+        curves.append((alt, C_ALT, "-", "moment_B (conservative)"))
+    if args.delta_model != "toy":
+        curves.append((dm.make("toy", scale=1e-3), "0.45", "--",
+                       r"toy, $\Delta/F_1=10^{-3}$"))
+    for dfunc, color, ls, lab in curves:
+        amp = a_cos2phi(dfunc(xg, q2g, f1), f1, f2, xg, y)
         ax.plot(xg[ok], 1e3 * amp[ok], ls, color=color, lw=1.5, label=lab)
     ax.set_xscale("log")
     ax.set_xlabel(r"$x$")
@@ -243,20 +281,23 @@ def main():
     ax.tick_params(labelsize=8)
     ax.set_title(r"amplitude vs $x$,  $Q^2\approx%.3g$ GeV$^2$" % q2_spot,
                  fontsize=9)
-    ax.legend(fontsize=7, loc="lower left")
+    ax.legend(fontsize=7, loc="upper left")
 
     fig.suptitle(
         r"Nuclear gluonometry, transversely tensor-polarized $^6$Li, "
-        "%s\n"
-        r"pseudo-data at $L=%g$ fb$^{-1}$/u, $P_{zz}=%.2f$ "
-        "(all luminosity in the transverse fill; TOY/scenario inputs)"
-        % (config.label(), args.lumi, plan.pzz_true), fontsize=10)
+        r"%s, $P_{zz}=%.2f$""\n"
+        r"$\Delta$: %s;  $\phi'$ panels at 1 year (%g fb$^{-1}$/u), "
+        "amplitudes for 1 and 10 years"
+        % (config.label(), plan.pzz_true, model.info(), args.lumi_1yr),
+        fontsize=10)
     fig.subplots_adjust(top=0.86, bottom=0.09, left=0.06, right=0.985)
     outdir = pathlib.Path(args.outdir)
     outdir.mkdir(parents=True, exist_ok=True)
     out = outdir / "money_cos2phi_6Li.png"
     fig.savefig(out, dpi=140)
     print("wrote", out)
+    print("delta model:", model.info(),
+          "" if q2_ref is None else "(<Q2> = %.3g GeV^2)" % q2_ref)
     for line in summary:
         print(line)
 

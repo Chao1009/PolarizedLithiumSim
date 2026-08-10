@@ -66,8 +66,10 @@ def best_superbin(proj, n_tag, pad=1):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--config", type=int, default=1, choices=(0, 1, 2))
-    ap.add_argument("--lumi", type=float, default=100.0,
-                    help="integrated luminosity [fb^-1/nucleon]")
+    ap.add_argument("--lumi-1yr", type=float, default=10.0,
+                    help="1-year EIC program [fb^-1/nucleon]")
+    ap.add_argument("--lumi-10yr", type=float, default=100.0,
+                    help="10-year EIC program [fb^-1/nucleon]")
     ap.add_argument("--pzz", type=float, default=0.60)
     ap.add_argument("--eps-b0", type=float, default=-0.08,
                     help="m=0 relative slope modulation of 6Li "
@@ -82,8 +84,9 @@ def main():
     config = beams.default_configs("6Li")[args.config]
     rng = np.random.default_rng(args.seed)
     sc = coh.CoherentScenario(amp=args.amp, eps_b0=args.eps_b0)
-    scenario = fom.Scenario(lumi_fb_per_nucleon=args.lumi,
+    scenario = fom.Scenario(lumi_fb_per_nucleon=args.lumi_1yr,
                             pol_ion_tensor=args.pzz)
+    lumi_ratio = args.lumi_10yr / args.lumi_1yr
     proj, n_coh, tagged = coh.project_coherent(
         config, scenario, sc, optics_list=(HIGH_ACCEPTANCE, HIGH_DIVERGENCE))
     n_tag = tagged[HIGH_ACCEPTANCE.name]
@@ -163,9 +166,11 @@ def main():
     y_tag = n_tag.sum(axis=1)
     ok = y_coh > 0
     ax3.plot(xc[ok], y_coh[ok], "--", color=C_ALT, lw=1.4,
-             label="coherent, produced")
+             label="coherent, produced (1 yr)")
     ax3.plot(xc[ok], np.maximum(y_tag[ok], 1e-1), "-", color=C_TRUTH,
-             lw=1.8, label="RP-tagged (high-acc.)")
+             lw=1.8, label="RP-tagged, 1 yr")
+    ax3.plot(xc[ok], np.maximum(lumi_ratio * y_tag[ok], 1e-1), "-.",
+             color="black", lw=1.2, label="RP-tagged, 10 yr")
     for f0 in (0.02, 0.08):
         sc_b = coh.CoherentScenario(f0=f0)
         _, nb, tb = coh.project_coherent(
@@ -178,9 +183,10 @@ def main():
     ax3.set_ylim(1e2, None)
     ax3.set_xlabel(r"$x$")
     ax3.set_ylabel(r"events per $x$ bin ($Q^2$ summed)")
-    ax3.set_title(r"coherent yield at $L=%g$ fb$^{-1}$/u"
-                  % args.lumi, fontsize=9)
-    ax3.annotate(r"$N_{\rm tag}^{\rm tot} = %.2g$" % y_tag.sum(),
+    ax3.set_title(r"coherent yield: 1-year (%g) / 10-year (%g fb$^{-1}$/u)"
+                  % (args.lumi_1yr, args.lumi_10yr), fontsize=9)
+    ax3.annotate(r"$N_{\rm tag}^{\rm tot}$ = %.2g (1 yr), %.2g (10 yr)"
+                 % (y_tag.sum(), lumi_ratio * y_tag.sum()),
                  xy=(0.05, 0.08), xycoords="axes fraction", fontsize=8)
     ax3.legend(fontsize=7, loc="upper right")
     ax3.tick_params(labelsize=8)
@@ -195,6 +201,7 @@ def main():
     counts, edges = phi_histogram_pseudo(n_bin, a2_def, nbins=24, rng=rng)
     amp_hat = cos2phi_fit_binned(counts, edges, args.pzz)
     err = err_cos2phi_amplitude(n_bin, args.pzz)
+    err10 = err_cos2phi_amplitude(lumi_ratio * n_bin, args.pzz)
     centers = 0.5 * (edges[:-1] + edges[1:])
     nbar = counts.mean()
     ax4.errorbar(centers, counts / nbar,
@@ -221,11 +228,12 @@ def main():
     ax4.set_xlabel(r"$\phi' = \phi - \phi_S$", fontsize=9)
     ax4.set_ylabel(r"$N(\phi')/\langle N\rangle$", fontsize=9)
     ax4.set_title(
-        (r"tagged sample, $x\in[%.2g, %.2g]$, $Q^2\in[%.2g, %.2g]$" "\n"
-         r"$N=%.2g$;  $\hat A=(%.1f\pm%.1f)\times10^{-3}$;  "
-         r"$5\sigma$ floor $%.1f\times10^{-3}$")
+        (r"tagged sample (1 yr), $x\in[%.2g, %.2g]$, "
+         r"$Q^2\in[%.2g, %.2g]$, $N=%.2g$" "\n"
+         r"$\hat A=(%.1f\pm%.1f)\times10^{-3}$ [1 yr]; $\pm%.1f$ [10 yr];"
+         r"  $5\sigma$ floors $%.1f/%.1f\times10^{-3}$")
         % (xlo, xhi, q2lo, q2hi, n_bin, 1e3 * amp_hat, 1e3 * err,
-           5e3 * err), fontsize=8)
+           1e3 * err10, 5e3 * err, 5e3 * err10), fontsize=8)
     ax4.tick_params(labelsize=8)
     ax4.axhline(1.0, color="0.85", lw=0.6, zorder=0)
 
@@ -244,8 +252,9 @@ def main():
     print("coherent produced: %.3g   RP-tagged (HA): %.3g   (HD): %.3g"
           % (n_coh.sum(), n_tag.sum(),
              tagged[HIGH_DIVERGENCE.name].sum()))
-    print("best super-bin: x [%.3g, %.3g], Q2 [%.3g, %.3g], N=%.3g" % (
+    print("best super-bin: x [%.3g, %.3g], Q2 [%.3g, %.3g], N_1yr=%.3g" % (
         xlo, xhi, q2lo, q2hi, n_bin))
+    print("dA: %.4f (1 yr) / %.4f (10 yr)" % (err, err10))
     print("deformation <a2>_tag = %.4f (band %.4f..%.4f); "
           "gluonic scenario %.4f" % (
               a2_def, a2_def_band[0], a2_def_band[1],

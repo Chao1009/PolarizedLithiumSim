@@ -37,9 +37,16 @@ python3 scripts/money_cos2phi_coherent.py --lumi 100      # money plot 6
 `money_cos2phi.py`: inclusive gluonometry pseudo-data (φ′ modulation
 with statistical error bars) in the four sweet-spot (x, Q²) super-bins,
 picked per Q² band from the significance map, plus amplitude-vs-x with
-Δ/F₁ scenario curves. Full-luminosity statistics via per-φ-bin Poisson
-draws (`sample.phi_histogram_pseudo` — exact for binned estimators).
-At 100 fb⁻¹/u, P_zz = 0.6 (mid energy): per-bin δA ≈ (0.4–1.2)×10⁻⁴.
+1-year AND 10-year error bars. The Δ(x,Q²) input comes from the unified
+registry `polli_fastsim.delta_models` (default `moment_A`: the
+sum-rule-constrained ansatz of the merged money_delta suite,
+∫xΔdx = −0.012·α_s, with the ⁶Li per-nucleon dilution 1/3;
+`moment_B`/`toy` one flag away). Full-luminosity statistics via
+per-φ-bin Poisson draws (`sample.phi_histogram_pseudo` — exact for
+binned estimators). At P_zz = 0.6 (mid energy) the moment-constrained
+amplitudes are (0.7–1.4)×10⁻² at the sweet spots with per-bin
+δA ≈ (1.5–4.5)×10⁻⁴ already in year 1 (10 fb⁻¹/u) — the
+measurement discriminates interpretation A vs B, not just zero.
 
 `money_cos2phi_coherent.py`: the coherent channel e⁶Li → e′X ⁶Li(g.s.)
 with the intact recoil tagged in the Roman-Pot near-beam pT tail

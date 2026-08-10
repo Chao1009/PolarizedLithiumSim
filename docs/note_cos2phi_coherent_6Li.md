@@ -54,26 +54,37 @@ drawn from exact expected yields, so any luminosity is exact for the
 binned estimator; the whole luminosity is assigned to the transverse
 tensor fill; scattered-electron acceptance cuts applied.
 
-Setup: mid energy e(10 GeV) × ⁶Li(50 GeV/u), L = 100 fb⁻¹/u,
-P_zz = 0.60 (in-ring placeholder). Sweet-spot (x, Q²) super-bins are
-chosen per Q² band from the analytic significance map: Q² = 1.1 → 14
-GeV² at x ≈ 0.02–0.06.
+Setup: mid energy e(10 GeV) × ⁶Li(50 GeV/u), P_zz = 0.60 (in-ring
+placeholder); projections quoted separately for the 1-year (10 fb⁻¹/u)
+and 10-year (100 fb⁻¹/u) EIC programs. The Δ(x,Q²) input comes from the
+**unified model registry** `polli_fastsim/delta_models.py` — the single
+home for all Δ models and constraints, every consumer switching by
+name. Default: `moment_A`, the sum-rule-constrained ansatz of the
+merged money_delta suite, Δ = A·α_s(Q²)·F₁·x^a(1−x)^b with A solved
+from the bag-model moment ∫x Δ dx = −0.012·α_s (Sather–Schmidt), times
+the ⁶Li per-nucleon dilution 1/3 (Cloët convention; the whole-nucleus
+P_zz is a separate factor — plans/04 #6). `moment_B` (no F₁ factor,
+conservative; factor ~2–8 below A) and the legacy `toy` shape are one
+flag away. Sweet-spot super-bins per Q² band: Q² = 1.1 → 14 GeV² at
+x ≈ 0.02–0.14.
 
-Results (also verified independently by an adversarial review pass):
+Results (moment_A, mid_x variant, solved A = −0.294 at ⟨Q²⟩ = 3.9 GeV²):
 
-| super-bin (x, Q²) | N at 100 fb⁻¹/u | δA (stat) |
-|---|---|---|
-| 0.056, 1.14 GeV² | 1.8×10⁹ | 5.6×10⁻⁵ |
-| 0.022, 1.14 GeV² | 2.6×10⁹ | 4.6×10⁻⁵ |
-| 0.056, 3.1 GeV²  | 1.7×10⁹ | 5.8×10⁻⁵ |
-| 0.056, 14.3 GeV² | 3.7×10⁸ | 1.2×10⁻⁴ |
+| super-bin (x, Q²) | amplitude | δA, 1 yr | δA, 10 yr |
+|---|---|---|---|
+| 0.056, 1.14 GeV² | +1.2×10⁻² | 1.8×10⁻⁴ | 5.6×10⁻⁵ |
+| 0.022, 1.14 GeV² | +0.7×10⁻² | 1.5×10⁻⁴ | 4.6×10⁻⁵ |
+| 0.14, 3.1 GeV²   | +1.4×10⁻² | 2.5×10⁻⁴ | 8.0×10⁻⁵ |
+| 0.14, 14.3 GeV²  | +1.1×10⁻² | 4.5×10⁻⁴ | 1.4×10⁻⁴ |
 
-At the pessimistic Δ/F₁ = 10⁻³ (amplitude ≈ 1.4×10⁻⁴ at the sweet
-spots) this is 2.5–2.7σ per low/mid-Q² bin, 4.6σ combining the four
-displayed bins, and 9.7σ combining the full accepted (x,Q²) map —
-consistent with the `money_delta` reach curves. The Q² lever arm across
-the panels is the built-in consistency check against power-suppressed
-(non-partonic) contributions (§6).
+Under the moment constraint the measurement is no longer a null test:
+every sweet-spot bin is a > 25σ effect in year 1, and the
+moment_A-vs-moment_B spread — the dominant ansatz systematic (their
+notes: factor 2–8 in reach) — is itself resolved by the amplitude-vs-x
+shape. (Historical flat-toy numbers at Δ/F₁ = 10⁻³, verified by the
+adversarial review: 2.5–2.7σ per bin, 9.7σ full-map at 100 fb⁻¹/u.)
+The Q² lever arm across the panels remains the built-in consistency
+check against power-suppressed (non-partonic) contributions (§6).
 
 ## 3. Money plot 6 — the coherent intact-⁶Li channel
 
@@ -98,9 +109,11 @@ the Roman-Pot near-beam pT tail above the 10σ beam-envelope cut [7,8]:
 **Rates** (scenario coherent fraction f₀ = 0.04 of DIS at x → 0, ×2÷2
 band; coherence falloff x_coh = 0.01; slope B = 50 GeV⁻² from the
 matter radius, exponential valid below the ⁶Li form-factor minimum at
-|t| ≈ 0.31 GeV² [11,12]): ~8×10⁸ coherent events produced, ~1.1×10⁸
-RP-tagged at 100 fb⁻¹/u. Best super-bin (x ≈ 0.002, Q² ≈ 1.3 GeV²):
-N = 1.5×10⁷ → δA = 6×10⁻⁴, a 5σ floor at a 0.3% modulation amplitude.
+|t| ≈ 0.31 GeV² [11,12]): ~1.1×10⁷ RP-tagged events in year 1
+(10 fb⁻¹/u), ~1.1×10⁸ over the 10-year program. Best super-bin
+(x ≈ 0.002, Q² ≈ 1.3 GeV²): δA = 1.9×10⁻³ (1 yr) / 6×10⁻⁴ (10 yr),
+i.e. 5σ floors at 1.0% / 0.3% modulation amplitudes — both below the
+deformation-anchored signal of §4.
 
 ## 4. Anchoring the modulation amplitude
 
