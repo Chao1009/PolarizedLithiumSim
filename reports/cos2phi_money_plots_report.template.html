@@ -197,7 +197,7 @@
 
   <div class="stats">
     <div class="stat"><div class="v">13.5%</div><div class="l">coherent-tag acceptance at IP6, high-acceptance optics (exp(−B·p²_T,cut); 9–20% for B ∈ 40–60 GeV⁻²). High-divergence: 4×10⁻⁵ — the coherent program fixes the optics choice.</div></div>
-    <div class="stat"><div class="v">1.1×10⁸</div><div class="l">tagged coherent events at 100 fb⁻¹/u (scenario coherent fraction f₀ = 0.04); best bin δA = 6×10⁻⁴ → 5σ floor at a 0.3% modulation</div></div>
+    <div class="stat"><div class="v">1.1×10⁷ / 10⁸</div><div class="l">tagged coherent events in the 1-year / 10-year programs (scenario f₀ = 0.04); best-bin δA = 1.9×10⁻³ / 6×10⁻⁴ → 5σ floors at 1.0% / 0.3% modulations</div></div>
     <div class="stat"><div class="v">0.036</div><div class="l">deformation-anchored ⟨a₂⟩ of the tagged sample at P_zz = 0.6 [band 0.018–0.059], scaled from the polarized-deuteron CGC calculation [13] — sign flip vs the deuteron predicted</div></div>
   </div>
 
@@ -264,18 +264,33 @@ a_m = ¼ c_m (3cos²θ_m − 1),   c_m = 3|λ_m| − 2 → (1, −2, 1)</div>
   scattered-electron acceptance cuts (|η| ≤ 3.5, E′ ≥ 0.5 GeV, 0.01 ≤ y ≤ 0.95, W² ≥ 10 GeV²)
   applied in the rate maps; the whole luminosity is assigned to the transverse-tensor fill —
   the same convention as the analytic FOM maps (a run-plan split would scale N down
-  proportionally).</p>
+  proportionally). Projections are quoted separately for the <b>1-year (10 fb⁻¹/u) and
+  10-year (100 fb⁻¹/u) EIC programs</b>.</p>
+
+  <p><b>One home for the Δ model.</b> All Δ(x,Q²) models live in a unified registry,
+  <code>polli_fastsim/delta_models.py</code>, behind the single (x, Q², F₁) interface every
+  kernel consumes — new constraints and models land in one file and every consumer switches by
+  name. The production default is <code>moment_A</code>, the sum-rule-constrained ansatz of the
+  merged money_delta study line: Δ = A·α_s(Q²)·F₁·x^a(1−x)^b with A solved so that
+  ∫x Δ dx = −0.012·α_s (the Sather–Schmidt bag moment [4]; solved A = −0.294 at
+  ⟨Q²⟩ = 3.9 GeV², matching the money_delta EPPS21 value −0.31), times the ⁶Li per-nucleon
+  dilution 1/3 — the Cloët convention, kept separate from the whole-nucleus P_zz so the two
+  never double-count. <code>moment_B</code> (no F₁ factor; the conservative reading, a factor
+  ~2–8 below A) and the legacy <code>toy</code> shape are one flag away; the A-vs-B spread is
+  the dominant ansatz systematic, and the amplitude-vs-x panel shows both — under the moment
+  constraint the measurement <i>resolves the interpretation</i>, not just a null.</p>
 
   <figure>
     <div class="panel"><img src="data:image/png;base64,__M5__" alt="Money plot 5"></div>
-    <figcaption><b>Money plot 5 — inclusive gluonometry</b> (e10 × ⁶Li50, L = 100 fb⁻¹/u,
-    P_zz = 0.60, generated at Δ/F₁ = 10⁻²). Left 2×2: φ′-modulation pseudo-data with
-    statistical error bars in the four sweet-spot super-bins (Q² = 1.1 → 14 GeV², x ≈
-    0.02–0.06); injected curve (blue), binned fit (vermillion), Δ/F₁ = 10⁻³ scenario (gray).
-    Right: extracted amplitude vs x along the best Q² slice with three scenario curves.
-    Per-bin δA = (0.4–1.2)×10⁻⁴; at Δ/F₁ = 10⁻³ this is 2.5–2.7σ per low/mid-Q² bin, 4.6σ
-    for the four bins shown, 9.7σ combining the full accepted map (numbers independently
-    reproduced by the adversarial review). Detection needs only the scattered electron.</figcaption>
+    <figcaption><b>Money plot 5 — inclusive gluonometry</b> (e10 × ⁶Li50, P_zz = 0.60,
+    Δ model: moment_A, dilution 1/3). Left 2×2: φ′-modulation pseudo-data with statistical
+    error bars at the <b>1-year program</b> (10 fb⁻¹/u) in the four sweet-spot super-bins
+    (Q² = 1.1 → 14 GeV², x ≈ 0.02–0.14); injected curve (blue), binned fit (vermillion);
+    per-panel annotations give δA for both programs. Right: extracted amplitude vs x with
+    1-year (open) and 10-year (filled) error bars against the moment_A (blue), moment_B
+    (green), and toy-10⁻³ (gray) curves. Amplitudes are (0.7–1.4)×10⁻² at the sweet spots
+    against δA = (1.5–4.5)×10⁻⁴ in year 1 — every bin > 25σ, so the A-vs-B ansatz spread is
+    resolved by the x-shape. Detection needs only the scattered electron.</figcaption>
   </figure>
 
   <h2>3 · The coherent channel: model choices and the anchored amplitude</h2>
@@ -298,7 +313,8 @@ a_m = ¼ c_m (3cos²θ_m − 1),   c_m = 3|λ_m| − 2 → (1, −2, 1)</div>
   from B = ⟨r²⟩/3 with the matter radius (charge radius gives ≈57 [47]; the gluonic B may sit
   higher [42]), exponential valid below the form-factor minimum at |t| ≈ 0.31 GeV² [11,12].
   Writing f_coh against Bjorken x (not x_P) is optimistic for high-mass diffraction; the f₀
-  band covers it.</p>
+  band covers it. Tagged yields: 1.1×10⁷ events in year 1 (10 fb⁻¹/u), 1.1×10⁸ over ten
+  years; best super-bin δA = 1.9×10⁻³ / 6×10⁻⁴ (1 yr / 10 yr).</p>
 
   <p><b>The amplitude is anchored, not guessed.</b> The polarized-deuteron CGC calculation of
   Mäntysaari, Salazar, Schenke, Shen, and Zhao [13] is the <i>only</i> published calculation of
@@ -341,9 +357,10 @@ a_m = ¼ c_m (3cos²θ_m − 1),   c_m = 3|λ_m| − 2 → (1, −2, 1)</div>
     P_zz = 0.60). Top left: recoil t-spectrum vs both optics' p<sub>T</sub> cuts with the
     slope band. Top right: the amplitude anchor — digitized deuteron a₂ per m-state [13] vs
     the scaled ⁶Li ensemble band (sign flip predicted); tagged window and C₀-zero exclusion
-    marked. Bottom left: tagged yield vs x at 100 fb⁻¹/u with the f₀ band (N_tag ≈ 1.1×10⁸).
-    Bottom right: φ′ pseudo-data at the deformation-anchored ⟨a₂⟩ = 0.036 with the flat
-    gluon-transversity scenario (gray); best-bin extraction Â ± 0.6×10⁻³.</figcaption>
+    marked. Bottom left: tagged yield vs x for the 1-year and 10-year programs with the f₀
+    band (N_tag ≈ 1.1×10⁷ / 1.1×10⁸). Bottom right: φ′ pseudo-data (1-year statistics) at
+    the deformation-anchored ⟨a₂⟩ = 0.036 with the flat gluon-transversity scenario (gray);
+    extraction Â ± 1.9×10⁻³ (1 yr), ± 0.6×10⁻³ (10 yr).</figcaption>
   </figure>
 
   <h2>4 · Backgrounds for the coherent tag (summary — full budget in plans/06)</h2>
@@ -517,10 +534,12 @@ a_m = ¼ c_m (3cos²θ_m − 1),   c_m = 3|λ_m| − 2 → (1, −2, 1)</div>
   </div>
 
   <div class="foot">
-    Generated from the working tree of the PolarizedLithiumSim repository (development run 5,
-    2026-08-10): <code>evgen/scripts/money_cos2phi.py</code>,
-    <code>evgen/scripts/money_cos2phi_coherent.py</code>, model in
-    <code>evgen/polligen/coherent.py</code>; 66 tests pass. All rates use TOY/scenario inputs —
+    Generated from the PolarizedLithiumSim repository (development run 5, 2026-08-10):
+    <code>evgen/scripts/money_cos2phi.py</code>,
+    <code>evgen/scripts/money_cos2phi_coherent.py</code>, models in
+    <code>polli_fastsim/delta_models.py</code> (unified Δ registry) and
+    <code>evgen/polligen/coherent.py</code>; 66 + 22 tests pass, including the merged
+    money_delta study line. All rates use TOY/scenario inputs —
     bands, not predictions. External numbers verified against primary sources in three research
     sweeps (nuclear data: TUNL; detector: EIC YR + ePIC documents; theory: original papers);
     citation metadata individually verified against arXiv/INSPIRE. Target venue: INT program on
