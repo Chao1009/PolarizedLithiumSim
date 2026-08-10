@@ -30,7 +30,13 @@ scenario inputs):
   and **4×10⁻⁵ with high-divergence optics: the coherent program
   fixes the optics choice**. Scenario rates give ~10⁸ tagged events at
   100 fb⁻¹/u; the best super-bin (x ≈ 0.002, Q² ≈ 1.3) reaches
-  δA ≈ 6×10⁻⁴, i.e. a 5σ floor at a 0.3% modulation amplitude.
+  δA ≈ 6×10⁻⁴, i.e. a 5σ floor at a 0.3% modulation amplitude. The
+  modulation itself is now *anchored* (second sweep, §6.4b): the
+  deformation term scaled from the polarized-deuteron CGC calculation
+  gives ⟨a₂⟩_tag ≈ 0.036 [0.018–0.059] at P_zz = 0.6 with a predicted
+  sign flip vs the deuteron; the gluon-transversity term sits at
+  3×10⁻³–10⁻² — both ≥ 5σ above the statistical floor, so the
+  measurement becomes a two-component a₂(t) decomposition.
 
 Everything below is the requested background think-through, ordered by
 how dangerous the background is to the coherent tag.
@@ -264,7 +270,69 @@ subtraction with wrong-sign tracks / positron running). For the
 | coherent fraction f₀ (x→0) | 0.04 | 0.02–0.08 | **no light-A prediction exists** (lightest published is Ca); band brackets the HERA ep diffractive fraction (10–15% of DIS, of which coherent-elastic is part) and heavy-A saturation estimates (20–25%); replace via #18 |
 | coherence falloff x_coh | 0.01 | l_c = 0.105 fm/x_P vs R–2R ≈ 2.4–5 fm → bare bound x_P ≲ 0.04; EIC practice x_P < 0.01 | diffractive model, #18 |
 | slope B | 50 GeV⁻² | 40–60 | B = ⟨r²⟩/3: matter radius 2.32–2.45 fm → 45–51; charge radius 2.589(39) fm → ≈57; STAR d+Au found the *gluon* distribution wider than charge, so the gluonic B may sit high. Exponential valid below the first FF minimum, \|t\| ≈ 0.31 GeV² (q² = 8 fm⁻²) |
-| modulation amp (P_zz = 1) | 0.02 | 10⁻³ (Sather–Schmidt-scale) … few×10⁻² (max Δ_T g = Δg, Kumano–Song-style; flagged overestimate) | scenario until #18; best-bin 5σ floor 0.003 at 100 fb⁻¹/u — the pessimistic 10⁻³ needs bin combination (~×3) and/or IR-8 acceptance |
+| modulation, deformation term ε_B0 | −0.08 | −0.04 … −0.13 | scaled from the polarized-d CGC calculation (§6.4b); a₂(t) = −(P_zz/4)·ε_B0·B·\|t\|, i.e. ⟨a₂⟩_tag ≈ 0.036 [0.018–0.059] at P_zz = 0.6 |
+| modulation, gluon-transversity term (flat, P_zz = 1) | 0.01 | 3×10⁻³ … 10⁻² | lattice φ-meson transversity ÷ NPLQCD nuclear suppression; Kumano–Song few-% only at max Δ_T g (§6.4b); best-bin 5σ floor 0.003 at 100 fb⁻¹/u |
+
+## 6.4b Literature anchors for the modulation (second research sweep, 2026-08-10)
+
+The question "are there estimates like Mäntysaari et al. 2408.13213 we
+can use?" has a sharp answer: **that paper is the only small-x
+calculation of polarization-dependent azimuthal coefficients in coherent
+diffraction on any polarized nucleus** — all 8 forward citations were
+checked; none extends it to A > 2, and the group's own follow-ups are
+unpolarized. So we anchored by scaling, and digitized their figures from
+the arXiv source (now in `coherent.MANTYSAARI_A2_DEUTERON`):
+
+- **The deuteron anchor** (PLB 858:139053; coherent J/ψ, x_P = 1.7×10⁻³,
+  transverse polarization): a₂(m=0) = +0.08/+0.15/+0.30/+0.43 at
+  \|t\| = 0.05/0.1/0.2/0.3 GeV², with a₂(m=±1) ≈ −a₂(m=0)/2 — a factor-2
+  cross-section difference between m-states at \|t\| = 0.1 for full
+  alignment. Mechanism: the D-wave-deformed (6% P_D) gluon density
+  modulates the diffractive slope, a₂ ≈ (ΔB_m/2)·\|t\| with
+  ΔB₀/B ≈ 0.21. Ensemble relation: a₂ ∝ P_zz (exact cancellation for an
+  unpolarized fill). Two more transferable facts: only even harmonics
+  appear; and the incoherent (breakup) cross section is
+  **m-state-blind**, so incoherent contamination dilutes but does not
+  fake the modulation — one more reason the tagged-coherent selection is
+  the right one.
+- **⁶Li scaling, two dials that disagree usefully**: relative quadrupole
+  deformation Q/⟨r²⟩ is 5× smaller than the deuteron's (and opposite in
+  sign); the α–d asymptotic D/S ratio η = −0.010…−0.015 vs
+  η_d = +0.0256 suggests 0.4–0.6×. Hence ε_B0(⁶Li) ∈ −(0.04–0.13) with
+  a **predicted sign flip relative to the deuteron** — itself a testable
+  wave-function statement. The Wiringa–Schiavilla VMC result (even exact
+  few-body theory misses the ⁶Li quadrupole cancellation by ~3×) is why
+  the band stays wide, and why the *gluonic* deformation need not cancel
+  like the charge one — measuring it is the physics.
+- **Existence proofs at our exact \|t\|**: elastic e-d T₂₀ is measured
+  at −(0.1–0.3) for Q² = 0.04–0.3 GeV² (monopole–quadrupole
+  interference); HERMES measured A_zz(d) ≈ −1×10⁻² at x ≈ 0.01, the
+  low-x rise being coherent-double-scattering in origin
+  (Nikolaev–Schäfer predicted the ~1% shadowing-driven tensor scale) —
+  the same diffractive physics as our channel. The only
+  coherent-exclusive tensor bound is HERMES A_Lzz < 0.2 — everything
+  below is unexplored.
+- **Gluonic term**: lattice gives near-maximal gluon transversity in the
+  compact φ meson but a ~10× smaller transversity/unpolarized ratio in
+  the deuteron (NPLQCD) → flat scenario 3×10⁻³–10⁻² at P_zz = 1,
+  corroborated by Kumano–Song pd Drell-Yan (few % only for Δ_T g = Δg).
+- **The analysis strategy this buys**: the two mechanisms separate by
+  *shape* — deformation is t-linear, sign-flipped vs the deuteron, and
+  should weaken toward small x_P (JIMWLK washes out deformation,
+  arXiv:2411.14934); gluon transversity is flat-ish in t and survives at
+  small x. A two-component fit a₂(t) = c_def·\|t\| + a_g over the tagged
+  window, repeated in x_P bins, is the measurement — and both components
+  are individually ≥ 5σ against the 3×10⁻⁴-level per-bin statistical
+  floor at 100 fb⁻¹/u. Validity limit: quote for \|t\| < 0.2 GeV²; the
+  C₀ zero at ≈ 0.31 GeV² locally enhances and sign-flips a₂ (the
+  deuteron analog of 2408.13213's dip region) — flagged, not modeled.
+- **Realism checks**: solid-target programs reach P_zz ≈ 0.5–0.7 (JLab
+  Hall D tensor-deuteron, arXiv:2504.21177); ABS-type Li sources have
+  demonstrated ~95% of maximal tensor polarization, so the in-ring 0.6
+  default stands. The eSTARlight IR-8 study's intact-recoil efficiencies
+  (d 47%, ³He 32%, ⁴He 29%, ⁷Li 17.8%) interpolate to ≈ 20% for ⁶Li at
+  IR-8 — versus our 13.5% RP pT-tail estimate at IP6, an independent
+  cross-check of the tagging scale.
 
 **New open questions for plans/04**: **#18** a coherent diffractive
 model for (tensor-polarized) ⁶Li — engage the small-x/diffraction

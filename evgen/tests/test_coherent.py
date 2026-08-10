@@ -56,6 +56,28 @@ def test_tag_acceptance_sampled_through_router():
     assert acc_hd < 1e-3  # exp(-50 * 0.45^2) ~ 4e-5
 
 
+def test_a2_deformation_scaling():
+    sc = coh.CoherentScenario(slope_b=50.0, eps_b0=-0.08)
+    # linear in |t| and in pzz; sign: eps_b0 < 0 (6Li) with pzz > 0 -> +
+    a = sc.a2_deformation(0.1, 0.6)
+    assert a == pytest.approx(0.6 / 4.0 * 0.08 * 50.0 * 0.1)
+    assert a > 0
+    assert sc.a2_deformation(0.2, 0.6) == pytest.approx(2 * a)
+    assert sc.a2_deformation(0.1, 0.0) == 0.0
+    # tagged mean uses <|t|> = cut^2 + 1/B exactly (linear regime)
+    cut = HIGH_ACCEPTANCE.pt_cut_near_beam
+    assert sc.a2_tagged(cut, 0.6) == pytest.approx(
+        float(sc.a2_deformation(sc.mean_t_tagged(cut), 0.6)))
+
+
+def test_mantysaari_table_m_state_relation():
+    # wave-function symmetry: a_2(0) ~ -2 a_2(+-1) in the linear regime
+    for t, (a0, a1) in coh.MANTYSAARI_A2_DEUTERON.items():
+        if t <= 0.2:
+            assert a0 == pytest.approx(-2.0 * a1, rel=0.25)
+        assert a0 * a1 < 0  # opposite signs at all tabulated |t|
+
+
 def test_recoil_stays_in_near_beam_band():
     lab = coh.recoil_lab(np.array([0.01, 0.05, 0.2]), 0.0, 100.0,
                          x_pom=0.01)

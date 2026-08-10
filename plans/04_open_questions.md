@@ -106,12 +106,18 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
 18. **Coherent diffractive model for (tensor-polarized) ⁶Li** — no
     light-nucleus coherent-fraction prediction exists (lightest
     published is Ca); the tensor cos 2φ of the coherent yield has no
-    calculation at all. Template: Mäntysaari et al. arXiv:2408.13213
-    (polarized-deuteron coherent VM imaging); the ⁶Li case is a clean
-    null test (Q(⁶Li) = −0.0806 fm²). *Engage:* small-x/diffraction
-    theory community. *Default:* `polligen/coherent.CoherentScenario`
-    bands (f₀ = 0.04 ×2÷2, B = 50 ± 10 GeV⁻², amp scenario
-    10⁻³–few×10⁻²) — plans/06.
+    calculation for any A > 2 (all forward citations of the deuteron
+    template checked, 2026-08-10). Template: Mäntysaari et al.
+    arXiv:2408.13213 / PLB 858:139053 — now digitized into
+    `coherent.MANTYSAARI_A2_DEUTERON` and scaled to ⁶Li (plans/06
+    §6.4b: deformation term ε_B0 ∈ −(0.04–0.13), sign flip predicted).
+    *Engage:* the Mäntysaari–Schenke group — the concrete ask is
+    rerunning their IP-Glasma polarized-deuteron setup with an α–d
+    cluster density; the ⁶Li case is a clean null test
+    (Q(⁶Li) = −0.0806 fm²). *Default:*
+    `polligen/coherent.CoherentScenario` bands (f₀ = 0.04 ×2÷2,
+    B = 50 ± 10 GeV⁻², deformation + flat-gluonic modulation) —
+    plans/06.
 
 ## Still open — detector / software
 

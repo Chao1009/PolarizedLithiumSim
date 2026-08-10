@@ -72,6 +72,15 @@ brings to the EIC, in support of the ANL polarized ⁶,⁷Li ion-source program
   de-excitation γ; ⁶Li is a deformation null test (Q = −0.0806 fm²).
   New open questions #18 (coherent model) and #19 (RP Z-ID for
   A/Z = 2 — no EIC document addresses it).
+- ☑ **Second sweep — modulation anchored** (same day): the polarized-d
+  CGC calculation (Mäntysaari et al. PLB 858:139053) digitized and
+  scaled to ⁶Li (only such calculation for any polarized nucleus; all
+  8 forward citations checked): deformation term a₂(t) = −(P_zz/4)ε_B0
+  B|t| with ε_B0 ∈ −(0.04–0.13) → ⟨a₂⟩_tag ≈ 0.036 [0.018–0.059] at
+  P_zz = 0.6, sign flip vs d predicted; flat gluonic term 3×10⁻³–10⁻²
+  (lattice/NPLQCD + Kumano–Song). Money plot 6 now shows the d-anchor
+  vs ⁶Li band and the two-component a₂(t) decomposition strategy
+  (plans/06 §6.4b; 66 tests).
 
 ## Development run 4 (2026-07-13): polligen Step 5.A
 

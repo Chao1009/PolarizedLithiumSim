@@ -47,6 +47,12 @@ with the intact recoil tagged in the Roman-Pot near-beam pT tail
 exp(−B pT_cut²) = 13.5% [9–20%] with high-acceptance optics vs 4×10⁻⁵
 with high-divergence; ~10⁸ tagged events at 100 fb⁻¹/u (scenario
 f₀ = 0.04), best-bin δA ≈ 6×10⁻⁴ (5σ floor at a 0.3% modulation).
+The modulation is anchored (plans/06 §6.4b): a t-linear deformation
+term scaled from the polarized-deuteron CGC calculation (PLB
+858:139053, digitized in `coherent.MANTYSAARI_A2_DEUTERON`) giving
+⟨a₂⟩_tag ≈ 0.036 [0.018–0.059] at P_zz = 0.6 with a predicted sign
+flip vs the deuteron, plus a flat gluon-transversity scenario
+(3×10⁻³–10⁻²) — separable by t-shape and x_P dependence.
 Backgrounds and the RP charge-ID question: plans/06.
 
 ## Step-5.A validation gates (plans/05 §5.4) — all passing

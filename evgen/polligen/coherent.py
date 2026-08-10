@@ -11,9 +11,16 @@ the Roman-Pot near-beam pT tail: the same beam-blindness that limits the
 tagging acceptance is analytic, acc = exp(-B pT_cut^2).
 
 Everything here is a SCENARIO model in the sense of polarized.py: the
-coherent fraction, the slope, and the tensor modulation amplitude are
-placeholders with explicit bands, to be replaced by a real diffractive
-model (nuclear shadowing / dipole) when one is adopted -- plans/06.
+coherent fraction and slope are placeholders with explicit bands, to be
+replaced by a real diffractive model (nuclear shadowing / dipole) when
+one is adopted -- plans/06.  The tensor modulation now carries TWO
+mechanisms with distinct anchors (2026-08-10 second research sweep,
+plans/06 SS6.4b): a t-linear DEFORMATION term scaled from the polarized-
+deuteron CGC calculation of Mantysaari et al. (PLB 858:139053), and a
+flat GLUON-TRANSVERSITY scenario bounded by lattice + Drell-Yan
+estimates.  No published calculation exists for any polarized A > 2
+nucleus (verified against all forward citations) -- these projections
+are first-of-their-kind extrapolations, bands not predictions.
 
 Conventions:
 * Rates reuse fom.project_rates (per-nucleon DIS rate with the scattered-
@@ -62,13 +69,33 @@ class CoherentScenario:
              distributions can be wider than charge.  Exponential form
              valid below the first form-factor minimum at |t| ~ 0.31
              GeV^2 (q^2 = 8 fm^-2, Li-Sick-Whitney-Yearian 1971).
-    amp:     cos 2phi' modulation of the coherent yield at P_zz = 1
-             (gluonic-quadrupole / double-helicity-flip scenario).
+    amp:     FLAT cos 2phi' modulation of the coherent yield at P_zz = 1
+             -- the gluon-transversity ("exotic glue") scenario.  Band
+             3e-3..1e-2: lattice gives a large gluon transversity in the
+             compact phi meson (Soffer bound ~80% saturated, Detmold-
+             Shanahan PRD 94:014507) but a ~10x smaller transversity/
+             unpolarized ratio in the deuteron (NPLQCD PRD 96:094512);
+             Kumano-Song pd Drell-Yan lands at few-percent only for
+             maximal Delta_T g (PRD 101:054011).
+    eps_b0:  relative slope modulation Delta B_0/B of the m = 0 state --
+             the DEFORMATION (nuclear-geometry) mechanism, anchored on
+             Mantysaari-Salazar-Schenke-Shen-Zhao (PLB 858:139053,
+             arXiv:2408.13213): coherent J/psi off transversely
+             polarized deuterons has a_2(m)(|t|) ~ (Delta B_m/2)|t| at
+             low |t| with a_2(0) = -2 a_2(+-1) and Delta B_0/B ~ 0.21
+             (6% D-wave).  6Li scaling: relative quadrupole deformation
+             Q/r^2 is ~5x smaller than the deuteron's and OPPOSITE in
+             sign (Q = -0.0806 fm^2), while the alpha-d asymptotic D/S
+             ratio eta = -0.010..-0.015 vs eta_d = +0.0256 suggests
+             0.4-0.6x -- band eps_b0 in -(0.04..0.13), default -0.08.
+             Caveat (arXiv:2411.14934): JIMWLK evolution washes out
+             deformation toward small x, so the low-x_P tail may shrink.
     """
     f0: float = 0.04
     x_coh: float = 0.01
     slope_b: float = 50.0
-    amp: float = 0.02
+    amp: float = 0.01
+    eps_b0: float = -0.08
 
     def coherent_fraction(self, x):
         """f_coh(x) = f0 / (1 + (x/x_coh)^2): flat well below x_coh, dies
@@ -90,6 +117,43 @@ class CoherentScenario:
     def mean_t_tagged(self, pt_cut):
         """<|t|> of the TAGGED sample: pT_cut^2 + 1/B (exponential tail)."""
         return pt_cut * pt_cut + 1.0 / self.slope_b
+
+    # --- deformation-anchored modulation (arXiv:2408.13213 scaling) -----
+
+    def a2_deformation(self, t_abs, pzz):
+        """Ensemble cos 2phi' coefficient of the coherent yield at |t|
+        from the slope-modulation (deformation) mechanism.
+
+        Per pure m state a_2(m) ~ (Delta B_m / 2)|t| with
+        a_2(0) = -2 a_2(+-1); a fill with populations p_m therefore has
+            a_2(t; P_zz) = -(P_zz/4) * eps_b0 * B * |t|
+        (P_zz = p+ + p- - 2 p0; unpolarized fill cancels exactly).
+        Linear regime valid for |t| <~ 0.2 GeV^2, below the 6Li
+        form-factor minimum at |t| ~ 0.31 GeV^2 where the coefficient
+        is locally enhanced and sign-flipping (2408.13213 Fig. 4 shows
+        the deuteron analog at its own dip).
+        """
+        return (-(pzz / 4.0) * self.eps_b0 * self.slope_b
+                * np.asarray(t_abs, dtype=float))
+
+    def a2_tagged(self, pt_cut, pzz):
+        """Rate-weighted <a_2> of the RP-tagged sample.  Exact for the
+        linear-in-|t| regime: <a_2> = a_2(<|t|>_tag)."""
+        return float(self.a2_deformation(self.mean_t_tagged(pt_cut), pzz))
+
+
+# a_2 Fourier coefficients of coherent J/psi photoproduction off
+# transversely polarized deuterons, digitized from arXiv:2408.13213
+# Fig. 4 (x_P = 1.7e-3): {|t| [GeV^2]: (a_2 m=0, a_2 m=+-1)}.  The
+# m-state sign flip and the ~ -2x relation are the wave-function-
+# symmetry prediction our 6Li scaling inherits (with an overall sign
+# flip from Q(6Li) < 0 vs Q(d) > 0).
+MANTYSAARI_A2_DEUTERON = {
+    0.05: (+0.08, -0.04),
+    0.10: (+0.15, -0.08),
+    0.20: (+0.30, -0.17),
+    0.30: (+0.43, -0.28),
+}
 
 
 def recoil_lab(t_abs, phi_t, p_per_nucleon, x_pom=0.0):
