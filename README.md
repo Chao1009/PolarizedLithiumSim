@@ -27,7 +27,7 @@ on polarized ion beams at the EIC, March 22 – April 2, 2027.
 | `fastsim/` | `polli_fastsim`: analytic fast simulation — rates, FOM maps, tagging acceptance, money plots 1–3, and the dated `money_delta_*` study suite (moment-constrained Δ ansatz, detector efficiency, reco selection) with working notes in `fastsim/notes/` |
 | `evgen/` | `polligen`: the doubly polarized e+⁶,⁷Li event generator (the first of its kind) — spin-density kernel, inclusive + tagged samplers, run-plan bookkeeping, estimators, the coherent intact-⁶Li channel, money plots 4–6 |
 | `docs/` | source documents + the self-contained physics note [docs/note_cos2phi_coherent_6Li.md](docs/note_cos2phi_coherent_6Li.md) (verified 50-entry bibliography) |
-| `reports/` | circulate-able reports (HTML source + rendered PDF), currently the cos 2φ money-plot report |
+| `reports/` | circulate-able reports (self-contained HTML + rendered PDF), currently the cos 2φ money-plot report; served as a website by the GitHub Pages workflow (`.github/workflows/pages.yml` + `reports/index.html`) — activate once via Settings → Pages → Source: "GitHub Actions" (public repo required on free plans) |
 | `tools/` | BeAGLE and full-simulation (eic-shell/ePIC) setup notes |
 
 ## Quick start

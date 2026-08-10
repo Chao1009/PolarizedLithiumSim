@@ -1,0 +1,45 @@
+# Deploy the self-contained reports in reports/ to GitHub Pages.
+#
+# One-time activation (repo settings, cannot be done from a workflow):
+#   Settings -> Pages -> Build and deployment -> Source: "GitHub Actions".
+# Note: on a free plan GitHub Pages requires a PUBLIC repository.
+# Site URL: https://<owner>.github.io/PolarizedLithiumSim/
+
+name: Deploy reports to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "reports/**"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Assemble site from reports/
+        run: |
+          mkdir -p _site
+          cp -r reports/* _site/
+          rm -f _site/*.template.html
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v4
