@@ -125,9 +125,16 @@ class CoherentScenario:
         from the slope-modulation (deformation) mechanism.
 
         Per pure m state a_2(m) ~ (Delta B_m / 2)|t| with
-        a_2(0) = -2 a_2(+-1); a fill with populations p_m therefore has
+        a_2(0) = -2 a_2(+-1); the SIMPLE POPULATION AVERAGE over a fill
+        with populations p_m is
             a_2(t; P_zz) = -(P_zz/4) * eps_b0 * B * |t|
-        (P_zz = p+ + p- - 2 p0; unpolarized fill cancels exactly).
+        (P_zz = p+ + p- - 2 p0).  This average is exact only in the
+        |t| -> 0 limit where the m-state phi-averaged rates are equal:
+        at finite |t| the true ensemble coefficient is rate-weighted,
+        and the anchor calculation itself shows m-state rates differing
+        by ~2x at |t| = 0.1 (2408.13213 Fig. 3) -- see RATE_WEIGHT_SYST.
+        In particular an unpolarized fill does NOT cancel exactly at
+        finite |t| (a useful systematic-control fact in itself).
         Linear regime valid for |t| <~ 0.2 GeV^2, below the 6Li
         form-factor minimum at |t| ~ 0.31 GeV^2 where the coefficient
         is locally enhanced and sign-flipping (2408.13213 Fig. 4 shows
@@ -137,10 +144,23 @@ class CoherentScenario:
                 * np.asarray(t_abs, dtype=float))
 
     def a2_tagged(self, pt_cut, pzz):
-        """Rate-weighted <a_2> of the RP-tagged sample.  Exact for the
-        linear-in-|t| regime: <a_2> = a_2(<|t|>_tag)."""
+        """<a_2> of the RP-tagged sample in the equal-rate, linear-in-|t|
+        approximation: a_2(<|t|>_tag) with <|t|>_tag = pT_cut^2 + 1/B.
+        Carries the one-sided rate-weighting model systematic
+        RATE_WEIGHT_SYST (multiply to get the anchor-scaled rate-weighted
+        estimate); quote both, the eps_b0 band covers the spread."""
         return float(self.a2_deformation(self.mean_t_tagged(pt_cut), pzz))
 
+
+# One-sided rate-weighting model systematic on a2_tagged (2026-08-10
+# audit): the simple population average assumes equal m-state rates, but
+# the anchor's m-states have different mean diffractive slopes (Fig. 5)
+# and ~2x rate differences at |t| = 0.1 (Fig. 3).  Reconstructing the
+# rate-weighted ensemble from the digitized anchor and scaling to the
+# 6Li defaults gives <a2>_tag,weighted ~ 0.73 x the simple average at
+# the tagged <|t|> = 0.06 GeV^2 (0.026 vs 0.036 at eps_b0 = -0.08,
+# P_zz = 0.6) -- one-sided, and covered by the eps_b0 band edge 0.018.
+RATE_WEIGHT_SYST = 0.73
 
 # a_2 Fourier coefficients of coherent J/psi photoproduction off
 # transversely polarized deuterons, digitized from arXiv:2408.13213
@@ -159,9 +179,13 @@ MANTYSAARI_A2_DEUTERON = {
 def recoil_lab(t_abs, phi_t, p_per_nucleon, x_pom=0.0):
     """Lab kinematics of the intact 6Li recoil.
 
-    pT = sqrt(|t|) (t_min ~ (x_P M_A)^2/(1-x_P) is < 1e-3 GeV^2 for
-    x_P < 0.005 and is neglected); the longitudinal momentum keeps
-    (1 - x_pom) of the beam value, so R = p/Z over beam rigidity ~ 1.
+    pT = sqrt(|t|), neglecting t_min ~ (x_P M_A)^2/(1-x_P).  Audit note
+    (2026-08-10): t_min = 3.1e-3 GeV^2 at x_P = 0.01 (M_A = 5.6 GeV), so
+    the tagged acceptance is overestimated by ~exp(-B t_min) - 1 ~ -14%
+    there (less below; rate-weighted over f_coh the effect is ~10%,
+    one-sided) -- subdominant to the x2 f0 band, but not < 1e-3 as the
+    x_P < 0.005 wording previously implied.  The longitudinal momentum
+    keeps (1 - x_pom) of the beam value, so R = p/Z over beam ~ 1.
     Returns dict with pT, theta, R, xL (per-nucleus fraction).
     """
     t_abs = np.asarray(t_abs, dtype=float)

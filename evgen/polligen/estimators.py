@@ -85,6 +85,19 @@ def cos2phi_fit_binned(counts, edges, pzz, acceptance=None, nsub=9):
     return amp / dilution / pzz
 
 
+def cos2phi_fit_err(n, pzz, nbins=24):
+    """Statistical error of the cos2phi_fit_binned amplitude on n events
+    over nbins uniform full-coverage bins: sqrt(2/n)/pzz inflated by the
+    same 1/dilution the fit divides out of the amplitude (audit
+    2026-08-10: +1.1% at 24 bins, +11% at 8 -- the bare sqrt(2/n)/pzz of
+    asymmetries.err_cos2phi_amplitude is the unbinned/analytic-FOM
+    convention and understates the binned-fit spread)."""
+    n = np.maximum(np.asarray(n, dtype=float), 1e-12)
+    w = np.pi / nbins  # bin half-width; dilution in 2*phi
+    dilution = np.sin(2.0 * w) / (2.0 * w)
+    return np.sqrt(2.0 / n) / pzz / dilution
+
+
 def cos2phi_fit(phi_prime, pzz, nbins=36, acceptance=None, nsub=9):
     """Event-level wrapper of `cos2phi_fit_binned`: histogram phi' on
     `nbins` uniform bins over [0, 2pi) and fit the cos 2phi' amplitude."""

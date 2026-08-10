@@ -22,7 +22,11 @@ and the form-factor-minimum exclusion; (c) tagged coherent yield vs x;
 (d) phi'-modulation pseudo-data at the deformation-anchored amplitude
 with the gluonic scenario overlaid.
 
-Usage:  python3 scripts/money_cos2phi_coherent.py --lumi 100
+Error bars assume the whole luminosity in the transverse-tensor fill
+(same convention as the inclusive plot and the analytic FOM maps; a
+run-plan split scales N down proportionally).
+
+Usage:  python3 scripts/money_cos2phi_coherent.py
 """
 
 import argparse
@@ -38,11 +42,11 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 
 from polligen import coherent as coh  # noqa: E402
-from polligen.estimators import cos2phi_fit_binned  # noqa: E402
+from polligen.estimators import (cos2phi_fit_binned,  # noqa: E402
+                                 cos2phi_fit_err)
 from polligen.sample import phi_histogram_pseudo  # noqa: E402
 
 from polli_fastsim import beams, fom  # noqa: E402
-from polli_fastsim.asymmetries import err_cos2phi_amplitude  # noqa: E402
 from polli_fastsim.farforward import (HIGH_ACCEPTANCE,  # noqa: E402
                                       HIGH_DIVERGENCE)
 
@@ -200,8 +204,8 @@ def main():
                    for e in EPS_BAND]
     counts, edges = phi_histogram_pseudo(n_bin, a2_def, nbins=24, rng=rng)
     amp_hat = cos2phi_fit_binned(counts, edges, args.pzz)
-    err = err_cos2phi_amplitude(n_bin, args.pzz)
-    err10 = err_cos2phi_amplitude(lumi_ratio * n_bin, args.pzz)
+    err = cos2phi_fit_err(n_bin, args.pzz)
+    err10 = cos2phi_fit_err(lumi_ratio * n_bin, args.pzz)
     centers = 0.5 * (edges[:-1] + edges[1:])
     nbar = counts.mean()
     ax4.errorbar(centers, counts / nbar,

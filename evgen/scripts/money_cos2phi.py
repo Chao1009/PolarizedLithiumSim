@@ -39,13 +39,13 @@ import matplotlib.pyplot as plt  # noqa: E402
 from matplotlib.gridspec import GridSpec  # noqa: E402
 
 from polligen import bookkeeping as bk  # noqa: E402
-from polligen.estimators import cos2phi_fit_binned  # noqa: E402
+from polligen.estimators import (cos2phi_fit_binned,  # noqa: E402
+                                 cos2phi_fit_err)
 from polligen.sample import InclusiveSampler, phi_histogram_pseudo  # noqa: E402
 from polligen.xsec import InclusiveKernel  # noqa: E402
 
 from polli_fastsim import beams, delta_models as dm, fom  # noqa: E402
-from polli_fastsim.asymmetries import (a_cos2phi,  # noqa: E402
-                                       err_cos2phi_amplitude)
+from polli_fastsim.asymmetries import a_cos2phi  # noqa: E402
 from polli_fastsim.kinematics import kinematic_mask, y_from_xq2  # noqa: E402
 from polli_fastsim.polarized import toy_b1  # noqa: E402
 from polli_fastsim.structure import NuclearF2  # noqa: E402
@@ -77,7 +77,13 @@ def pick_sweet_spots_banded(proj, sig,
                                    (12.0, 200.0, 1))):
     """Best bins per Q2 band: the raw significance map clusters at the
     lowest Q2 (rate-dominated), but the money plot must also show the
-    Q2 lever arm, so one spot is forced into each higher band."""
+    Q2 lever arm, so one spot is forced into each higher band.
+
+    Audit note (2026-08-10): the ranking runs on the 40x30 analysis map
+    with cell-center acceptance; counts of bins touching the y_min edge
+    carry ~20% grid bias there.  All PLOTTED numbers instead come from
+    the finer 60x45 sampler grid (within ~3% of a 240x180 reference),
+    so the bias can only influence which near-edge bin gets picked."""
     picked = []
     for qlo, qhi, npick in bands:
         in_band = np.where((proj.q2 >= qlo) & (proj.q2 < qhi), sig, 0.0)
@@ -104,7 +110,7 @@ def measure(sampler, cat, mask, lumi_pb, pzz, rng, nbins=24):
     counts, edges = phi_histogram_pseudo(n_exp, a2_eff, nbins=nbins, rng=rng)
     amp_hat = cos2phi_fit_binned(counts, edges, pzz)
     return {"n": n_exp, "truth": a2_eff / pzz, "amp": amp_hat,
-            "err": err_cos2phi_amplitude(n_exp, pzz),
+            "err": cos2phi_fit_err(n_exp, pzz, nbins),
             "counts": counts, "edges": edges, "a2_eff": a2_eff,
             "sigma_pb": sigma_pb}
 
@@ -184,8 +190,8 @@ def main():
         xlo, xhi, q2lo, q2hi = superbin_edges(proj, i, j)
         mask = superbin_mask(sampler, xlo, xhi, q2lo, q2hi)
         m = measure(sampler, cat, mask, lumi1_pb, plan.pzz_true, rng)
-        err10 = err_cos2phi_amplitude(lumi10_pb * m["sigma_pb"],
-                                      plan.pzz_true)
+        err10 = cos2phi_fit_err(lumi10_pb * m["sigma_pb"],
+                                plan.pzz_true)
         centers = 0.5 * (m["edges"][:-1] + m["edges"][1:])
         nbar = m["counts"].mean()
         mod = 1e3 * (m["counts"] / nbar - 1.0)
@@ -242,8 +248,8 @@ def main():
         m = measure(sampler, cat, mask, lumi1_pb, plan.pzz_true, rng)
         if m["n"] < 1e3 or m["err"] > 8e-3:
             continue
-        m["err10"] = err_cos2phi_amplitude(lumi10_pb * m["sigma_pb"],
-                                           plan.pzz_true)
+        m["err10"] = cos2phi_fit_err(lumi10_pb * m["sigma_pb"],
+                                     plan.pzz_true)
         pts.append((xc, m))
     xoff = 1.045  # slight offset so the two series stay legible
     ax.errorbar([p[0] for p in pts], [1e3 * p[1]["amp"] for p in pts],

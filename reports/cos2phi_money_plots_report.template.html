@@ -198,7 +198,7 @@
   <div class="stats">
     <div class="stat"><div class="v">13.5%</div><div class="l">coherent-tag acceptance at IP6, high-acceptance optics (exp(−B·p²_T,cut); 9–20% for B ∈ 40–60 GeV⁻²). High-divergence: 4×10⁻⁵ — the coherent program fixes the optics choice.</div></div>
     <div class="stat"><div class="v">1.1×10⁷ / 10⁸</div><div class="l">tagged coherent events in the 1-year / 10-year programs (scenario f₀ = 0.04); best-bin δA = 1.9×10⁻³ / 6×10⁻⁴ → 5σ floors at 1.0% / 0.3% modulations</div></div>
-    <div class="stat"><div class="v">0.036</div><div class="l">deformation-anchored ⟨a₂⟩ of the tagged sample at P_zz = 0.6 [band 0.018–0.059], scaled from the polarized-deuteron CGC calculation [13] — sign flip vs the deuteron predicted</div></div>
+    <div class="stat"><div class="v">0.036</div><div class="l">deformation-anchored ⟨a₂⟩ of the tagged sample at P_zz = 0.6 [band 0.018–0.059; one-sided ×0.73 rate-weighting systematic], scaled from the polarized-deuteron CGC calculation [13] — sign flip vs the deuteron predicted</div></div>
   </div>
 
   <h2>1 · The observable and why these formulas</h2>
@@ -273,8 +273,11 @@ a_m = ¼ c_m (3cos²θ_m − 1),   c_m = 3|λ_m| − 2 → (1, −2, 1)</div>
   name. The production default is <code>moment_A</code>, the sum-rule-constrained ansatz of the
   merged money_delta study line: Δ = A·α_s(Q²)·F₁·x^a(1−x)^b with A solved so that
   ∫x Δ dx = −0.012·α_s (the Sather–Schmidt bag moment [4]; solved A = −0.294 at
-  ⟨Q²⟩ = 3.9 GeV², matching the money_delta EPPS21 value −0.31), times the ⁶Li per-nucleon
-  dilution 1/3 — the Cloët convention, kept separate from the whole-nucleus P_zz so the two
+  ⟨Q²⟩ = 3.9 GeV², matching the money_delta EPPS21 value −0.31; α_s from the CT18NLO
+  table, their production convention — the LO fallback runs ~14% high), times the ⁶Li
+  per-nucleon dilution 1/3. Applying the bag-target Sather–Schmidt moment to the
+  per-nucleon Δ of ⁶Li is itself a scenario choice inherited from the money_delta line,
+  made explicit here — the Cloët convention, kept separate from the whole-nucleus P_zz so the two
   never double-count. <code>moment_B</code> (no F₁ factor; the conservative reading, a factor
   ~2–8 below A) and the legacy <code>toy</code> shape are one flag away; the A-vs-B spread is
   the dominant ansatz systematic, and the amplitude-vs-x panel shows both — under the moment
@@ -288,8 +291,8 @@ a_m = ¼ c_m (3cos²θ_m − 1),   c_m = 3|λ_m| − 2 → (1, −2, 1)</div>
     (Q² = 1.1 → 14 GeV², x ≈ 0.02–0.14); injected curve (blue), binned fit (vermillion);
     per-panel annotations give δA for both programs. Right: extracted amplitude vs x with
     1-year (open) and 10-year (filled) error bars against the moment_A (blue), moment_B
-    (green), and toy-10⁻³ (gray) curves. Amplitudes are (0.7–1.4)×10⁻² at the sweet spots
-    against δA = (1.5–4.5)×10⁻⁴ in year 1 — every bin > 25σ, so the A-vs-B ansatz spread is
+    (green), and toy-10⁻³ (gray) curves. Amplitudes are (0.6–1.2)×10⁻² at the sweet spots
+    against δA = (1.5–4.5)×10⁻⁴ in year 1 — every bin ≥ 21σ, so the A-vs-B ansatz spread is
     resolved by the x-shape. Detection needs only the scattered electron.</figcaption>
   </figure>
 
@@ -332,7 +335,8 @@ a_m = ¼ c_m (3cos²θ_m − 1),   c_m = 3|λ_m| − 2 → (1, −2, 1)</div>
   · relative quadrupole deformation Q/⟨r²⟩:  ⁶Li ≈ (1/5) × deuteron, OPPOSITE sign
   · α–d asymptotic D/S ratio η = −0.010…−0.015 [16]  vs  η_d = +0.0256:  0.4–0.6×
   ⇒ ε_B0(⁶Li) ∈ −(0.04 … 0.13),  default −0.08
-  ⇒ ⟨a₂⟩_tag = a₂(⟨|t|⟩_tag = p²_T,cut + 1/B) ≈ 0.036 [0.018–0.059] at P_zz = 0.6</div>
+  ⇒ ⟨a₂⟩_tag = a₂(⟨|t|⟩_tag = p²_T,cut + 1/B) ≈ 0.036 [0.018–0.059] at P_zz = 0.6
+     (equal-rate average; rate-weighting systematic: one-sided ×0.73 → 0.026, audited)</div>
 
   <p>The <b>sign flip relative to the deuteron is a testable prediction</b>. The band is
   physics, not sloppiness: even exact few-body theory misses the ⁶Li quadrupole cancellation
@@ -454,6 +458,9 @@ a_m = ¼ c_m (3cos²θ_m − 1),   c_m = 3|λ_m| − 2 → (1, −2, 1)</div>
     <tr><td>9</td><td>Deformation term assumed x_P-independent within the plotted bins</td>
         <td>JIMWLK evolution weakens deformation toward small x [15] — would mimic a relative growth of the gluonic term</td>
         <td>Make the x_P dependence part of the two-component fit; theory input from [15]</td></tr>
+    <tr><td>10</td><td>Coherent ensemble a₂ uses the equal-rate population average (exact only as |t| → 0); t_min is neglected in the tag acceptance</td>
+        <td>One-sided −27% (rate weighting, audited) and ≈−10% (t_min) on the coherent signal/yield — both inside the ε_B0 / f₀ bands</td>
+        <td>Rate-weighted ensemble model (the IP-Glasma α–d run of #18 supersedes both)</td>
   </table>
 
   <h2>6 · Future improvements</h2>
@@ -538,7 +545,7 @@ a_m = ¼ c_m (3cos²θ_m − 1),   c_m = 3|λ_m| − 2 → (1, −2, 1)</div>
     <code>evgen/scripts/money_cos2phi.py</code>,
     <code>evgen/scripts/money_cos2phi_coherent.py</code>, models in
     <code>polli_fastsim/delta_models.py</code> (unified Δ registry) and
-    <code>evgen/polligen/coherent.py</code>; 66 + 22 tests pass, including the merged
+    <code>evgen/polligen/coherent.py</code>; 66 + 23 tests pass, including the merged
     money_delta study line. All rates use TOY/scenario inputs —
     bands, not predictions. External numbers verified against primary sources in three research
     sweeps (nuclear data: TUNL; detector: EIC YR + ePIC documents; theory: original papers);

@@ -11,13 +11,13 @@ next. Imports `../fastsim/polli_fastsim` — nothing there is duplicated.
 
 ```bash
 cd evgen
-python3 -m pytest tests/ -q            # 64 tests (grid tests auto-skip)
+python3 -m pytest tests/ -q            # 66 tests (grid tests auto-skip)
 python3 scripts/closure_fom.py --ion 6Li --events 200000 --trials 200
 python3 scripts/closure_fom.py --ion 7Li --events 200000 --trials 200
 python3 scripts/money_tagged_azz.py --events 400000       # money plot 4
 python3 scripts/tagged_polarimetry_7li.py --events 300000
-python3 scripts/money_cos2phi.py --lumi 100               # money plot 5
-python3 scripts/money_cos2phi_coherent.py --lumi 100      # money plot 6
+python3 scripts/money_cos2phi.py                          # money plot 5
+python3 scripts/money_cos2phi_coherent.py                 # money plot 6
 ```
 
 ## Modules
@@ -44,8 +44,9 @@ sum-rule-constrained ansatz of the merged money_delta suite,
 `moment_B`/`toy` one flag away). Full-luminosity statistics via
 per-φ-bin Poisson draws (`sample.phi_histogram_pseudo` — exact for
 binned estimators). At P_zz = 0.6 (mid energy) the moment-constrained
-amplitudes are (0.7–1.4)×10⁻² at the sweet spots with per-bin
-δA ≈ (1.5–4.5)×10⁻⁴ already in year 1 (10 fb⁻¹/u) — the
+amplitudes are (0.6–1.2)×10⁻² at the sweet spots (table-α_s, the
+money_delta production convention) with per-bin δA ≈ (1.5–4.5)×10⁻⁴
+already in year 1 (10 fb⁻¹/u) — the
 measurement discriminates interpretation A vs B, not just zero.
 
 `money_cos2phi_coherent.py`: the coherent channel e⁶Li → e′X ⁶Li(g.s.)

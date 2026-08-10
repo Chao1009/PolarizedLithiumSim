@@ -10,7 +10,7 @@ far-forward systems can see; the channel of primary interest keeps the
 
 | artifact | content |
 |---|---|
-| `evgen/scripts/money_cos2phi.py` → `money_cos2phi_6Li.png` | inclusive gluonometry: φ′ pseudo-data in 4 sweet-spot super-bins (Q² = 1.1→14 GeV² at x ≈ 0.02–0.06) + amplitude vs x with Δ/F₁ scenario curves |
+| `evgen/scripts/money_cos2phi.py` → `money_cos2phi_6Li.png` | inclusive gluonometry: φ′ pseudo-data in 4 sweet-spot super-bins (Q² = 1.1→14 GeV² at x ≈ 0.02–0.14) + amplitude vs x with Δ/F₁ scenario curves |
 | `evgen/scripts/money_cos2phi_coherent.py` → `money_cos2phi_coherent_6Li.png` | coherent channel: recoil t-spectrum vs RP cuts, tagged yield vs x, φ′ pseudo-data in the best low-x bin |
 | `evgen/polligen/coherent.py` | scenario coherent model + intact-recoil routing + breakup veto table (tested) |
 
@@ -20,7 +20,7 @@ scenario inputs):
 - **Inclusive:** with the unified Δ registry
   (`polli_fastsim/delta_models`, default `moment_A`: sum-rule-
   constrained, ∫xΔdx = −0.012·α_s, dilution 1/3) the sweet-spot
-  amplitudes are (0.7–1.4)×10⁻² against per-bin δA ≈ (1.5–4.5)×10⁻⁴
+  amplitudes are (0.6–1.2)×10⁻² (table-α_s) against per-bin δA ≈ (1.5–4.5)×10⁻⁴
   already at the 1-year program (10 fb⁻¹/u; ÷√10 at 10 years) — the
   measurement resolves the moment_A-vs-moment_B ansatz spread, not just
   a null. [Historical toy-model numbers, kept for reference and
@@ -35,13 +35,16 @@ scenario inputs):
   and **4×10⁻⁵ with high-divergence optics: the coherent program
   fixes the optics choice**. Scenario rates give ~10⁸ tagged events at
   100 fb⁻¹/u; the best super-bin (x ≈ 0.002, Q² ≈ 1.3) reaches
-  δA ≈ 6×10⁻⁴, i.e. a 5σ floor at a 0.3% modulation amplitude. The
-  modulation itself is now *anchored* (second sweep, §6.4b): the
-  deformation term scaled from the polarized-deuteron CGC calculation
-  gives ⟨a₂⟩_tag ≈ 0.036 [0.018–0.059] at P_zz = 0.6 with a predicted
-  sign flip vs the deuteron; the gluon-transversity term sits at
-  3×10⁻³–10⁻² — both ≥ 5σ above the statistical floor, so the
-  measurement becomes a two-component a₂(t) decomposition.
+  δA ≈ 6×10⁻⁴ at 10 years (1.9×10⁻³ in year 1), i.e. 5σ floors at
+  0.3% / 1.0% modulation amplitudes — with the whole luminosity in the
+  transverse-tensor fill, as for all FOMs. The modulation itself is now
+  *anchored* (second sweep, §6.4b): the deformation term scaled from
+  the polarized-deuteron CGC calculation gives ⟨a₂⟩_tag ≈ 0.036
+  [0.018–0.059] at P_zz = 0.6 (one-sided −27% rate-weighting
+  systematic, §6.4b audit note) with a predicted sign flip vs the
+  deuteron; the gluon-transversity term sits at 3×10⁻³–10⁻² — both
+  well above the statistical floors, so the measurement becomes a
+  two-component a₂(t) decomposition.
 
 Everything below is the requested background think-through, ordered by
 how dangerous the background is to the coherent tag.
@@ -231,8 +234,9 @@ subtraction with wrong-sign tracks / positron running). For the
   item 6.2(3) and is calculable — flag both on every plot.
 - **Low-Q², high-x nuclear effects**: target-mass/γ² terms are absent
   from the master formula (known fastsim caveat); the sweet spots sit
-  at x ≤ 0.06 where γ² = 4M²x²/Q² < 10⁻² even at Q² ≈ 1 GeV², so this
-  is a labeling caveat, not a bias, for money plot 5.
+  at x ≤ 0.15; the low-Q² spots have x ≤ 0.06 (γ² < 10⁻² at Q² ≈ 1
+  GeV²) and the x ≈ 0.14 spots sit at Q² ≥ 3 GeV² (γ² ≲ 3×10⁻²), so
+  this is a labeling caveat, not a bias, for money plot 5.
 
 ## 6.3b Interpretational backgrounds to "exotic glue" (theory, verified)
 
@@ -327,8 +331,14 @@ the arXiv source (now in `coherent.MANTYSAARI_A2_DEUTERON`):
   arXiv:2411.14934); gluon transversity is flat-ish in t and survives at
   small x. A two-component fit a₂(t) = c_def·\|t\| + a_g over the tagged
   window, repeated in x_P bins, is the measurement — and both components
-  are individually ≥ 5σ against the 3×10⁻⁴-level per-bin statistical
-  floor at 100 fb⁻¹/u. Validity limit: quote for \|t\| < 0.2 GeV²; the
+  sit well above the best-bin statistical floors (δa₂ = P_zz·δA ≈
+  1.1×10⁻³ / 3.6×10⁻⁴ at the 1-/10-year programs). Audit note
+  (2026-08-10): the simple population average behind a₂ ∝ P_zz assumes
+  equal m-state rates — exact only as |t| → 0; the anchor's own m-state
+  rate differences imply a one-sided ≈ −27% rate-weighting systematic
+  on ⟨a₂⟩_tag (0.026 vs 0.036 at the defaults,
+  `coherent.RATE_WEIGHT_SYST`), covered by the ε_B0 band edge.
+  Validity limit: quote for \|t\| < 0.2 GeV²; the
   C₀ zero at ≈ 0.31 GeV² locally enhances and sign-flips a₂ (the
   deuteron analog of 2408.13213's dip region) — flagged, not modeled.
 - **Realism checks**: solid-target programs reach P_zz ≈ 0.5–0.7 (JLab

@@ -7,7 +7,7 @@ feasibility study. Companion to `../plans/02_phase1_event_generation.md`.
 
 ```bash
 cd fastsim
-python3 -m pytest tests/ -q                 # 15 tests (grid tests auto-skip)
+python3 -m pytest tests/ -q                 # 23 tests (grid tests auto-skip)
 python3 scripts/phase_space_map.py --ion 7Li --lumi 10 --outdir out
 python3 scripts/tagging_acceptance.py --outdir out      # spectator tagging
 python3 scripts/money_polemc.py --outdir out            # polarized EMC FOM

@@ -68,17 +68,20 @@ conservative; factor ~2–8 below A) and the legacy `toy` shape are one
 flag away. Sweet-spot super-bins per Q² band: Q² = 1.1 → 14 GeV² at
 x ≈ 0.02–0.14.
 
-Results (moment_A, mid_x variant, solved A = −0.294 at ⟨Q²⟩ = 3.9 GeV²):
+Results (moment_A, mid_x variant, solved A = −0.294 at ⟨Q²⟩ = 3.9 GeV²,
+table-α_s — the money_delta production convention; the bag-target moment
+applied to the per-nucleon Δ of ⁶Li is itself a scenario choice
+inherited from that line, made explicit in the 2026-08-10 audit):
 
 | super-bin (x, Q²) | amplitude | δA, 1 yr | δA, 10 yr |
 |---|---|---|---|
-| 0.056, 1.14 GeV² | +1.2×10⁻² | 1.8×10⁻⁴ | 5.6×10⁻⁵ |
-| 0.022, 1.14 GeV² | +0.7×10⁻² | 1.5×10⁻⁴ | 4.6×10⁻⁵ |
-| 0.14, 3.1 GeV²   | +1.4×10⁻² | 2.5×10⁻⁴ | 8.0×10⁻⁵ |
-| 0.14, 14.3 GeV²  | +1.1×10⁻² | 4.5×10⁻⁴ | 1.4×10⁻⁴ |
+| 0.056, 1.14 GeV² | +0.99×10⁻² | 1.8×10⁻⁴ | 5.7×10⁻⁵ |
+| 0.022, 1.14 GeV² | +0.60×10⁻² | 1.5×10⁻⁴ | 4.6×10⁻⁵ |
+| 0.14, 3.1 GeV²   | +1.24×10⁻² | 2.6×10⁻⁴ | 8.1×10⁻⁵ |
+| 0.14, 14.3 GeV²  | +0.96×10⁻² | 4.5×10⁻⁴ | 1.4×10⁻⁴ |
 
 Under the moment constraint the measurement is no longer a null test:
-every sweet-spot bin is a > 25σ effect in year 1, and the
+every sweet-spot bin is a 21–40σ effect in year 1, and the
 moment_A-vs-moment_B spread — the dominant ansatz systematic (their
 notes: factor 2–8 in reach) — is itself resolved by the amplitude-vs-x
 shape. (Historical flat-toy numbers at Δ/F₁ = 10⁻³, verified by the
@@ -165,7 +168,10 @@ Hence **ε_B0(⁶Li) ∈ −(0.04 … 0.13), default −0.08**, giving
 
     ⟨a₂⟩_tag = a₂(⟨|t|⟩_tag; P_zz) ≈ 0.036  [0.018 – 0.059]
 
-at P_zz = 0.6 with ⟨|t|⟩_tag = pT_cut² + 1/B = 0.06 GeV², and a
+at P_zz = 0.6 with ⟨|t|⟩_tag = pT_cut² + 1/B = 0.06 GeV² (equal-rate
+population average; the anchor's m-state rate differences imply a
+one-sided ≈ −27% rate-weighting systematic, `coherent.RATE_WEIGHT_SYST`,
+covered by the band edge — 2026-08-10 audit), and a
 **predicted sign flip relative to the deuteron** — itself a testable
 wave-function statement. The width of the band is physics, not
 sloppiness: even exact few-body theory (VMC, AV18+UIX) misses the ⁶Li

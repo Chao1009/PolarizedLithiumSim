@@ -33,7 +33,7 @@ on polarized ion beams at the EIC, March 22 – April 2, 2027.
 ## Quick start
 
 ```bash
-# fast simulation (15 tests; PDF-grid tests need the `parton` package)
+# fast simulation (23 tests; PDF-grid tests need the `parton` package)
 cd fastsim && python -m pytest tests/ -q
 
 # event generator (66 tests)
@@ -41,22 +41,25 @@ cd evgen && python -m pytest tests/ -q
 
 # money plots (outputs land next to the scripts' working directory)
 cd evgen
-python scripts/money_cos2phi.py --lumi 100            # inclusive gluonometry
-python scripts/money_cos2phi_coherent.py --lumi 100   # coherent intact-6Li tag
+python scripts/money_cos2phi.py                       # inclusive gluonometry
+python scripts/money_cos2phi_coherent.py              # coherent intact-6Li tag
 python scripts/money_tagged_azz.py --events 400000    # tagged tensor asymmetry
 ```
 
 ## Headline results so far
 
-- **Gluonometry reach**: 5σ on Δ/F₁ = 10⁻³ within ~15–40 fb⁻¹/u
-  (combined bins); projected-data money plots with per-bin
-  δA ≈ (0.4–1.2)×10⁻⁴ at 100 fb⁻¹/u across Q² = 1.1–14 GeV².
+- **Gluonometry**: with the sum-rule-constrained Δ model
+  (`delta_models`, moment_A, table-α_s) the sweet-spot cos 2φ
+  amplitudes are (0.6–1.2)×10⁻² against per-bin δA = (1.5–4.5)×10⁻⁴
+  already at the 1-year program (10 fb⁻¹/u), across Q² = 1.1–14 GeV²
+  at x ≈ 0.02–0.14 — the measurement resolves the interpretation-A-vs-B
+  ansatz spread, not just a null.
 - **Coherent intact-⁶Li tag**: the recoil is exactly beam-blind
   (A/Z = 2) — 13.5% acceptance via the Roman-Pot pT tail with
-  high-acceptance optics, ~10⁻⁴ with high-divergence: the coherent
-  program fixes the optics choice. ~10⁸ tagged events at 100 fb⁻¹/u;
-  modulation amplitude anchored on the polarized-deuteron CGC
-  calculation (sign flip vs d predicted).
+  high-acceptance optics, 4×10⁻⁵ with high-divergence: the coherent
+  program fixes the optics choice. 1.1×10⁷ / 1.1×10⁸ tagged events in
+  the 1-/10-year programs; modulation amplitude anchored on the
+  polarized-deuteron CGC calculation (sign flip vs d predicted).
 - **Tagging inverts between isotopes at IP6**: ⁷Li α-tag works
   (96–99% to the Roman Pots); ⁶Li α-tag is beam-blind (3–9%);
   tritons need IR-8.

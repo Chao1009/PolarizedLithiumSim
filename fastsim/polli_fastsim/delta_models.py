@@ -43,7 +43,21 @@ physics is expressed here with the `dilution` factor multiplying Delta
 (default 1/3 for 6Li, the conservative Cloet convention already used in
 beams.LI6): P_zz = 0.8 with dilution = 1/3 reproduces their numbers
 exactly.  Do not set dilution != 1 AND use a per-nucleon-normalized
-P_zz at the same time.
+P_zz at the same time.  Known residual inconsistency (audited
+2026-08-10): the scenario b1 curves (polarized.toy_b1) carry NO such
+dilution -- acceptable while b1 is a shape scenario, but the b1 and
+Delta conventions must be unified before any combined tensor fit.
+
+Assumption made explicit (2026-08-10 audit): the Sather-Schmidt moment
+was computed for a single bag (Delta++) target; applying it to the
+PER-NUCLEON Delta of 6Li -- inherited verbatim from the money_delta
+suite so the two lines stay comparable -- is itself a scenario choice,
+on top of which `dilution` restricts the exotic glue to the polarized
+pair.  <Q2>-convention note: the money_delta production solve used
+Scenario(q2_min=2.0)+EPPS21 (<Q2> = 7.4, A = -0.310); our callers use
+their own accepted phase space (q2_min=1.0, toy F1: <Q2> = 3.9,
+A = -0.294) -- the F1 model, not q2_ref, dominates the small
+difference.
 """
 
 from dataclasses import dataclass, field
@@ -86,6 +100,39 @@ def alpha_s_lo(q2, lambda_qcd=0.22, n_f=4):
     lam2 = lambda_qcd * lambda_qcd
     ln = np.log(np.maximum(q2, lam2 * 1.01) / lam2)
     return 12.0 * np.pi / ((33.0 - 2.0 * n_f) * ln)
+
+
+_ALPHAS_CACHE = {}
+
+
+def alpha_s_table(setname="CT18NLO"):
+    """alpha_s(Q2) interpolated from the parton PDF table (AlphaS_Qs /
+    AlphaS_Vals in the set's .info) -- the money_delta PRIMARY source.
+    Returns a callable, or None if the parton package/grids are absent.
+    """
+    if setname in _ALPHAS_CACHE:
+        return _ALPHAS_CACHE[setname]
+    func = None
+    try:
+        from parton import mkPDF
+        info = mkPDF(setname, 0).pdfset.info
+        qs = np.asarray(info["AlphaS_Qs"], dtype=float)
+        vals = np.asarray(info["AlphaS_Vals"], dtype=float)
+
+        def func(q2, _qs=qs, _vals=vals):
+            q = np.sqrt(np.maximum(np.asarray(q2, dtype=float),
+                                   _qs[0] ** 2))
+            return np.interp(q, _qs, _vals)
+    except Exception:
+        func = None
+    _ALPHAS_CACHE[setname] = func
+    return func
+
+
+def default_alpha_s():
+    """Preferred alpha_s: parton table (money_delta production convention,
+    ~14% below the LO analytic at Q2 ~ 2-15 GeV2), LO fallback."""
+    return alpha_s_table() or alpha_s_lo
 
 
 @dataclass
@@ -144,8 +191,12 @@ def solve_A_interp_b(variant="mid_x", c_moment=C_BAG):
 
 
 def make_moment_a(f1_func, q2_ref, variant="mid_x", c_moment=C_BAG,
-                  dilution=1.0, alphas=alpha_s_lo):
-    """Interpretation A: Delta = dilution * A * alpha_s(Q2) * F1 * shape."""
+                  dilution=1.0, alphas=None):
+    """Interpretation A: Delta = dilution * A * alpha_s(Q2) * F1 * shape.
+
+    alphas=None resolves to default_alpha_s() (parton table preferred,
+    matching the money_delta production convention; LO fallback)."""
+    alphas = alphas or default_alpha_s()
     a_solved = solve_A_interp_a(f1_func, q2_ref, variant, c_moment)
 
     def func(x, q2, f1):
@@ -157,8 +208,11 @@ def make_moment_a(f1_func, q2_ref, variant="mid_x", c_moment=C_BAG,
 
 
 def make_moment_b(variant="mid_x", c_moment=C_BAG, dilution=1.0,
-                  alphas=alpha_s_lo):
-    """Interpretation B: Delta = dilution * A * alpha_s(Q2) * shape."""
+                  alphas=None):
+    """Interpretation B: Delta = dilution * A * alpha_s(Q2) * shape.
+
+    alphas=None resolves to default_alpha_s()."""
+    alphas = alphas or default_alpha_s()
     a_solved = solve_A_interp_b(variant, c_moment)
 
     def func(x, q2, f1):

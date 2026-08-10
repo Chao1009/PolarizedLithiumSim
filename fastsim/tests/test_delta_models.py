@@ -30,7 +30,8 @@ def _moment(model, f1_func, q2):
 
 def test_moment_a_satisfies_sum_rule(f1_func):
     q2_ref = 7.4
-    model = dm.make("moment_A", f1_func=f1_func, q2_ref=q2_ref)
+    model = dm.make("moment_A", f1_func=f1_func, q2_ref=q2_ref,
+                    alphas=dm.alpha_s_lo)
     # at Q2 = q2_ref the constraint holds by construction:
     # int x Delta dx = c * alpha_s(q2_ref)
     expect = dm.C_BAG * dm.alpha_s_lo(q2_ref)
@@ -39,11 +40,25 @@ def test_moment_a_satisfies_sum_rule(f1_func):
 
 
 def test_moment_b_analytic_sum_rule(f1_func):
-    model = dm.make("moment_B")
+    model = dm.make("moment_B", alphas=dm.alpha_s_lo)
     for q2 in (3.0, 10.0):
         expect = dm.C_BAG * dm.alpha_s_lo(q2)
         assert _moment(model, f1_func, q2) == pytest.approx(expect,
                                                             rel=1e-3)
+
+
+def test_default_alphas_resolution(f1_func):
+    # alphas=None resolves to the parton table when grids exist, else LO;
+    # the sum rule must hold with whatever was resolved
+    resolved = dm.default_alpha_s()
+    model = dm.make("moment_B")
+    q2 = 5.0
+    assert _moment(model, f1_func, q2) == pytest.approx(
+        dm.C_BAG * float(resolved(q2)), rel=1e-3)
+    # table alpha_s, when present, sits below the LO analytic at Q2 ~ 5
+    table = dm.alpha_s_table()
+    if table is not None:
+        assert float(table(5.0)) < float(dm.alpha_s_lo(5.0))
 
 
 def test_dilution_scales_linearly(f1_func):
