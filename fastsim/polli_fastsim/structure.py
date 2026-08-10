@@ -12,6 +12,22 @@ Keep the F2Source interface so the swap is one line in the scripts.
 import numpy as np
 
 ALPHA_EM = 1.0 / 137.036
+
+
+def _safe_xfx(pdf, pid, x, q2):
+    """Coerce xfxQ2 return value to a plain Python float.
+
+    Guards against the NumPy ≥ 2.0 breakage where float() on a 0-d ndarray
+    raises TypeError instead of extracting the scalar.
+    """
+    v = pdf.xfxQ2(pid, x, q2)
+    try:
+        return float(v)
+    except TypeError:
+        # NumPy ≥ 2 0-d array path
+        return float(np.asarray(v).item())
+
+
 GEV2_TO_PB = 0.3894e9  # (hbar c)^2 in GeV^2 * pb
 
 
@@ -62,8 +78,8 @@ class PartonF2:
             return 0.0
         tot = 0.0
         for pid, e2 in self._E2.items():
-            tot += e2 * (self._pdf.xfxQ2(pid, x, q2)
-                         + self._pdf.xfxQ2(-pid, x, q2))
+            tot += e2 * (_safe_xfx(self._pdf, pid, x, q2)
+                         + _safe_xfx(self._pdf, -pid, x, q2))
         return max(tot, 0.0)
 
     def f2p(self, x, q2):
@@ -79,8 +95,8 @@ class PartonF2:
             if not (0.0 < xx < 1.0):
                 return 0.0
             e2n = {1: 4 / 9, 2: 1 / 9, 3: 1 / 9, 4: 4 / 9, 5: 1 / 9}
-            return max(sum(e2 * (self._pdf.xfxQ2(p, xx, qq)
-                                 + self._pdf.xfxQ2(-p, xx, qq))
+            return max(sum(e2 * (_safe_xfx(self._pdf, p, xx, qq)
+                                 + _safe_xfx(self._pdf, -p, xx, qq))
                            for p, e2 in e2n.items()), 0.0)
 
         return np.vectorize(scalar)(x, q2)

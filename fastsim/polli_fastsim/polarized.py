@@ -12,7 +12,7 @@ be exercised end-to-end; Phase-1 steps 1.3-1.5 replace them with:
 
 import numpy as np
 
-from .structure import ToyF2, r_sigma_lt
+from .structure import ToyF2, r_sigma_lt, _safe_xfx
 
 
 class ToyG1:
@@ -72,8 +72,8 @@ class PartonG1(ToyG1):
         for pid, e2 in self._E2.items():
             if swap_ud and pid in (1, 2):
                 e2 = self._E2[3 - pid]
-            tot += e2 * (self._pol.xfxQ2(pid, x, q2)
-                         + self._pol.xfxQ2(-pid, x, q2))
+            tot += e2 * (_safe_xfx(self._pol, pid, x, q2)
+                         + _safe_xfx(self._pol, -pid, x, q2))
         return 0.5 * tot / x  # xfxQ2 returns x*Dq
 
     def g1p(self, x, q2):

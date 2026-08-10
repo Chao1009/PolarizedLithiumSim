@@ -21,3 +21,9 @@ BeAGLE_jz/
 
 # generated evgen outputs (reproduce with evgen/scripts/closure_fom.py)
 evgen/out/
+
+# generated coverage plot directory (not tracked; regenerate from scripts)
+fastsim/scripts/out_coverage/
+
+# macOS Finder metadata
+.DS_Store
