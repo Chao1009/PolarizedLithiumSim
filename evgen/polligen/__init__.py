@@ -19,7 +19,9 @@ if str(_FASTSIM) not in sys.path:
 
 import polli_fastsim  # noqa: E402,F401  (path check; polligen depends on it)
 
-from . import spin, xsec, bookkeeping, sample, estimators, tagged  # noqa: E402
+from . import (spin, xsec, bookkeeping, sample,  # noqa: E402
+               estimators, tagged, coherent)
 
-__all__ = ["spin", "xsec", "bookkeeping", "sample", "estimators", "tagged"]
+__all__ = ["spin", "xsec", "bookkeeping", "sample", "estimators", "tagged",
+           "coherent"]
 __version__ = "0.1.0"

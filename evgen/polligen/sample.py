@@ -101,6 +101,40 @@ class InclusiveSampler:
     def expected_events(self, category, lumi_pb):
         return lumi_pb * self.sigma_tot_pb(category)
 
+    def effective_modulation(self, category, mask=None):
+        """Fill-averaged accepted cross section and phi amplitudes.
+
+        Returns (sigma_pb, a1_eff, a2_eff) for the category's population
+        mixture over its accepted cells (optionally restricted to a
+        boolean `mask` over the accepted-cell arrays, e.g. a sweet-spot
+        super-bin in (x, Q2)):
+            sigma_pb = sum_m p_m sum_c sigma_c (1 + w_avg)
+            a_k_eff  = [sum_m p_m sum_c sigma_c a_k] / sigma_pb
+        so that the category's phi' distribution is
+        proportional to 1 + a1_eff cos phi' + a2_eff cos 2phi'.
+        For a tensor-only transverse fill (b1 = 0), a2_eff reduces to
+        P_zz * asymmetries.a_cos2phi rate-averaged over the cells
+        (tested in test_coherent.py).
+        """
+        ms = _m_values(category.j)
+        pops = np.asarray(category.populations, dtype=float)
+        sel = (slice(None) if mask is None
+               else np.asarray(mask, dtype=bool))
+        xsec = self.xsec_flat[sel]
+        den = 0.0
+        num1 = 0.0
+        num2 = 0.0
+        for p_m, mm in zip(pops, ms):
+            if p_m <= 0.0:
+                continue
+            w_avg, a1, a2 = self._amplitudes(category, mm)
+            den += p_m * float((xsec * (1.0 + w_avg[sel])).sum())
+            num1 += p_m * float((xsec * a1[sel]).sum())
+            num2 += p_m * float((xsec * a2[sel]).sum())
+        if den <= 0.0:
+            return 0.0, 0.0, 0.0
+        return den, num1 / den, num2 / den
+
     # --- sampling -------------------------------------------------------------
 
     def sample_category(self, category, lumi_pb=None, n=None, rng=None,
@@ -198,6 +232,29 @@ class InclusiveSampler:
 def _m_values(j):
     n = int(round(2 * j + 1))
     return np.array([j - i for i in range(n)])
+
+
+def phi_histogram_pseudo(n_expected, a2, nbins=36, rng=None, a1=0.0,
+                         poisson=True):
+    """Binned phi' pseudo-experiment at full projected statistics.
+
+    Expected counts per bin are the EXACT integral of
+    n_expected/(2 pi) * (1 + a1 cos phi' + a2 cos 2phi') over each of
+    `nbins` uniform bins, Poisson-fluctuated.  For binned estimators this
+    carries statistics identical to event-level sampling, so 1e8-event
+    projections cost 36 Poisson draws instead of 1e8 rows.
+
+    Returns (counts, edges) ready for estimators.cos2phi_fit_binned.
+    """
+    rng = rng or np.random.default_rng(20260713)
+    edges = np.linspace(0.0, 2.0 * np.pi, nbins + 1)
+    lo, hi = edges[:-1], edges[1:]
+    mu = (n_expected / (2.0 * np.pi)) * (
+        (hi - lo)
+        + a1 * (np.sin(hi) - np.sin(lo))
+        + 0.5 * a2 * (np.sin(2.0 * hi) - np.sin(2.0 * lo)))
+    counts = rng.poisson(mu) if poisson else mu
+    return counts, edges
 
 
 def run_pseudo_experiment(sampler, plan, total_lumi_pb, rng=None,

@@ -13,6 +13,7 @@ brings to the EIC, in support of the ANL polarized ⁶,⁷Li ion-source program
 | [03_phase2_full_simulation.md](03_phase2_full_simulation.md) | Phase 2: full ePIC chain (eic-shell → npsim → EICrecon) — far-forward acceptance for Li fragments, reconstructed-level closure tests |
 | [04_open_questions.md](04_open_questions.md) | External dependencies: ring spin dynamics, optics for Li, BeAGLE validity, theory curves — each with owner and default assumption |
 | [05_doubly_polarized_generator.md](05_doubly_polarized_generator.md) | "polligen": doubly polarized e+⁶,⁷Li event generator — spin-density-matrix ⊗ cluster-IA kernel, reweighting + native modes, tagged spin observables, HepMC3 for ePIC |
+| [06_cos2phi_coherent_backgrounds.md](06_cos2phi_coherent_backgrounds.md) | cos 2φ money plots as projected data points (sweet-spot bins); the coherent intact-⁶Li channel (RP tag, 13.5% HA acceptance) and its full background budget (α+d beam-blindness, T=1 veto pattern, Z-ID question #19) |
 
 ## The physics in three lines
 
@@ -46,6 +47,31 @@ brings to the EIC, in support of the ANL polarized ⁶,⁷Li ion-source program
    with partial snakes; ~138/~117 GeV/u top energies.
 5. **Calendar anchor**: INT program on polarized ion beams at EIC,
    March 22 – April 2, 2027 — target for Phase-1 money plots.
+
+## Development run 5 (2026-08-10): cos 2φ money plots + coherent channel
+
+- ☑ **Money plots 5–6 — cos 2φ as projected data points** (user request):
+  `evgen/scripts/money_cos2phi.py` (inclusive gluonometry: φ′ pseudo-data
+  with stat error bars in 4 sweet-spot (x,Q²) super-bins, Q² = 1.1→14
+  GeV² at x ≈ 0.02–0.06, + amplitude-vs-x scenario curves; per-bin
+  δA ≈ (0.4–1.2)×10⁻⁴ at 100 fb⁻¹/u, P_zz = 0.6) and
+  `evgen/scripts/money_cos2phi_coherent.py` (coherent e⁶Li→e′X⁶Li(g.s.):
+  intact recoil is exactly beam-blind (R = 1.000) ⇒ RP pT-tail only —
+  **acc = exp(−B pT_cut²) = 13.5% with high-acceptance optics, 4×10⁻⁵
+  with high-divergence: the coherent program fixes the optics**; ~10⁸
+  tagged events at 100 fb⁻¹/u, best-bin δA ≈ 6×10⁻⁴, 5σ floor at a
+  0.3% modulation — apparently the first intact-tag projection for any
+  A = 6). New `polligen/coherent.py` (+10 tests, 64 total),
+  `phi_histogram_pseudo` full-luminosity binned pseudo-experiments,
+  `cos2phi_fit_binned`, `effective_modulation`.
+- ☑ **plans/06 background budget** for the coherent tag, anchored on a
+  32-claim verified research sweep: the α+d channel is the killer (both
+  fragments R = 1.000, same velocity — only dE/dx Z² separates); every
+  T = 1 ⁶Li* state is γ- or nucleon-vetoable while T = 0 states feed
+  the blind channel; B0 EMCal (not ZDC) catches the 3.56 MeV
+  de-excitation γ; ⁶Li is a deformation null test (Q = −0.0806 fm²).
+  New open questions #18 (coherent model) and #19 (RP Z-ID for
+  A/Z = 2 — no EIC document addresses it).
 
 ## Development run 4 (2026-07-13): polligen Step 5.A
 

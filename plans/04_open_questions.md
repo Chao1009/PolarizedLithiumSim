@@ -103,6 +103,15 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
 17. **HepMC3 convention for ion spin states** — none exists; plans/05
     step 5.D defines named attributes and proposes them upstream.
     *Engage:* ePIC MC/software group. *Default:* our attribute schema.
+18. **Coherent diffractive model for (tensor-polarized) ⁶Li** — no
+    light-nucleus coherent-fraction prediction exists (lightest
+    published is Ca); the tensor cos 2φ of the coherent yield has no
+    calculation at all. Template: Mäntysaari et al. arXiv:2408.13213
+    (polarized-deuteron coherent VM imaging); the ⁶Li case is a clean
+    null test (Q(⁶Li) = −0.0806 fm²). *Engage:* small-x/diffraction
+    theory community. *Default:* `polligen/coherent.CoherentScenario`
+    bands (f₀ = 0.04 ×2÷2, B = 50 ± 10 GeV⁻², amp scenario
+    10⁻³–few×10⁻²) — plans/06.
 
 ## Still open — detector / software
 
@@ -115,6 +124,15 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
 13. **Afterburner + beamline configs for Li** — verified absent; three
     concrete artifacts to add (EicConfigurator.cc preset; beamline_*.xml;
     BeAGLE runcard). ⁶Li can start from He-4/deuteron files (same Z/A).
+19. **Roman-Pot charge discrimination for A/Z = 2 fragments** — an
+    intact ⁶Li, an α, and a d from breakup have identical rigidity AND
+    velocity; only dE/dx (∝ Z²: 9/4/1) separates them. The EICROC
+    AC-LGAD chain records pulse amplitude (for charge-sharing) but no
+    EIC document addresses Z-ID in the RPs; the documented concept is a
+    Z² Cherenkov behind the IR-8 secondary-focus pots (arXiv:2211.15746
+    §VIII, 2602.04636). Make-or-break for the coherent intact-⁶Li tag
+    (plans/06 §6.2). *Engage:* ePIC FF WG (A. Jentsch). *Default:*
+    assume no event-by-event Z-ID at IP6 → two-component |t| fit.
 
 ## Tracking
 
@@ -129,3 +147,5 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
 | 11–13 | software checks | scheduled | inside Phase-1/2 steps |
 | 14–16 | generator theory inputs (plans/05) | open | Cloët/Cosyn (14), Wiringa (15), Cosyn/Sargsian (16) |
 | 17 | HepMC3 ion-spin convention | scheduled | plans/05 step 5.D → ePIC MC group |
+| 18 | coherent-⁶Li diffractive model (plans/06) | open | small-x theory engagement; scenario bands until then |
+| 19 | RP Z-ID for A/Z = 2 (plans/06) | open | ask ePIC FF WG — decides coherent-tag purity strategy |

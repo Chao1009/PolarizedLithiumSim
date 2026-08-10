@@ -11,11 +11,13 @@ next. Imports `../fastsim/polli_fastsim` — nothing there is duplicated.
 
 ```bash
 cd evgen
-python3 -m pytest tests/ -q            # 54 tests (grid tests auto-skip)
+python3 -m pytest tests/ -q            # 64 tests (grid tests auto-skip)
 python3 scripts/closure_fom.py --ion 6Li --events 200000 --trials 200
 python3 scripts/closure_fom.py --ion 7Li --events 200000 --trials 200
 python3 scripts/money_tagged_azz.py --events 400000       # money plot 4
 python3 scripts/tagged_polarimetry_7li.py --events 300000
+python3 scripts/money_cos2phi.py --lumi 100               # money plot 5
+python3 scripts/money_cos2phi_coherent.py --lumi 100      # money plot 6
 ```
 
 ## Modules
@@ -28,6 +30,24 @@ python3 scripts/tagged_polarimetry_7li.py --events 300000
 | `polligen/sample.py` | grid inverse-CDF sampler: per-spin-state Poisson rates (φ-averaged modulation shifts counting rates), φ accept-reject, Mode-W weight matrices |
 | `polligen/estimators.py` | analysis-side estimators: helicity-flip, tensor thirds, cos 2φ moment + binned LSQ fit (holey-φ robust), luminosity-corrected yields |
 | `polligen/tagged.py` | two-cluster spin model: CG-coupled L-waves → m-dependent spectator densities n_M(k,k̂), embedded-cluster spin populations, pair decomposition; TaggedSampler = spin ⊗ spectator ⊗ DIS ⊗ far-forward routing |
+| `polligen/coherent.py` | coherent (intact-g.s.) e+⁶Li channel: scenario coherent fraction/slope, intact-recoil kinematics (R = 1.000 → RP pT-tail only), analytic tag acceptance exp(−B pT_cut²), per-bin tagged-rate projections, breakup veto table (plans/06) |
+
+## Money plots 5–6 (2026-08-10): cos 2φ as projected data points
+
+`money_cos2phi.py`: inclusive gluonometry pseudo-data (φ′ modulation
+with statistical error bars) in the four sweet-spot (x, Q²) super-bins,
+picked per Q² band from the significance map, plus amplitude-vs-x with
+Δ/F₁ scenario curves. Full-luminosity statistics via per-φ-bin Poisson
+draws (`sample.phi_histogram_pseudo` — exact for binned estimators).
+At 100 fb⁻¹/u, P_zz = 0.6 (mid energy): per-bin δA ≈ (0.4–1.2)×10⁻⁴.
+
+`money_cos2phi_coherent.py`: the coherent channel e⁶Li → e′X ⁶Li(g.s.)
+with the intact recoil tagged in the Roman-Pot near-beam pT tail
+(R = 1.000 exactly — beam-blind below the pT cut): acceptance
+exp(−B pT_cut²) = 13.5% [9–20%] with high-acceptance optics vs 4×10⁻⁵
+with high-divergence; ~10⁸ tagged events at 100 fb⁻¹/u (scenario
+f₀ = 0.04), best-bin δA ≈ 6×10⁻⁴ (5σ floor at a 0.3% modulation).
+Backgrounds and the RP charge-ID question: plans/06.
 
 ## Step-5.A validation gates (plans/05 §5.4) — all passing
 

@@ -39,9 +39,15 @@ def cos2phi_moment(phi_prime, pzz):
     return 2.0 * np.mean(np.cos(2.0 * np.asarray(phi_prime))) / pzz
 
 
-def cos2phi_fit(phi_prime, pzz, nbins=36, acceptance=None, nsub=9):
-    """Binned least-squares amplitude of N(phi') = C (1 + A cos 2phi'),
-    robust to phi acceptance holes.
+def cos2phi_fit_binned(counts, edges, pzz, acceptance=None, nsub=9):
+    """Binned least-squares amplitude of N(phi') = C (1 + A cos 2phi') from
+    a precomputed phi' histogram (counts on `edges`), robust to phi
+    acceptance holes.
+
+    This is the histogram-level core of `cos2phi_fit`; use it directly for
+    full-luminosity projections where the per-phi-bin counts are drawn
+    Poisson from expected yields (binned estimators see statistics
+    identical to event-level sampling, without 1e8-event arrays).
 
     `acceptance`: optional boolean callable acc(phi) marking live phi values.
     Each bin is probed at `nsub` points across its full width and dropped
@@ -50,10 +56,16 @@ def cos2phi_fit(phi_prime, pzz, nbins=36, acceptance=None, nsub=9):
     (by more than the gluonometry signal for unlucky hole placements).
     Returns A / pzz, with the finite-bin-width dilution sin(w)/w
     (w = bin half-width in 2phi) corrected.
+
+    Preconditions: uniform bins; the counts follow C(1 + A cos 2phi') --
+    a residual cos phi' modulation is orthogonal only at full coverage
+    and would leak into A through acceptance holes.  The gluonometry
+    fills satisfy this by design (m-symmetric tensor populations give
+    a1_eff = 0 identically; see sample.effective_modulation).
     """
-    phi_prime = np.mod(np.asarray(phi_prime, dtype=float), 2.0 * np.pi)
-    edges = np.linspace(0.0, 2.0 * np.pi, nbins + 1)
-    counts, _ = np.histogram(phi_prime, bins=edges)
+    counts = np.asarray(counts, dtype=float)
+    edges = np.asarray(edges, dtype=float)
+    nbins = counts.size
     centers = 0.5 * (edges[:-1] + edges[1:])
     use = np.ones(nbins, dtype=bool)
     if acceptance is not None:
@@ -63,7 +75,7 @@ def cos2phi_fit(phi_prime, pzz, nbins=36, acceptance=None, nsub=9):
                           dtype=bool).reshape(probes.shape)
         use &= live.all(axis=1)
     c2 = np.cos(2.0 * centers[use])
-    n = counts[use].astype(float)
+    n = counts[use]
     # linear LSQ for N = C + B*cos2phi  (B = C*A)
     design = np.vstack([np.ones(c2.size), c2]).T
     coef, *_ = np.linalg.lstsq(design, n, rcond=None)
@@ -71,6 +83,16 @@ def cos2phi_fit(phi_prime, pzz, nbins=36, acceptance=None, nsub=9):
     w = 0.5 * (edges[1] - edges[0])  # half-width; dilution in 2phi
     dilution = np.sin(2.0 * w) / (2.0 * w)
     return amp / dilution / pzz
+
+
+def cos2phi_fit(phi_prime, pzz, nbins=36, acceptance=None, nsub=9):
+    """Event-level wrapper of `cos2phi_fit_binned`: histogram phi' on
+    `nbins` uniform bins over [0, 2pi) and fit the cos 2phi' amplitude."""
+    phi_prime = np.mod(np.asarray(phi_prime, dtype=float), 2.0 * np.pi)
+    edges = np.linspace(0.0, 2.0 * np.pi, nbins + 1)
+    counts, _ = np.histogram(phi_prime, bins=edges)
+    return cos2phi_fit_binned(counts, edges, pzz, acceptance=acceptance,
+                              nsub=nsub)
 
 
 def binned_counts(events, x_edges, q2_edges):
