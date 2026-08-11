@@ -245,7 +245,8 @@ def main():
         r"Coherent $e\,^6$Li$\,\to\,e'X\,^6$Li(g.s.), transversely "
         r"tensor-polarized, %s, $P_{zz}=%.2f$"
         "\n(scenario rates; modulation anchored on the polarized-$d$ "
-        "CGC calculation, PLB 858:139053 -- plans/06 SS6.4b)"
+        "CGC calculation, PLB 858:139053 -- plans/06 SS6.4b; statistical "
+        "only, backgrounds/purity and tensor RC unquantified)"
         % (config.label(), args.pzz), fontsize=10)
     fig.tight_layout(rect=(0, 0, 1, 0.93))
     outdir = pathlib.Path(args.outdir)

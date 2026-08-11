@@ -85,9 +85,18 @@ class CoherentScenario:
              low |t| with a_2(0) = -2 a_2(+-1) and Delta B_0/B ~ 0.21
              (6% D-wave).  6Li scaling: relative quadrupole deformation
              Q/r^2 is ~5x smaller than the deuteron's and OPPOSITE in
-             sign (Q = -0.0806 fm^2), while the alpha-d asymptotic D/S
-             ratio eta = -0.010..-0.015 vs eta_d = +0.0256 suggests
-             0.4-0.6x -- band eps_b0 in -(0.04..0.13), default -0.08.
+             sign (Q = -0.0806 fm^2).  The alpha-d asymptotic D/S ratio
+             is itself disputed (2026-08-11 reference audit): the
+             (6Li,d) transfer measurement of Veal et al. PRC 60:064003
+             gives eta = +0.0003(9) -- CONSISTENT WITH ZERO, mirroring
+             the Q cancellation -- while older sub-Coulomb analyses
+             favored eta ~ -0.01.  The gluonic deformation need not
+             share these charge-sector cancellations; band eps_b0 in
+             -(0.04..0.13) (default -0.08) spans the Q/r^2 dial up to a
+             no-cancellation deuteron-like value, with near-zero
+             deformation an open possibility covered by the quoted
+             5-sigma floors -- whether the gluonic quadrupole cancels
+             like the charge one is precisely the measurement.
              Caveat (arXiv:2411.14934): JIMWLK evolution washes out
              deformation toward small x, so the low-x_P tail may shrink.
     """

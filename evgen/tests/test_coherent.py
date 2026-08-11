@@ -165,3 +165,11 @@ def test_effective_modulation_matches_analytic():
     expect = pzz * float((sampler.xsec_flat * amp).sum()
                          / sampler.xsec_flat.sum())
     assert a2_eff == pytest.approx(expect, rel=1e-9)
+
+
+def test_cos2phi_fit_binned_raises_on_dead_acceptance():
+    counts, edges = phi_histogram_pseudo(1e5, a2=0.02, poisson=False)
+    with pytest.raises(ValueError):
+        cos2phi_fit_binned(counts, edges, 0.6,
+                           acceptance=lambda phi: np.zeros_like(
+                               np.asarray(phi), dtype=bool))

@@ -52,6 +52,9 @@ from polli_fastsim.polarized import ToyG1
 
 M_NUCLEON = 0.9383  # GeV (per-nucleon target mass for gamma = 2Mx/Q)
 
+# NumPy compat: np.trapz removed in NumPy >= 2.4, np.trapezoid absent < 2.0
+_trapezoid = getattr(np, "trapezoid", None) or np.trapz
+
 
 def g2_ww(g1_func, x, q2, npts=96):
     """Wandzura-Wilczek g2(x) = -g1(x) + int_x^1 du g1(u)/u at fixed Q2.
@@ -68,7 +71,7 @@ def g2_ww(g1_func, x, q2, npts=96):
     xu = np.power(xf[:, None], 1.0 - t)
     qu = np.broadcast_to(qf[:, None], xu.shape)
     g1u = np.asarray(g1_func(xu, qu), dtype=float)
-    integral = -np.log(np.maximum(xf, 1e-12)) * np.trapz(g1u, t, axis=-1)
+    integral = -np.log(np.maximum(xf, 1e-12)) * _trapezoid(g1u, t, axis=-1)
     out = -np.asarray(g1_func(xf, qf), dtype=float) + integral
     return out.reshape(shape)
 

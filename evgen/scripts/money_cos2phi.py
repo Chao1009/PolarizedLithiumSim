@@ -248,8 +248,11 @@ def main():
         m = measure(sampler, cat, mask, lumi1_pb, plan.pzz_true, rng)
         if m["n"] < 1e3 or m["err"] > 8e-3:
             continue
-        m["err10"] = cos2phi_fit_err(lumi10_pb * m["sigma_pb"],
-                                     plan.pzz_true)
+        # independent 10-yr pseudo-measurement (2026-08-11 audit: reusing
+        # the 1-yr draw with 10-yr bars scattered points ~sqrt(10) sigma)
+        m10 = measure(sampler, cat, mask, lumi10_pb, plan.pzz_true, rng)
+        m["amp10"] = m10["amp"]
+        m["err10"] = m10["err"]
         pts.append((xc, m))
     xoff = 1.045  # slight offset so the two series stay legible
     ax.errorbar([p[0] for p in pts], [1e3 * p[1]["amp"] for p in pts],
@@ -257,7 +260,7 @@ def main():
                 mfc="none", color=C_FIT, ms=4, capsize=2, lw=1, zorder=3,
                 label=r"1-year EIC (%g fb$^{-1}$/u)" % args.lumi_1yr)
     ax.errorbar([p[0] * xoff for p in pts],
-                [1e3 * p[1]["amp"] for p in pts],
+                [1e3 * p[1]["amp10"] for p in pts],
                 yerr=[1e3 * p[1]["err10"] for p in pts], fmt="o",
                 color="black", ms=4, capsize=2, lw=1, zorder=4,
                 label=r"10-year EIC (%g fb$^{-1}$/u)" % args.lumi_10yr)
@@ -292,8 +295,8 @@ def main():
     fig.suptitle(
         r"Nuclear gluonometry, transversely tensor-polarized $^6$Li, "
         r"%s, $P_{zz}=%.2f$""\n"
-        r"$\Delta$: %s;  $\phi'$ panels at 1 year (%g fb$^{-1}$/u), "
-        "amplitudes for 1 and 10 years"
+        r"$\Delta$: %s;  $\phi'$ at 1 yr (%g fb$^{-1}$/u), amplitudes "
+        "1 & 10 yr — stat. only; bkg & tensor RC unquantified (plans/06)"
         % (config.label(), plan.pzz_true, model.info(), args.lumi_1yr),
         fontsize=10)
     fig.subplots_adjust(top=0.86, bottom=0.09, left=0.06, right=0.985)

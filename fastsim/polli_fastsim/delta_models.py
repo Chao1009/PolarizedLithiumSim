@@ -66,6 +66,9 @@ import numpy as np
 
 from .polarized import toy_delta_gluon
 
+# NumPy compat: np.trapz removed in NumPy >= 2.4, np.trapezoid absent < 2.0
+trapezoid = getattr(np, "trapezoid", None) or np.trapz
+
 # Sather-Schmidt bag-model sum-rule coefficient (PRD 42:1424):
 # int_0^1 x Delta dx = C_BAG * alpha_s(Q2)
 C_BAG = -0.012
@@ -108,7 +111,11 @@ _ALPHAS_CACHE = {}
 def alpha_s_table(setname="CT18NLO"):
     """alpha_s(Q2) interpolated from the parton PDF table (AlphaS_Qs /
     AlphaS_Vals in the set's .info) -- the money_delta PRIMARY source.
-    Returns a callable, or None if the parton package/grids are absent.
+    Below the table minimum (CT18NLO: Q = 1.295 GeV) the value CONTINUES
+    RUNNING with the LO shape matched to the table edge, instead of
+    freezing (2026-08-11 audit: a silent freeze flattened alpha_s by
+    ~12% exactly in the Q2 = 1.0-1.7 GeV2 bins where the top sweet spots
+    sit).  Returns a callable, or None if parton/grids are absent.
     """
     if setname in _ALPHAS_CACHE:
         return _ALPHAS_CACHE[setname]
@@ -118,11 +125,14 @@ def alpha_s_table(setname="CT18NLO"):
         info = mkPDF(setname, 0).pdfset.info
         qs = np.asarray(info["AlphaS_Qs"], dtype=float)
         vals = np.asarray(info["AlphaS_Vals"], dtype=float)
+        q2_min = qs[0] ** 2
+        edge_ratio = vals[0] / float(alpha_s_lo(q2_min))
 
-        def func(q2, _qs=qs, _vals=vals):
-            q = np.sqrt(np.maximum(np.asarray(q2, dtype=float),
-                                   _qs[0] ** 2))
-            return np.interp(q, _qs, _vals)
+        def func(q2, _qs=qs, _vals=vals, _q2min=q2_min, _r=edge_ratio):
+            q2 = np.asarray(q2, dtype=float)
+            above = np.interp(np.sqrt(np.maximum(q2, _q2min)), _qs, _vals)
+            below = _r * alpha_s_lo(q2)  # LO shape matched at the edge
+            return np.where(q2 >= _q2min, above, below)
     except Exception:
         func = None
     _ALPHAS_CACHE[setname] = func
@@ -175,7 +185,7 @@ def solve_A_interp_a(f1_func, q2_ref, variant="mid_x", c_moment=C_BAG,
     f1 = np.asarray(f1_func(x_grid, np.full_like(x_grid, q2_ref)),
                     dtype=float)
     integrand = x_grid * f1 * shape_normalized(x_grid, variant)
-    integral = float(np.trapz(integrand, x_grid))
+    integral = float(trapezoid(integrand, x_grid))
     if abs(integral) < 1e-30:
         raise ValueError("sum-rule integral vanished (variant=%s)" % variant)
     return c_moment / integral

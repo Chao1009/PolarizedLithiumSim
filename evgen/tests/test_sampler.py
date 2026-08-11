@@ -128,3 +128,13 @@ def test_mode_w_weights_reproduce_rate_ratio(sampler):
                 / sampler.sigma_tot_pb(UNPOL))
     assert w.mean() == pytest.approx(expected,
                                      abs=4 * w.std() / np.sqrt(w.size))
+
+
+def test_sampled_events_respect_acceptance(sampler):
+    # 2026-08-11 audit: boundary cells must not emit y > 1 or out-of-window
+    # events (log-uniform in-cell placement is redrawn into acceptance)
+    ev = sampler.sample_category(UNPOL, n=200000,
+                                 rng=np.random.default_rng(11))
+    sc = sampler.scenario
+    assert ev["y"].max() <= sc.y_max + 1e-12
+    assert ev["y"].min() >= sc.y_min - 1e-12

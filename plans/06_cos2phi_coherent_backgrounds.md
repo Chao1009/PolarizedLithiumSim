@@ -20,7 +20,7 @@ scenario inputs):
 - **Inclusive:** with the unified Δ registry
   (`polli_fastsim/delta_models`, default `moment_A`: sum-rule-
   constrained, ∫xΔdx = −0.012·α_s, dilution 1/3) the sweet-spot
-  amplitudes are (0.6–1.2)×10⁻² (table-α_s) against per-bin δA ≈ (1.5–4.5)×10⁻⁴
+  amplitudes are (0.7–1.2)×10⁻² (table-α_s, run below the table edge) against per-bin δA ≈ (1.5–4.5)×10⁻⁴
   already at the 1-year program (10 fb⁻¹/u; ÷√10 at 10 years) — the
   measurement resolves the moment_A-vs-moment_B ansatz spread, not just
   a null. [Historical toy-model numbers, kept for reference and
@@ -306,10 +306,16 @@ the arXiv source (now in `coherent.MANTYSAARI_A2_DEUTERON`):
   the right one.
 - **⁶Li scaling, two dials that disagree usefully**: relative quadrupole
   deformation Q/⟨r²⟩ is 5× smaller than the deuteron's (and opposite in
-  sign); the α–d asymptotic D/S ratio η = −0.010…−0.015 vs
-  η_d = +0.0256 suggests 0.4–0.6×. Hence ε_B0(⁶Li) ∈ −(0.04–0.13) with
-  a **predicted sign flip relative to the deuteron** — itself a testable
-  wave-function statement. The Wiringa–Schiavilla VMC result (even exact
+  sign); the α–d asymptotic D/S ratio is itself
+  DISPUTED (2026-08-11 reference audit): the (⁶Li,d) transfer
+  measurement of Veal et al. PRC 60:064003 gives η = +0.0003(9) —
+  consistent with zero, mirroring the Q cancellation — while older
+  sub-Coulomb analyses favored η ≈ −0.01 (vs η_d = +0.0256). Hence
+  ε_B0(⁶Li) ∈ −(0.04–0.13) spans the Q/⟨r²⟩ dial up to a
+  no-cancellation deuteron-like value, with near-zero gluonic
+  deformation an open possibility covered by the quoted 5σ floors;
+  the **predicted sign flip relative to the deuteron** (from Q < 0)
+  remains a testable statement. The Wiringa–Schiavilla VMC result (even exact
   few-body theory misses the ⁶Li quadrupole cancellation by ~3×) is why
   the band stays wide, and why the *gluonic* deformation need not cancel
   like the charge one — measuring it is the physics.

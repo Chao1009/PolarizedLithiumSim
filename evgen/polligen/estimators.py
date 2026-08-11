@@ -74,6 +74,10 @@ def cos2phi_fit_binned(counts, edges, pzz, acceptance=None, nsub=9):
         live = np.asarray(acceptance(probes.ravel()),
                           dtype=bool).reshape(probes.shape)
         use &= live.all(axis=1)
+    if use.sum() < 3:
+        raise ValueError(
+            "cos2phi_fit_binned: only %d live phi bins after the "
+            "acceptance probe -- amplitude unidentifiable" % int(use.sum()))
     c2 = np.cos(2.0 * centers[use])
     n = counts[use]
     # linear LSQ for N = C + B*cos2phi  (B = C*A)

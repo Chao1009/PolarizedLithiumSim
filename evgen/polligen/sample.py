@@ -176,6 +176,25 @@ class InclusiveSampler:
         out["lam_e"] = category.lam_e
         return out
 
+    def _in_acceptance(self, x, q2):
+        """Event-level acceptance: the same kinematic + scattered-electron
+        cuts fom.project_rates applies at cell centers.  Needed because
+        log-uniform in-cell placement in boundary cells would otherwise
+        emit events outside the window -- including unphysical y > 1
+        (2026-08-11 audit: 0.2% of events on the 60x45 grid before this
+        guard)."""
+        from polli_fastsim.kinematics import (kinematic_mask,
+                                              scattered_electron)
+        sc = self.scenario
+        ok = kinematic_mask(x, q2, self.s, q2_min=sc.q2_min,
+                            y_min=sc.y_min, y_max=sc.y_max,
+                            w2_min=sc.w2_min)
+        y = np.clip(q2 / (self.s * x), 1e-9, 1.0 - 1e-12)
+        e_p, _th, eta = scattered_electron(x, y, self.s,
+                                           self.config.electron_energy)
+        return (ok & (eta >= sc.eta_min) & (eta <= sc.eta_max)
+                & (e_p >= sc.e_prime_min))
+
     def _sample_state(self, category, m, n, rng):
         w_avg, a1, a2 = self._amplitudes(category, m)
         weights = self.xsec_flat * (1.0 + w_avg)
@@ -187,6 +206,25 @@ class InclusiveSampler:
                    + u1 * (self.logx_hi[cell] - self.logx_lo[cell]))
         q2 = np.exp(self.logq2_lo[cell]
                     + u2 * (self.logq2_hi[cell] - self.logq2_lo[cell]))
+        # redraw in-cell positions that fell outside the acceptance
+        # (boundary cells only); fall back to the accepted cell center
+        # after `tries` attempts so termination is guaranteed
+        bad = ~self._in_acceptance(x, q2)
+        tries = 20
+        while bad.any() and tries > 0:
+            nb = int(bad.sum())
+            u1b = rng.uniform(size=nb)
+            u2b = rng.uniform(size=nb)
+            cb = cell[bad]
+            x[bad] = np.exp(self.logx_lo[cb]
+                            + u1b * (self.logx_hi[cb] - self.logx_lo[cb]))
+            q2[bad] = np.exp(self.logq2_lo[cb]
+                             + u2b * (self.logq2_hi[cb] - self.logq2_lo[cb]))
+            bad = ~self._in_acceptance(x, q2)
+            tries -= 1
+        if bad.any():
+            x[bad] = self.x_cells[cell[bad]]
+            q2[bad] = self.q2_cells[cell[bad]]
         # phi accept-reject on the cell-center amplitudes
         a1n = a1[cell] / (1.0 + w_avg[cell])
         a2n = a2[cell] / (1.0 + w_avg[cell])

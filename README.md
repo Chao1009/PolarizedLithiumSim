@@ -50,7 +50,7 @@ python scripts/money_tagged_azz.py --events 400000    # tagged tensor asymmetry
 
 - **Gluonometry**: with the sum-rule-constrained Δ model
   (`delta_models`, moment_A, table-α_s) the sweet-spot cos 2φ
-  amplitudes are (0.6–1.2)×10⁻² against per-bin δA = (1.5–4.5)×10⁻⁴
+  amplitudes are (0.7–1.2)×10⁻² against per-bin δA = (1.5–4.5)×10⁻⁴
   already at the 1-year program (10 fb⁻¹/u), across Q² = 1.1–14 GeV²
   at x ≈ 0.02–0.14 — the measurement resolves the interpretation-A-vs-B
   ansatz spread, not just a null.

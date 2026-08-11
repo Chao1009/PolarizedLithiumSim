@@ -35,7 +35,8 @@ Two measurement channels, with different detection demands:
 
 - **Inclusive (breakup) DIS** — only the scattered electron is needed;
   φ is the lepton-plane azimuth relative to the transverse alignment
-  axis. This is the classic HJM measurement [2].
+  axis. This is the classic Jaffe–Manohar measurement [1]; the full
+  spin-1 DIS formalism including b₁ is [2].
 - **Coherent diffractive DIS**, e ⁶Li → e′ X ⁶Li(g.s.) — the nucleus
   stays in its 1⁺ ground state and is detected in the far-forward
   spectrometers. The cos 2φ modulation of the *coherent* yield probes
@@ -75,16 +76,25 @@ inherited from that line, made explicit in the 2026-08-10 audit):
 
 | super-bin (x, Q²) | amplitude | δA, 1 yr | δA, 10 yr |
 |---|---|---|---|
-| 0.056, 1.14 GeV² | +0.99×10⁻² | 1.8×10⁻⁴ | 5.7×10⁻⁵ |
-| 0.022, 1.14 GeV² | +0.60×10⁻² | 1.5×10⁻⁴ | 4.6×10⁻⁵ |
+| 0.056, 1.14 GeV² | +1.07×10⁻² | 1.8×10⁻⁴ | 5.7×10⁻⁵ |
+| 0.022, 1.14 GeV² | +0.65×10⁻² | 1.5×10⁻⁴ | 4.6×10⁻⁵ |
 | 0.14, 3.1 GeV²   | +1.24×10⁻² | 2.6×10⁻⁴ | 8.1×10⁻⁵ |
 | 0.14, 14.3 GeV²  | +0.96×10⁻² | 4.5×10⁻⁴ | 1.4×10⁻⁴ |
 
+(α_s from the CT18NLO table, continued running below the table edge —
+2026-08-11 audit fix; a frozen edge value had suppressed the two
+low-Q² amplitudes by ~10%.)
+
 Under the moment constraint the measurement is no longer a null test:
-every sweet-spot bin is a 21–40σ effect in year 1, and the
+every sweet-spot bin is a 21–44σ effect in year 1, and the
 moment_A-vs-moment_B spread — the dominant ansatz systematic (their
 notes: factor 2–8 in reach) — is itself resolved by the amplitude-vs-x
-shape. (Historical flat-toy numbers at Δ/F₁ = 10⁻³, verified by the
+shape. At 10-year precision the statistical errors (≈ 5×10⁻⁵) sit
+well below the polarimetry-scale systematic (3% of A ≈ 10⁻² is
+3×10⁻⁴): the 10-year measurement is systematics-limited. The
+extraction here divides by the true P_zz; polarimetry smearing exists
+in the run-plan bookkeeper but is not exercised in these plots.
+(Historical flat-toy numbers at Δ/F₁ = 10⁻³, verified by the
 adversarial review: 2.5–2.7σ per bin, 9.7σ full-map at 100 fb⁻¹/u.)
 The Q² lever arm across the panels remains the built-in consistency
 check against power-suppressed (non-partonic) contributions (§6).
@@ -161,10 +171,16 @@ sign-flipping (the deuteron analog of our |t| ≈ 0.31 GeV² caveat).
 1. relative quadrupole deformation Q/⟨r²⟩: deuteron 0.286 fm²/(2.13 fm)²
    ≈ 0.063 vs ⁶Li 0.0806 fm²/(2.59 fm)² ≈ 0.012 — a factor ~5 smaller,
    **opposite sign** (Q(⁶Li) < 0);
-2. the α–d asymptotic D/S ratio η(⁶Li) = −0.010 … −0.015 [16] vs
-   η_d = +0.0256 — a factor 0.4–0.6, same sign flip.
+2. the α–d asymptotic D/S ratio — itself DISPUTED: the (⁶Li,d)
+   transfer measurement of Veal et al. [16] gives η = +0.0003(9),
+   consistent with zero and mirroring the Q cancellation, while older
+   sub-Coulomb analyses favored η ≈ −0.01 (vs η_d = +0.0256). The
+   geometric dial therefore spans zero to ~0.5× the deuteron's.
 
-Hence **ε_B0(⁶Li) ∈ −(0.04 … 0.13), default −0.08**, giving
+Hence **ε_B0(⁶Li) ∈ −(0.04 … 0.13), default −0.08** (near-zero
+deformation remains open if the gluonic sector shares the charge-sector
+cancellations — detecting or excluding it is covered by the quoted 5σ
+floors), giving
 
     ⟨a₂⟩_tag = a₂(⟨|t|⟩_tag; P_zz) ≈ 0.036  [0.018 – 0.059]
 
@@ -223,10 +239,12 @@ on ⁶Li by its anomalously small quadrupole moment,
 Q(⁶Li) = −0.0806(6) fm² ≈ Q(⁷Li)/50 [35]. A sizable flat-in-t coherent
 cos 2φ on ⁶Li cannot be a shape effect; the deformation and gluon
 mechanisms that are entangled for the deuteron separate cleanly in the
-⁶Li/d comparison. Tensor-polarized ⁶Li at the EIC has been explicitly
-called for [36]; funded tensor-target programs at JLab (P_zz = 0.5–0.7)
-show the observable class is considered experimentally realistic
-[37,38].
+⁶Li/d comparison. Tensor-polarized ⁶Li beams are explicitly motivated in the EPIOS white
+paper [50] ("the best chance for discovery may come from larger
+nuclei… spin-1 ⁶Li"); polarized internal-target options at the EIC are
+discussed in [36]; funded tensor-target programs at JLab
+(P_zz = 0.5–0.7) show the observable class is considered
+experimentally realistic [37,38].
 
 ## 5. Background budget for the coherent tag (summary; running version in plans/06)
 
@@ -355,7 +373,7 @@ nuclear structure at small-x*, Eur. Phys. J. C 85 (2025) 1449,
 arXiv:2411.14934.
 [16] K. D. Veal, C. R. Brune, W. H. Geist et al., *Determination of the
 asymptotic D- to S-state ratio for ⁶Li via (⁶Li,d) transfer reactions*,
-Phys. Rev. C 60 (1999) 064003.
+Phys. Rev. C 60 (1999) 064003 (η = +0.0003(9), consistent with zero).
 [17] R. B. Wiringa, R. Schiavilla, *Microscopic calculation of ⁶Li
 elastic and transition form factors*, Phys. Rev. Lett. 81 (1998) 4317,
 nucl-th/9807037.
@@ -369,12 +387,14 @@ nucl-ex/0001006; D. M. Nikolenko et al. (VEPP-3), Phys. Rev. Lett. 90
 [20] A. Airapetian et al. (HERMES), *First measurement of the tensor
 structure function b₁ of the deuteron*, Phys. Rev. Lett. 95 (2005)
 242001, hep-ex/0506018.
-[21] N. N. Nikolaev, W. Schäfer, *Shadowing and the tensor structure
-function b₁*, Phys. Lett. B 398 (1997) 245.
-[22] K. Bora, R. L. Jaffe, *The double-scattering contribution to
+[21] N. N. Nikolaev, W. Schäfer, *Nonvanishing tensor polarization of
+sea quarks in polarized deuterons*, Phys. Lett. B 398 (1997) 245,
+hep-ph/9611460 (and erratum, Phys. Lett. B 407 (1997)).
+[22] K. Bora, R. L. Jaffe, *The double scattering contribution to
 b₁(x,Q²) in the deuteron*, Phys. Rev. D 57 (1998) 6906, hep-ph/9711323.
-[23] J. Edelmann, G. Piller, W. Weise, *Nuclear shadowing and the tensor
-structure function b₁*, Phys. Rev. C 57 (1998) 3392.
+[23] J. Edelmann, G. Piller, W. Weise, *Deuteron spin structure
+functions at small Bjorken x*, Phys. Rev. C 57 (1998) 3392,
+hep-ph/9709455.
 [24] A. Airapetian et al. (HERMES), *Measurement of azimuthal
 asymmetries associated with deeply virtual Compton scattering on a
 longitudinally polarized deuterium target*, Nucl. Phys. B 842 (2011)
@@ -382,8 +402,9 @@ longitudinally polarized deuterium target*, Nucl. Phys. B 842 (2011)
 to coherent scattering small at low −t).
 [25] W. Detmold, P. E. Shanahan, *Gluonic transversity from lattice
 QCD*, Phys. Rev. D 94 (2016) 014507, arXiv:1606.04505.
-[26] W. Detmold, P. E. Shanahan, *Off-forward gluonic structure of
-vector mesons*, Phys. Rev. D 95 (2017) 114515, arXiv:1703.08220.
+[26] W. Detmold, D. Pefkou, P. E. Shanahan, *Off-forward gluonic
+structure of vector mesons*, Phys. Rev. D 95 (2017) 114515,
+arXiv:1703.08220.
 [27] F. Winter, W. Detmold, A. S. Gambhir, K. Orginos, M. J. Savage,
 P. E. Shanahan, M. L. Wagman (NPLQCD), *First lattice QCD study of the
 gluonic structure of light nuclei*, Phys. Rev. D 96 (2017) 094512,
@@ -411,7 +432,7 @@ distributions in the deuteron*, Phys. Rev. Lett. 87 (2001) 142302.
 the deuteron*, Eur. Phys. J. A 19 (2004) 423, hep-ph/0307231;
 A. Kirchner, D. Müller, *Deeply virtual Compton scattering off
 nuclei*, Eur. Phys. J. C 32 (2003) 347, hep-ph/0302007.
-[34] M. Nzar, P. Hoodbhoy, *Estimate of the double-helicity-flip
+[34] M. Nzar, P. Hoodbhoy, *Estimation of the double-helicity-flip
 deuteron structure function*, Phys. Rev. D 45 (1992) 2264.
 [35] Moments and radii: I. Angeli, K. P. Marinova, At. Data Nucl. Data
 Tables 99 (2013) 69; recommended Q(⁶Li) = −0.0806(6) fm²,
@@ -427,14 +448,16 @@ precision measurement of φ-nucleon cross section using a tensor
 polarized deuteron target*, JLab PAC 53 proposal, arXiv:2508.06481.
 [39] D. R. Tilley, C. M. Cheves, J. L. Godwin, G. M. Hale, H. M.
 Hofmann, J. H. Kelley, C. G. Sheu, H. R. Weller, *Energy levels of
-light nuclei A = 5, 6*, Nucl. Phys. A 708 (2002) 3 (TUNL evaluation).
+light nuclei A = 5, 6, 7*, Nucl. Phys. A 708 (2002) 3 (TUNL
+evaluation).
 [40] EIC second-detector / IR-8 rare-isotope instrumentation:
 arXiv:2211.15746 §VIII; arXiv:2602.04636.
 [41] LEPS collaboration, coherent φ photoproduction on ⁴He
-(b = 23.8(1.0) GeV⁻²), arXiv:1711.01095.
-[42] STAR collaboration, *Exclusive J/ψ photoproduction in d+Au
-ultra-peripheral collisions*, Phys. Rev. Lett. 128 (2022) 122303,
-arXiv:2109.07625.
+(b = 23.81 ± 0.95 (stat) GeV⁻², with a sizable one-sided systematic),
+arXiv:1711.01095.
+[42] STAR collaboration, *Probing the gluonic structure of the deuteron
+with J/ψ photoproduction in d+Au ultra-peripheral collisions*,
+Phys. Rev. Lett. 128 (2022) 122303, arXiv:2109.07625.
 [43] W. Chang, E.-C. Aschenauer, M. D. Baker, A. Jentsch, J.-H. Lee,
 Z. Tu, Z. Yin, L. Zheng, *Investigation of the background in coherent
 J/ψ production at the EIC*, Phys. Rev. D 104 (2021) 114030,
@@ -455,5 +478,6 @@ arXiv:1505.06924 (R_ch(⁶Li) = 2.589(39) fm).
 [48] ECCE consortium, exclusive/diffractive/tagging physics studies,
 arXiv:2208.14575.
 [49] Polarized ³He/⁴He coherent DVCS at the EIC, arXiv:2606.11491.
-[50] EPIOS white paper: G. Atoian et al., *Polarized ion beams at the
-EIC*, Phys. Rev. C 113 (2026) 060501, arXiv:2510.10794.
+[50] EPIOS white paper: G. Atoian et al., *Realizing the scientific
+program with polarized ion beams at EIC*, Phys. Rev. C 113 (2026)
+060501, arXiv:2510.10794.

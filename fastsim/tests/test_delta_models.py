@@ -25,7 +25,7 @@ def _moment(model, f1_func, q2):
                                   np.linspace(0.5, 0.9999, 200)]))
     q2a = np.full_like(x, q2)
     d = model(x, q2a, f1_func(x, q2a))
-    return float(np.trapz(x * d, x))
+    return float(getattr(np, "trapezoid", np.trapz)(x * d, x))
 
 
 def test_moment_a_satisfies_sum_rule(f1_func):
@@ -100,3 +100,16 @@ def test_registry_and_info(f1_func):
     m = dm.make("moment_A", f1_func=f1_func, q2_ref=7.4,
                 dilution=1.0 / 3.0)
     assert "moment_A" in m.info() and "mid_x" in m.info()
+
+
+def test_alpha_s_table_runs_below_edge():
+    # 2026-08-11 audit: below the table minimum alpha_s must keep running
+    # (LO shape matched at the edge), not freeze
+    table = dm.alpha_s_table()
+    if table is None:
+        pytest.skip("parton grids not installed")
+    import numpy as np
+    q2 = np.array([1.0, 1.2, 1.5, 1.68, 2.0])
+    v = np.asarray(table(q2), dtype=float)
+    assert np.all(np.diff(v) < 0)  # strictly decreasing through the edge
+    assert v[0] > v[-1] * 1.05

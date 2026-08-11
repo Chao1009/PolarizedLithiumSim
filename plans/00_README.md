@@ -65,7 +65,7 @@ brings to the EIC, in support of the ANL polarized ⁶,⁷Li ion-source program
   (23 fastsim total).
 - ☑ **Money plots 5–6 re-cut with the moment constraint and separate
   1-year (10 fb⁻¹/u) / 10-year (100 fb⁻¹/u) projections**: inclusive
-  amplitudes now (0.6–1.2)×10⁻² at the sweet spots (moment_A,
+  amplitudes now (0.7–1.2)×10⁻² at the sweet spots (moment_A,
   table-α_s, dilution 1/3, P_zz 0.6) vs per-bin δA ≈ (1.5–4.5)×10⁻⁴ in year 1 — the
   A-vs-B interpretation spread (the dominant ansatz systematic) is
   itself resolvable; coherent tag: N_tag = 1.1×10⁷ (1 yr) / 1.1×10⁸

@@ -44,7 +44,7 @@ sum-rule-constrained ansatz of the merged money_delta suite,
 `moment_B`/`toy` one flag away). Full-luminosity statistics via
 per-φ-bin Poisson draws (`sample.phi_histogram_pseudo` — exact for
 binned estimators). At P_zz = 0.6 (mid energy) the moment-constrained
-amplitudes are (0.6–1.2)×10⁻² at the sweet spots (table-α_s, the
+amplitudes are (0.7–1.2)×10⁻² at the sweet spots (table-α_s, the
 money_delta production convention) with per-bin δA ≈ (1.5–4.5)×10⁻⁴
 already in year 1 (10 fb⁻¹/u) — the
 measurement discriminates interpretation A vs B, not just zero.

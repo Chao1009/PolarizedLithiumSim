@@ -57,6 +57,8 @@ from typing import Tuple
 
 import numpy as np
 
+_trapezoid = getattr(np, "trapezoid", None) or np.trapz
+
 from polli_fastsim import beams, spectator
 from polli_fastsim.farforward import HIGH_ACCEPTANCE, route_charged
 
@@ -183,7 +185,7 @@ class TaggedModel:
         self._rad = {}
         for w in channel.waves:
             psi = w.radial(self.k, kappa)
-            norm = np.sqrt(np.trapz(psi * psi * self.k**2, self.k))
+            norm = np.sqrt(_trapezoid(psi * psi * self.k**2, self.k))
             self._rad[w.l] = np.sqrt(w.prob) * psi / norm
         self._ms_struck = m_values(channel.s_channel)
         self._amp2 = {}   # (M) -> array (n_mS, nk, nc)
