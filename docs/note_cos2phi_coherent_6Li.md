@@ -99,6 +99,16 @@ adversarial review: 2.5–2.7σ per bin, 9.7σ full-map at 100 fb⁻¹/u.)
 The Q² lever arm across the panels remains the built-in consistency
 check against power-suppressed (non-partonic) contributions (§6).
 
+**Money plot 7** (`money_delta_extraction.py` →
+`money_delta_extracted_6Li.png`) unfolds the same pseudo-measurements
+to the structure function itself, Δ̂ = Â·y²D_φ/(1−y) per bin (model
+bin-centering; errors δΔ = δA·|∂Δ/∂A|), presented as xΔ(x,Q²) at the
+three sweet-spot Q² slices with independent 1-/10-year draws — the
+world-data-style figure a reader expects for a structure-function
+program, with the area under each curve equal to the Sather–Schmidt
+moment (÷3 dilution). Best bins reach δΔ ≈ (0.7–1.4)×10⁻³ in year 1
+on Δ ≈ −0.03…−0.09 per nucleon.
+
 ## 3. Money plot 6 — the coherent intact-⁶Li channel
 
 `evgen/scripts/money_cos2phi_coherent.py`

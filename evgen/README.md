@@ -18,6 +18,7 @@ python3 scripts/money_tagged_azz.py --events 400000       # money plot 4
 python3 scripts/tagged_polarimetry_7li.py --events 300000
 python3 scripts/money_cos2phi.py                          # money plot 5
 python3 scripts/money_cos2phi_coherent.py                 # money plot 6
+python3 scripts/money_delta_extraction.py                 # money plot 7
 ```
 
 ## Modules
@@ -48,6 +49,13 @@ amplitudes are (0.7–1.2)×10⁻² at the sweet spots (table-α_s, the
 money_delta production convention) with per-bin δA ≈ (1.5–4.5)×10⁻⁴
 already in year 1 (10 fb⁻¹/u) — the
 measurement discriminates interpretation A vs B, not just zero.
+
+`money_delta_extraction.py` (money plot 7): the same pseudo-
+measurements unfolded to the structure function itself —
+Δ̂ = Â·y²D_φ/(1−y) per bin with model bin-centering — presented as
+xΔ(x,Q²) data points at the three sweet-spot Q² slices with
+independent 1-yr/10-yr draws against the moment_A/moment_B curves
+(the area under each curve is the Sather–Schmidt moment, ÷3 dilution).
 
 `money_cos2phi_coherent.py`: the coherent channel e⁶Li → e′X ⁶Li(g.s.)
 with the intact recoil tagged in the Roman-Pot near-beam pT tail

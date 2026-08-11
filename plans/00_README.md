@@ -72,6 +72,10 @@ brings to the EIC, in support of the ANL polarized ⁶,⁷Li ion-source program
   (10 yr), best-bin δA = 1.9×10⁻³ / 6×10⁻⁴.
 - ☑ Top-level README; physics note `docs/note_cos2phi_coherent_6Li.md`
   (50 verified references); PDF report in `reports/`.
+- ☑ **Money plot 7** (`money_delta_extraction.py`): the extracted
+  Δ(x,Q²) itself as xΔ data points at the three sweet-spot Q² slices
+  (Δ̂ = Â·y²D_φ/(1−y), model bin-centering, independent 1-/10-yr
+  draws) — best bins δΔ ≈ (0.7–1.4)×10⁻³ (1 yr) on Δ ≈ −0.03…−0.09.
 
 ## Development run 5 (2026-08-10): cos 2φ money plots + coherent channel
 
