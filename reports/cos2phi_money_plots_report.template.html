@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>cos 2φ Money Plots for Tensor-Polarized ⁶Li at the EIC — Design, Assumptions, and Outlook</title>
+<title>cos 2φ Money Plots for Tensor-Polarized ⁶Li at the EIC</title>
 <style>
   :root {
     --ground: #FFFFFF;
@@ -101,19 +101,8 @@
     line-height: 1.5;
   }
   figcaption b { color: var(--ink); }
-  .formula {
-    font-family: Consolas, "Cascadia Mono", monospace;
-    font-size: 8.6pt;
-    background: var(--wash);
-    border: 0.7pt solid var(--hairline);
-    border-radius: 4pt;
-    padding: 6pt 9pt;
-    margin: 6pt 0;
-    overflow-x: hidden;
-    white-space: pre;
-    line-height: 1.55;
-    break-inside: avoid;
-  }
+  .eq { text-align: center; margin: 8pt 0; break-inside: avoid; }
+  .eq img.tex { display: inline-block; max-width: 100%; height: auto; vertical-align: middle; }
   table {
     border-collapse: collapse;
     width: 100%;
@@ -184,341 +173,396 @@
 <div class="page">
 
   <p class="eyebrow">Polarized ⁶,⁷Li @ EIC · Simulation program report · reports/</p>
-  <h1>The cos 2φ modulation on tensor-polarized ⁶Li: projected measurements, the coherent intact-recoil channel, and what stands behind the numbers</h1>
-  <p class="dateline">2026-08-17 · development run 5 · polligen (evgen/) + polli_fastsim (fastsim/) · companion documents: plans/06 (background budget), docs/note_cos2phi_coherent_6Li.md (physics note) · all external numbers verified against primary sources in three research sweeps; adversarially reviewed</p>
+  <h1>The cos 2φ modulation on tensor-polarized ⁶Li: projected inclusive and coherent measurements</h1>
+  <p class="dateline">2026-08-17 · development run 5 · polligen (evgen/) + polli_fastsim (fastsim/) · companions: plans/06 (background budget), docs/note_cos2phi_coherent_6Li.md, reports/polarized_li_primer.html (pedagogical introduction) · external numbers verified against primary sources; this revision adds dedicated fact checks of the moment constraint and of the far-forward detection chain</p>
 
-  <p class="lede">This report presents two projected measurements ("money plots") for a
-  transversely tensor-polarized ⁶Li beam at the EIC, explains the design choices behind the
-  simulation machinery and the physics formulas, states every critical assumption explicitly,
-  and lists the improvements that would firm the projections up. The observable is the
-  cos 2φ azimuthal modulation driven by photon double-helicity flip — "exotic glue" [1,2] —
-  measured two ways: inclusively (electron only), and in coherent diffraction with the
-  ⁶Li detected intact in its 1⁺ ground state.</p>
+  <p class="lede">Two projected EIC measurements of the cos 2φ azimuthal modulation on a
+  transversely tensor-polarized ⁶Li beam: inclusive DIS with only the scattered electron
+  detected, and coherent diffraction with the ⁶Li detected intact in its 1⁺ ground state.
+  The modulation is driven by photon double helicity flip — the gluon-transversity sector,
+  closed to quarks and to bound nucleons [1,2] — and has never been measured on any target.
+  This note gives the projections, the assumptions behind each number, and the checks made
+  on both.</p>
 
   <div class="stats">
-    <div class="stat"><div class="v">13.5%</div><div class="l">coherent-tag acceptance at IP6, high-acceptance optics (exp(−B·p²_T,cut); 9–20% for B ∈ 40–60 GeV⁻²). High-divergence: 4×10⁻⁵ — the coherent program fixes the optics choice.</div></div>
-    <div class="stat"><div class="v">1.1×10⁷ / 10⁸</div><div class="l">tagged coherent events in the 1-year / 10-year programs (scenario f₀ = 0.04); best-bin δA = 1.9×10⁻³ / 6×10⁻⁴ → 5σ floors at 1.0% / 0.3% modulations</div></div>
-    <div class="stat"><div class="v">0.036</div><div class="l">deformation-anchored ⟨a₂⟩ of the tagged sample at P_zz = 0.6 [band 0.018–0.059; one-sided ×0.73 rate-weighting systematic], scaled from the polarized-deuteron CGC calculation [13] — sign flip vs the deuteron predicted</div></div>
+    <div class="stat"><div class="v">13.5%</div><div class="l">coherent-tag acceptance at IP6 with the 0.20 GeV envelope cut, exp(−B·p²_T,cut), B = 50 GeV⁻² [9–20% for B ∈ 40–60]. The cut is documented for top-rigidity beams; for ⁶Li it is an optics assumption (§4.1).</div></div>
+    <div class="stat"><div class="v">1.1×10⁷ / 10⁸</div><div class="l">tagged coherent events in 1 / 10 EIC years (scenario f₀ = 0.04); best-bin δA = 1.9×10⁻³ / 6×10⁻⁴, i.e. 5σ floors at 1.0% / 0.3% modulation</div></div>
+    <div class="stat"><div class="v">0.036</div><div class="l">deformation-anchored ⟨a₂⟩ of the tagged sample at P_zz = 0.6 [band 0.018–0.059; one-sided ×0.73 rate-weighting systematic], scaled from the polarized-deuteron CGC calculation [13]; sign flip vs the deuteron predicted</div></div>
   </div>
 
-  <h2>1 · The observable and why these formulas</h2>
+  <h2>1 · The observable</h2>
 
-  <p>For unpolarized electrons on a spin-1 target whose tensor polarization axis lies in the
-  transverse plane, the inclusive cross section is [1,2]:</p>
+  <p>For unpolarized electrons on a spin-1 target whose spin axis makes angle θ<sub>m</sub>
+  with the beam, the inclusive cross section per spin projection m is [1,2]</p>
 
-  <div class="formula">dσ/(dx dy dφ) = (2yα²/Q²) · [ F₁ + ⅔ a_m b₁ + (1−y)/(xy²) · (F₂ + ⅔ a_m b₂)
-                           − (1−y)/y² · c_m sin²θ_m · Δ(x,Q²) · cos 2φ ]
+  <p class="eq"><img class="tex" data-tex="\frac{d\sigma^{(m)}}{dx\,dy\,d\phi} = \frac{2y\alpha^2}{Q^2}\left[F_1 + \frac{2}{3}a_m b_1 + \frac{1-y}{x y^2}\left(F_2 + \frac{2}{3}a_m b_2\right) - \frac{1-y}{y^2}\,c_m \sin^2\theta_m\,\Delta(x,Q^2)\,\cos 2\phi\right]"></p>
 
-a_m = ¼ c_m (3cos²θ_m − 1),   c_m = 3|λ_m| − 2 → (1, −2, 1)</div>
+  <p class="eq"><img class="tex" data-tex="a_m = \frac{1}{4}\,c_m\left(3\cos^2\theta_m - 1\right),\qquad c_m = 3|\lambda_m| - 2 \;\rightarrow\; (1,\,-2,\,1)"></p>
 
-  <p><b>Why this observable.</b> The cos 2φ term requires the virtual photon to flip helicity
-  by two units. A spin-½ nucleon cannot absorb two units of helicity, so no quark — and no
-  bound nucleon — contributes at leading twist: Δ(x,Q²) is purely gluonic and vanishes for a
-  nucleus that is "just protons and neutrons" [1]. It has never been measured for any target;
-  the only prior experimental document is a JLab letter of intent with no sensitivity
-  projection [3]. Magnitude guidance spans per-mille (Sather–Schmidt bag moment −0.012 α_s
-  [4]) to few-percent (maximal Δ_T g = Δg, explicitly an overestimate [5]) — hence the
-  scenario band Δ/F₁ ∈ {10⁻³ … 10⁻²}.</p>
+  <p>The cos 2φ term requires the virtual photon to flip helicity by two units. No spin-½
+  constituent can absorb that — no quark, and no bound nucleon — so Δ(x,Q²) is purely
+  gluonic at leading twist and vanishes for any nucleus that is only protons and neutrons
+  [1]. At leading order it is generated by the gluon transversity distribution δG through
+  an O(α<sub>s</sub>) photon–gluon convolution,</p>
 
-  <p><b>Formula choices made and their cost.</b> The master formula is implemented in the
-  Hoodbhoy–Jaffe–Manohar normalization [2] with the fastsim approximation set: A<sub>∥</sub> =
-  D·g₁/F₁ (γ²-suppressed η term dropped), g₂ = g₂<sup>WW</sup>, and no target-mass/γ²
-  corrections. The last is a real limitation only at high x and low Q²; the sweet-spot bins sit
-  at x ≤ 0.06 where γ² = 4M²x²/Q² < 10⁻² even at Q² ≈ 1 GeV², so it is a labeling caveat, not
-  a bias, for these plots. Structure functions are TOY parameterizations with PDF-grid
-  (CT18NLO/NNPDFpol11) backends behind the same interface — rates are trustworthy to a factor
-  ~1.5, asymmetry <i>shapes</i> are scenarios by construction.</p>
+  <p class="eq"><img class="tex" data-tex="\Delta(x,Q^2) = -\frac{\alpha_s(Q^2)}{2\pi}\left(\sum_q e_q^2\right) x^2 \int_x^1 \frac{dy}{y^3}\,\delta G(y,Q^2)"></p>
 
-  <h2>2 · Simulation design choices</h2>
+  <p>(Detmold–Shanahan sign convention [25]; conventions differ between papers). Δ has
+  never been measured for any target; the only prior experimental document is a JLab letter
+  of intent without a sensitivity projection [3]. Magnitude guidance is thin. The single
+  moment estimate is the Sather–Schmidt bag-model calculation for the spin-3/2 Δ⁺⁺ baryon,
+  ∫x Δ dx = −0.012 α<sub>s</sub> [4], which sets a per-mille scale for the asymmetries;
+  percent-level numbers exist only for maximal-transversity (Δ<sub>T</sub>g = Δg)
+  proton–deuteron Drell–Yan scenarios that their authors call optimistic [5]. We therefore
+  work with a scenario band Δ/F₁ ∈ 10⁻³–10⁻².</p>
 
-  <p><b>Why an event-level machinery at all.</b> No public generator produces polarized e+A
-  events for A > 1 (verified survey; BeAGLE is unpolarized, DJANGOH/PEPSI are nucleon-level
-  longitudinal-only). polligen implements only the missing wheel — the spin-density matrix ⊗
-  structure-function master formula and spin-correlated sampling — and reuses everything else.
-  Its Step-5.A validation gates: bin-wise identity with the analytic asymmetry formulas at
-  rtol 10⁻¹², pseudo-experiment error spreads closing on every analytic FOM map, and unbiased
-  cos 2φ recovery with holey φ acceptance.</p>
+  <p>The measured amplitude and its inversion back to the structure function are</p>
 
-  <p><b>Full-luminosity statistics without 10⁹-event files.</b> The money plots need pseudo-data
-  at N up to ~10⁹ events per bin. For a <i>binned</i> estimator, drawing each φ-bin's count from
-  a Poisson with the exact expected yield (the analytic integral of the modulated cross section
-  over the bin) is statistically identical to event-level sampling — so a full-luminosity
-  pseudo-experiment costs 24 Poisson draws (<code>sample.phi_histogram_pseudo</code>). Event-level
-  sampling remains available and is what the closure tests use.</p>
+  <p class="eq"><img class="tex" data-tex="A^{\cos 2\phi} = -\frac{1-y}{y^2}\,\frac{\Delta}{D_\phi},\qquad D_\phi = F_1 + \frac{1-y}{x y^2}\,F_2,\qquad \hat{\Delta} = \hat{A}\,\frac{y^2 D_\phi}{1-y}"></p>
 
-  <p><b>Estimator choice.</b> The amplitude is extracted by a binned least-squares fit of
-  N(φ′) = C(1 + A cos 2φ′) (<code>estimators.cos2phi_fit_binned</code>), not the naive
-  2⟨cos 2φ′⟩ moment: with realistic φ-acceptance holes the moment is demonstrably biased by
-  more than the signal, while the fit — with bins probed across their full width and dropped
-  if they straddle a hole — stays unbiased. Statistical errors follow δA = √(2/N)/P_zz,
-  validated by pseudo-experiment spreads. A precondition is documented: the fit model carries
-  no cos φ′ term; the m-symmetric tensor fills guarantee a₁ = 0 identically by design.</p>
+  <p>Approximations in the fastsim set: A<sub>∥</sub> = D·g₁/F₁ (γ²-suppressed term
+  dropped), g₂ = g₂<sup>WW</sup>, no target-mass corrections. The last matters only at high
+  x and low Q²; the sweet-spot bins sit at x ≤ 0.06 where γ² = 4M²x²/Q² &lt; 10⁻², so it is
+  a labeling caveat rather than a bias. Structure functions are TOY parameterizations with
+  PDF-grid (CT18NLO/NNPDFpol11) backends behind the same interface: rates are good to a
+  factor ~1.5, and asymmetry shapes are scenarios by construction.</p>
 
-  <p><b>Sweet-spot selection.</b> The four displayed (x, Q²) super-bins are chosen from the
-  analytic significance map <i>per Q² band</i> rather than by raw ranking — the raw map
-  clusters at the lowest Q² (rate-dominated), but the Q² lever arm is itself physics: it is
-  the consistency check against power-suppressed non-partonic contributions (§5). Each
-  super-bin merges 3×3 cells of the analysis grid (~×2 in x and Q²).</p>
+  <h2>2 · Machinery, statistics, and binning</h2>
 
-  <p><b>Rate conventions.</b> Per-nucleon luminosity and F₂A/A structure functions throughout;
-  scattered-electron acceptance cuts (|η| ≤ 3.5, E′ ≥ 0.5 GeV, 0.01 ≤ y ≤ 0.95, W² ≥ 10 GeV²)
-  applied in the rate maps; the whole luminosity is assigned to the transverse-tensor fill —
-  the same convention as the analytic FOM maps (a run-plan split would scale N down
-  proportionally). Projections are quoted separately for the <b>1-year (10 fb⁻¹/u) and
-  10-year (100 fb⁻¹/u) EIC programs</b>.</p>
+  <p><b>Generator.</b> No public generator produces polarized e+A events for A &gt; 1
+  (BeAGLE is unpolarized; DJANGOH/PEPSI are nucleon-level and longitudinal-only), so
+  polligen implements the missing piece — the spin-density matrix ⊗ structure-function
+  master formula with spin-correlated sampling — and reuses everything else. Validation
+  gates: bin-wise identity with the analytic asymmetry formulas at rtol 10⁻¹²,
+  pseudo-experiment spreads closing on every analytic error map, and unbiased cos 2φ
+  recovery under φ-acceptance holes.</p>
+
+  <p><b>Full-luminosity statistics.</b> For a binned estimator, drawing each φ-bin count
+  from a Poisson distribution with the exact expected yield is statistically identical to
+  event-level sampling, so a full-luminosity pseudo-experiment costs 24 Poisson draws
+  (<code>sample.phi_histogram_pseudo</code>). Event-level sampling remains available and is
+  what the closure tests use.</p>
+
+  <p><b>Estimator.</b> The amplitude comes from a binned least-squares fit of
+  N(φ′) = C(1 + A cos 2φ′), not the 2⟨cos 2φ′⟩ moment: with realistic φ holes the moment
+  is biased by more than the signal, while the fit stays unbiased. Errors follow
+  δA = √(2/N)/P<sub>zz</sub>, validated by pseudo-experiments. The fit carries no cos φ′
+  term; the m-symmetric tensor fills set a₁ = 0 by construction.</p>
+
+  <p><b>Binning.</b> The four displayed (x, Q²) super-bins are the top significance picks
+  per Q² band (the raw map clusters at the lowest Q²; the Q² lever arm is kept because it
+  is the consistency check against power-suppressed contributions, §6). Each super-bin
+  merges 3×3 cells of the 40×30 analysis grid. Rates use per-nucleon luminosity, F₂ᴬ/A,
+  scattered-electron cuts |η| ≤ 3.5, E′ ≥ 0.5 GeV, 0.01 ≤ y ≤ 0.95, W² ≥ 10 GeV², and the
+  whole luminosity in the transverse-tensor fill; projections are quoted for the 1-year
+  (10 fb⁻¹/u) and 10-year (100 fb⁻¹/u) programs.</p>
 
   <figure>
     <div class="panel"><img src="data:image/png;base64,__PS__" alt="Phase space and binning: (x, Q2) event-rate maps for the inclusive and tagged-coherent measurements with the analysis bins of money plots 5-7 overlaid"></div>
     <figcaption><b>Where the events are and how they are binned</b> (e10 × ⁶Li50, 1-year
-    program, 40×30 log-log analysis grid; color = expected events per bin where ≥ 1, log
-    scale; gray dashes: the y = 0.95/0.01 and W² = 10 GeV² boundaries — the |η|, E′ cuts
-    carve the rest of the staircase). <b>Left — inclusive DIS</b>, the rate map behind money
-    plots 5/7 (N = 4.6×10⁹ accepted events in year 1): vermillion boxes 1–4 are the
-    sweet-spot φ′ super-bins of money plot 5, numbered in panel order (3×3 cells merged,
-    picked per Q² band from the significance map); gray combs are the three sweet-spot Q²
-    slices (Q²×[1/1.6, 1.6]) with the merged x-bin pairs that become the data points of the
-    amplitude-vs-x panel (plot 5, right) and of the Δ extraction (plot 7) — one comb cell =
-    one data point, kept by the money-plot selection N ≥ 10³ and δA ≤ 8×10⁻³. <b>Right —
-    RP-tagged coherent channel</b>: the same map × f_coh(x) (f₀ = 0.04, dying at
-    x_coh = 0.01, dotted line) × the 13.5% tag acceptance (high-acceptance optics).
-    N_tag = 1.1×10⁷ in year 1, with 98% of the tagged sample at x &lt; 0.03 (median
-    x = 3.5×10⁻³) — the coherent measurement is a low-x measurement by construction. The
-    vermillion box is the tagged-count-maximal super-bin whose φ′ modulation is money
-    plot 6(d); plot 6(c) is this map summed over Q², column by column.</figcaption>
+    program, 40×30 log-log grid; color = expected events per bin where ≥ 1; dashes: y and
+    W² cut boundaries). <b>Left — inclusive DIS</b> (4.6×10⁹ accepted events in year 1):
+    boxes 1–4 are the φ′ super-bins of money plot 5; gray combs are the three Q² slices
+    (Q²×[1/1.6, 1.6]) whose merged x-bin pairs become the data points of the amplitude-vs-x
+    panel and the Δ extraction (plots 5R/7), kept where N ≥ 10³ and δA ≤ 8×10⁻³.
+    <b>Right — RP-tagged coherent channel</b>: the same map × f_coh(x) × the 13.5% tag
+    acceptance. N_tag = 1.1×10⁷ in year 1; 98% of the tagged sample sits at x &lt; 0.03
+    (median 3.5×10⁻³). The box is the super-bin of money plot 6(d); plot 6(c) is this map
+    summed over Q².</figcaption>
   </figure>
 
-  <p><b>One home for the Δ model.</b> All Δ(x,Q²) models live in a unified registry,
-  <code>polli_fastsim/delta_models.py</code>, behind the single (x, Q², F₁) interface every
-  kernel consumes — new constraints and models land in one file and every consumer switches by
-  name. The production default is <code>moment_A</code>, the sum-rule-constrained ansatz of the
-  merged money_delta study line: Δ = A·α_s(Q²)·F₁·x^a(1−x)^b with A solved so that
-  ∫x Δ dx = −0.012·α_s (the Sather–Schmidt bag moment [4]; solved A = −0.294 at
-  ⟨Q²⟩ = 3.9 GeV², matching the money_delta EPPS21 value −0.31; α_s from the CT18NLO
-  table, their production convention — the LO fallback runs ~14% high), times the ⁶Li
-  per-nucleon dilution 1/3. Applying the bag-target Sather–Schmidt moment to the
-  per-nucleon Δ of ⁶Li is itself a scenario choice inherited from the money_delta line,
-  made explicit here — the Cloët convention, kept separate from the whole-nucleus P_zz so the two
-  never double-count. <code>moment_B</code> (no F₁ factor; the conservative reading, a factor
-  ~2–8 below A) and the legacy <code>toy</code> shape are one flag away; the A-vs-B spread is
-  the dominant ansatz systematic, and the amplitude-vs-x panel shows both — under the moment
-  constraint the measurement <i>resolves the interpretation</i>, not just a null.</p>
+  <h2>3 · The Δ model and the moment constraint</h2>
+
+  <p><b>What the constraint is.</b> Sather and Schmidt computed the lowest moment of Δ in
+  the MIT bag model for the spin-3/2 Δ⁺⁺ baryon and its Q² evolution; they give no x-shape
+  [4]. The explicit α<sub>s</sub>(Q²) is the leading-order Wilson coefficient of the
+  photon–gluon box, so the O(α<sub>s</sub>) suppression relative to F₁ is model-independent;
+  the −0.012 is the bag estimate. Lattice QCD adds two data points, with heavy caveats: the
+  bare φ-meson matrix element A₂ = 0.23(2)(5) at m<sub>π</sub> = 450 MeV [25] converts to
+  ∫x Δ|<sub>φ</sub> ≈ −0.006 α<sub>s</sub> (our conversion, unrenormalized), while the
+  NPLQCD deuteron gives a δG moment of −0.010(3), bare at m<sub>π</sub> ≈ 806 MeV [27] —
+  a transversity-to-momentum ratio roughly ten times below the φ's, and implying the
+  opposite sign for the deuteron's Δ moment. No calculation of Δ exists for ⁶Li or any
+  A &gt; 2 nucleus; the only nuclear model is a ΔΔ-isobar estimate for the deuteron [34],
+  and the literature brackets nuclear Δ in both directions — suppressed as in the NPLQCD
+  deuteron, or enhanced by binding like the EMC effect, as the polarized-ion white paper
+  argues [50].</p>
+
+  <p><b>What we do with it.</b> All Δ models live in one registry
+  (<code>polli_fastsim/delta_models.py</code>). The production default, <code>moment_A</code>,
+  is an ansatz normalized to the bag moment applied to the per-nucleon Δ of ⁶Li:</p>
+
+  <p class="eq"><img class="tex" data-tex="\Delta_{\mathrm{A}}(x,Q^2) = \frac{1}{3}\,A\;\alpha_s(Q^2)\,F_1(x,Q^2)\;\frac{x^{a}(1-x)^{b}}{N_{\mathrm{peak}}},\qquad \int_0^1 x\,\Delta(x,\langle Q^2\rangle)\,dx = -0.012\;\alpha_s \;\Rightarrow\; A = -0.294"></p>
+
+  <p>with (a, b) = (0.7, 3) and the 1/3 restricting the exotic glue to the polarized
+  deuteron-like pair (the whole-nucleus P<sub>zz</sub> stays a separate factor, so the two
+  never double-count). The constraint is imposed at the rate-weighted ⟨Q²⟩ = 3.9 GeV² of
+  the accepted phase space; because F₁ evolves, the realized moment drifts between −4% and
+  +7% across the plotted Q² slices. α<sub>s</sub> comes from the CT18NLO table (the LO
+  analytic fallback runs 14% high). The solved A = −0.294 matches the EPPS21-based
+  money_delta value −0.31 at its ⟨Q²⟩ = 7.4 GeV². <code>moment_B</code> applies the same
+  constraint without the F₁ factor and lands a factor 2–8 lower; the A-vs-B spread is the
+  dominant ansatz systematic, and both curves are drawn on every plot.</p>
+
+  <p><b>What it is not.</b> Porting a single-hadron bag moment to a per-nucleon nuclear
+  structure function has no literature precedent; both the normalization and the x-shape
+  are labeled scenario choices, bracketed by moment_B below and by the possible nuclear
+  enhancement above. What the projection then shows is that the measurement has the
+  precision to decide: with the moment constraint in place, the x-shape separates
+  interpretation A from B bin by bin.</p>
 
   <figure>
     <div class="panel"><img src="data:image/png;base64,__M5__" alt="Money plot 5"></div>
     <figcaption><b>Money plot 5 — inclusive gluonometry</b> (e10 × ⁶Li50, P_zz = 0.60,
-    Δ model: moment_A, dilution 1/3). Left 2×2: φ′-modulation pseudo-data with statistical
-    error bars at the <b>1-year program</b> (10 fb⁻¹/u) in the four sweet-spot super-bins
-    (Q² = 1.1 → 14 GeV², x ≈ 0.02–0.14); injected curve (blue), binned fit (vermillion);
-    per-panel annotations give δA for both programs. Right: extracted amplitude vs x with
-    1-year (open) and 10-year (filled) error bars against the moment_A (blue), moment_B
-    (green), and toy-10⁻³ (gray) curves. Amplitudes are (0.7–1.2)×10⁻² at the sweet spots
-    against δA = (1.5–4.5)×10⁻⁴ in year 1 — every bin ≥ 21σ, so the A-vs-B ansatz spread is
+    Δ: moment_A, dilution 1/3). Left 2×2: φ′ pseudo-data with 1-year statistical error bars
+    in the four sweet-spot super-bins (Q² = 1.1 → 14 GeV², x ≈ 0.02–0.14); injected curve
+    (blue), binned fit (vermillion); annotations give δA for both programs. Right:
+    extracted amplitude vs x with 1-year (open) and 10-year (filled) error bars against the
+    moment_A, moment_B, and toy-10⁻³ curves. Amplitudes are (0.7–1.2)×10⁻² at the sweet
+    spots against δA = (1.5–4.5)×10⁻⁴ in year 1 — every bin ≥ 21σ, so the A-vs-B spread is
     resolved by the x-shape. Detection needs only the scattered electron.</figcaption>
   </figure>
 
   <figure>
     <div class="panel"><img src="data:image/png;base64,__M7__" alt="Money plot 7: extracted x Delta structure function at three Q2 slices"></div>
-    <figcaption><b>Money plot 7 — the extracted Δ(x,Q²) itself.</b> The cos 2φ
-    amplitudes of money plot 5 unfolded to the structure function,
-    Δ̂ = Â·y²D<sub>φ</sub>/(1−y) per bin (model bin-centering; δΔ = δA·|∂Δ/∂A|),
-    shown as xΔ(x,Q²) per nucleon at the three sweet-spot Q² slices with independent
-    1-year (open) and 10-year (filled) pseudo-measurements against the moment_A (blue)
-    and moment_B (green) curves — the area under each curve is the Sather–Schmidt
-    moment (÷3 dilution). Best bins reach δΔ ≈ (0.7–1.4)×10⁻³ in year 1 on
-    Δ ≈ −0.03…−0.09; the A-vs-B ansatz spread is resolved bin by bin.</figcaption>
+    <figcaption><b>Money plot 7 — the extracted Δ(x,Q²).</b> The amplitudes of money
+    plot 5 unfolded to the structure function (model bin-centering, δΔ = δA·|∂Δ/∂A|),
+    shown as xΔ per nucleon at the three sweet-spot Q² slices with independent 1-year
+    (open) and 10-year (filled) pseudo-measurements against the moment_A and moment_B
+    curves; the area under each curve is the ported bag moment (÷3 dilution). Best bins
+    reach δΔ ≈ (0.7–1.4)×10⁻³ in year 1 on Δ ≈ −0.03…−0.09.</figcaption>
   </figure>
 
-  <h2>3 · The coherent channel: model choices and the anchored amplitude</h2>
+  <h2>4 · The coherent channel</h2>
 
-  <p><b>Tagging.</b> The intact ⁶Li recoil has A/Z = 2 — exactly beam rigidity (R = 1.000; the
-  diffractive momentum loss x_P < 0.01 changes rigidity by < 1%). At IP6 it is visible
-  <i>only</i> in the Roman-Pot near-beam p<sub>T</sub> tail above the 10σ beam-envelope cut
-  [7,9]. With an exponential coherent t-distribution the acceptance is analytic,
-  exp(−B·p²_T,cut): <em class="k">13.5%</em> for the documented high-acceptance cut
-  (p<sub>T</sub> > 0.20 GeV), <em class="k">4×10⁻⁵</em> for high-divergence (0.45 GeV — a
-  derived, not documented, number) — the coherent program fixes the optics choice. The IR-8
-  secondary focus reaches p<sub>T</sub> ≈ 0; published intact-recoil efficiencies (d 47%,
-  ³He 32%, ⁴He 29%, ⁷Li 17.8% [10]) interpolate to ≈20% for ⁶Li — an independent cross-check.</p>
+  <h3>4.1 · Detecting the intact ⁶Li at ePIC</h3>
 
-  <p><b>Rate model choices</b> (<code>polligen/coherent.py</code>, all bands explicit):
-  σ_coh = f_coh(x)·σ_DIS with f_coh = f₀/(1+(x/x_coh)²), f₀ = 0.04 [0.02–0.08] — no
-  light-nucleus prediction exists (lightest published: Ca), so the band brackets HERA ep
-  diffraction (10–15% of DIS [44]) and heavy-A saturation estimates (20–25% [45]); x_coh = 0.01
-  from the coherence length l_c = 0.105 fm/x_P vs the ⁶Li size; slope B = 50 GeV⁻² [40–60]
-  from B = ⟨r²⟩/3 with the matter radius (charge radius gives ≈57 [47]; the gluonic B may sit
-  higher [42]), exponential valid below the form-factor minimum at |t| ≈ 0.31 GeV² [11,12].
-  Writing f_coh against Bjorken x (not x_P) is optimistic for high-mass diffraction; the f₀
-  band covers it. Tagged yields: 1.1×10⁷ events in year 1 (10 fb⁻¹/u), 1.1×10⁸ over ten
-  years; best super-bin δA = 1.9×10⁻³ / 6×10⁻⁴ (1 yr / 10 yr).</p>
+  <p>In coherent diffraction, e ⁶Li → e′ X ⁶Li(g.s.), the recoil keeps the beam's
+  magnetic rigidity exactly (A/Z = 2; the diffractive momentum loss x<sub>P</sub> &lt; 0.01
+  changes it by &lt; 1%) and emerges at θ = p<sub>T</sub>/p ≲ 1.7 mrad. Everything below
+  5 mrad enters the far-forward system: B0 spectrometer (5.5–20 mrad, charged tracks and
+  photons above ~50 MeV), Off-Momentum Detectors (~30–60% of beam rigidity), Roman Pots at
+  z ≈ 26/28 m (θ &lt; 5 mrad, ~60–95% rigidity for off-rigidity tracks, AC-LGAD sensors
+  with ~140 μm and ~30 ps resolution), and the ZDC for neutrals [7,8,9]. A beam-rigidity
+  recoil rides inside the beam envelope and is invisible to all of them except the Roman
+  Pots, and there only above the 10σ beam-envelope cut — at low |t| the intact recoil
+  cannot be tagged at IP6 at all [10,51]. With an exponential coherent t-distribution the
+  tag acceptance is analytic:</p>
 
-  <p><b>The amplitude is anchored, not guessed.</b> The polarized-deuteron CGC calculation of
-  Mäntysaari, Salazar, Schenke, Shen, and Zhao [13] is the <i>only</i> published calculation of
+  <p class="eq"><img class="tex" data-tex="\varepsilon_{\mathrm{tag}} = e^{-B\,p_{T,\mathrm{cut}}^2} = 13.5\%\ \ (p_{T,\mathrm{cut}} = 0.20\ \mathrm{GeV},\ B = 50\ \mathrm{GeV}^{-2});\qquad 4\times10^{-5}\ \ (0.45\ \mathrm{GeV})"></p>
+
+  <p><b>Where the cuts come from.</b> The 0.20 GeV floor is the documented EIC requirement
+  for high-acceptance (low-divergence) optics at top rigidity — divergence ≤ 73 μrad for
+  275 GeV protons [7,48] — and matches the one documented light-ion number, coherent ³He
+  tagging limited to p<sub>T</sub> &gt; 0.20 GeV at IR-6 [10]. The 0.45 GeV value is our
+  derivation (150 μrad high-divergence proton optics applied to the 300 GeV ⁶Li momentum),
+  not a documented number. No beam-optics parameters are published for any lithium beam;
+  if the ⁶Li beam ran with proton-class divergence at this rigidity, the 10σ cut would
+  land at 0.5–0.7 GeV and close the IP6 channel entirely. The cut is the single most
+  consequential machine input to this measurement (§6, #1).</p>
+
+  <p><b>The IP6 fallback and the IR-8 fix.</b> Standard EIC practice at IP6 is to
+  establish coherence by vetoing breakup rather than tagging the recoil: dissociation
+  protons (rigidity 0.50) hit the Off-Momentum Detectors, neutrons the ZDC, de-excitation
+  photons the B0 calorimeter and ZDC, and ³He-like fragments (0.75) the Roman-Pot window
+  [51]. Direct low-|t| tagging is the flagship argument for the second interaction region:
+  its lattice adds a secondary beam focus ~45 m downstream where the beam is
+  σ ≈ 0.15 × 0.1 mm, so Roman Pots at z = 44.0/45.5 m reach p<sub>T</sub> ≈ 0. The
+  published intact-recoil efficiencies there are d 47%, ³He 32%, ⁴He 29%, ⁷Li 17.8% at top
+  energy (rising steeply at lower energies — ³He reaches 99.8% at 5×41) [10]; no ⁶Li case
+  has been published, and our interpolation is ≈20%. One degeneracy remains even there: a
+  Roman-Pot hit measures only A/Z, so intact ⁶Li, α, and d at the same velocity are
+  identical in trajectory and timing; the second-detector design addresses this with a
+  proposed Z²-scaling Cherenkov behind the pots (R&amp;D status) [8], while for the IP6
+  AC-LGADs no charge-discrimination study exists — signal amplitude is used for position
+  interpolation only, and even the minimum-angle ion acceptance there is not yet fully
+  established [49]. That question (open item #19) decides whether IP6 coherent-tag purity
+  is event-by-event or statistical (§5).</p>
+
+  <h3>4.2 · Rate model</h3>
+
+  <p class="eq"><img class="tex" data-tex="\sigma_{\mathrm{coh}} = f_{\mathrm{coh}}(x)\,\sigma_{\mathrm{DIS}},\qquad f_{\mathrm{coh}}(x) = \frac{f_0}{1 + (x/x_{\mathrm{coh}})^2},\qquad f_0 = 0.04\ [0.02\mathrm{-}0.08]"></p>
+
+  <p>No light-nucleus diffractive prediction exists (the lightest published is Ca), so the
+  f₀ band brackets HERA ep diffraction (10–15% of DIS [44]) and heavy-A saturation
+  estimates (20–25% [45]). x<sub>coh</sub> = 0.01 is where the coherence length
+  l<sub>c</sub> = 0.105 fm/x<sub>P</sub> drops below the ⁶Li size. The slope
+  B = 50 GeV⁻² [40–60] follows from B = ⟨r²⟩/3 with the matter radius (the charge radius
+  gives ≈57 [47]; gluonic distributions may be wider [42]); the exponential form is valid
+  below the form-factor minimum at |t| ≈ 0.31 GeV² [11,12]. Writing f_coh against Bjorken
+  x rather than x<sub>P</sub> is optimistic for high-mass diffraction; the f₀ band covers
+  it. Yields: 1.1×10⁷ tagged events in year 1, 1.1×10⁸ over ten; best super-bin
+  δA = 1.9×10⁻³ / 6×10⁻⁴.</p>
+
+  <h3>4.3 · The anchored amplitude</h3>
+
+  <p>The cos 2φ′ modulation of the tagged yield carries two mechanisms. The
+  <i>deformation</i> term is scaled from the polarized-deuteron CGC calculation of
+  Mäntysaari, Salazar, Schenke, Shen, and Zhao [13] — the only published calculation of
   polarization-dependent azimuthal coefficients in coherent diffraction on any polarized
-  nucleus (all 8 forward citations checked; the group's follow-ups are unpolarized [14,15]).
-  Their figures, digitized from the arXiv source into <code>coherent.MANTYSAARI_A2_DEUTERON</code>:
-  a₂(m=0) = +0.08/+0.15/+0.30/+0.43 at |t| = 0.05/0.1/0.2/0.3 GeV², a₂(m=±1) ≈ −a₂(m=0)/2,
-  a factor-2 m-state cross-section difference at |t| = 0.1 — all from the 6% D-wave modulating
-  the diffractive slope, a₂ ≈ (ΔB_m/2)·|t| with ΔB₀/B ≈ 0.21. For a fill with populations p_m
-  the ensemble coefficient is exactly ∝ P_zz:</p>
+  nucleus (all forward citations checked; the group's follow-ups are unpolarized [14,15]).
+  Their digitized coefficients (<code>coherent.MANTYSAARI_A2_DEUTERON</code>) show a₂
+  growing linearly in |t| with a₂(m=0) = −2a₂(m=±1), from the 6% D-wave modulating the
+  diffractive slope. For a fill with populations p<sub>m</sub> the ensemble coefficient is
+  proportional to P<sub>zz</sub>:</p>
 
-  <div class="formula">a₂(t; P_zz) = −(P_zz/4) · ε_B0 · B · |t|,      ε_B0 ≡ ΔB₀/B
+  <p class="eq"><img class="tex" data-tex="a_2(t;P_{zz}) = -\frac{P_{zz}}{4}\,\varepsilon_{B0}\,B\,|t|,\qquad \langle a_2\rangle_{\mathrm{tag}} = a_2\!\left(p_{T,\mathrm{cut}}^2 + 1/B\right) = 0.036\ \ [0.018\mathrm{-}0.059]"></p>
 
-⁶Li scaling of ε_B0 (two dials that usefully disagree):
-  · relative quadrupole deformation Q/⟨r²⟩:  ⁶Li ≈ (1/5) × deuteron, OPPOSITE sign
-  · α–d asymptotic D/S ratio: DISPUTED — Veal et al. [16] give η = +0.0003(9) (≈ 0,
-    mirroring the Q cancellation); older sub-Coulomb analyses favored η ≈ −0.01
-  ⇒ ε_B0(⁶Li) ∈ −(0.04 … 0.13),  default −0.08  (near-zero deformation open;
-    the 5σ floors cover its detection or exclusion)
-  ⇒ ⟨a₂⟩_tag = a₂(⟨|t|⟩_tag = p²_T,cut + 1/B) ≈ 0.036 [0.018–0.059] at P_zz = 0.6
-     (equal-rate average; rate-weighting systematic: one-sided ×0.73 → 0.026, audited)</div>
-
-  <p>The <b>sign flip relative to the deuteron is a testable prediction</b>. The band is
-  physics, not sloppiness: even exact few-body theory misses the ⁶Li quadrupole cancellation
-  by ~3× [17], and the gluonic deformation need not cancel like the charge one. Existence
-  proofs at exactly this |t|: measured e-d T₂₀ = −(0.1–0.3) [19]; HERMES A_zz(d) ≈ −1% at
-  x ≈ 0.01 [20], coherent-double-scattering in origin [21–23]. The flat gluon-transversity
-  term is separately bounded at 3×10⁻³–10⁻² (lattice φ-meson transversity [25,26] ÷ the ~10×
-  NPLQCD nuclear suppression [27]; Kumano–Song few-% only at maximal Δ_T g [5,28]).</p>
+  <p>ε<sub>B0</sub> ≡ ΔB₀/B is scaled from the deuteron's 0.21 by two dials that disagree:
+  the relative quadrupole deformation Q/⟨r²⟩ of ⁶Li is about 1/5 of the deuteron's and
+  opposite in sign, while the α–d asymptotic D/S ratio is disputed — the transfer
+  measurement gives η = +0.0003(9), consistent with zero [16], where older sub-Coulomb
+  analyses gave η ≈ −0.01. We take ε<sub>B0</sub> ∈ −(0.04–0.13), default −0.08, with
+  near-zero deformation open (the 5σ floors cover its detection or exclusion). The band is
+  a physics statement: even exact few-body theory misses the ⁶Li quadrupole cancellation by
+  ~3× [17], and the gluonic deformation need not cancel like the charge one. The
+  <b>sign flip relative to the deuteron is a testable prediction</b> (Q(⁶Li) &lt; 0).
+  Existence proofs at this |t|: e-d T₂₀ = −(0.1–0.3) [19]; HERMES A<sub>zz</sub>(d) ≈ −1%
+  at x ≈ 0.01 [20], coherent-double-scattering in origin [21–23]. The flat
+  gluon-transversity term is separately bounded at 3×10⁻³–10⁻², from the bare lattice φ
+  transversity [25] divided by the ~10× NPLQCD deuteron suppression [27] (both at
+  unphysical pion masses), with the maximal Drell–Yan scenario [5] as the ceiling. The
+  equal-rate population average behind ⟨a₂⟩ carries a one-sided ×0.73 rate-weighting
+  systematic (audited; inside the ε<sub>B0</sub> band).</p>
 
   <div class="callout">
-    <b>The measurement this buys:</b> the two mechanisms separate by shape — deformation is
-    t-linear, sign-flipped vs the deuteron, and should weaken toward small x_P (JIMWLK washes
-    out deformation [15]); exotic glue is flat in t and survives at small x. A two-component
-    fit a₂(t) = c<sub>def</sub>·|t| + a<sub>g</sub> over the tagged window, per x_P bin, with
-    both components ≥ 5σ above the statistical floor at 100 fb⁻¹/u. Incoherent breakup is
-    m-state-blind in this mechanism [13] — it dilutes but cannot fake the modulation.
+    <b>What the tagged sample measures:</b> the two mechanisms separate by shape.
+    Deformation is t-linear, sign-flipped vs the deuteron, and should weaken toward small
+    x_P (JIMWLK evolution washes out deformation [15]); exotic glue is flat in t and
+    survives at small x, where it connects to the elliptic-gluon program [6]. A two-component fit a₂(t) = c_def·|t| + a_g per x_P bin has both
+    components ≥ 5σ above the statistical floor at 100 fb⁻¹/u. Incoherent breakup is
+    m-state-blind in this mechanism [13]: it dilutes but cannot fake the modulation.
   </div>
 
   <figure>
     <div class="panel"><img src="data:image/png;base64,__M6__" alt="Money plot 6"></div>
-    <figcaption><b>Money plot 6 — coherent channel, e ⁶Li → e′ X ⁶Li(g.s.)</b> (same beam,
-    P_zz = 0.60). Top left: recoil t-spectrum vs both optics' p<sub>T</sub> cuts with the
-    slope band. Top right: the amplitude anchor — digitized deuteron a₂ per m-state [13] vs
-    the scaled ⁶Li ensemble band (sign flip predicted); tagged window and C₀-zero exclusion
-    marked. Bottom left: tagged yield vs x for the 1-year and 10-year programs with the f₀
-    band (N_tag ≈ 1.1×10⁷ / 1.1×10⁸). Bottom right: φ′ pseudo-data (1-year statistics) at
-    the deformation-anchored ⟨a₂⟩ = 0.036 with the flat gluon-transversity scenario (gray);
-    extraction Â ± 1.9×10⁻³ (1 yr), ± 0.6×10⁻³ (10 yr).</figcaption>
+    <figcaption><b>Money plot 6 — coherent channel, e ⁶Li → e′ X ⁶Li(g.s.)</b> (same
+    beam, P_zz = 0.60). Top left: recoil t-spectrum vs both optics' p<sub>T</sub> cuts with
+    the slope band. Top right: digitized deuteron a₂ per m-state [13] vs the scaled ⁶Li
+    ensemble band (sign flip predicted); tagged window and form-factor-zero exclusion
+    marked. Bottom left: tagged yield vs x for both programs with the f₀ band
+    (N_tag ≈ 1.1×10⁷ / 1.1×10⁸). Bottom right: φ′ pseudo-data (1-year statistics) at the
+    anchored ⟨a₂⟩ = 0.036 with the flat gluon-transversity scenario (gray); extraction
+    Â ± 1.9×10⁻³ (1 yr), ± 0.6×10⁻³ (10 yr).</figcaption>
   </figure>
 
-  <h2>4 · Backgrounds for the coherent tag (summary — full budget in plans/06)</h2>
+  <h2>5 · Backgrounds for the coherent tag (full budget: plans/06)</h2>
 
   <table>
     <tr><th>Background</th><th>Why it fakes the tag</th><th>Handle</th></tr>
     <tr class="killer">
-      <td><b>α + d breakup</b> (threshold 1.474 MeV; 2.186 MeV 3⁺, Γ = 24 keV, ~100% α+d [39])</td>
-      <td>Both fragments at <span class="mono">R = 1.000</span>, same trajectory <i>and</i>
-      velocity as intact ⁶Li — tracking and ToF blind; only dE/dx (∝ Z²: 9/4/1) separates</td>
-      <td><em class="k">RP charge discrimination — open question #19</em>: no EIC document
-      addresses the A/Z = 2 degeneracy (AC-LGAD amplitude exists but is used for position;
-      documented Z-ID is an IR-8 Cherenkov [8]). Fallback: two-component |t| fit (coherent
-      e<sup>−50|t|</sup> vs ~10× flatter incoherent; crossover at 0.05–0.2 GeV² sits inside
-      the window [41,42]); e+Pb benchmark: 80–99% incoherent rejection [43]</td>
+      <td><b>α + d breakup</b> (threshold 1.474 MeV; the 2.186 MeV 3⁺ state, Γ = 24 keV, decays ~100% α+d [39])</td>
+      <td>Both fragments at <span class="mono">R = 1.000</span>, same trajectory and
+      velocity as intact ⁶Li: tracking and ToF blind; only dE/dx (∝ Z²: 9/4/1) separates</td>
+      <td><em class="k">RP charge discrimination — open question #19</em>: no study exists
+      for the IP6 AC-LGADs (amplitude is used for position; the documented Z-ID is the
+      proposed IR-8 Cherenkov [8]). Fallback: two-component |t| fit (coherent
+      e<sup>−50|t|</sup> vs ~10× flatter incoherent; crossover at 0.05–0.2 GeV² inside the
+      window [41,42]); e+Pb benchmark: 80–99% incoherent rejection [43]</td>
     </tr>
     <tr>
       <td>Nucleon-emission breakup: α+p+n (3.70 MeV), ³He+t (15.79 MeV) [39]</td>
-      <td>A fragment could pass unnoticed…</td>
-      <td>…but p → OMD (R = 0.50), n → ZDC, ³He → RP main window (R = 0.75): vetoable;
+      <td>A fragment could pass unnoticed</td>
+      <td>p → OMD (R = 0.50), n → ZDC, ³He → RP window (R = 0.75) [51]: vetoable;
       inefficiency is second-order (BeAGLE study to quantify)</td>
     </tr>
     <tr>
       <td>⁶Li* 3.5629 MeV (0⁺, T = 1, Γ = 8.2 eV) [39]</td>
-      <td>Particle-stable (α+d strictly parity-forbidden, Γ_α ≤ 6×10⁻⁷ eV); γ-decays → real
-      A=6, Z=3 track</td>
-      <td>Isoscalar exchange cannot drive T=0 → T=1; the boosted 0.1–0.4 GeV γ lands mostly
-      in the B0 EMCal (≥ 50–100 MeV, 5.5–20 mrad [9]), tail in ZDC. The 5.366 MeV 2⁺ T=1
-      always emits a nucleon → vetoable. <b>Every T=1 state is γ- or nucleon-vetoable; only
-      T=0 states feed the blind α+d channel</b></td>
+      <td>Particle-stable (α+d parity-forbidden, Γ_α ≤ 6×10⁻⁷ eV); γ-decays to a real
+      A = 6, Z = 3 track</td>
+      <td>Isoscalar exchange cannot drive T = 0 → 1; the boosted 0.1–0.4 GeV γ lands mostly
+      in the B0 calorimeter (photons ≥ 50 MeV, 5.5–20 mrad [9]), tail in the ZDC. The
+      5.366 MeV 2⁺ T = 1 state always emits a nucleon. Every T = 1 state is γ- or
+      nucleon-vetoable; only T = 0 states feed the blind α+d channel</td>
     </tr>
     <tr>
       <td>Bethe–Heitler / QED Compton</td>
       <td>Intact nucleus by construction</td>
-      <td>Calculable (t-dependence = charge FF² [11,12]); subtract + reuse as RP-acceptance
-      candle; charge-quadrupole cos 2φ < 10⁻³ for |t| < 0.15 GeV² (⁶Li C2 unobservably small
-      below q ≈ 3 fm⁻¹ [12,17])</td>
+      <td>Calculable (t-dependence = charge FF² [11,12]); subtract and reuse as an
+      RP-acceptance candle; the charge-quadrupole cos 2φ is &lt; 10⁻³ for
+      |t| &lt; 0.15 GeV² [12,17]</td>
     </tr>
     <tr>
       <td>Beam-gas / halo; e′-side fakes</td>
-      <td>Accidental R ≈ 1 tracks; π/pair-symmetric e′ at high y</td>
-      <td>Non-colliding bunches, ~30 ps timing, vertex association; standard DIS e′ ID +
-      (e′, recoil) kinematic consistency</td>
+      <td>Accidental R ≈ 1 tracks; π / pair-symmetric e′ at high y</td>
+      <td>Non-colliding bunches, ~30 ps timing, vertex association; standard DIS e′ ID
+      plus (e′, recoil) kinematic consistency</td>
     </tr>
   </table>
 
-  <p>Extraction systematics: the modulation is self-normalized within a single fill —
-  relative-luminosity systematics drop out; φ-acceptance holes are handled by the binned fit
-  (demonstrated); polarimetry scale δP_zz/P_zz ≈ 3% is common with A_zz; tensor-observable
-  radiative corrections are uncharted and flagged on every plot. Interpretation-level:
-  a ΔΔ-isobar admixture can mimic Δ at leading twist [34]; conventional double-scattering
-  generates the low-x b₁ [21–23] — the Q² lever arm and the ⁶Li/d comparison are the
-  discriminants.</p>
+  <p>Extraction systematics: the modulation is self-normalized within a single fill, so
+  relative-luminosity systematics drop out; φ-acceptance holes are handled by the binned
+  fit; the polarimetry scale δP_zz/P_zz ≈ 3% is common with A_zz; radiative corrections for
+  tensor observables are uncalculated and flagged on every plot. At the interpretation
+  level, a ΔΔ-isobar admixture can mimic Δ at leading twist [34] and conventional double
+  scattering generates the low-x b₁ [21–23]; the Q² lever arm and the ⁶Li/d comparison are
+  the discriminants.</p>
 
   <div class="callout warm">
-    <b>The ⁶Li null test:</b> deformation-driven coherent modulations — the polarized-deuteron
-    imaging signal [13] — are bounded on ⁶Li by its anomalously small quadrupole moment,
-    Q(⁶Li) = −0.0806(6) fm² ≈ Q(⁷Li)/50 [35]. A sizable flat-in-t cos 2φ on ⁶Li cannot be a
-    shape effect: the mechanisms entangled for the deuteron separate cleanly in the ⁶Li/d
-    comparison.
+    <b>The ⁶Li null test:</b> deformation-driven coherent modulations — the
+    polarized-deuteron imaging signal [13] — are bounded on ⁶Li by its anomalously small
+    quadrupole moment, Q = −0.0806(6) fm² ≈ Q(⁷Li)/50 [35]. A sizable flat-in-t cos 2φ on
+    ⁶Li cannot be a shape effect; the mechanisms entangled for the deuteron separate in
+    the ⁶Li/d comparison.
   </div>
 
-  <h2>5 · Critical assumptions, honestly ranked</h2>
+  <h2>6 · Critical assumptions</h2>
 
   <table>
     <tr><th>#</th><th>Assumption</th><th>Impact if wrong</th><th>Replacement path</th></tr>
-    <tr><td>1</td><td>Scenario coherent fraction f₀ = 0.04 [×2/÷2] and its Bjorken-x (not x_P) parameterization</td>
-        <td>All coherent yields scale linearly; δA scales as 1/√f₀</td>
-        <td>Real diffractive model — open question #18; the concrete ask is an IP-Glasma α–d run [13]</td></tr>
-    <tr><td>2</td><td>ε_B0 scaling from the deuteron (two dials disagreeing by ×3; charge-quadrupole cancellation may not transfer to gluons)</td>
-        <td>Deformation amplitude anywhere in the stated band; sign flip robust</td>
-        <td>Same IP-Glasma α–d calculation; meanwhile the band is quoted on every plot</td></tr>
-    <tr><td>3</td><td>Event-by-event Z-ID in the RPs is NOT assumed (purity via |t|-shape fit)</td>
-        <td>If Z-ID exists, purity improves outright; if the incoherent slope model is off, the fit systematic grows</td>
-        <td>#19 answer from ePIC FF WG; BeAGLE Mode-W incoherent spectra</td></tr>
-    <tr><td>4</td><td>Linear a₂(t) valid only for |t| < 0.2 GeV²; C₀ zero at 0.31 GeV² excluded, not modeled</td>
-        <td>Upper tagged window carries unmodeled structure (locally enhanced, sign-flipping a₂)</td>
-        <td>Form-factor-level model of the dip region (the deuteron analog is in [13])</td></tr>
-    <tr><td>5</td><td>TOY structure functions; no target-mass terms; g₂ = g₂WW</td>
-        <td>Rates to ×1.5; shapes are scenarios by construction</td>
-        <td>PDF-grid backends exist; digitized theory curves scheduled (plans/02 step 1.2)</td></tr>
-    <tr><td>6</td><td>High-divergence p_T cut 0.45 GeV is derived from YR divergence tables, not documented</td>
-        <td>Only affects the (already excluded) high-divergence option</td>
-        <td>ePIC optics documents as they firm up</td></tr>
-    <tr><td>7</td><td>All luminosity in the transverse-tensor fill; P_zz = 0.6 in-ring placeholder</td>
-        <td>N scales with the run-plan share; amplitude scales with P_zz</td>
-        <td>Run-plan bookkeeper already supports splits; EPIOS/source numbers as they land (ABS sources: ~95% of maximal P_zz demonstrated [37])</td></tr>
-    <tr><td>8</td><td>Impulse approximation; no FSI; tensor radiative corrections unknown</td>
-        <td>FSI distorts the recoil spectrum at larger |t|; RC unquantified for tensor observables</td>
-        <td>Theory engagement (plans/04 #10, #16); QED tail is calculable and doubles as calibration</td></tr>
-    <tr><td>9</td><td>Deformation term assumed x_P-independent within the plotted bins</td>
-        <td>JIMWLK evolution weakens deformation toward small x [15] — would mimic a relative growth of the gluonic term</td>
-        <td>Make the x_P dependence part of the two-component fit; theory input from [15]</td></tr>
-    <tr><td>10</td><td>Coherent ensemble a₂ uses the equal-rate population average (exact only as |t| → 0); t_min is neglected in the tag acceptance</td>
-        <td>One-sided −27% (rate weighting, audited) and ≈−10% (t_min) on the coherent signal/yield — both inside the ε_B0 / f₀ bands</td>
-        <td>Rate-weighted ensemble model (the IP-Glasma α–d run of #18 supersedes both)</td>
+    <tr><td>1</td><td>RP p_T cuts: 0.20 GeV is the documented top-rigidity envelope scale (³He precedent [10]); 0.45 GeV is our derivation; no Li optics exist — proton-class divergence would give 0.5–0.7 GeV</td>
+        <td>Tag acceptance anywhere from 13.5% to negligible at IP6; the physics case shifts to IR-8</td>
+        <td>Li beam-optics parameters from EIC C-AD; the IR-8 secondary focus removes the cut entirely [10]</td></tr>
+    <tr><td>2</td><td>Scenario coherent fraction f₀ = 0.04 [×2/÷2], parameterized in Bjorken x</td>
+        <td>Coherent yields scale linearly; δA as 1/√f₀</td>
+        <td>Real diffractive model — open question #18; concrete ask: an IP-Glasma α–d run [13]</td></tr>
+    <tr><td>3</td><td>Bag-moment normalization of Δ ported to per-nucleon ⁶Li with 1/3 dilution; x-shape ours</td>
+        <td>Overall Δ scale; literature brackets both directions (NPLQCD suppression [27] vs binding enhancement [50])</td>
+        <td>Lattice moment for a light nucleus; theory engagement (plans/04)</td></tr>
+    <tr><td>4</td><td>ε_B0 scaling from the deuteron (two dials disagreeing by ×3)</td>
+        <td>Deformation amplitude anywhere in the band; sign flip robust</td>
+        <td>The same IP-Glasma α–d calculation; band quoted on every plot</td></tr>
+    <tr><td>5</td><td>Event-by-event Z-ID in the RPs is NOT assumed (purity via |t|-shape fit)</td>
+        <td>If Z-ID exists purity improves; if the incoherent slope model is off, the fit systematic grows</td>
+        <td>#19 answer from the ePIC far-forward group; BeAGLE incoherent spectra</td></tr>
+    <tr><td>6</td><td>Linear a₂(t) valid only for |t| &lt; 0.2 GeV²; form-factor zero at 0.31 GeV² excluded, not modeled</td>
+        <td>Upper tagged window carries unmodeled structure</td>
+        <td>Form-factor-level model of the dip region (deuteron analog in [13])</td></tr>
+    <tr><td>7</td><td>TOY structure functions; no target-mass terms; g₂ = g₂WW</td>
+        <td>Rates to ×1.5; shapes are scenarios</td>
+        <td>PDF-grid backends exist; digitized theory curves scheduled (plans/02)</td></tr>
+    <tr><td>8</td><td>All luminosity in the transverse-tensor fill; P_zz = 0.6 in-ring placeholder</td>
+        <td>N scales with the run-plan share; amplitude with P_zz</td>
+        <td>Run-plan bookkeeper supports splits; source demonstrations reach ~95% of maximal P_zz [37]</td></tr>
+    <tr><td>9</td><td>Impulse approximation; no FSI; tensor radiative corrections unknown</td>
+        <td>FSI distorts the recoil spectrum at larger |t|; RC unquantified</td>
+        <td>Theory engagement (plans/04); the QED tail is calculable and doubles as calibration</td></tr>
+    <tr><td>10</td><td>Equal-rate population average for ⟨a₂⟩; t_min neglected in the tag acceptance</td>
+        <td>One-sided −27% (rate weighting) and ≈−10% (t_min) — inside the ε_B0 / f₀ bands</td>
+        <td>Rate-weighted ensemble model (the IP-Glasma run supersedes both)</td></tr>
   </table>
 
-  <h2>6 · Future improvements</h2>
+  <h2>7 · Next steps</h2>
 
-  <p><b>Near term (this program):</b> BeAGLE Mode-W incoherent ⁶Li spectra → veto-efficiency
-  and |t|-fit systematics become numbers (plans/02 step 1.5); VMC α–d/α–t overlaps replace the
-  two-parameter radial forms (plans/04 #15); pseudo-experiment closure with a 2-D (φ, φ_t)
-  acceptance map (Phase-2, plans/03 step 2.3); HepMC3 output + ePIC chain smoke test
-  (plans/05 step 5.D) so these projections can be repeated at reconstructed level.</p>
+  <p><b>Near term:</b> BeAGLE incoherent ⁶Li spectra to turn the veto efficiency and
+  |t|-fit systematics into numbers (plans/02); VMC α–d/α–t overlaps replacing the
+  two-parameter radial forms (plans/04); pseudo-experiment closure with a 2-D (φ, φ_t)
+  acceptance map (plans/03); HepMC3 output and an ePIC chain smoke test (plans/05) so
+  these projections can be repeated at reconstructed level.</p>
 
-  <p><b>Theory engagement:</b> #18 — rerun the IP-Glasma polarized-deuteron setup [13] with an
-  α–d cluster density for ⁶Li (the single highest-leverage input: it would replace both ε_B0
-  dials and the f₀ band at once); the spin-3/2 (⁷Li) structure-function basis (plans/04 #14);
-  tensor-observable radiative corrections (#10); the sum-rule tie between the transversity-GPD
-  moments and the measured tensor form factors [30] to implement the cancellation scenario
-  rigorously.</p>
+  <p><b>Theory asks:</b> rerun the IP-Glasma polarized-deuteron setup [13] with an α–d
+  cluster density — the single highest-leverage input, replacing both ε_B0 dials and the
+  f₀ band at once; a lattice Δ moment for a light nucleus; the spin-3/2 structure-function
+  basis for ⁷Li; tensor-observable radiative corrections; the sum-rule tie between
+  transversity-GPD moments and measured tensor form factors [30].</p>
 
-  <p><b>Detector/machine questions raised by this study:</b> #19 — can the RP AC-LGAD
-  amplitude separate Z = 3/2/1 at the same rigidity and velocity? (No EIC document addresses
-  it; decides whether coherent-tag purity is event-by-event or statistical.) The IR-8
-  secondary focus with its Z² Cherenkov [8] is the structural fix and lifts the tag acceptance
-  from 13.5% toward pT ≈ 0 coverage (⁷Li: 17.8% [10]) — the coherent-⁶Li program is one more
-  physics case for the second IR. Off-momentum halo determines how close the pots sit, i.e.
-  the pT cut itself.</p>
+  <p><b>Machine and detector asks:</b> lithium beam-optics parameters (they set the IP6
+  p_T cut, assumption #1); an answer to #19 — can the RP AC-LGAD amplitude separate
+  Z = 3/2/1 at identical rigidity and velocity?; and the IR-8 secondary focus with its
+  proposed Z² Cherenkov [8], which lifts the tag toward p_T ≈ 0 (⁷Li: 17.8% published;
+  ⁶Li not yet studied [10]) — the coherent-⁶Li program is one more physics case for the
+  second interaction region. Off-momentum halo sets how close the pots sit, i.e. the cut
+  itself.</p>
 
   <h2>References</h2>
   <div class="refs twocol">
@@ -526,52 +570,41 @@ a_m = ¼ c_m (3cos²θ_m − 1),   c_m = 3|λ_m| − 2 → (1, −2, 1)</div>
     <p>[2] P. Hoodbhoy, R. L. Jaffe, A. Manohar, <i>Novel effects in deep inelastic scattering from spin-one hadrons</i>, Nucl. Phys. B 312 (1989) 571.</p>
     <p>[3] J. Maxwell et al., <i>Search for Exotic Gluonic States in the Nucleus</i>, JLab LOI12-16-006, arXiv:1803.11206.</p>
     <p>[4] E. Sather, C. Schmidt, <i>Size and scaling of the double-helicity-flip hadronic structure function</i>, Phys. Rev. D 42 (1990) 1424.</p>
-    <p>[5] S. Kumano, Q.-T. Song, <i>Gluon transversity in polarized proton-deuteron Drell-Yan process</i>, Phys. Rev. D 101 (2020) 054011, arXiv:1910.12523.</p>
+    <p>[5] S. Kumano, Q.-T. Song, Phys. Rev. D 101 (2020) 054011, arXiv:1910.12523; Phys. Rev. D 101 (2020) 094013, arXiv:2003.06623.</p>
     <p>[6] Y. Hatta, B.-W. Xiao, F. Yuan, Phys. Rev. Lett. 116 (2016) 202301.</p>
     <p>[7] R. Abdul Khalek et al., <i>EIC Yellow Report</i>, Nucl. Phys. A 1026 (2022) 122447, arXiv:2103.05419.</p>
-    <p>[8] Second EIC detector / IR-8 studies: arXiv:2211.15746 (§VIII); BNL LDRD 23-050 closeout, arXiv:2602.04636.</p>
-    <p>[9] M. Pitt, PoS DIS2024 (2025) 259, arXiv:2409.02811; E.-C. Aschenauer et al., Phys. Rev. D 112 (2025) 036010, arXiv:2503.05908; M. Boër et al., arXiv:2512.15064.</p>
+    <p>[8] Far-forward/second-IR design: ATHENA collaboration, JINST 17 (2022) P10019, arXiv:2210.09048; <i>Precision Studies of QCD in the Low Energy Domain of the EIC</i>, arXiv:2211.15746 (§VIII); BNL LDRD 23-050 closeout (second-detector conceptual design, Mini-DIRC Z² Cherenkov), arXiv:2602.04636.</p>
+    <p>[9] M. Pitt, PoS DIS2024 (2025) 259, arXiv:2409.02811; E.-C. Aschenauer et al., Phys. Rev. D 112 (2025) 036010, arXiv:2503.05908.</p>
     <p>[10] W. Chang, E.-C. Aschenauer, A. Jentsch, A. Kumar, Z. Tu, Z. Yin, <i>Opportunities for imaging light nuclei with a second interaction region at the EIC</i>, Phys. Rev. D 113 (2026) 032018, arXiv:2511.05638.</p>
     <p>[11] L. R. Suelzle, M. R. Yearian, H. Crannell, Phys. Rev. 162 (1967) 992.</p>
     <p>[12] G. C. Li, I. Sick, R. R. Whitney, M. R. Yearian, Nucl. Phys. A 162 (1971) 583.</p>
     <p>[13] H. Mäntysaari, F. Salazar, B. Schenke, C. Shen, W. Zhao, <i>Spatial imaging of polarized deuterons at the Electron-Ion Collider</i>, Phys. Lett. B 858 (2024) 139053, arXiv:2408.13213.</p>
     <p>[14] H. Mäntysaari, H. Roch, B. Schenke, C. Shen, W. Zhao, Phys. Rev. D 114 (2026) 014068, arXiv:2605.00454.</p>
-    <p>[15] H. Mäntysaari, P. Singh, <i>Energy dependence of the deformed nuclear structure at small-x</i>, Eur. Phys. J. C 85 (2025) 1449, arXiv:2411.14934.</p>
+    <p>[15] H. Mäntysaari, P. Singh, Eur. Phys. J. C 85 (2025) 1449, arXiv:2411.14934.</p>
     <p>[16] K. D. Veal, C. R. Brune, W. H. Geist et al., Phys. Rev. C 60 (1999) 064003.</p>
     <p>[17] R. B. Wiringa, R. Schiavilla, Phys. Rev. Lett. 81 (1998) 4317, nucl-th/9807037.</p>
-    <p>[18] M. Garçon, J. W. Van Orden, Adv. Nucl. Phys. 26 (2001) 293, nucl-th/0102049.</p>
     <p>[19] M. Bouwhuis et al. (NIKHEF), Phys. Rev. Lett. 82 (1999) 3755; D. Abbott et al. (JLab t20), Phys. Rev. Lett. 84 (2000) 5053; D. M. Nikolenko et al. (VEPP-3), Phys. Rev. Lett. 90 (2003) 072501.</p>
     <p>[20] A. Airapetian et al. (HERMES), Phys. Rev. Lett. 95 (2005) 242001, hep-ex/0506018.</p>
     <p>[21] N. N. Nikolaev, W. Schäfer, Phys. Lett. B 398 (1997) 245.</p>
     <p>[22] K. Bora, R. L. Jaffe, Phys. Rev. D 57 (1998) 6906, hep-ph/9711323.</p>
     <p>[23] J. Edelmann, G. Piller, W. Weise, Phys. Rev. C 57 (1998) 3392.</p>
-    <p>[24] A. Airapetian et al. (HERMES), Nucl. Phys. B 842 (2011) 265, arXiv:1008.3996.</p>
-    <p>[25] W. Detmold, P. E. Shanahan, Phys. Rev. D 94 (2016) 014507, arXiv:1606.04505.</p>
-    <p>[26] W. Detmold, D. Pefkou, P. E. Shanahan, Phys. Rev. D 95 (2017) 114515, arXiv:1703.08220.</p>
+    <p>[25] W. Detmold, P. E. Shanahan, Phys. Rev. D 94 (2016) 014507 [Erratum: Phys. Rev. D 95 (2017) 079902], arXiv:1606.04505.</p>
     <p>[27] F. Winter et al. (NPLQCD), Phys. Rev. D 96 (2017) 094512, arXiv:1709.00395.</p>
-    <p>[28] S. Kumano, Q.-T. Song, Phys. Rev. D 101 (2020) 094013, arXiv:2003.06623.</p>
-    <p>[29] J. Zhao, A. Bacchetta, S. Kumano, T. Liu, Y.-J. Zhou, JHEP 12 (2025) 067, arXiv:2508.06134.</p>
-    <p>[30] W. Cosyn, B. Pire, Phys. Rev. D 98 (2018) 074020, arXiv:1806.01177; W. Cosyn et al., Phys. Rev. D 99 (2019) 094035; W. Cosyn, B. Pire, L. Szymanowski, PoS DIS2019 (2019) 254, arXiv:1907.08662.</p>
-    <p>[31] D. Boer, S. Cotogno, T. van Daal, P. J. Mulders, A. Signori, Y.-J. Zhou, JHEP 10 (2016) 013, arXiv:1607.01654; S. Cotogno, T. van Daal, P. J. Mulders, JHEP 11 (2017) 185, arXiv:1709.07827.</p>
-    <p>[32] E. R. Berger, F. Cano, M. Diehl, B. Pire, Phys. Rev. Lett. 87 (2001) 142302.</p>
-    <p>[33] F. Cano, B. Pire, Eur. Phys. J. A 19 (2004) 423, hep-ph/0307231; A. Kirchner, D. Müller, Eur. Phys. J. C 32 (2003) 347, hep-ph/0302007.</p>
-    <p>[34] M. Nzar, P. Hoodbhoy, Phys. Rev. D 45 (1992) 2264.</p>
-    <p>[35] I. Angeli, K. P. Marinova, At. Data Nucl. Data Tables 99 (2013) 69; Q values via arXiv:2403.06384; N. J. Stone, At. Data Nucl. Data Tables 111–112 (2016) 1.</p>
-    <p>[36] B. Wojtsekhowski, arXiv:2406.11480.</p>
+    <p>[30] W. Cosyn, B. Pire, Phys. Rev. D 98 (2018) 074020, arXiv:1806.01177; W. Cosyn et al., Phys. Rev. D 99 (2019) 094035.</p>
+    <p>[34] M. Nzar, P. Hoodbhoy, <i>Estimation of the double helicity flip deuteron structure function</i>, Phys. Rev. D 45 (1992) 2264.</p>
+    <p>[35] I. Angeli, K. P. Marinova, At. Data Nucl. Data Tables 99 (2013) 69; N. J. Stone, At. Data Nucl. Data Tables 111–112 (2016) 1.</p>
     <p>[37] M. M. Dalton, A. Deur, C. D. Keith, Eur. Phys. J. A 61 (2025) 111, arXiv:2504.21177.</p>
-    <p>[38] M. M. Dalton, A. Deur, C. D. Keith, N. Fomin, M. Sargsian, JLab PAC 53 proposal, arXiv:2508.06481.</p>
     <p>[39] D. R. Tilley et al., <i>Energy levels of light nuclei A = 5, 6, 7</i>, Nucl. Phys. A 708 (2002) 3 (TUNL).</p>
-    <p>[40] arXiv:2211.15746 §VIII; arXiv:2602.04636 (IR-8 Z² Cherenkov).</p>
     <p>[41] LEPS collaboration, coherent φ on ⁴He, arXiv:1711.01095.</p>
     <p>[42] STAR collaboration, Phys. Rev. Lett. 128 (2022) 122303, arXiv:2109.07625.</p>
     <p>[43] W. Chang et al., Phys. Rev. D 104 (2021) 114030, arXiv:2108.01694.</p>
     <p>[44] H1 collaboration, Eur. Phys. J. C 72 (2012) 2074, arXiv:1203.4495.</p>
     <p>[45] T. Lappi, Nucl. Phys. A 830 (2009) 403c, arXiv:0907.4588; H. Kowalski, T. Lappi, C. Marquet, R. Venugopalan, Phys. Rev. C 78 (2008) 045201, arXiv:0805.4071.</p>
-    <p>[46] A. Accardi et al., Eur. Phys. J. A 52 (2016) 268, arXiv:1212.1701.</p>
     <p>[47] I. Sick, arXiv:1505.06924.</p>
-    <p>[48] ECCE consortium, arXiv:2208.14575.</p>
-    <p>[49] Polarized ³He/⁴He coherent DVCS at the EIC, arXiv:2606.11491.</p>
-    <p>[50] G. Atoian et al. (EPIOS), Phys. Rev. C 113 (2026) 060501, arXiv:2510.10794.</p>
+    <p>[48] ECCE consortium, exclusive/diffractive/tagging studies, NIM A 1052 (2023) 168238, arXiv:2208.14575.</p>
+    <p>[49] J. R. Pybus, S. Li, L. Calero-Diaz, <i>Polarized nuclear DVCS at the EIC</i> (e+³He), arXiv:2606.11491.</p>
+    <p>[50] G. Atoian et al. (EPIOS), <i>Realizing the scientific program with polarized ion beams at EIC</i>, Phys. Rev. C 113 (2026) 060501, arXiv:2510.10794.</p>
+    <p>[51] IR-8 far-forward tagging of nuclear breakup, arXiv:2501.12410.</p>
   </div>
 
   <div class="foot">
@@ -579,15 +612,16 @@ a_m = ¼ c_m (3cos²θ_m − 1),   c_m = 3|λ_m| − 2 → (1, −2, 1)</div>
     <code>evgen/scripts/money_cos2phi.py</code>,
     <code>evgen/scripts/money_cos2phi_coherent.py</code>,
     <code>evgen/scripts/money_delta_extraction.py</code>,
-    <code>evgen/scripts/phase_space_bins.py</code> (assembled by
-    <code>reports/build_report.py</code>), models in
-    <code>polli_fastsim/delta_models.py</code> (unified Δ registry) and
-    <code>evgen/polligen/coherent.py</code>; 68 + 24 tests pass, including the merged
-    money_delta study line. All rates use TOY/scenario inputs —
-    bands, not predictions. External numbers verified against primary sources in three research
-    sweeps (nuclear data: TUNL; detector: EIC YR + ePIC documents; theory: original papers);
-    citation metadata individually verified against arXiv/INSPIRE. Target venue: INT program on
-    polarized ion beams at the EIC, March 22 – April 2, 2027.
+    <code>evgen/scripts/phase_space_bins.py</code>; models in
+    <code>polli_fastsim/delta_models.py</code> and <code>evgen/polligen/coherent.py</code>;
+    assembled by <code>reports/build_report.py</code> (display math typeset at build time,
+    matplotlib mathtext/STIX). 68 + 24 tests pass. All rates use TOY/scenario inputs —
+    bands, not predictions. External numbers verified against primary sources (nuclear
+    data: TUNL; detector: EIC YR, ATHENA, ePIC and second-IR documents; theory: original
+    papers), including dedicated 2026-08-17 fact checks of the Sather–Schmidt moment usage
+    and the far-forward detection chain. Reference numbering is shared with earlier
+    revisions; retired entries are omitted. Target venue: INT program on polarized ion
+    beams at the EIC, March 22 – April 2, 2027.
   </div>
 </div>
 </body>
