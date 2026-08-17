@@ -20,7 +20,11 @@ python3 scripts/money_cos2phi.py                          # money plot 5
 python3 scripts/money_cos2phi_coherent.py                 # money plot 6
 python3 scripts/money_delta_extraction.py                 # money plot 7
 python3 scripts/phase_space_bins.py       # (x,Q2) rate maps + binning
-python3 ../reports/build_report.py --pdf  # assemble the report from the PNGs
+python3 ../reports/build_report.py --pdf  # assemble reports/ pages
+#   -> cos2phi_money_plots_report.html/pdf (projection report)
+#   -> polarized_li_primer.html/pdf (educational physics primer)
+#   figures embedded from the PNGs above; display math typeset at
+#   build time (matplotlib mathtext, no JS/fonts in the output)
 ```
 
 ## Modules
