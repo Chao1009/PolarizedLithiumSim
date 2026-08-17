@@ -185,7 +185,7 @@
 
   <p class="eyebrow">Polarized ⁶,⁷Li @ EIC · Simulation program report · reports/</p>
   <h1>The cos 2φ modulation on tensor-polarized ⁶Li: projected measurements, the coherent intact-recoil channel, and what stands behind the numbers</h1>
-  <p class="dateline">2026-08-10 · development run 5 · polligen (evgen/) + polli_fastsim (fastsim/) · companion documents: plans/06 (background budget), docs/note_cos2phi_coherent_6Li.md (physics note) · all external numbers verified against primary sources in three research sweeps; adversarially reviewed</p>
+  <p class="dateline">2026-08-17 · development run 5 · polligen (evgen/) + polli_fastsim (fastsim/) · companion documents: plans/06 (background budget), docs/note_cos2phi_coherent_6Li.md (physics note) · all external numbers verified against primary sources in three research sweeps; adversarially reviewed</p>
 
   <p class="lede">This report presents two projected measurements ("money plots") for a
   transversely tensor-polarized ⁶Li beam at the EIC, explains the design choices behind the
@@ -266,6 +266,26 @@ a_m = ¼ c_m (3cos²θ_m − 1),   c_m = 3|λ_m| − 2 → (1, −2, 1)</div>
   the same convention as the analytic FOM maps (a run-plan split would scale N down
   proportionally). Projections are quoted separately for the <b>1-year (10 fb⁻¹/u) and
   10-year (100 fb⁻¹/u) EIC programs</b>.</p>
+
+  <figure>
+    <div class="panel"><img src="data:image/png;base64,__PS__" alt="Phase space and binning: (x, Q2) event-rate maps for the inclusive and tagged-coherent measurements with the analysis bins of money plots 5-7 overlaid"></div>
+    <figcaption><b>Where the events are and how they are binned</b> (e10 × ⁶Li50, 1-year
+    program, 40×30 log-log analysis grid; color = expected events per bin where ≥ 1, log
+    scale; gray dashes: the y = 0.95/0.01 and W² = 10 GeV² boundaries — the |η|, E′ cuts
+    carve the rest of the staircase). <b>Left — inclusive DIS</b>, the rate map behind money
+    plots 5/7 (N = 4.6×10⁹ accepted events in year 1): vermillion boxes 1–4 are the
+    sweet-spot φ′ super-bins of money plot 5, numbered in panel order (3×3 cells merged,
+    picked per Q² band from the significance map); gray combs are the three sweet-spot Q²
+    slices (Q²×[1/1.6, 1.6]) with the merged x-bin pairs that become the data points of the
+    amplitude-vs-x panel (plot 5, right) and of the Δ extraction (plot 7) — one comb cell =
+    one data point, kept by the money-plot selection N ≥ 10³ and δA ≤ 8×10⁻³. <b>Right —
+    RP-tagged coherent channel</b>: the same map × f_coh(x) (f₀ = 0.04, dying at
+    x_coh = 0.01, dotted line) × the 13.5% tag acceptance (high-acceptance optics).
+    N_tag = 1.1×10⁷ in year 1, with 98% of the tagged sample at x &lt; 0.03 (median
+    x = 3.5×10⁻³) — the coherent measurement is a low-x measurement by construction. The
+    vermillion box is the tagged-count-maximal super-bin whose φ′ modulation is money
+    plot 6(d); plot 6(c) is this map summed over Q², column by column.</figcaption>
+  </figure>
 
   <p><b>One home for the Δ model.</b> All Δ(x,Q²) models live in a unified registry,
   <code>polli_fastsim/delta_models.py</code>, behind the single (x, Q², F₁) interface every
@@ -555,11 +575,14 @@ a_m = ¼ c_m (3cos²θ_m − 1),   c_m = 3|λ_m| − 2 → (1, −2, 1)</div>
   </div>
 
   <div class="foot">
-    Generated from the PolarizedLithiumSim repository (development run 5, 2026-08-10):
+    Generated from the PolarizedLithiumSim repository (development run 5, 2026-08-17):
     <code>evgen/scripts/money_cos2phi.py</code>,
-    <code>evgen/scripts/money_cos2phi_coherent.py</code>, models in
+    <code>evgen/scripts/money_cos2phi_coherent.py</code>,
+    <code>evgen/scripts/money_delta_extraction.py</code>,
+    <code>evgen/scripts/phase_space_bins.py</code> (assembled by
+    <code>reports/build_report.py</code>), models in
     <code>polli_fastsim/delta_models.py</code> (unified Δ registry) and
-    <code>evgen/polligen/coherent.py</code>; 66 + 23 tests pass, including the merged
+    <code>evgen/polligen/coherent.py</code>; 68 + 24 tests pass, including the merged
     money_delta study line. All rates use TOY/scenario inputs —
     bands, not predictions. External numbers verified against primary sources in three research
     sweeps (nuclear data: TUNL; detector: EIC YR + ePIC documents; theory: original papers);

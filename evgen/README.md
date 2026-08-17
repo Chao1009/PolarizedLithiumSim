@@ -19,6 +19,8 @@ python3 scripts/tagged_polarimetry_7li.py --events 300000
 python3 scripts/money_cos2phi.py                          # money plot 5
 python3 scripts/money_cos2phi_coherent.py                 # money plot 6
 python3 scripts/money_delta_extraction.py                 # money plot 7
+python3 scripts/phase_space_bins.py       # (x,Q2) rate maps + binning
+python3 ../reports/build_report.py --pdf  # assemble the report from the PNGs
 ```
 
 ## Modules
@@ -56,6 +58,15 @@ measurements unfolded to the structure function itself —
 xΔ(x,Q²) data points at the three sweet-spot Q² slices with
 independent 1-yr/10-yr draws against the moment_A/moment_B curves
 (the area under each curve is the Sather–Schmidt moment, ÷3 dilution).
+
+`phase_space_bins.py`: the companion phase-space figure — (x, Q²)
+event-rate maps on the 40×30 analysis grid (1-yr program) for the
+inclusive DIS and the RP-tagged coherent channel, with every bin of
+the detailed plots overlaid: the four sweet-spot φ′ super-bins
+(plot 5), the three Q² slices with their merged x-bin pairs (the
+Δ-extraction points of plots 5R/7, exact money-plot selection), and
+the tagged-count-maximal super-bin of plot 6(d). 98% of the tagged
+sample sits at x < 0.03 (median 3.5×10⁻³).
 
 `money_cos2phi_coherent.py`: the coherent channel e⁶Li → e′X ⁶Li(g.s.)
 with the intact recoil tagged in the Roman-Pot near-beam pT tail
