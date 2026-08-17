@@ -144,32 +144,35 @@
 
   <p class="eyebrow">Polarized ⁶,⁷Li @ EIC · Educational note · reports/</p>
   <h1>Deep inelastic scattering on polarized lithium: the physics behind the planned measurements</h1>
-  <p class="dateline">2026-08-17 · companion to the cos 2φ projection report and to plans/01 (physics case) · written for students and colleagues joining the program; external numbers carry over from the fetch-verified physics-case survey</p>
+  <p class="dateline">2026-08-17 · companion to the cos 2φ projection report and to plans/01 (physics case) · written for students and colleagues joining the program; external numbers carry over from the verified physics-case survey</p>
 
-  <p class="lede">A polarized lithium beam gives the EIC something no other beam provides:
-  spin-polarized <i>nuclei</i> light enough to compute, heavy enough to have genuine nuclear
-  structure. ⁶Li is a spin-1 nucleus that behaves in many ways like a deuteron bound to an
-  inert α core; ⁷Li is its spin-3/2 partner, an α plus a triton. This note explains, from the
-  DIS formalism up, the four measurements the program is built around: the tensor structure
-  function b₁, the double-helicity-flip ("exotic glue") structure function Δ, the polarized
-  EMC effect, and spectator-tagged DIS on the embedded deuteron.</p>
+  <p class="lede">Polarized lithium beams would provide the EIC with spin-polarized
+  <i>nuclei</i> that are light enough for ab initio computation yet complex enough to
+  exhibit genuine nuclear structure. ⁶Li is a spin-1 nucleus well described as a deuteron
+  bound to an inert α core; ⁷Li is its spin-3/2 partner, an α plus a triton. This note
+  develops, starting from the DIS formalism, the four measurements around which the
+  program is built: the tensor structure function b₁, the double-helicity-flip ("exotic
+  glue") structure function Δ, the polarized EMC effect, and spectator-tagged DIS on the
+  embedded deuteron.</p>
 
-  <h2>1 · Why lithium, and what the source must deliver</h2>
+  <h2>1 · Polarized lithium at the EIC</h2>
 
   <p>The EIC baseline includes polarized electrons, protons, deuterons, and ³He. The EPIOS
-  white paper [1] lays out the accelerator case for adding polarized ⁶Li and ⁷Li: an
-  atomic-beam source with optical pumping at 671 nm feeding EBIS charge breeding, with source
-  targets P<sub>z</sub> ≥ 0.90 (vector) and P<sub>zz</sub> ≥ 0.80 (tensor) at ≥ 10¹³ atoms/s.
-  In the ring, ⁶Li is spin-dynamically deuteron-like — its small gyromagnetic anomaly
-  (G = −0.178) means only 81 linear depolarizing resonances up to the top energy of
-  ~138 GeV/u, compared with 2457 for ³He — so the machine techniques developed for deuterons
-  carry over. ⁷Li (G = +1.532) reaches ~117 GeV/u with partial snakes and tune jumps [1].</p>
+  white paper [1] presents the accelerator case for adding polarized ⁶Li and ⁷Li: an
+  atomic-beam source with optical pumping at 671 nm feeding EBIS charge breeding, with
+  source targets P<sub>z</sub> ≥ 0.90 (vector) and P<sub>zz</sub> ≥ 0.80 (tensor) at
+  ≥ 10¹³ atoms/s. In the ring, ⁶Li is spin-dynamically similar to the deuteron: its small
+  gyromagnetic anomaly (G = −0.178) implies only 81 linear depolarizing resonances up to
+  the top energy of ~138 GeV/u, compared with 2457 for ³He, so the machine techniques
+  developed for deuterons carry over. ⁷Li (G = +1.532) reaches ~117 GeV/u with partial
+  snakes and tune jumps [1].</p>
 
-  <p>Four measurements motivate the beam, and each sits on a verified literature gap: no
-  b₁ prediction or measurement exists for any nucleus beyond the deuteron; no gluon-transversity
-  projection exists for any EIC target; no study of α-tagged DIS on lithium exists; and no
-  Li-beam luminosity/polarization parameter set has been published. The program's simulations
-  exist to turn these gaps into figures of merit.</p>
+  <p>Four measurements motivate the beam, each addressing a verified gap in the
+  literature: no b₁ prediction or measurement exists for any nucleus beyond the deuteron;
+  no gluon-transversity projection exists for any EIC target; no study of α-tagged DIS on
+  lithium exists; and no lithium-beam luminosity or polarization parameter set has been
+  published. The purpose of the program's simulations is to convert these gaps into
+  figures of merit.</p>
 
   <table>
     <tr><th>Measurement</th><th>Observable</th><th>Electron beam</th><th>Ion spin</th><th>Axis</th></tr>
@@ -179,43 +182,46 @@
     <tr><td>Tagged DIS (both isotopes)</td><td>tagged versions of all three</td><td>as above</td><td>as above</td><td>as above, correlated with spectator</td></tr>
   </table>
 
-  <h2>2 · DIS in brief</h2>
+  <h2>2 · Deep inelastic scattering</h2>
 
-  <p>An electron with four-momentum k scatters off a nucleus of momentum P by exchanging a
-  virtual photon q = k − k′. Per-nucleon invariants (the convention used throughout the
-  program: energies and structure functions per nucleon, x ≤ 1):</p>
+  <p>An electron with four-momentum k scatters from a nucleus of momentum P by exchanging
+  a virtual photon q = k − k′. The kinematic invariants, in the per-nucleon convention
+  used throughout the program (energies and structure functions per nucleon, x ≤ 1),
+  are</p>
 
   <p class="eq"><img class="tex" data-tex="Q^2 = -q^2,\qquad x = \frac{Q^2}{2P\cdot q},\qquad y = \frac{P\cdot q}{P\cdot k},\qquad Q^2 = x\,y\,s,\qquad W^2 = M^2 + Q^2\,\frac{1-x}{x}"></p>
 
-  <p>x is the momentum fraction of the struck parton, y the energy transfer fraction, W the
-  invariant mass of everything the photon produces. The unpolarized cross section is carried
-  by two structure functions,</p>
+  <p>where x is the momentum fraction of the struck parton, y the energy-transfer
+  fraction, and W the invariant mass of the hadronic final state. The unpolarized cross
+  section is carried by two structure functions,</p>
 
   <p class="eq"><img class="tex" data-tex="\frac{d^2\sigma}{dx\,dQ^2} = \frac{4\pi\alpha^2}{x\,Q^4}\left[\left(1 - y + \frac{y^2}{2}\right)F_2(x,Q^2) - \frac{y^2}{2}\,F_L(x,Q^2)\right],\qquad F_1 = \frac{F_2}{2x\,(1+R)}"></p>
 
-  <p>with R = σ<sub>L</sub>/σ<sub>T</sub>. In the parton model F₂ = Σ<sub>q</sub> e²<sub>q</sub> x[q(x)+q̄(x)]:
-  DIS counts quarks weighted by charge squared. For a nucleus we use F₂ᴬ/A, so rates are
-  quoted against luminosity per nucleon. Polarization adds structure functions on top of
-  F₁ and F₂ — which ones depends on the target spin.</p>
+  <p>with R = σ<sub>L</sub>/σ<sub>T</sub>. In the parton model,
+  F₂ = Σ<sub>q</sub> e²<sub>q</sub> x[q(x)+q̄(x)]: the cross section measures quark
+  distributions weighted by squared charge. For a nucleus we use F₂ᴬ/A, so rates are
+  quoted against luminosity per nucleon. Polarization introduces additional structure
+  functions beyond F₁ and F₂; their number and character depend on the target spin.</p>
 
-  <h2>3 · What spin-1 adds</h2>
+  <h2>3 · Spin-1 targets</h2>
 
-  <p>A spin-½ target contributes two spin structure functions, g₁ and g₂. The workhorse is
-  g₁, the helicity-weighted quark distribution, measured through the double-spin asymmetry
-  A<sub>∥</sub> ≈ D·g₁/F₁ (D is a kinematic depolarization factor) with both beams
-  longitudinally polarized and the electron helicity flipped bunch by bunch.</p>
+  <p>A spin-½ target contributes two spin structure functions, g₁ and g₂. The principal
+  observable is g₁, the helicity-weighted quark distribution, measured through the
+  double-spin asymmetry A<sub>∥</sub> ≈ D·g₁/F₁ (D is a kinematic depolarization factor)
+  with both beams longitudinally polarized and the electron helicity reversed bunch by
+  bunch.</p>
 
-  <p>A spin-1 target is genuinely richer. Its spin state along a chosen axis is a set of
-  three populations p₊, p₀, p₋ over the projections m = +1, 0, −1, and two numbers
-  characterize the fill:</p>
+  <p>A spin-1 target carries additional structure. Its spin state along a chosen axis is
+  specified by three populations p₊, p₀, p₋ of the projections m = +1, 0, −1, and two
+  moments characterize the fill:</p>
 
   <p class="eq"><img class="tex" data-tex="P_z = p_+ - p_-\,\in[-1,1],\qquad P_{zz} = p_+ + p_- - 2p_0 = 1 - 3p_0\,\in[-2,1]"></p>
 
-  <p>P<sub>z</sub> is the familiar vector polarization. P<sub>zz</sub> — the <i>tensor</i> or
-  alignment polarization — is new: it distinguishes "spin along ±z" from "spin in the
-  transverse plane" (m = 0), and it is nonzero even when equal numbers point up and down.
-  An unpolarized beam has (⅓, ⅓, ⅓) and both moments vanish; a pure m = 0 beam has
-  P<sub>z</sub> = 0 but P<sub>zz</sub> = −2.</p>
+  <p>P<sub>z</sub> is the familiar vector polarization. P<sub>zz</sub>, the <i>tensor</i>
+  or alignment polarization, is specific to spin ≥ 1: it distinguishes spin along ±z from
+  spin in the transverse plane (m = 0), and it is nonzero even when equal numbers point up
+  and down. An unpolarized beam has populations (⅓, ⅓, ⅓) and both moments vanish; a pure
+  m = 0 beam has P<sub>z</sub> = 0 but P<sub>zz</sub> = −2.</p>
 
   <div class="popfig">
     <svg width="420" height="108" viewBox="0 0 420 108" role="img" aria-label="Population diagrams: unpolarized, vector-polarized, tensor-aligned fills">
@@ -266,98 +272,99 @@
 
   <p class="eq"><img class="tex" data-tex="a_m = \frac{1}{4}\,c_m\left(3\cos^2\theta_m - 1\right),\qquad c_m = 3|\lambda_m| - 2 \;\rightarrow\; (1,\,-2,\,1)\ \mathrm{for}\ m = (+1,\,0,\,-1)"></p>
 
-  <p>The weights (1, −2, 1) are the whole story of tensor observables: the m = ±1 states
-  enter together and against m = 0, exactly the combination P<sub>zz</sub> measures. Averaging
-  the formula over a fill with populations p<sub>m</sub> turns every c<sub>m</sub> into a
-  factor P<sub>zz</sub>. Two experimental handles follow: with the spin axis
-  <i>longitudinal</i>, the rate difference between fills gives A<sub>zz</sub> ∝ b₁; with the
-  spin axis <i>transverse</i> (θ<sub>m</sub> = 90°), the φ distribution of the scattered
-  electron acquires a cos 2φ modulation proportional to Δ. Both need tensor polarization and
-  neither needs polarized electrons.</p>
+  <p>The weights (1, −2, 1) organize all tensor observables: the m = ±1 states enter
+  together and against m = 0, precisely the combination measured by P<sub>zz</sub>.
+  Averaging the formula over a fill with populations p<sub>m</sub> replaces every
+  c<sub>m</sub> by a factor P<sub>zz</sub>. Two experimental handles follow. With the spin
+  axis <i>longitudinal</i>, the rate difference between fills gives A<sub>zz</sub> ∝ b₁;
+  with the spin axis <i>transverse</i> (θ<sub>m</sub> = 90°), the φ distribution of the
+  scattered electron acquires a cos 2φ modulation proportional to Δ. Both require tensor
+  polarization; neither requires polarized electrons.</p>
 
-  <p>⁷Li, with spin 3/2, has four populations and three moments (vector, tensor/quadrupole,
-  octupole). Its rank-0 and rank-1 sectors are exact analogs of the spin-½ case — that is
-  where the polarized EMC measurement lives — and its rank-2 sector is the formal analog of
-  the spin-1 tensor sector, for which no structure-function basis has been published
-  (an open theory item the program tracks).</p>
+  <p>⁷Li, with spin 3/2, has four populations and three moments (vector,
+  tensor/quadrupole, and octupole). Its rank-0 and rank-1 sectors are exact analogs of the
+  spin-½ case, and host the polarized EMC measurement; its rank-2 sector is the formal
+  analog of the spin-1 tensor sector, for which no structure-function basis has been
+  published — an open theory item the program tracks.</p>
 
-  <h2>4 · The four measurements</h2>
+  <h2>4 · The measurement program</h2>
 
-  <h3>4.1 · b₁: does a bound deuteron keep its shape?</h3>
+  <h3>4.1 · The tensor structure function b₁</h3>
 
   <p>In parton language, b₁ compares quark distributions in an aligned versus a transverse
   nucleus [2]:</p>
 
   <p class="eq"><img class="tex" data-tex="b_1(x) = \frac{1}{2}\sum_q e_q^2\left[q^{(0)}(x) - \frac{q^{(+1)}(x) + q^{(-1)}(x)}{2}\right],\qquad \int_0^1 b_1(x)\,dx = 0\ \ \mathrm{(Close-Kumano,\ no\ tensor\ sea)}"></p>
 
-  <p>where q<sup>(m)</sup> is the quark distribution in a target with spin projection m. For
-  a collection of free spin-½ nucleons, or a pure S-wave bound state, all m states look
-  alike and b₁ = 0. A nonzero b₁ is therefore a direct measure of how binding deforms the
-  nucleon content: D-wave admixture, pion exchange, hidden-color components, or a
+  <p>where q<sup>(m)</sup> is the quark distribution in a target with spin projection m.
+  For a collection of free spin-½ nucleons, or for a pure S-wave bound state, all m states
+  are equivalent and b₁ = 0. A nonzero b₁ therefore measures directly how binding modifies
+  the partonic content: D-wave admixture, pion exchange, hidden-color components, or a
   tensor-polarized sea (which would violate the Close–Kumano sum rule [4]).</p>
 
-  <p>The single existing measurement is HERMES on the deuteron [5]: A<sub>zz</sub> up to
-  2×10⁻² over 0.01 &lt; x &lt; 0.45, b₁(x = 0.012) = 0.112 ± 0.055 ± 0.028 — surprisingly
-  large at low x, with a zero crossing near x ≈ 0.2 and a sum-rule integral 2σ away from
-  zero. Standard convolution calculations predict |b₁| &lt; 10⁻³ at x ≳ 0.2, an order of
-  magnitude below the data [6]; a model with pions plus only a 0.15% hidden-color probability
-  can reproduce it [7]. The tension is unresolved, and JLab E12-13-011 will remeasure the
-  high-x region. The EIC adds the low-x region where HERMES saw the large signal, and the Q²
-  lever arm.</p>
+  <p>The only existing measurement is HERMES on the deuteron [5]: A<sub>zz</sub> up to
+  2×10⁻² over 0.01 &lt; x &lt; 0.45 and b₁(x = 0.012) = 0.112 ± 0.055 ± 0.028, unexpectedly
+  large at low x, with a zero crossing near x ≈ 0.2 and a sum-rule integral 2σ from zero.
+  Standard convolution calculations predict |b₁| &lt; 10⁻³ at x ≳ 0.2, an order of
+  magnitude below the data [6], whereas a model with pions and a hidden-color probability
+  of only 0.15% reproduces it [7]. The tension is unresolved; JLab E12-13-011 will
+  remeasure the high-x region, and the EIC adds the low-x region, where HERMES observed
+  the large signal, together with the Q² lever arm.</p>
 
-  <p><b>How the measurement runs.</b> The beam is delivered in fills of different tensor
-  polarization ("tensor thirds"); with the estimator (N₊ + N₋ − 2N₀) over matched
-  luminosities, all m-independent physics cancels and the statistical error on
-  A<sub>zz</sub> is √(2/N)/P<sub>zz</sub>. ⁶Li would be the first b₁ of any A &gt; 2
-  nucleus — there is not even a prediction to compare to — and the ⁶Li-versus-free-deuteron
-  difference isolates what embedding in the α field does to the bound deuteron. A practical
-  systematic tracked from the start: at collider kinematics the clean b₁ extraction prefers
-  the spin axis along the momentum transfer <b>q</b> rather than along the beam [26].</p>
+  <p><b>Measurement procedure.</b> The beam is delivered in fills of different tensor
+  polarization ("tensor thirds"). With the estimator (N₊ + N₋ − 2N₀) over matched
+  luminosities, all m-independent physics cancels, and the statistical uncertainty on
+  A<sub>zz</sub> is √(2/N)/P<sub>zz</sub>. ⁶Li would provide the first b₁ of any A &gt; 2
+  nucleus, for which no prediction exists, and the difference between ⁶Li and the free
+  deuteron isolates the effect of embedding in the α field. One systematic is tracked from
+  the outset: at collider kinematics a clean b₁ extraction favors orienting the spin axis
+  along the momentum transfer <b>q</b> rather than along the beam [26].</p>
 
   <h3>4.2 · Δ(x,Q²): exotic glue</h3>
 
-  <p>The cos 2φ term in the master formula has a special pedigree. It corresponds to the
-  virtual photon flipping its helicity by two units between absorption and emission in the
-  forward Compton amplitude. A spin-½ particle cannot absorb two units of angular momentum
-  along the collinear axis — so no quark, and no bound proton or neutron, can generate Δ at
-  leading twist. Gluons can. Δ is the structure function that the gluon transversity
-  distribution — an interference of gluon helicity states existing only in targets with
-  J ≥ 1 — generates at order α<sub>s</sub> through a photon–gluon convolution [3,9]. Any
-  nonzero Δ in a nucleus is direct evidence for glue not inherited from individual
-  nucleons — hence "exotic glue". It has never been measured for any target; the one prior
-  experimental document is a JLab letter of intent [13].</p>
+  <p>The cos 2φ term in the master formula corresponds to the virtual photon flipping its
+  helicity by two units between absorption and emission in the forward Compton amplitude.
+  A spin-½ particle cannot absorb two units of helicity, so neither quarks nor bound
+  nucleons generate Δ at leading twist; gluons can. Δ is the structure function that the
+  gluon transversity distribution, an interference of gluon helicity states existing only
+  in targets with J ≥ 1, generates at order α<sub>s</sub> through a photon–gluon
+  convolution [3,9]. A nonzero Δ in a nucleus is therefore direct evidence for glue not
+  inherited from individual nucleons, hence the name "exotic glue". It has not been
+  measured for any target; the one prior experimental document is a JLab letter of intent
+  [13].</p>
 
-  <p>The measurement: unpolarized electrons, tensor-polarized nucleus with the alignment
-  axis in the transverse plane, and a fit of the azimuthal distribution about that axis.
-  Averaged over the fill, the modulation amplitude and its inversion back to Δ are</p>
+  <p>The measurement uses unpolarized electrons on a tensor-polarized nucleus whose
+  alignment axis lies in the transverse plane, and fits the azimuthal distribution about
+  that axis. Averaged over the fill, the modulation amplitude and its inversion back to Δ
+  are</p>
 
   <p class="eq"><img class="tex" data-tex="A^{\cos 2\phi} = -\frac{1-y}{y^2}\,\frac{\Delta}{D_\phi},\qquad D_\phi = F_1 + \frac{1-y}{x y^2}\,F_2"></p>
 
   <p>The expected size spans per-mille to percent. The only absolute normalizations
   available are moment estimates: a bag-model calculation by Sather and Schmidt for the
   spin-3/2 Δ⁺⁺ baryon, ∫x Δ dx = −0.012 α<sub>s</sub> [9], and lattice-QCD calculations by
-  Detmold and Shanahan of gluon transversity in the φ meson — clearly nonzero, at an
-  unphysical pion mass [10] — with NPLQCD finding the analogous matrix element roughly ten
+  Detmold and Shanahan of gluon transversity in the φ meson (clearly nonzero, albeit at an
+  unphysical pion mass) [10], with NPLQCD finding the analogous matrix element roughly ten
   times suppressed in the deuteron [11]. Percent-level asymmetries appear only in
-  proton–deuteron Drell–Yan under the maximal assumption Δ<sub>T</sub>g = Δg, which its
-  authors call optimistic [12]. No calculation exists for ⁶Li or any A &gt; 2 nucleus, and
-  the literature brackets nuclear Δ in both directions — suppressed as in the lattice
-  deuteron, or enhanced by binding like the EMC effect [1]. The projection report ports the
-  bag moment to ⁶Li as a labeled scenario, shows that one EIC year measures the amplitude
-  at ≥ 20σ per bin, and spells out the caveats.</p>
+  proton–deuteron Drell–Yan under the maximal assumption Δ<sub>T</sub>g = Δg, described by
+  its authors as optimistic [12]. No calculation exists for ⁶Li or any A &gt; 2 nucleus,
+  and the literature brackets the nuclear Δ in both directions: suppressed, as in the
+  lattice deuteron, or enhanced by binding in analogy with the EMC effect [1]. The
+  projection report transfers the bag moment to ⁶Li as a labeled scenario, shows that one
+  EIC year measures the amplitude at ≥ 20σ per bin, and details the caveats.</p>
 
-  <p><b>The coherent variant.</b> The same modulation can be measured in coherent
-  diffraction, e ⁶Li → e′ X ⁶Li(g.s.), where the nucleus stays in its ground state and
-  recoils intact. There the cos 2φ modulation mixes two mechanisms: the nuclear
-  <i>shape</i> (a deformed gluon density modulates the diffractive slope — the mechanism
-  computed for polarized deuterons in the only existing calculation of this kind [23]) and
-  exotic glue proper. ⁶Li is a sharp discriminator because its quadrupole moment is
-  anomalously small (Q = −0.0806 fm², about 50× smaller than ⁷Li's): the shape term is
-  bounded and t-linear, so a flat-in-t modulation cannot be a shape effect. Detecting the
-  intact recoil is its own experimental story — the nucleus keeps exactly the beam rigidity
-  (A/Z = 2) and emerges within ~2 mrad of the beam, visible only in the Roman-Pot
-  transverse-momentum tail at IP6, or at the secondary focus of a second interaction
-  region [25,27] — told in the companion report.</p>
+  <p><b>The coherent channel.</b> The same modulation can be measured in coherent
+  diffraction, e ⁶Li → e′ X ⁶Li(g.s.), in which the nucleus remains in its ground state
+  and recoils intact. There the cos 2φ modulation mixes two mechanisms: the nuclear
+  <i>shape</i>, in which a deformed gluon density modulates the diffractive slope (the
+  mechanism computed for polarized deuterons in the only existing calculation of this kind
+  [23]), and exotic glue proper. ⁶Li discriminates between the two because its quadrupole
+  moment is anomalously small (Q = −0.0806 fm², roughly 50 times smaller than that of
+  ⁷Li): the shape term is bounded and linear in t, so a flat-in-t modulation cannot be a
+  shape effect. Detection of the intact recoil is itself nontrivial: the nucleus retains
+  the beam rigidity exactly (A/Z = 2) and emerges within ~2 mrad of the beam, visible only
+  in the Roman-Pot transverse-momentum tail at IP6 or at the secondary focus of a second
+  interaction region [25,27]; the companion report treats this in detail.</p>
 
   <h3>4.3 · The polarized EMC effect: g₁ of a bound proton</h3>
 
@@ -369,41 +376,46 @@
 
   <p class="eq"><img class="tex" data-tex="\Delta R_A(x) = \frac{g_1^A(x)}{P_p\,g_1^p(x) + P_n\,g_1^n(x)}"></p>
 
-  <p>where P<sub>p</sub>, P<sub>n</sub> are the effective nucleon polarizations from nuclear
-  structure. ⁷Li is nearly ideal: quantum Monte Carlo gives P<sub>p</sub> = +0.866,
-  P<sub>n</sub> = −0.037 [17] — to a good approximation, polarized ⁷Li is one polarized
-  proton plus six spectators, with computable corrections. The model stakes are set by two
-  camps: Cloët–Bentz–Thomas (mean-field, NJL) predict a polarized EMC effect about twice the
-  unpolarized one [14]; Tronchin–Matevosyan–Thomas predict them equal [15]. A 5%-level
-  measurement discriminates the two, and they map onto the competing mean-field versus
-  short-range-correlation pictures of the EMC effect itself. A further EIC-only handle: the
-  Q² evolution of g₁ is driven by the polarized gluon distribution, and the predicted
-  <i>gluon-spin</i> EMC effect is larger still, with ⁷Li named the most promising case [16].
-  JLab E12-14-001 will measure ⁷Li at x &gt; 0.06; the EIC extends to x &lt; 0.06 and adds
-  the Q² arm, in collider kinematics free of target-fragment absorption.</p>
+  <p>where P<sub>p</sub>, P<sub>n</sub> are the effective nucleon polarizations from
+  nuclear structure. ⁷Li is well suited: quantum Monte Carlo gives P<sub>p</sub> = +0.866
+  and P<sub>n</sub> = −0.037 [17], so to a good approximation polarized ⁷Li is one
+  polarized proton plus six spectators, with computable corrections. Two classes of models
+  make sharply different predictions: Cloët–Bentz–Thomas (mean-field, NJL) obtain a
+  polarized EMC effect about twice the unpolarized one [14], whereas
+  Tronchin–Matevosyan–Thomas obtain equal effects [15]. A measurement at the 5% level
+  discriminates between them, and the two map onto the competing mean-field and
+  short-range-correlation pictures of the EMC effect itself. A handle unique to the EIC is
+  the Q² evolution of g₁, driven by the polarized gluon distribution; the predicted
+  <i>gluon-spin</i> EMC effect is larger still, with ⁷Li identified as the most promising
+  case [16]. JLab E12-14-001 will measure ⁷Li at x &gt; 0.06; the EIC extends the coverage
+  to x &lt; 0.06 and adds the Q² arm, in collider kinematics free of target-fragment
+  absorption.</p>
 
   <p>For this observable both beams are polarized longitudinally and the electron helicity
   flips bunch-by-bunch; the error scales as 1/(P<sub>e</sub>P<sub>z</sub>√N), so it uses the
   vector polarization the source delivers most readily.</p>
 
-  <h3>4.4 · Tagged DIS: operating on the embedded deuteron</h3>
+  <h3>4.4 · Spectator-tagged DIS</h3>
 
-  <p>⁶Li ≈ α + d is more than an analogy: cluster-model calculations give the deuteron-like
-  pair a polarization of ~0.87 inside ⁶Li, carrying over 90% of the nuclear spin [18]. If
-  the α spectator is <i>detected</i> — it carries beam velocity into the far-forward
-  spectrometers — the event is known to have struck the deuteron cluster, and the ⁶Li beam
-  becomes a source of polarized deuterons at controlled virtuality. The formal machinery is
-  spectator tagging (Cosyn–Weiss [20]): measure the spectator momentum, extrapolate in its
-  transverse momentum to the free-nucleon (here free-cluster) pole, and recover free-particle
-  structure with binding effects removed by construction rather than modeled. Tagged
-  <i>tensor</i> asymmetries are predicted to reach O(1) at spectator momenta ~300 MeV/c,
-  where the D-wave dominates — enormous compared with the inclusive asymmetries above. The
-  benchmark for the method's power is the e+³He double-tagging study of Friščić et al. [21]:
-  tagging beat effective-polarization unfolding by ×2–3, and by ×10 at low x.</p>
+  <p>The cluster description of ⁶Li is quantitative: cluster-model calculations give the
+  deuteron-like pair a polarization of ≈0.87 within ⁶Li, carrying over 90% of the nuclear
+  spin [18]. When the α spectator is detected (it carries beam velocity into the
+  far-forward spectrometers), the struck object is identified as the deuteron cluster, and
+  the ⁶Li beam acts as a source of polarized deuterons at controlled virtuality. The
+  formal framework is spectator tagging (Cosyn–Weiss [20]): the spectator momentum is
+  measured and extrapolated in its transverse component to the free-nucleon (here
+  free-cluster) pole, recovering free-particle structure with binding effects removed by
+  construction rather than modeled. Tagged <i>tensor</i> asymmetries are predicted to
+  reach O(1) at spectator momenta of ~300 MeV/c, where the D-wave dominates — far larger
+  than the inclusive asymmetries above. The benchmark for the method is the e+³He
+  double-tagging study of Friščić et al. [21], in which tagging improved on
+  effective-polarization unfolding by a factor of 2–3, and by a factor of 10 at low
+  x.</p>
 
-  <p>Far-forward routing decides which isotope tags where, and it follows from magnetic
-  rigidity alone. A beam-velocity fragment with mass-to-charge A/Z bends in the hadron
-  optics according to R = (A/Z)<sub>frag</sub>/(A/Z)<sub>beam</sub>:</p>
+  <p>Far-forward routing determines where each isotope's tag fragment is detected, and it
+  follows from magnetic rigidity alone: a beam-velocity fragment with mass-to-charge ratio
+  A/Z bends in the hadron optics according to
+  R = (A/Z)<sub>frag</sub>/(A/Z)<sub>beam</sub>.</p>
 
   <table>
     <tr><th>Beam</th><th>Tag fragment</th><th>R</th><th>Destination at IP6</th></tr>
@@ -413,46 +425,49 @@
     <tr><td>⁶Li</td><td>p / n</td><td class="mono">0.50 / —</td><td>Off-Momentum Detectors / ZDC (veto handles)</td></tr>
   </table>
 
-  <p>So the tagging program leads with ⁷Li at IP6, while ⁶Li α-tagging (and the coherent
-  intact-⁶Li channel, same rigidity problem) is the physics case for the second interaction
-  region's secondary focus [27]. This isotope asymmetry was itself a finding of the
-  simulation program.</p>
+  <p>The tagging program therefore begins with ⁷Li at IP6, while ⁶Li α-tagging (and the
+  coherent intact-⁶Li channel, which faces the same rigidity problem) motivates the
+  secondary focus of the second interaction region [27]. This asymmetry between the
+  isotopes was itself a finding of the simulation program.</p>
 
-  <h2>5 · From polarization to error bars</h2>
+  <h2>5 · Rates and statistical precision</h2>
 
-  <p>All projections use luminosity per nucleon, with 10 fb⁻¹/u ≈ one year and
-  100 fb⁻¹/u ≈ ten years at nominal EIC rates, and in-ring polarization placeholders
-  P<sub>z</sub> = 0.7, P<sub>zz</sub> = 0.6 (ring transport from the source values is an
-  open accelerator question). The statistical errors behind every money plot are</p>
+  <p>All projections use luminosity per nucleon, with 10 fb⁻¹/u corresponding to
+  approximately one year and 100 fb⁻¹/u to ten years at nominal EIC rates, and in-ring
+  polarization placeholders P<sub>z</sub> = 0.7 and P<sub>zz</sub> = 0.6 (ring transport
+  from the source values is an open accelerator question). The statistical uncertainties
+  behind every money plot are</p>
 
   <p class="eq"><img class="tex" data-tex="\delta A_{\parallel} = \frac{1}{P_e P_z \sqrt{N}},\qquad \delta A_{zz} = \frac{\sqrt{2/N}}{P_{zz}},\qquad \delta A^{\cos 2\phi} = \frac{\sqrt{2/N}}{P_{zz}}"></p>
 
-  <p>The √2 in the tensor errors comes from ⟨cos²2φ⟩ = ½ (or from the three-fill estimator
-  variance); the polarization divides because the physics asymmetry is diluted by the fill.
-  These formulas — and their breakdown under realistic φ acceptance holes, where a binned
-  fit replaces the naive moment — are validated end-to-end by the polligen event generator's
-  pseudo-experiments. Tensor observables have a structural advantage on systematics: the
-  cos 2φ modulation is self-normalized within a single fill, so relative-luminosity errors
-  largely cancel; what remains is the polarimetry scale (δP<sub>zz</sub>/P<sub>zz</sub> ≈ 3%)
-  and radiative corrections, which for tensor observables are uncalculated to date.</p>
+  <p>The factor √2 in the tensor uncertainties follows from ⟨cos²2φ⟩ = ½ (equivalently,
+  from the three-fill estimator variance); the polarization appears in the denominator
+  because the fill dilutes the physical asymmetry. These formulas, and their behavior
+  under realistic φ-acceptance holes (where a binned fit replaces the naive moment), are
+  validated end to end by pseudo-experiments with the polligen event generator. Tensor
+  observables enjoy a structural advantage in systematics: the cos 2φ modulation is
+  self-normalized within a single fill, so relative-luminosity errors largely cancel; what
+  remains is the polarimetry scale (δP<sub>zz</sub>/P<sub>zz</sub> ≈ 3%) and radiative
+  corrections, which for tensor observables have not yet been calculated.</p>
 
   <figure>
     <div class="panel"><img src="data:image/png;base64,__PS__" alt="Phase space maps in x and Q2 for the inclusive and tagged-coherent measurements, with analysis bins overlaid"></div>
-    <figcaption><b>Where the events are.</b> Expected events per (x, Q²) bin in one EIC year
-    at e(10 GeV) × ⁶Li(50 GeV/u). Left: inclusive DIS (4.6×10⁹ accepted events) with the
-    bins of the cos 2φ analysis overlaid — statistics are never the problem; polarization,
-    acceptance, and systematics are. Right: the coherent intact-⁶Li channel (1.1×10⁷ tagged
-    events), which lives entirely at x ≲ 0.03 — coherence requires the photon to see the
-    whole nucleus, which fails once x ≳ 0.01.</figcaption>
+    <figcaption><b>Phase-space coverage.</b> Expected events per (x, Q²) bin in one EIC
+    year at e(10 GeV) × ⁶Li(50 GeV/u). Left: inclusive DIS (4.6×10⁹ accepted events) with
+    the bins of the cos 2φ analysis overlaid; the measurement is limited by polarization,
+    acceptance, and systematics rather than by statistics. Right: the coherent intact-⁶Li
+    channel (1.1×10⁷ tagged events), confined to x ≲ 0.03 because coherence requires the
+    photon to resolve the whole nucleus, a condition that fails once x ≳ 0.01.</figcaption>
   </figure>
 
   <figure>
     <div class="panel"><img src="data:image/png;base64,__M5__" alt="Projected cos 2phi pseudo-data in four kinematic bins and the extracted amplitude versus x"></div>
-    <figcaption><b>What a discovery would look like.</b> Projected cos 2φ′ pseudo-data
-    (one EIC year, P<sub>zz</sub> = 0.6) in the four highest-significance (x, Q²) bins, with
-    the injected moment-constrained Δ model and the binned fit; right, the extracted
-    amplitude versus x against alternative model readings. The measurement distinguishes the
-    models, not merely zero. Full assumptions and caveats: companion report.</figcaption>
+    <figcaption><b>Projected extraction.</b> cos 2φ′ pseudo-data (one EIC year,
+    P<sub>zz</sub> = 0.6) in the four highest-significance (x, Q²) bins, with the injected
+    moment-constrained Δ model and the binned fit; right, the extracted amplitude versus x
+    against alternative model readings. The projected precision distinguishes between the
+    models rather than only from zero. Assumptions and caveats are detailed in the
+    companion report.</figcaption>
   </figure>
 
   <h2>6 · Further reading</h2>
