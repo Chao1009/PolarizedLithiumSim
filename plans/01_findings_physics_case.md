@@ -242,3 +242,20 @@ corrections to entries above:
   μ(⁶Li) = 0.8220, μ(⁷Li) = 3.2564 μ_N; S(α+d) = 1.474, S(α+t) = 2.468 MeV
   (AME2020); stable J = 1 nuclei are exactly ²H, ⁶Li, ¹⁴N; stable J = 3/2
   below A = 30: ⁷Li, ⁹Be, ¹¹B, ²¹Ne, ²³Na (IAEA ground-state table).
+- **Primer §1.5 (2026-08-21, second revision): beam requirements and
+  uniqueness by observable.** Requirements table built from the program's
+  own FOMs (fastsim README / money plots 5–6): g₁-EMC needs longitudinal
+  P_z ≥ 0.7 + P_e ≈ 0.7 (δΔR ≈ 2.6–4%/x-bin at x = 0.3–0.5, 10 fb⁻¹/u;
+  5σ CBT-vs-TMT at 100 fb⁻¹/u); b₁ needs tensor fills (δA_zz ≈ 1×10⁻⁴ at
+  x < 0.05 vs scenario (2–10)×10⁻³; rel-lumi at 10⁻⁴); Δ needs transverse
+  P_zz (δA = (1.5–4.5)×10⁻⁴ at P_zz = 0.6; a 3×10⁻³ floor stays 3–10σ at
+  P_zz = 0.3); tagging/coherent as in plans/03, 06. Machine facts: arcs'
+  stable spin is vertical → transverse native, longitudinal needs rotators
+  (CDR; EPIOS "beams are transversely polarized and only converted to
+  longitudinal at the IPs"); ⁷Li spin-temperature fill at P_z = 0.8 carries
+  P_zz ≈ 0.55, P_zzz ≈ 0.11 (PR12-14-001, g_zzz numerator correction).
+  Unpolarized-Li baseline: JLab E12-10-008 (Arrington–Gaskell–Daniel)
+  target list includes ⁶Li and ⁷Li ("for 6,7Li the local density picture
+  predicts an EMC effect well below the other models"; 9Be cluster
+  argument from E03-103, Seely et al. PRL 103:202301). Flavor separation
+  of the spin modification from ⁷Li/⁶Li/d is labeled a program inference.

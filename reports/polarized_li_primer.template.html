@@ -144,7 +144,7 @@
 
   <p class="eyebrow">Polarized ⁶,⁷Li @ EIC · Educational note · reports/</p>
   <h1>Deep inelastic scattering on polarized lithium: the physics behind the planned measurements</h1>
-  <p class="dateline">2026-08-17, revised 2026-08-21 (why lithium, why polarization, fixed target versus collider; fact-checked against primary sources) · companion to the cos 2φ projection report and to plans/01 (physics case) · written for students and colleagues joining the program</p>
+  <p class="dateline">2026-08-17, revised 2026-08-21 (why lithium, why polarization, fixed target versus collider, beam requirements and uniqueness by observable; fact-checked against primary sources) · companion to the cos 2φ projection report and to plans/01 (physics case) · written for students and colleagues joining the program</p>
 
   <p class="lede">Polarized lithium beams would provide the EIC with spin-polarized
   <i>nuclei</i> that are light enough for ab initio computation yet complex enough to
@@ -373,6 +373,71 @@
     <tr><td>Spectator-tagged DIS (α, t)</td><td>Not feasible: spectators stop within 0.25 mm of a solid target; no polarized lithium gas target exists</td><td>Far-forward detection of α and t at beam velocity; pole extrapolation to the free cluster [20,22]</td></tr>
     <tr><td>Coherent intact-⁶Li channel</td><td>Not feasible: needs x ≲ 0.01 and a 2–9 MeV recoil</td><td>Roman-Pot p<sub>T</sub> tail or the IR-8 secondary focus [27]</td></tr>
   </table>
+
+  <h3>1.5 · What each observable requires of the beam, and what lithium alone provides</h3>
+
+  <p>The requirements below are the program's own, from the fast simulation and the
+  polligen pseudo-experiments (§5), stated for the placeholder in-ring polarizations
+  P<sub>z</sub> = 0.7 and P<sub>zz</sub> = 0.6, P<sub>e</sub> = 0.7, and 10 fb⁻¹/u. Every
+  statistical error scales as 1/(P√L), so a lower polarization is paid for in luminosity
+  squared: halving P<sub>zz</sub> costs a factor four in running time. Two machine facts
+  shape the list. The stable spin direction in the arcs is vertical, so transverse
+  polarization at the interaction point is native while longitudinal polarization needs
+  spin rotators, whose lithium settings are not yet defined [29,1]; and tensor fills
+  need m = 0 bunches prepared by the source radio-frequency transitions, whose survival
+  through acceleration and bunch-by-bunch patterning are open questions [51]. The
+  observables also demand different spin configurations and therefore share the
+  luminosity; the reach quoted assumes each receives the full 10 fb⁻¹/u in its own
+  configuration. (Semi-inclusive channels add the three leading-twist tensor TMDs of a
+  spin-1 target [1]; they need the same tensor polarization and are not projected
+  here.)</p>
+
+  <table>
+    <tr><th>Observable</th><th>Beam polarization required</th><th>Electrons</th><th>Reach at 10 fb⁻¹/u</th><th>Binding requirement</th></tr>
+    <tr><td>g₁ᴬ, polarized EMC (⁷Li; ⁶Li for the isoscalar pair)</td><td>Vector P<sub>z</sub> ≥ 0.7, <b>longitudinal</b> (spin rotators). A spin-3/2 spin-temperature fill at P<sub>z</sub> = 0.8 also carries P<sub>zz</sub> ≈ 0.55 and P<sub>zzz</sub> ≈ 0.11; the octupole term enters the asymmetry numerator and is corrected through the fill model [45]</td><td>Polarized, P<sub>e</sub> ≈ 0.7, helicity flipped bunch by bunch</td><td>δΔR ≈ 2.6–4% per x-bin at x = 0.3–0.5 (three energies combined); CBT-vs-TMT ≈ 1.5σ per bin, 5σ at x ≈ 0.5–0.7 with 100 fb⁻¹/u</td><td>Polarimetry scale δP<sub>z</sub>/P<sub>z</sub> ≤ 3%; P<sub>p</sub> from VMC [17]; Q² lever arm at fixed x (gluon-spin EMC)</td></tr>
+    <tr><td>b₁ via A<sub>zz</sub> (⁶Li)</td><td><b>Tensor</b> P<sub>zz</sub>, longitudinal or along <b>q</b> [26]; fills of different P<sub>zz</sub> ("tensor thirds": m = +1-, 0-, −1-rich), i.e. m = 0 bunches from the source</td><td>Unpolarized (helicity-averaged)</td><td>δA<sub>zz</sub> ≈ 1×10⁻⁴ per x-bin at x &lt; 0.05 (7×10⁻⁵ at P<sub>zz</sub> = 0.8) against scenario |A<sub>zz</sub>| = (2–10)×10⁻³ (HERMES-like b₁ with the 0.29 dilution) or ten times smaller (convolution): both ≥ 10σ per bin at x &lt; 0.05. At x &gt; 0.3, δA<sub>zz</sub> ≈ 10⁻³ against a signal ≤ 2×10⁻³ — JLab's domain</td><td>Relative luminosity between fills at the 10⁻⁴ level (a 10⁻⁴ offset biases A<sub>zz</sub> by 1×10⁻⁴; the luminosity-corrected estimator removes it exactly); tensor polarimetry, which needs dedicated development [1]</td></tr>
+    <tr><td>Δ via cos 2φ (⁶Li; ⁷Li eligible)</td><td><b>Tensor</b> P<sub>zz</sub> with the alignment axis <b>transverse</b> (the native vertical direction); fills of opposite P<sub>zz</sub> sign flip the modulation — the decisive systematic check</td><td>Unpolarized</td><td>δA = (1.5–4.5)×10⁻⁴ per sweet-spot bin (x ≈ 0.02–0.14, Q² = 1.1–14 GeV²) against moment-constrained amplitudes of (0.7–1.2)×10⁻², ≥ 21σ; a 3×10⁻³ flat amplitude stays 3–10σ per bin even at P<sub>zz</sub> = 0.3</td><td>Full azimuthal coverage for the scattered electron (the binned fit tolerates holes); δP<sub>zz</sub>/P<sub>zz</sub> ≈ 3% scale; tensor radiative corrections not yet calculated</td></tr>
+    <tr><td>Spectator-tagged DIS</td><td>⁷Li α-tag: any polarization for tagged F₂; vector P<sub>z</sub> with polarized electrons for tagged g₁ of the bound proton. ⁶Li α-tag: tensor P<sub>zz</sub> for the order-unity tagged tensor asymmetries at p<sub>s</sub> ≈ 300 MeV/c [41]</td><td>As for the inclusive observable</td><td>⁷Li α → Roman Pots (R = 0.857), 96–99% acceptance, optics-robust; ⁶Li α beam-blind at IP6 (3–9% with high-acceptance optics, 1–2% with high-divergence) → IR-8 secondary focus</td><td>Spectator p<sub>T</sub> resolution ~10% at 100 MeV/c [22]; charge identification of α against A/Z = 2 fragments in the Roman Pots (open); pole extrapolation in p<sub>T</sub> [20]</td></tr>
+    <tr><td>Coherent intact-⁶Li cos 2φ</td><td><b>Tensor</b> P<sub>zz</sub> ≥ 0.6, <b>transverse</b></td><td>Unpolarized</td><td>x ≲ 0.01, |t| &lt; 0.2 GeV²; 1.1×10⁷ tagged events (high-acceptance optics; f₀ = 0.04 scenario), best-bin δA = 1.9×10⁻³ (5σ floor at a 1.0% modulation); deformation-anchored ⟨a₂⟩ = 0.036 (band 0.018–0.059); a flat gluonic 3×10⁻³–10⁻² gives 1.6–5σ, or 5–16σ with 100 fb⁻¹/u</td><td>High-acceptance optics (13.5% acceptance against 4×10⁻⁵ with high divergence) or IR-8; Roman-Pot p<sub>T</sub> cut ≤ 0.2 GeV; Z-identification against α+d (both R = 1); B0 calorimeter veto of the 3.56 MeV de-excitation γ</td></tr>
+  </table>
+
+  <p>What lithium alone provides is clearest species by species. Of the ions the EIC can
+  polarize, only the deuteron and the lithium isotopes have J ≥ 1, so b₁ and Δ do not exist
+  for protons or ³He at all; among J ≥ 1 nuclei ⁶Li is the only A &gt; 2 case, and the
+  lattice indication that the deuteron's exotic glue is suppressed [11] is what makes a
+  bound nucleus, rather than the deuteron, the likelier place for a discovery [1]. ⁷Li is
+  the only bound polarized proton within reach of any collider; ⁶Li and the deuteron
+  supply the isoscalar companions, so the three together separate the u- and d-quark spin
+  modification — an inference of this program, not yet in the literature. For tagging,
+  ⁷Li gives the only light-ion spectator that is a spin-0, tightly bound nucleus landing
+  in the Roman-Pot window today, leaving a struck A = 3 cluster. In the coherent channel
+  the deuteron's deformation term dominates (Q = +0.286 fm²), ⁷Li is the deformed reference
+  (Q = −4.00 fm²), and ⁶Li (Q = −0.081 fm²) is the deformation null in which a flat-in-t
+  modulation can only be exotic glue.</p>
+
+  <table>
+    <tr><th>Observable</th><th>p</th><th>d</th><th><span style="text-transform:none">³He</span></th><th><span style="text-transform:none">⁶Li</span></th><th><span style="text-transform:none">⁷Li</span></th></tr>
+    <tr><td>g₁ᴬ, polarized EMC</td><td>free reference</td><td>isoscalar pair, weakly bound; D-wave depolarization of a few per cent [20]</td><td>neutron (P<sub>n</sub> = 0.86–0.88) at A = 3</td><td>isoscalar pair, P = 0.85, in the α field</td><td><b>the bound polarized proton</b>, P<sub>p</sub> = 0.87, at normal density</td></tr>
+    <tr><td>b₁</td><td>—</td><td>HERMES; EIC deuterons a later addition</td><td>—</td><td><b>the only A &gt; 2 case</b>; ⁶Li − d isolates the α field</td><td>rank-2 analog, no published formalism</td></tr>
+    <tr><td>Δ (exotic glue)</td><td>— (J = ½)</td><td>allowed; lattice suggests suppression [11]</td><td>—</td><td><b>allowed, bound</b>; spin-1 like the φ meson of the lattice signal [10]</td><td>allowed; J = 3/2 as in the bag estimate [9]</td></tr>
+    <tr><td>Spectator tagging</td><td>—</td><td>p, n spectators (off-momentum detectors, ZDC)</td><td>p spectators into the Roman Pots; double tag [21]</td><td>α beam-blind → IR-8; tagged tensor asymmetries O(1)</td><td><b>α into the Roman Pots now</b>; struck A = 3 cluster</td></tr>
+    <tr><td>Coherent tensor cos 2φ</td><td>—</td><td>deformation term dominant [23]</td><td>—</td><td><b>deformation null</b> (|Q| 3.5× smaller than d, opposite sign)</td><td>deformed reference</td></tr>
+  </table>
+
+  <p><b>What an unpolarized lithium beam already gives.</b> Three things, none of them
+  the driver. First, nuclear parton distributions at A = 6 and 7: the high-x EMC ratios of
+  ⁶Li and ⁷Li are in the target list of JLab E12-10-008 [54], motivated by the E03-103
+  finding that the ⁹Be EMC effect follows the local density of its α clusters rather than
+  its average density [53] — for ⁶Li and ⁷Li the local-density picture predicts an EMC
+  effect well below the other models [54] — and the EIC adds the low-x shadowing region.
+  Second, cluster virtuality: the α-tagged F₂ of the triton (⁷Li) or deuteron (⁶Li)
+  cluster versus spectator momentum measures the α–t and α–d momentum distributions that
+  VMC predicts (N<sub>αt</sub> = 1.00 in a relative p-wave, N<sub>αd</sub> = 0.86) [17], the
+  collider counterpart of the JLab tagged-EMC program [48]. Third, coherent diffraction on
+  an α-clustered nucleus, whose t-distribution images the gluon density of the cluster, as
+  studied for ⁷Li at IR-8 [27]. Polarization turns the same cluster structure from an
+  object of study into a tool: b₁, Δ, g₁ᴬ and the tagged tensor asymmetries all vanish or
+  are undefined without it (§1.3).</p>
 
   <h2>2 · Deep inelastic scattering</h2>
 
@@ -673,7 +738,7 @@
     <p><b>Formalism.</b> [2] P. Hoodbhoy, R. L. Jaffe, A. Manohar, Nucl. Phys. B 312 (1989) 571 — the spin-1 DIS structure-function basis. [3] R. L. Jaffe, A. Manohar, Phys. Lett. B 223 (1989) 218 — nuclear gluonometry. [4] F. E. Close, S. Kumano, Phys. Rev. D 42 (1990) 2377 — the b₁ sum rule.</p>
     <p><b>b₁.</b> [5] A. Airapetian et al. (HERMES), Phys. Rev. Lett. 95 (2005) 242001, hep-ex/0506018 (target polarizations in Table I). [6] W. Cosyn, Y.-B. Dong, S. Kumano, M. Sargsian, Phys. Rev. D 95 (2017) 074036. [7] G. A. Miller, Phys. Rev. C 89 (2014) 045203. [8] K. Slifer et al., JLab PR12-13-011 / E12-13-011, "The deuteron tensor structure function b₁" (PAC40, 2013; conditional approval requiring P<sub>zz</sub> ≥ 30%); D. Keller, D. Crabb, D. Day, Nucl. Instrum. Meth. A 981 (2020) 164504 (tensor-enhancement results).</p>
     <p><b>Exotic glue.</b> [9] E. Sather, C. Schmidt, Phys. Rev. D 42 (1990) 1424. [10] W. Detmold, P. E. Shanahan, Phys. Rev. D 94 (2016) 014507; W. Detmold, D. Pefkou, P. E. Shanahan, Phys. Rev. D 95 (2017) 114515. [11] F. Winter et al. (NPLQCD), Phys. Rev. D 96 (2017) 094512. [12] S. Kumano, Q.-T. Song, Phys. Rev. D 101 (2020) 054011. [13] J. Maxwell et al., JLab LOI12-16-006, arXiv:1803.11206.</p>
-    <p><b>Polarized EMC.</b> [14] I. C. Cloët, W. Bentz, A. W. Thomas, Phys. Lett. B 642 (2006) 210. [15] S. Tronchin, H. H. Matevosyan, A. W. Thomas, Phys. Lett. B 783 (2018) 247. [16] X. G. Wang, W. Bentz, I. C. Cloët, A. W. Thomas, J. Phys. G 49 (2022) 03LT01. [17] R. B. Wiringa, R. Schiavilla, S. C. Pieper, J. Carlson, Phys. Rev. C 89 (2014) 024305, arXiv:1309.3794 — VMC spin-up/spin-down nucleon numbers (Table I) and α–d, α–t overlaps; quoted as effective polarizations in [45].</p>
+    <p><b>Polarized EMC.</b> [14] I. C. Cloët, W. Bentz, A. W. Thomas, Phys. Lett. B 642 (2006) 210. [15] S. Tronchin, H. H. Matevosyan, A. W. Thomas, Phys. Lett. B 783 (2018) 247. [16] X. G. Wang, W. Bentz, I. C. Cloët, A. W. Thomas, J. Phys. G 49 (2022) 03LT01. [17] R. B. Wiringa, R. Schiavilla, S. C. Pieper, J. Carlson, Phys. Rev. C 89 (2014) 024305, arXiv:1309.3794 — VMC spin-up/spin-down nucleon numbers (Table I) and α–d, α–t overlaps; quoted as effective polarizations in [45]. [53] J. Seely et al., Phys. Rev. Lett. 103 (2009) 202301, arXiv:0904.4448 — EMC effect in ³He, ⁴He, ⁹Be, ¹²C (JLab E03-103). [54] J. Arrington, D. Gaskell, A. Daniel et al., JLab PR12-10-008 / E12-10-008, "Detailed studies of the nuclear dependence of F₂ in light nuclei" (Hall C; targets include ⁶Li and ⁷Li).</p>
     <p><b>Nuclear structure of Li.</b> [18] N. W. Schellingerhout, L. P. Kok, S. A. Coon, R. M. Adam, Phys. Rev. C 48 (1993) 2714; erratum Phys. Rev. C 52 (1995) 439 — three-body α+n+p models of polarized ⁶Li. [19] B. S. Pudliner et al., Phys. Rev. C 56 (1997) 1720; S. C. Pieper, R. B. Wiringa, Annu. Rev. Nucl. Part. Sci. 51 (2001) 53 — QMC cluster structure of ⁶Li and ⁷Li, spin-projected densities, Q(⁶Li) cancellation. [36] Nuclear data: N. J. Stone, Table of nuclear electric quadrupole moments, IAEA INDC(NDS)-0833 (2021) and At. Data Nucl. Data Tables 111–112 (2016) 1; Table of recommended nuclear magnetic dipole moments, INDC(NDS)-0794 (2019); IAEA Live Chart ground-state table (spins of stable nuclides); AME2020, M. Wang et al., Chin. Phys. C 45 (2021) 030003. [37] C. Forssén, E. Caurier, P. Navrátil, Phys. Rev. C 79 (2009) 021303(R). [38] G. Hupin, S. Quaglioni, P. Navrátil, Phys. Rev. Lett. 114 (2015) 212502. [39] S. Pastore, S. C. Pieper, R. Schiavilla, R. B. Wiringa, Phys. Rev. C 87 (2013) 035503. [40] J. Carlson et al., Rev. Mod. Phys. 87 (2015) 1067 (Table I: GFMC vs experiment for A ≤ 12).</p>
     <p><b>Tagging.</b> [20] W. Cosyn, C. Weiss, Phys. Lett. B 799 (2019) 135035; Phys. Rev. C 102 (2020) 065204. [21] I. Friščić et al., Phys. Lett. B 823 (2021) 136726. [22] A. Jentsch, Z. Tu, C. Weiss, Phys. Rev. C 104 (2021) 065205. [26] W. Cosyn et al., Eur. Phys. J. A 61 (2025) 83, arXiv:2410.12764. [41] W. Cosyn, C. Weiss, Phys. Rev. C 114 (2026) 025201 and 025202, arXiv:2603.23699, 2603.23700 — SIDIS on a polarized spin-1 target with spectator tagging; tensor asymmetries of order unity at ~300 MeV/c. [47] N. Baillie et al. (CLAS/BoNuS), Phys. Rev. Lett. 108 (2012) 142001. [48] ALERT run group, JLab E12-17-012, arXiv:1708.00888. [49] M. J. Berger et al., NIST Standard Reference Database 124 (ASTAR), doi:10.18434/T4NC7P.</p>
     <p><b>Coherent channel.</b> [23] H. Mäntysaari, F. Salazar, B. Schenke, C. Shen, W. Zhao, Phys. Lett. B 858 (2024) 139053. [24] Y. Hatta, B.-W. Xiao, F. Yuan, Phys. Rev. Lett. 116 (2016) 202301.</p>
