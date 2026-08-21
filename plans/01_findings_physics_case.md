@@ -170,3 +170,75 @@ EPIOS white paper: Atoian et al., **arXiv:2510.10794**, PRC 113:060501
 | Δ(x,Q²) | nothing (LOI only) | first projection; 5σ reach vs Δ/F₁ ∈ 10⁻³–10⁻² |
 | ΔR_pol-EMC(⁷Li) | E12-14-001 projected 4–5% on ratio, x ≤ 0.8 | x < 0.06 + Q² arm + 5%-level CBT-vs-QMC discrimination |
 | tagged structure | Friščić e+³He ×2–3 improvement | α-tagged ⁶Li embedded-deuteron program |
+
+## 6. Fact-check addendum (2026-08-21, primer revision "why Li / why polarization / fixed target vs collider")
+
+Verified against primary sources while strengthening `reports/polarized_li_primer`;
+corrections to entries above:
+
+- **⁶Li cluster polarization (§2.3 table).** Schellingerhout–Kok–Coon–Adam
+  (PRC 48:2714, erratum PRC 52:439) give a *valence-neutron polarization
+  > 90%* (92–98% across models) with an α+d probability of 60–70%; the
+  paper does not state "valence pair carries > 90% of the spin", and its
+  "87%" refers to ³He. The ≈0.85–0.87 per-nucleon value is six-body QMC:
+  Pudliner et al. PRC 56:1720 (n↑/n↓ = 1.93/1.07) and Wiringa et al.
+  PRC 89:024305 Table I (1.924/1.076 → 0.848); SLAC E155 (PLB 463:339)
+  adopted "87% of the Li polarization" for the effective deuteron.
+- **⁷Li effective polarizations.** P_p = 0.866 / P_n = −0.037 are the values
+  *quoted in PR12-14-001* from the VMC spin-projected nucleon numbers of
+  Wiringa et al. (printed Table I: 1.934/1.066, 1.981/2.019 → 0.868/−0.038;
+  online tables 0.8675/−0.0374). Shell model 13/15 = 0.867 (proposal),
+  Cohen–Kurath via Cloët–Bentz–Thomas; earliest QMC 0.88/−0.04 (Pudliner).
+  Say "VMC", not "GFMC".
+- **Tagged tensor asymmetries O(1) at ~300 MeV/c** are from Cosyn–Weiss
+  PRC 114:025202 (2026), arXiv:2603.23700 (Part I: 025201, 2603.23699) — not
+  PRC 102:065204 (vector) or PLB 799:135035.
+- **Resonance counts 81 (⁶Li) / 573 (⁷Li) / 63 (d) / 2457 (³He)** are from
+  Hamwi–Devlin–Hoffstaetter, PRAB 29:073501 (2026), arXiv:2509.18558, Table I
+  (G = −0.1818 / +1.5196 there; EPIOS Table III gives −0.178 / +1.532). Top
+  energies ~138 / ~117 GeV/u are the rigidity limit 275 GeV × Z/A (137.5 /
+  117.9), not a number quoted by EPIOS.
+- **Source targets** (P_z ≥ 0.90, P_zz ≥ 0.80, ≥ 10¹³ atoms/s) are from the ANL
+  ECRP proposal, not EPIOS (which gives no Li source numbers).
+- **EIC baseline species.** CDR (doi:10.2172/1765663) and EIC Global
+  Requirements (EIC-ORG-PLN-010 Rev. 03, 2026): polarized p and ³He in
+  project scope; polarized d "with further development", explicitly outside
+  scope. Lithium is not mentioned in the CDR or the Yellow Report; EPIOS calls
+  ⁶,⁷Li "a desirable addition" and lists them as critical technology.
+- **Yellow Report luminosity accounting:** 10 fb⁻¹ = 30 weeks at
+  10³³ cm⁻² s⁻¹ with 60% efficiency (1.5 fb⁻¹/month) — "one year" is our
+  rounding.
+- **Fixed-target polarized Li** (new, §1.4 of the primer): COMPASS ⁶LiD
+  D-polarization +54.2/−47.1% (Ball et al. NIM A 498:101), EST → ⁶Li 51 ± 3%,
+  ⁷Li admixture 92 ± 4% (Koivuniemi SPIN2004), dilution f ≈ 0.35–0.45
+  (NIM A 577:455; PLB 612:154); E155 ⁶LiD: P(⁶Li) = 97% of P(d), f ≈ 0.36 vs
+  0.22 for ND₃ (PLB 463:339); ⁷LiH at Saclay: ⁷Li 47%, H 56% (Chaumette
+  AIP Conf. Proc. 187:1275); PR12-14-001 expects ⁷Li 65–80% in ⁷LiD at 5 T,
+  assumes P_z = 0.8 (P_zz = 0.55, P_zzz = 0.11 by EST). Tensor polarization
+  in solids: EST P_zz = 2 − √(4 − 3P_z²) (0.20 at P_z = 0.5); RF enhancement
+  to 29–37% in d-butanol (Keller–Crabb–Day NIM A 981:164504); E12-13-011
+  C1-approved on demonstrating 30%. HERMES ABS target: P_zz = +0.89/−1.65
+  pure-tensor states (effective 0.83). LOI12-16-006: ¹⁴N in NH₃, x < 0.3,
+  2–12% alignment; "cos 2φ … difficult with a fixed target at JLab". No
+  polarized-Li gas/jet target in lepton scattering exists (only Wittchow et
+  al. PLB 59:29 (1975), low-energy reaction).
+- **Spectator/recoil energetics:** α at 100/300 MeV/c → 1.3/12 MeV → CSDA
+  range 7–12 / 170–240 μm in LiD (NIST ASTAR scaled); coherent ⁶Li recoil at
+  |t| = 0.05 GeV² → 4.5 MeV. Target cells: JLab 2–5 cm, COMPASS 30–60 cm.
+  BoNuS (p ≥ 70 MeV/c) and ALERT (α 230–400 MeV/c) use unpolarized gas.
+- **Coherent recoil rigidity:** an intact coherent recoil keeps the beam
+  rigidity for any A/Z; A/Z = 2 matters for the α/d *fragments* of ⁶Li.
+  Chang et al. (PRD 113:032018) studied ⁷Li (17.75% IR-8 efficiency) but not
+  ⁶Li.
+- **Source history (primary numbers):** Heidelberg 1977 ⁶Li³⁺ ≤ 150 nA,
+  |P| = 0.57–0.65 (Steffens NIM 143:409); 1987 atomic beam P_z, P_zz ≥ 0.85,
+  ⁷Li accelerated at P_zz = 0.69 (Jänsch NIM A 254:7); FSU ⁶Li³⁺ > 150 nA,
+  P_yy = −1.33 ± 0.02, P_y > 0.74, no loss in the linac (Myers NIM B 79:701;
+  Mendez NIM A 329:37). Zelenski 2023: 2×10¹¹ ³He⁺⁺/pulse at ≥ 70% is the
+  design goal; polarization transmission through the EBIS not yet measured
+  (EPIOS: extraction measurement planned 2026).
+- **Nuclear data:** Q(⁶Li) = −0.0806(6) fm², Q(⁷Li) = −4.00(3) fm² (Stone
+  INDC(NDS)-0833, 2021; −4.06 is superseded), Q(d) = +0.2858 fm²;
+  μ(⁶Li) = 0.8220, μ(⁷Li) = 3.2564 μ_N; S(α+d) = 1.474, S(α+t) = 2.468 MeV
+  (AME2020); stable J = 1 nuclei are exactly ²H, ⁶Li, ¹⁴N; stable J = 3/2
+  below A = 30: ⁷Li, ⁹Be, ¹¹B, ²¹Ne, ²³Na (IAEA ground-state table).
