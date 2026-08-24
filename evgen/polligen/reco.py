@@ -287,6 +287,32 @@ def tracking_resolution(e_prime, eta, a=None, b=None):
     return np.sqrt((a * p) ** 2 + b ** 2)
 
 
+def tracking_angular_resolution(eta):
+    """Track direction resolution sigma_theta [rad] (also the transverse
+    direction resolution used for phi), eta-piecewise table of
+    fastsim/scripts/money_delta_20260729.py: 5/3/2/1/2/3/5 mrad."""
+    eta = np.asarray(eta, dtype=float)
+    out = np.full_like(eta, 1.0e-3)
+    for lo, hi, val in ((-np.inf, -3.5, 5.0e-3), (-3.5, -2.5, 3.0e-3),
+                        (-2.5, -1.0, 2.0e-3), (1.0, 2.5, 2.0e-3),
+                        (2.5, 3.5, 3.0e-3), (3.5, np.inf, 5.0e-3)):
+        out = np.where((eta >= lo) & (eta < hi), val, out)
+    return out
+
+
+def eps_eid(eta):
+    """Electron-ID efficiency eps_eID(eta), linearly interpolated between
+    the ATHENA (JINST 17 (2022) P10019, Table 5) / ECCE (NIM A 1055 (2023)
+    168464, Sec. 3.5.2) anchors used by fastsim/scripts/
+    money_delta_20260729.py; zero outside |eta| > 3.5.  No official ePIC
+    curve exists (pCDR v1)."""
+    eta = np.asarray(eta, dtype=float)
+    eta_pts = np.array([-3.5, -3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0, 3.5])
+    eps_pts = np.array([0.85, 0.92, 0.95, 0.93, 0.90, 0.90, 0.85, 0.80, 0.70])
+    return np.where((eta < -3.5) | (eta > 3.5), 0.0,
+                    np.interp(eta, eta_pts, eps_pts))
+
+
 def smear_electron(e_prime, theta, phi, de_over_e, dtheta, dphi, rng):
     """Gaussian smearing of the measured (E', theta, phi) of the scattered
     electron; resolutions are absolute (rad) for angles, relative for E'."""
@@ -318,67 +344,175 @@ def mixed_method(q2_electron, y_hadronic, s):
 # --- spin-state-sorted harmonic estimator ---------------------------------
 
 def spin_state_ratio(counts, lumis, pzz):
-    """Acceptance-free tensor ratio per phi bin.
+    """Acceptance-free tensor ratio per bin.
 
-    counts: array (F, K) of counts per fill type f and phi bin i;
-    lumis:  (F,) integrated luminosities; pzz: (F,) fill tensor
-    polarizations.  With Y_f = N_f / L_f and w_f = P_f - Pbar
-    (Pbar = luminosity-weighted mean), the bin-wise ratio
+    counts: array (F, K) of counts per fill type f and bin i; lumis: (F,)
+    integrated luminosities (only their ratios matter); pzz: (F,) fill
+    tensor polarizations.  With Pbar = sum_f L_f P_f / sum_f L_f and
+    w_f = P_f - Pbar, the bin-wise luminosity-weighted ratio
 
-        R_i = sum_f w_f Y_fi / sum_f Y_fi
-            ~ sigma_P^2 [kappa + A cos 2phi'_i] (1 + O(P T)),
+        R_i = sum_f w_f N_fi / sum_f N_fi
+
+    is, for yields N_fi = L_f eps_i sigma_i [1 + P_f T_i],
+
+        R_i = sigma_P^2 T_i / (1 + Pbar T_i)   EXACTLY,
         sigma_P^2 = sum_f L_f (P_f - Pbar)^2 / sum_f L_f,
 
-    cancels any phi-dependent acceptance/efficiency bin by bin (it
-    multiplies every Y_fi identically) and turns a relative-luminosity
-    error into a phi-INDEPENDENT offset -- orthogonal to the harmonic.
-    Returns (R, var_R, sigma_P2) with var_R from linear error propagation
-    (Poisson counts).
+    because sum_f L_f w_f = 0: any phi-dependent acceptance/efficiency
+    eps_i cancels bin by bin, and a relative-luminosity error enters
+    only through Pbar, i.e. as a bin-INDEPENDENT offset of R plus a
+    second-order rescaling (delta x Pbar/sigma_P^2).  Returns
+    (R, var_R, sigma_P2, Pbar) with var_R from linear error propagation
+    of Poisson counts: var(R) = sum_f ((w_f - R)/sum N)^2 N_f.
     """
     n = np.asarray(counts, dtype=float)
-    lum = np.asarray(lumis, dtype=float)[:, None]
+    lum = np.asarray(lumis, dtype=float)
     p = np.asarray(pzz, dtype=float)
-    lw = lum[:, 0] / lum[:, 0].sum()
+    lw = lum / lum.sum()
     pbar = float((lw * p).sum())
     w = (p - pbar)[:, None]
     sig2 = float((lw * (p - pbar) ** 2).sum())
-    y = n / lum
-    num = (w * y).sum(axis=0)
-    den = y.sum(axis=0)
-    r = num / den
-    # dR/dY_f = (w_f - R)/den ; var(Y_f) = N_f / L_f^2
-    var = (((w - r[None, :]) / den[None, :]) ** 2 * n / lum ** 2).sum(axis=0)
-    return r, var, sig2
+    num = (w * n).sum(axis=0)
+    den = n.sum(axis=0)
+    live = den > 0                      # empty bins (e.g. inside a
+    den_safe = np.where(live, den, 1.0)  # Roman-Pot cutout) get weight 0
+    r = np.where(live, num / den_safe, 0.0)
+    var = np.where(live, (((w - r[None, :]) / den_safe[None, :]) ** 2
+                          * n).sum(axis=0), np.inf)
+    return r, var, sig2, pbar
 
 
-def harmonic_ratio_fit(counts, lumis, pzz, edges, with_sin=False):
-    """Fit R_i = c + d cos 2phi_i (+ e sin 2phi_i) by weighted LSQ and
-    return {"amp": A_hat, "err": dA, "const": kappa_hat, "phase": ...}.
+def _ratio_to_modulation(r, var, sig2, pbar, u=0.0, n_iter=4):
+    """Invert R = sigma_P^2 T / (1 + u + Pbar T) for T bin by bin
+    (fixed-point iteration; u = known spin-independent modulation of the
+    denominator, 0 for inclusive DIS), propagating the variance."""
+    t = r / sig2
+    for _ in range(n_iter):
+        t = r * (1.0 + u + pbar * t) / sig2
+    scale = (1.0 + u + pbar * t) / sig2
+    return t, var * scale * scale
 
-    A_hat = d / sigma_P^2 / dilution, kappa_hat = c / sigma_P^2, with the
+
+def harmonic_ratio_fit(counts, lumis, pzz, edges, with_sin=False,
+                       denominator_correction=True):
+    """Fit T_i = kappa + A cos 2phi_i (+ A_s sin 2phi_i) to the spin-state
+    ratio inverted for the modulation T (R = sigma_P^2 T/(1 + Pbar T),
+    exact; `denominator_correction=False` uses T = R/sigma_P^2), by
+    weighted LSQ.  Returns {"amp": A_hat, "err": dA, "const": kappa_hat,
+    "sigma_p2", "pbar"} (+ "amp_sin", "phase" with with_sin), with the
     finite-bin dilution sin(w)/w (w = half-width in 2phi) divided out as
     in estimators.cos2phi_fit_binned.  Two fills (P+, P0) with equal
     luminosity give dA = 2 sqrt(2/N) / (P+ - P0) / dilution: the
     m=0-enriched fill (P0 = -2 P+ for the same purity) makes this 1.5x
-    BETTER than the single-fill fit sqrt(2/N)/P+."""
-    r, var, sig2 = spin_state_ratio(counts, lumis, pzz)
+    BETTER than the single-fill fit sqrt(2/N)/P+.  A residual sin 2phi
+    term measures the azimuthal misalignment of the assumed spin axis."""
+    r, var, sig2, pbar = spin_state_ratio(counts, lumis, pzz)
+    if denominator_correction:
+        t, var_t = _ratio_to_modulation(r, var, sig2, pbar)
+    else:
+        t, var_t = r / sig2, var / sig2 ** 2
     edges = np.asarray(edges, dtype=float)
     centers = 0.5 * (edges[:-1] + edges[1:])
     cols = [np.ones_like(centers), np.cos(2.0 * centers)]
     if with_sin:
         cols.append(np.sin(2.0 * centers))
     design = np.vstack(cols).T
-    wgt = 1.0 / np.sqrt(np.maximum(var, 1e-300))
-    coef, *_ = np.linalg.lstsq(design * wgt[:, None], r * wgt, rcond=None)
+    wgt = 1.0 / np.sqrt(np.maximum(var_t, 1e-300))
+    coef, *_ = np.linalg.lstsq(design * wgt[:, None], t * wgt, rcond=None)
     cov = np.linalg.inv((design * wgt[:, None]).T @ (design * wgt[:, None]))
     w = 0.5 * (edges[1] - edges[0])
     dil = np.sin(2.0 * w) / (2.0 * w)
-    out = {"amp": coef[1] / sig2 / dil, "err": np.sqrt(cov[1, 1]) / sig2 / dil,
-           "const": coef[0] / sig2, "sigma_p2": sig2}
+    out = {"amp": coef[1] / dil, "err": np.sqrt(cov[1, 1]) / dil,
+           "const": coef[0], "sigma_p2": sig2, "pbar": pbar}
     if with_sin:
-        out["amp_sin"] = coef[2] / sig2 / dil
+        out["amp_sin"] = coef[2] / dil
         out["phase"] = 0.5 * np.arctan2(coef[2], coef[1])
     return out
+
+
+def _bin_dilutions(alpha_edges, beta_edges):
+    ae = np.asarray(alpha_edges, dtype=float)
+    be = np.asarray(beta_edges, dtype=float)
+    wa, wb = 0.5 * (ae[1] - ae[0]), 0.5 * (be[1] - be[0])
+    return (np.sin(wa) / wa, np.sin(wb) / wb,
+            np.sin(2 * wa) / (2 * wa), np.sin(2 * wb) / (2 * wb))
+
+
+def basis_2d(alpha_edges, beta_edges, beta_means=None):
+    """Bin-averaged harmonic basis on the (Ka x Kb) grid, flattened in C
+    order: {"e": <cos 2a>, "t": <cos 2b>, "m": <cos(a+b)>,
+    "u1": <cos(a-b)>, "u2": <cos 2(a-b)>}.  The alpha average is analytic
+    (uniform in-bin distribution).  The beta averages are analytic too
+    unless `beta_means` = {"c1","s1","c2","s2"} (Kb,) supplies the
+    ACCEPTANCE-WEIGHTED in-bin means <cos b>, <sin b>, <cos 2b>, <sin 2b>
+    of the true beta of the events reconstructed into each beta bin --
+    required when the acceptance varies strongly across a bin (the
+    Roman-Pot cutout: x25 across beta), and the way the smearing of beta
+    enters the response (the fit then estimates the UNSMEARED
+    coefficients, as an MC-corrected analysis does)."""
+    ae = np.asarray(alpha_edges, dtype=float)
+    be = np.asarray(beta_edges, dtype=float)
+    ac = 0.5 * (ae[:-1] + ae[1:])
+    bc = 0.5 * (be[:-1] + be[1:])
+    d1a, d1b, d2a, d2b = _bin_dilutions(ae, be)
+    if beta_means is None:
+        c1, s1 = np.cos(bc) * d1b, np.sin(bc) * d1b
+        c2, s2 = np.cos(2 * bc) * d2b, np.sin(2 * bc) * d2b
+        c2t = c2
+    else:
+        c1, s1, c2, s2 = (np.asarray(beta_means[k], dtype=float)
+                          for k in ("c1", "s1", "c2", "s2"))
+        # template basis of a t-dependent a_t (recopseudo.basis_means)
+        c2t = np.asarray(beta_means.get("c2t", c2), dtype=float)
+    ca1, sa1 = (np.cos(ac) * d1a)[:, None], (np.sin(ac) * d1a)[:, None]
+    ca2, sa2 = (np.cos(2 * ac) * d2a)[:, None], (np.sin(2 * ac) * d2a)[:, None]
+    ones_a = np.ones((ac.size, 1))
+    return {"e": (ca2 * np.ones((1, bc.size))).ravel(),
+            "t": (ones_a * c2t[None, :]).ravel(),
+            "m": (ca1 * c1[None, :] - sa1 * s1[None, :]).ravel(),
+            "u1": (ca1 * c1[None, :] + sa1 * s1[None, :]).ravel(),
+            "u2": (ca2 * c2[None, :] + sa2 * s2[None, :]).ravel()}
+
+
+def unpolarized_modulation_2d(alpha_edges, beta_edges, u1, u2,
+                              beta_means=None):
+    """Bin-averaged spin-independent modulation u(alpha - beta) =
+    u1 cos(alpha-beta) + u2 cos 2(alpha-beta), flattened in C order."""
+    b = basis_2d(alpha_edges, beta_edges, beta_means)
+    return u1 * b["u1"] + u2 * b["u2"]
+
+
+def harmonic_ratio_fit_2d(counts, lumis, pzz, alpha_edges, beta_edges,
+                          u_coeffs=None, beta_means=None):
+    """Two-azimuth version for the coherent channel: counts (F, Ka, Kb)
+    per fill in bins of alpha = phi_e - phi_S and beta = phi_t - phi_S.
+    The spin-sorted yields are modelled as
+        N_f ~ eps(alpha,beta) [1 + u(alpha-beta) + P_f T(alpha,beta)],
+        T = kappa + a_e cos 2alpha + a_t cos 2beta + a_m cos(alpha+beta),
+    with u = u1 cos(alpha-beta) + u2 cos 2(alpha-beta) the spin-
+    independent lepton-plane/recoil-plane modulation (u_coeffs = (u1, u2),
+    known from the unpolarized analysis; None = 0).  The bin-wise ratio
+    R = sigma_P^2 T/(1 + u + Pbar T) is inverted for the bin-averaged T
+    and fitted linearly on the bin-averaged basis (basis_2d; pass
+    `beta_means` from the MC response for an acceptance-shaped beta).
+    Returns {"const", "a_e", "a_t", "a_m", "err_e", "err_t", "err_m",
+    "cov", "sigma_p2", "pbar"}."""
+    n = np.asarray(counts, dtype=float)
+    nf, ka, kb = n.shape
+    r, var, sig2, pbar = spin_state_ratio(n.reshape(nf, ka * kb), lumis, pzz)
+    basis = basis_2d(alpha_edges, beta_edges, beta_means)
+    u = (u_coeffs[0] * basis["u1"] + u_coeffs[1] * basis["u2"]
+         if u_coeffs is not None else 0.0)
+    t, var_t = _ratio_to_modulation(r, var, sig2, pbar, u=u)
+    design = np.vstack([np.ones(ka * kb), basis["e"], basis["t"],
+                        basis["m"]]).T
+    wgt = 1.0 / np.sqrt(np.maximum(var_t, 1e-300))
+    coef, *_ = np.linalg.lstsq(design * wgt[:, None], t * wgt, rcond=None)
+    cov = np.linalg.inv((design * wgt[:, None]).T @ (design * wgt[:, None]))
+    err = np.sqrt(np.diag(cov))
+    return {"const": coef[0], "a_e": coef[1], "a_t": coef[2], "a_m": coef[3],
+            "err_e": err[1], "err_t": err[2], "err_m": err[3], "cov": cov,
+            "sigma_p2": sig2, "pbar": pbar}
 
 
 def err_harmonic_ratio(n_total, pzz_list, lumi_fractions=None, nbins=24):

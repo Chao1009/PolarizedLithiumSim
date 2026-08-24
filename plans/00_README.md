@@ -82,6 +82,24 @@ brings to the EIC, in support of the ANL polarized ⁶,⁷Li ion-source program
   configuration is the coherent program's home; the a_n normalization
   convention of the deuteron anchor (factor 2) is flagged for a source
   check.
+- ☑ **Second pass (same day): WP3 reconstructed-level pseudo-experiments**
+  — `polligen/recopseudo.py` (+10 tests, 93 collected), money plots
+  5R/7R (`money_cos2phi_reco.py`) and 6R (`money_cos2phi_coherent_reco.py`),
+  report §7. Inclusive, mid energy, mixed method (20% hadronic y), EMCal
+  + track angles + ε_eID, spin-state ratio with the acceptance harmonic
+  and a rel-lumi offset on: sweet-spot purities 0.69–0.74, efficiencies
+  0.40–0.70, D = 0.91–0.99, Â unbiased vs the reco-bin truth, δÂ = 1.2 /
+  1.0 / 1.8 / 3.0 ×10⁻⁴ in year 1 (0.65–0.70 × money plot 5); 7R best
+  bins δΔ = 1.0 / 0.5 ×10⁻³. Coherent: angular cut + r = 1.25 cutout →
+  N_tag = 3.4×10⁶ (1 yr), fake ⟨cos 2β⟩ = −0.44 cancelled by the ratio,
+  template fit (acceptance-weighted MC basis, a_t ∝ |t| — the plans/06
+  two-component fit in response form) recovers a_t and a_e in all four
+  |t| bins. **Convention verified from arXiv:2408.13213 Eq. (9):
+  1 + 2Σ a_n e^{inΦ}, Φ = vector-meson (recoil) azimuth to the
+  polarization axis → the deformation modulation is 2a₂; money plot 6
+  injects a₂ (conservative ×2)** — `coherent.cos2phi_coefficient_deformation`.
+  Estimator upgrades: luminosity-weighted ratio (exact R = σ_P²T/(1+P̄T)),
+  denominator correction, empty-bin handling, 2-D fit with template basis.
 
 ## Development run 5 addendum (2026-08-10, later): merge + unified Δ models + 1/10-year projections
 

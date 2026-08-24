@@ -43,6 +43,9 @@ MONEY_FIGS = {
 RECO_FIGS = {
     "__RC1__": "evgen/reco_chain_inclusive_6Li.png",
     "__RC2__": "evgen/reco_chain_coherent_6Li.png",
+    "__RC3__": "evgen/money_cos2phi_reco_6Li.png",
+    "__RC4__": "evgen/money_delta_extracted_reco_6Li.png",
+    "__RC5__": "evgen/money_cos2phi_coherent_reco_6Li.png",
 }
 
 PAGES = (

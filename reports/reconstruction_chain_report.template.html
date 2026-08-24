@@ -80,7 +80,7 @@
 
   <p class="eyebrow">Polarized ⁶,⁷Li @ EIC · Analysis note · reports/</p>
   <h1>From detector signals to Δ(x,Q²): the reconstruction chain of the inclusive and coherent cos 2φ measurements</h1>
-  <p class="dateline">2026-08-24 · companion to the cos 2φ projection report (money plots 5–7) and to plans/07 WP3 · quantitative figures from the new <code>polligen.reco</code> module (15 tests) · every number below is reproducible with <code>evgen/scripts/reco_chain_figures.py</code></p>
+  <p class="dateline">2026-08-24 · companion to the cos 2φ projection report (money plots 5–7) and to plans/07 WP3 · §§1–6: the chain and the audit, quantified with <code>polligen.reco</code> (<code>evgen/scripts/reco_chain_figures.py</code>) · §7 (same day, second pass): the reconstructed-level pseudo-experiments of WP3 — money plots 5R, 7R and 6R from <code>polligen.recopseudo</code> (<code>money_cos2phi_reco.py</code>, <code>money_cos2phi_coherent_reco.py</code>; 25 tests)</p>
 
   <p class="lede">The projection report presents the double-helicity-flip structure function
   Δ(x,Q²) as φ′ pseudo-data and as extracted xΔ points. This note asks the experimentalist's
@@ -679,7 +679,10 @@
   <p>The table walks the chain of §§3–4 and states, for each step, what an experiment does,
   what the repository does, and where. "Seeded" marks the operations added in this run in
   <code>evgen/polligen/reco.py</code> (15 tests in <code>tests/test_reco.py</code>); they are
-  building blocks and quantified checks, not yet a reconstructed-level pseudo-experiment.</p>
+  building blocks and quantified checks. The second pass of the same day composed them into
+  the reconstructed-level pseudo-experiments of §7 (<code>polligen/recopseudo.py</code>), which
+  closes the "missing → seeded" rows below for the inclusive analysis and for the coherent
+  two-azimuth fit; the table is kept as the record of the state before that pass.</p>
 
   <table>
     <tr><th>Step</th><th>Experiment</th><th>Repository</th><th>Status</th></tr>
@@ -762,6 +765,136 @@
     simulation cannot produce: the Σ-method δy/y at y = 0.01–0.05 for e + light ions, and the
     Roman-Pot cutout dimensions (β*, emittance, pot geometry) for the light-ion optics.</li>
   </ol>
+
+  <h2>7 · Reconstructed-level closure: money plots 5R, 7R and 6R</h2>
+
+  <p>The pieces of §5.1 are composed in <code>polligen/recopseudo.py</code>. The inclusive
+  response is importance-sampled: every accepted sampler cell (60×45 grid, generator cuts
+  loosened to y ≥ 0.004, Q² ≥ 0.7 GeV², |η| ≤ 3.8, E′ ≥ 0.3 GeV so that events can migrate
+  <i>into</i> the analysis window) receives 400 pseudo-events with weight σ<sub>c</sub>/400,
+  each carried through the lab frame (25 mrad crossing), Gaussian smearing of E′ (EMCal
+  2%/√E ⊕ 1%) and of the track direction (1–5 mrad by η), the head-on transformation, the
+  electron-method Q², a hadronic y with 20% resolution, the mixed-method x, the analysis
+  cuts on reconstructed quantities, ε<sub>eID</sub>(η), and the covariant φ′ on true and
+  smeared four-vectors. The expected φ′ counts of any reconstructed bin are then exact
+  bin integrals of den<sub>f</sub> + P<sub>f</sub>A cos 2φ′ summed over the events that land
+  in it (the reconstructed-level analogue of <code>phi_histogram_pseudo</code>), Poisson-
+  fluctuated at the 1-year and 10-year luminosities for the two fills of the
+  m = ±1-rich / m = 0-rich pattern (<code>bookkeeping.tensor_flip_plan</code>), with the
+  spin-axis-aligned efficiency ε(φ′) = 1 + 0.03 cos 2φ′ + 0.02 cos φ′ and a 10⁻³
+  relative-luminosity offset switched on. The estimator is the spin-state ratio fit of §3
+  with the sin 2φ′ term; Δ follows from the amplitude with the MC bin-centering factor
+  K = Δ<sub>model</sub>(x<sub>c</sub>, Q²<sub>c</sub>)/A<sub>model, reco bin</sub>, which
+  includes the migration.</p>
+
+  <table>
+    <tr><th>Sweet spot (reco bin)</th><th>N, 1 yr (both fills)</th><th>Purity</th><th>Efficiency</th><th>D = A<sub>reco bin</sub>/A<sub>true bin</sub></th><th>Â ± δÂ (1 yr) [10⁻³]</th><th>Reco-bin truth</th><th>δÂ (10 yr)</th><th>δA of money plot 5</th></tr>
+    <tr><td class="mono">1: x = 0.056, Q² = 1.14</td><td class="mono">1.7×10⁸</td><td class="mono">0.70</td><td class="mono">0.45</td><td class="mono">0.912</td><td class="mono">10.57 ± 0.12</td><td class="mono">10.41</td><td class="mono">0.038</td><td class="mono">0.18</td></tr>
+    <tr><td class="mono">2: x = 0.022, Q² = 1.14</td><td class="mono">2.8×10⁸</td><td class="mono">0.69</td><td class="mono">0.64</td><td class="mono">0.991</td><td class="mono">6.55 ± 0.10</td><td class="mono">6.64</td><td class="mono">0.030</td><td class="mono">0.15</td></tr>
+    <tr><td class="mono">3: x = 0.141, Q² = 3.13</td><td class="mono">7.6×10⁷</td><td class="mono">0.72</td><td class="mono">0.40</td><td class="mono">0.919</td><td class="mono">11.69 ± 0.18</td><td class="mono">11.82</td><td class="mono">0.058</td><td class="mono">0.26</td></tr>
+    <tr><td class="mono">4: x = 0.141, Q² = 14.3</td><td class="mono">2.8×10⁷</td><td class="mono">0.74</td><td class="mono">0.70</td><td class="mono">0.980</td><td class="mono">9.63 ± 0.30</td><td class="mono">9.43</td><td class="mono">0.095</td><td class="mono">0.45</td></tr>
+  </table>
+  <p style="font-size:8pt;color:var(--ink-2);margin-top:-2pt">Table 2 — money plot 5R: the four sweet-spot super-bins in reconstructed (x, Q²) with the mixed method (20% hadronic y). Efficiency = fraction of the true-bin rate reconstructed in the bin after ε<sub>eID</sub>; D = ratio of the rate-weighted model amplitude of the events in the reconstructed bin to that of the true bin. The last column is the single-fill, truth-binned error of the projection report.</p>
+
+  <p>Three observations. (i) The fit is unbiased at the reconstructed level: every Â agrees
+  with its reco-bin truth within the statistical error while the acceptance harmonic and
+  the luminosity offset are on, and the sin 2φ′ coefficients are consistent with zero.
+  (ii) The two edge bins (spots 1 and 3 at y ≈ 0.01) lose 55–60% of their events to the
+  reconstructed y ≥ 0.01 cut and their amplitude reference shifts by 8–9% (the accepted
+  half of the bin sits at lower true x); the analysis knows both through K, and the
+  moment-constrained model's x-dependence is still resolved bin by bin (money plot 7R,
+  best bins δΔ = 1.0×10⁻³ at Q² = 1.14 and 0.5×10⁻³ at 3.13 GeV² in year 1, purities
+  0.6). (iii) The errors are <i>smaller</i> than the truth-binned single-fill projection —
+  0.65–0.70 of the money-plot-5 values — because the 1.5× gain of the m = 0-rich fill
+  outweighs the reconstruction efficiency of 0.40–0.70; this is the number to carry into
+  plans/07 §7.1, with the caveat that it presumes the source delivers m = 0-rich bunches
+  at |P<sub>zz</sub>| = 1.2 (the same purity as the ±1 fill at 0.6).</p>
+
+  <figure>
+    <div class="panel"><img src="data:image/png;base64,__RC3__" alt="Money plot 5R: reconstructed-level phi-prime pseudo-data in the four sweet-spot bins and amplitude versus x in reconstructed bins"></div>
+    <figcaption><b>Money plot 5R — inclusive gluonometry at the reconstructed level</b>
+    (e10 × ⁶Li50, P<sub>zz</sub> = 0.6, moment_A, mixed method with 20% hadronic y, EMCal
+    energy, track angles, ε<sub>eID</sub>(η), spin-state ratio of P<sub>zz</sub> = +0.6/−1.2
+    fills with the acceptance harmonic and luminosity offset on). Left: the acceptance-free
+    modulation T(φ′) − κ̂ (per unit P<sub>zz</sub>) from the ratio, with the reco-bin truth
+    (blue) and the fit (vermillion); annotations give purity, D, and the 1-/10-year errors.
+    Right: the amplitude in reconstructed x bins along the Q² = 1.14 GeV² slice with the
+    reco-bin truth (blue ticks) and the model curves.</figcaption>
+  </figure>
+
+  <figure>
+    <div class="panel"><img src="data:image/png;base64,__RC4__" alt="Money plot 7R: extracted x Delta points in reconstructed bins at three Q2 slices"></div>
+    <figcaption><b>Money plot 7R — Δ(x,Q²) from reconstructed bins.</b> xΔ points at the three
+    sweet-spot Q² slices from the same pseudo-measurements, converted with the MC
+    bin-centering factor K (model-derived, as in money plot 7, so the points sit on the
+    injected curve by construction and carry the statistical errors of the reconstructed
+    analysis); 1-year (open) and 10-year (filled) draws are independent.</figcaption>
+  </figure>
+
+  <p><b>Coherent channel (money plot 6R).</b> The coherent response samples recoils from the
+  exponential spectrum with x<sub>P</sub> ∈ [10⁻³, 10⁻²], builds the exact four-vector,
+  and emulates the pots with the angular cut 10σ<sub>θ</sub>·6p<sub>u</sub> at
+  σ<sub>θ</sub> = 73 μrad (p<sub>T</sub> &gt; 0.22 GeV at 50 GeV/u), a rectangular cutout of
+  aspect ratio 1.25, and divergence smearing. The two-azimuth expected counts per fill are
+  exact α-integrals per event of 1 + u₁cos(α−β) + u₂cos 2(α−β) + P<sub>f</sub>[a<sub>e</sub>cos 2α
+  + a<sub>t</sub>(t) cos 2β + a<sub>m</sub>cos(α+β)] with the <i>true</i> β and t inside and the
+  reconstructed β and |t| = p<sub>T</sub>² for the binning. Two lessons came out of this pass.
+  First, the anchor convention: the full text of the deuteron paper fixes
+  d²σ/dΦd|t| ∝ 1 + 2Σ<sub>n</sub>a<sub>n</sub>e<sup>inΦ</sup> (its Eq. 9, with Φ the angle
+  between the vector-meson momentum and the polarization axis in the γ*d frame), so the
+  cos 2β coefficient is 2a₂ — the deformation modulation is twice what money plot 6 injects
+  (c₂ = −(P<sub>zz</sub>/2)ε<sub>B0</sub>B|t| = 0.072 at ⟨|t|⟩ = 0.06 GeV² and
+  P<sub>zz</sub> = 0.6; <code>coherent.cos2phi_coefficient_deformation</code>). Second, the
+  cutout makes the in-bin β distribution far from uniform (the acceptance varies 25× around
+  the circle) and correlates β with |t| inside a reco t bin (the blind directions hold the
+  larger-|t| recoils), so the harmonic fit must use the acceptance-weighted basis from the
+  response — ⟨cos 2β⟩, ⟨cos β⟩, ⟨sin β⟩ per bin, and for the t-dependent term the template
+  ⟨(t/t<sub>ref</sub>) cos 2β⟩ of the assumed linear shape — which is exactly the
+  two-component fit a₂(t) = c<sub>def</sub>|t| + a<sub>g</sub> of plans/06 in MC-response form.
+  With the analytic (uniform-bin) basis the deformation coefficient is biased by 3–6% in
+  the lowest t bin; with the template it closes.</p>
+
+  <table>
+    <tr><th>Reco |t| bin [GeV²]</th><th>N<sub>tag</sub>, 1 yr</th><th>a<sub>t</sub>(t<sub>ref</sub>) injected</th><th>fit, 1 yr</th><th>fit, 10 yr</th><th>a<sub>e</sub> fit, 1 yr (inj. 0.010)</th><th>a<sub>e</sub> fit, 10 yr</th></tr>
+    <tr><td class="mono">0.05–0.08</td><td class="mono">1.8×10⁶</td><td class="mono">0.119</td><td class="mono">0.121 ± 0.002</td><td class="mono">0.1181 ± 0.0007</td><td class="mono">0.0101 ± 0.0013</td><td class="mono">0.0107 ± 0.0004</td></tr>
+    <tr><td class="mono">0.08–0.12</td><td class="mono">1.3×10⁶</td><td class="mono">0.174</td><td class="mono">0.177 ± 0.001</td><td class="mono">0.1733 ± 0.0004</td><td class="mono">0.0086 ± 0.0015</td><td class="mono">0.0094 ± 0.0005</td></tr>
+    <tr><td class="mono">0.12–0.17</td><td class="mono">2.6×10⁵</td><td class="mono">0.245</td><td class="mono">0.250 ± 0.003</td><td class="mono">0.2446 ± 0.0010</td><td class="mono">0.0088 ± 0.0032</td><td class="mono">0.0113 ± 0.0010</td></tr>
+    <tr><td class="mono">0.17–0.25</td><td class="mono">2.9×10⁴</td><td class="mono">0.335</td><td class="mono">0.341 ± 0.009</td><td class="mono">0.330 ± 0.003</td><td class="mono">0.008 ± 0.009</td><td class="mono">0.016 ± 0.003</td></tr>
+  </table>
+  <p style="font-size:8pt;color:var(--ink-2);margin-top:-2pt">Table 3 — money plot 6R: template fit of the two-azimuth spin-state ratio per reconstructed |t| bin (coefficients per unit P<sub>zz</sub>; ε<sub>B0</sub> = −0.08, B = 50 GeV⁻², u₁ = 0.05, u₂ = 0.02 placeholders; N<sub>tag</sub> = 3.4×10⁶ in year 1 for the angular cut and the r = 1.25 cutout, against 1.1×10⁷ for the constant 0.20 GeV cut). The cutout's fake ⟨cos 2β⟩ of the tagged sample is −0.44 (a single-fill fit would report a<sub>t</sub> ≈ −0.7); the ratio removes it entirely.</p>
+
+  <figure>
+    <div class="panel"><img src="data:image/png;base64,__RC5__" alt="Money plot 6R: raw spin-sorted yields versus beta, the acceptance-free modulation with fits, the two-dimensional modulation map, and the extracted coefficients versus t"></div>
+    <figcaption><b>Money plot 6R — the coherent channel at the reconstructed level.</b>
+    <b>(a)</b> Raw spin-sorted yields versus the reconstructed recoil azimuth β for the lowest
+    |t| bin: the cutout shape dominates both fills identically. <b>(b)</b> The modulation
+    T(β) and T(α) recovered from the spin-state ratio (T(α) with the a<sub>t</sub> offset
+    removed), the template-fit prediction per β bin (ticks) and the smooth a<sub>t</sub>cos 2β
+    and a<sub>e</sub>cos 2α curves. <b>(c)</b> The expected (noise-free) modulation map in
+    (α, β): rows from the deformation term, columns from the gluon-transversity term.
+    <b>(d)</b> Extracted a<sub>t</sub>(t<sub>ref</sub>) and a<sub>e</sub> per reco |t| bin (1 yr
+    open, 10 yr filled) against the injected curves.</figcaption>
+  </figure>
+
+  <h3>7.1 · Audit notes for this pass</h3>
+  <p>Checked independently of the code that produced the numbers: the analytic error of
+  the two-fill ratio, 2√(2/N)/(P<sub>+</sub>−P<sub>0</sub>)/dilution, reproduces the
+  pseudo-experiment spreads and the printed errors (spot 1: 1.21×10⁻⁴ for N = 1.71×10⁸);
+  the exact expected counts reproduce the sampler's generator-level
+  <code>effective_modulation</code> when binned in truth (test); the bin-centering factor
+  returns the injected Δ exactly without noise (test); the sign of the deformation term is
+  positive for P<sub>zz</sub> &gt; 0 and ε<sub>B0</sub> &lt; 0, consistent with the predicted
+  sign flip relative to the deuteron; the Eq. (9) convention was read from the paper's
+  text, not inferred; the relative-luminosity immunity is second order
+  (δ·P̄/σ<sub>P</sub>² — a 2% offset moves the amplitude by 0.7%, a 10⁻⁴ offset by
+  3×10⁻⁵); empty φ bins inside the cutout are handled with zero weight; the α-integrals
+  of the coherent counts are analytic per event and the β smearing is absorbed in the MC
+  basis, so the fitted coefficients refer to the unsmeared truth. Known limits of this
+  pass, stated rather than hidden: the hadronic y is a parametrized 20% Gaussian; u₁, u₂
+  and the cutout aspect ratio are placeholders; the φ′-efficiency harmonics are illustrative
+  magnitudes; radiative corrections and backgrounds are not included; the 7R points are
+  centered with the injected model (as in money plot 7); the template assumes the linear
+  t-shape it fits, so a different shape is a model systematic to be varied.</p>
 
   <h2>References</h2>
   <div class="refs">

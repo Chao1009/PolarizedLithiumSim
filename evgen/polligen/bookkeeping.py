@@ -147,6 +147,29 @@ def transverse_tensor_plan(pzz, phi_s=0.0, name="cos2phi"):
     return RunPlan(cats, pzz_true=pzz)
 
 
+def tensor_flip_plan(pzz, phi_s=0.0, share_plus=0.5, rel_lumi_offset=0.0,
+                     name="flip"):
+    """Gluonometry run plan with the acceptance-cancelling spin-state
+    pattern (reconstruction-chain note, 2026-08-24): m = +-1-rich bunches
+    at (P_z, P_zz) = (0, +pzz) and m = 0-rich bunches at (0, -2 pzz) --
+    the same source purity, as in tensor_thirds_plan -- both with the
+    alignment axis transverse (theta_S = 90 deg) at azimuth phi_s and
+    unpolarized electrons.  `share_plus` is the luminosity share of the
+    +pzz fill; `rel_lumi_offset` boosts that share by (1+offset) without
+    the analysis knowing (the bookkeeper's convention).  The analysis
+    estimator is reco.harmonic_ratio_fit."""
+    pops_p = spinmod.spin1_populations(0.0, pzz)
+    pops_0 = spinmod.spin1_populations(0.0, -2.0 * pzz)
+    cats = [
+        SpinCategory(name + "+", 1.0, pops_p, theta_s=np.pi / 2.0,
+                     phi_s=phi_s,
+                     lumi_fraction=share_plus * (1.0 + rel_lumi_offset)),
+        SpinCategory(name + "0", 1.0, pops_0, theta_s=np.pi / 2.0,
+                     phi_s=phi_s, lumi_fraction=1.0 - share_plus),
+    ]
+    return RunPlan(cats, pzz_true=pzz)
+
+
 def with_offset(plan, category_name, offset):
     """Copy of `plan` with one category's lumi share scaled by (1+offset),
     other categories untouched (the convention of the bias formulas)."""

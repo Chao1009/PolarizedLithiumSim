@@ -11,7 +11,7 @@ next. Imports `../fastsim/polli_fastsim` — nothing there is duplicated.
 
 ```bash
 cd evgen
-python3 -m pytest tests/ -q            # 83 tests (grid tests auto-skip)
+python3 -m pytest tests/ -q            # 93 tests (grid tests auto-skip)
 python3 scripts/closure_fom.py --ion 6Li --events 200000 --trials 200
 python3 scripts/closure_fom.py --ion 7Li --events 200000 --trials 200
 python3 scripts/money_tagged_azz.py --events 400000       # money plot 4
@@ -21,6 +21,8 @@ python3 scripts/money_cos2phi_coherent.py                 # money plot 6
 python3 scripts/money_delta_extraction.py                 # money plot 7
 python3 scripts/phase_space_bins.py       # (x,Q2) rate maps + binning
 python3 scripts/reco_chain_figures.py     # reconstruction-chain figures
+python3 scripts/money_cos2phi_reco.py          # money plots 5R + 7R (reco level)
+python3 scripts/money_cos2phi_coherent_reco.py # money plot 6R (reco level)
 python3 ../reports/build_report.py --pdf  # assemble reports/ pages
 #   -> cos2phi_money_plots_report.html/pdf (projection report)
 #   -> polarized_li_primer.html/pdf (educational physics primer)
@@ -40,6 +42,7 @@ python3 ../reports/build_report.py --pdf  # assemble reports/ pages
 | `polligen/estimators.py` | analysis-side estimators: helicity-flip, tensor thirds, cos 2φ moment + binned LSQ fit (holey-φ robust), luminosity-corrected yields |
 | `polligen/tagged.py` | two-cluster spin model: CG-coupled L-waves → m-dependent spectator densities n_M(k,k̂), embedded-cluster spin populations, pair decomposition; TaggedSampler = spin ⊗ spectator ⊗ DIS ⊗ far-forward routing |
 | `polligen/coherent.py` | coherent (intact-g.s.) e+⁶Li channel: scenario coherent fraction/slope, intact-recoil kinematics (R = 1.000 → RP pT-tail only), analytic tag acceptance exp(−B pT_cut²), per-bin tagged-rate projections, breakup veto table (plans/06) |
+| `polligen/recopseudo.py` | **reconstructed-level pseudo-experiments** (plans/07 WP3, 2026-08-24): importance-sampled inclusive response (`RecoResponse`), exact spin-sorted expected counts per reco bin, ratio-fit measurement, MC bin-centering to Δ; coherent Roman-Pot response (`CoherentResponse`), exact two-azimuth counts with the deformation/gluonic/unpolarized harmonics, acceptance-weighted template basis for the 2-D fit |
 | `polligen/reco.py` | **measured quantities and reconstruction** (plans/07 WP3 seed, 2026-08-24): head-on ↔ lab frames with the 25 mrad crossing angle; covariant azimuths φ_S / φ_t from four-vectors (Bacchetta et al. conventions, verified against an explicit collinear-frame construction); electron / hadronic (Σ, parametrized) / mixed kinematic reconstruction with EMCal and tracking resolution models; the spin-state-sorted harmonic ratio estimator (acceptance- and relative-luminosity-immune, 1.5× more precise with m = 0-rich fills); coherent recoil four-vector (exact light-cone t) and Roman-Pot emulation (divergence smearing, rectangular/elliptical 10σ cutout, angular near-beam cut pT_cut = 10σ_θ A p_u) |
 
 ## Money plots 5–6 (2026-08-10): cos 2φ as projected data points
@@ -119,6 +122,35 @@ quantifies the findings with `polligen/reco.py`:
   fakes ⟨cos 2φ_t⟩ = 0.49 (0.71) for aspect ratio 1.25 (1.5) against a
   physics a₂ ≈ 0.036; the near-beam cut is angular, pT_cut = 10σ_θ·6p_u,
   giving 67% / 9% / 10⁻⁸ tag acceptance at 20.5 / 50 / 137.5 GeV/u.
+
+### Reconstructed-level closure (money plots 5R / 7R / 6R, same day)
+
+`polligen/recopseudo.py` composes the pieces into the WP3 pseudo-
+experiments: `RecoResponse` (importance-sampled response: 400
+pseudo-events per sampler cell through lab frame → smearing → head-on →
+electron/mixed reconstruction → reco cuts → ε_eID → covariant φ′),
+`measure_inclusive` (exact spin-sorted φ′ counts per reco bin, Poisson,
+`reco.harmonic_ratio_fit`), `delta_from_amplitude` (MC bin-centering with
+migration), `CoherentResponse` (RP emulation + exact two-azimuth counts)
+and `measure_coherent` (template fit `reco.harmonic_ratio_fit_2d` with
+the acceptance-weighted basis). Results (mid energy, P_zz = 0.6, moment_A,
+mixed method 20%, ε(φ′) harmonic + 10⁻³ rel-lumi offset on):
+
+- 5R: sweet spots 1–4 in reco bins: purity 0.69–0.74, efficiency
+  0.40–0.70, D = 0.91–0.99; Â unbiased vs the reco-bin truth;
+  δÂ = 1.2 / 1.0 / 1.8 / 3.0 ×10⁻⁴ (1 yr) — 0.65–0.70 of money plot 5's
+  single-fill errors (the m = 0-rich fill gain beats the efficiency loss);
+- 7R: best bins δΔ = 1.0×10⁻³ (Q² = 1.14) and 0.5×10⁻³ (3.13 GeV²) in
+  year 1, purities ≈ 0.6;
+- 6R: angular cut (0.22 GeV at 50 GeV/u) + rectangular cutout r = 1.25 →
+  N_tag = 3.4×10⁶ (1 yr); the cutout fakes ⟨cos 2β⟩ = −0.44; the template
+  fit recovers a_t(t_ref) = 0.121 ± 0.002 (inj. 0.119) … 0.341 ± 0.009
+  (0.335) and a_e = 0.0101 ± 0.0013 (inj. 0.010) in year 1.
+  **Convention (verified in the paper's Eq. 9):** arXiv:2408.13213 expands
+  1 + 2Σ a_n cos nΦ with Φ the vector-meson (recoil) azimuth relative to
+  the polarization axis, so the deformation modulation coefficient is
+  2a₂ — money plot 6 injects a₂ and is conservative by ×2
+  (`coherent.cos2phi_coefficient_deformation`).
 
 ## Step-5.A validation gates (plans/05 §5.4) — all passing
 

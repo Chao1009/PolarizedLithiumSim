@@ -355,6 +355,22 @@ the arXiv source (now in `coherent.MANTYSAARI_A2_DEUTERON`):
   IR-8 — versus our 13.5% RP pT-tail estimate at IP6, an independent
   cross-check of the tagging scale.
 
+**Convention check (2026-08-24, full text of arXiv:2408.13213).** Its
+Eq. (9) expands d²σ/(dΦ d|t|) = dσ/d|t| · (1/2π)[1 + 2 Σ_n a_n(|t|) e^{inΦ}]
+with Φ "the angle between the produced vector meson and the polarization
+direction of the deuteron" (polarizations defined in the γ*d c.m.
+frame), i.e. the RECOIL azimuth. The cos 2Φ modulation coefficient of a
+pure state is therefore 2a₂(m), and the ensemble coefficient is
+c₂ = 2·a₂(t; P_zz) = −(P_zz/2)·ε_B0·B·|t| — twice the ⟨a₂⟩_tag quoted
+above and injected by money plot 6 (which is thus conservative by a
+factor two: 0.072 instead of 0.036 at P_zz = 0.6, ⟨|t|⟩ = 0.06). The
+reconstructed-level plot 6R (`money_cos2phi_coherent_reco.py`) injects
+c₂ (`coherent.cos2phi_coefficient_deformation`); the numbers in this
+section and in the projection report keep the a₂ convention until the
+WP5 curves are redone. The modulation lives in the recoil azimuth
+β = φ_t − φ_S; the gluon-transversity term lives in the electron azimuth
+α = φ_e − φ_S (reconstruction-chain report §4).
+
 **New open questions for plans/04**: **#18** a coherent diffractive
 model for (tensor-polarized) ⁶Li — engage the small-x/diffraction
 theory community (elliptic-gluon / spin-1 GPD angle) — and **#19** RP

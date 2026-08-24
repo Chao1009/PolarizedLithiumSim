@@ -127,6 +127,19 @@ class CoherentScenario:
         """<|t|> of the TAGGED sample: pT_cut^2 + 1/B (exponential tail)."""
         return pt_cut * pt_cut + 1.0 / self.slope_b
 
+    def tag_acceptance_angular(self, sigma_theta, p_per_nucleon, a_beam=6,
+                               n_sigma=10.0):
+        """Tag acceptance for an ANGULAR near-beam envelope: the pots see
+        the recoil's angle, so the cut on the nucleus pT scales with the
+        beam momentum, pT_cut = n_sigma sigma_theta A p_u
+        (reconstruction-chain note, 2026-08-24; open question #20).  The
+        documented 0.20 GeV (HA) / 0.41 GeV (HD) proton cuts correspond to
+        sigma_theta = 73 / 149 microrad: for 6Li that is 0.09 / 0.22 /
+        0.60 GeV at 20.5 / 50 / 137.5 GeV/u -> 67% / 9% / 1.5e-8."""
+        cut = n_sigma * sigma_theta * a_beam * np.asarray(p_per_nucleon,
+                                                          dtype=float)
+        return np.exp(-self.slope_b * cut * cut)
+
     # --- deformation-anchored modulation (arXiv:2408.13213 scaling) -----
 
     def a2_deformation(self, t_abs, pzz):
@@ -151,6 +164,24 @@ class CoherentScenario:
         """
         return (-(pzz / 4.0) * self.eps_b0 * self.slope_b
                 * np.asarray(t_abs, dtype=float))
+
+    def cos2phi_coefficient_deformation(self, t_abs, pzz):
+        """The cos 2phi_t COEFFICIENT c_2 of the ensemble distribution
+        1 + c_2 cos 2(phi_t - phi_S) from the deformation mechanism.
+
+        Convention check against the anchor (2026-08-24, full text of
+        arXiv:2408.13213): its Eq. (9) expands
+            d^2sigma/dPhi d|t| = dsigma/d|t| (1/2pi)[1 + 2 sum_n a_n(|t|) e^{i n Phi}],
+        with Phi the angle between the produced vector meson (= the
+        momentum transfer / recoil) and the polarization axis, so the
+        cos 2Phi coefficient of a pure state is 2 a_2(m) and the ensemble
+        coefficient is c_2 = 2 * a2_deformation(t, P_zz) = -(P_zz/2)
+        eps_b0 B |t|.  `a2_deformation`/`a2_tagged` return the anchor's
+        a_2 itself (kept for continuity with plans/06 and money plot 6,
+        whose pseudo-data inject a_2 as the coefficient and are therefore
+        conservative by a factor two); the reconstructed-level coherent
+        pseudo-experiments (recopseudo, money plot 6R) inject c_2."""
+        return 2.0 * self.a2_deformation(t_abs, pzz)
 
     def a2_tagged(self, pt_cut, pzz):
         """<a_2> of the RP-tagged sample in the equal-rate, linear-in-|t|
@@ -222,12 +253,15 @@ def tag_acceptance_sampled(scenario, optics, p_per_nucleon, n=200000,
 
 def project_coherent(config, scenario_fom, coh, optics_list=(), nx=40,
                      nq2=30, x_range=(1e-4, 1.0), q2_range=(1.0, 2e3),
-                     nuclear_f2=None):
+                     nuclear_f2=None, sigma_theta_list=()):
     """Coherent event counts per (x, Q2) bin.
 
     Returns (proj, n_coh, tagged) where proj is the underlying DIS
     BinnedProjection (e' acceptance applied), n_coh = DIS counts times
-    f_coh(x), and tagged maps each Optics to n_coh * exp(-B pT_cut^2).
+    f_coh(x), and tagged maps each Optics to n_coh * exp(-B pT_cut^2)
+    (constant pT cut) and each sigma_theta [rad] of `sigma_theta_list`
+    (key "sigma_theta=<microrad>urad") to the ANGULAR-cut acceptance at
+    the configuration's beam momentum per nucleon.
     """
     proj = fom.project_rates(config, scenario_fom, nx=nx, nq2=nq2,
                              x_range=x_range, q2_range=q2_range,
@@ -235,6 +269,10 @@ def project_coherent(config, scenario_fom, coh, optics_list=(), nx=40,
     n_coh = proj.n_events * coh.coherent_fraction(proj.x)
     tagged = {opt.name: n_coh * coh.tag_acceptance(opt.pt_cut_near_beam)
               for opt in optics_list}
+    for sig in sigma_theta_list:
+        tagged["sigma_theta=%.0furad" % (1e6 * sig)] = (
+            n_coh * coh.tag_acceptance_angular(
+                sig, config.ion_momentum_per_nucleon, a_beam=config.ion.A))
     return proj, n_coh, tagged
 
 
