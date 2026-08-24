@@ -11,7 +11,7 @@ next. Imports `../fastsim/polli_fastsim` — nothing there is duplicated.
 
 ```bash
 cd evgen
-python3 -m pytest tests/ -q            # 66 tests (grid tests auto-skip)
+python3 -m pytest tests/ -q            # 83 tests (grid tests auto-skip)
 python3 scripts/closure_fom.py --ion 6Li --events 200000 --trials 200
 python3 scripts/closure_fom.py --ion 7Li --events 200000 --trials 200
 python3 scripts/money_tagged_azz.py --events 400000       # money plot 4
@@ -20,9 +20,11 @@ python3 scripts/money_cos2phi.py                          # money plot 5
 python3 scripts/money_cos2phi_coherent.py                 # money plot 6
 python3 scripts/money_delta_extraction.py                 # money plot 7
 python3 scripts/phase_space_bins.py       # (x,Q2) rate maps + binning
+python3 scripts/reco_chain_figures.py     # reconstruction-chain figures
 python3 ../reports/build_report.py --pdf  # assemble reports/ pages
 #   -> cos2phi_money_plots_report.html/pdf (projection report)
 #   -> polarized_li_primer.html/pdf (educational physics primer)
+#   -> reconstruction_chain_report.html/pdf (measurement + reco audit)
 #   figures embedded from the PNGs above; display math typeset at
 #   build time (matplotlib mathtext, no JS/fonts in the output)
 ```
@@ -38,6 +40,7 @@ python3 ../reports/build_report.py --pdf  # assemble reports/ pages
 | `polligen/estimators.py` | analysis-side estimators: helicity-flip, tensor thirds, cos 2φ moment + binned LSQ fit (holey-φ robust), luminosity-corrected yields |
 | `polligen/tagged.py` | two-cluster spin model: CG-coupled L-waves → m-dependent spectator densities n_M(k,k̂), embedded-cluster spin populations, pair decomposition; TaggedSampler = spin ⊗ spectator ⊗ DIS ⊗ far-forward routing |
 | `polligen/coherent.py` | coherent (intact-g.s.) e+⁶Li channel: scenario coherent fraction/slope, intact-recoil kinematics (R = 1.000 → RP pT-tail only), analytic tag acceptance exp(−B pT_cut²), per-bin tagged-rate projections, breakup veto table (plans/06) |
+| `polligen/reco.py` | **measured quantities and reconstruction** (plans/07 WP3 seed, 2026-08-24): head-on ↔ lab frames with the 25 mrad crossing angle; covariant azimuths φ_S / φ_t from four-vectors (Bacchetta et al. conventions, verified against an explicit collinear-frame construction); electron / hadronic (Σ, parametrized) / mixed kinematic reconstruction with EMCal and tracking resolution models; the spin-state-sorted harmonic ratio estimator (acceptance- and relative-luminosity-immune, 1.5× more precise with m = 0-rich fills); coherent recoil four-vector (exact light-cone t) and Roman-Pot emulation (divergence smearing, rectangular/elliptical 10σ cutout, angular near-beam cut pT_cut = 10σ_θ A p_u) |
 
 ## Money plots 5–6 (2026-08-10): cos 2φ as projected data points
 
@@ -85,6 +88,37 @@ term scaled from the polarized-deuteron CGC calculation (PLB
 flip vs the deuteron, plus a flat gluon-transversity scenario
 (3×10⁻³–10⁻²) — separable by t-shape and x_P dependence.
 Backgrounds and the RP charge-ID question: plans/06.
+
+## Reconstruction chain (2026-08-24): what is measured, and does the simulation do it?
+
+`reports/reconstruction_chain_report` describes, for the inclusive and
+the coherent cos 2φ measurements, what the detector records, how the
+azimuth of the observable is built from the reconstructed four-vectors,
+the kinematic reconstruction, the spin-state-sorted estimator, the
+Roman-Pot measurement of the recoil, and the conversion to Δ — and
+audits each step against the code. `scripts/reco_chain_figures.py`
+(→ `reco_chain_inclusive_6Li.png`, `reco_chain_coherent_6Li.png`)
+quantifies the findings with `polligen/reco.py`:
+
+- three of the four sweet spots of money plot 5 sit at y = 0.010–0.025,
+  where e′ alone gives δy/y = 50–120%: x needs the hadronic (Σ/JB) y;
+  with a 15–20% hadronic resolution the super-bins keep 75–83% purity
+  and the reco-bin amplitude is within 1–4% of the true-bin value;
+- the single-fill cos 2φ′ fit measures the detector's own cos 2φ′
+  acceptance harmonic ÷ P_zz (a 3% harmonic aligned with the vertical
+  spin axis fakes 4× the signal); the spin-state ratio of m = ±1-rich
+  (P_zz = +0.6) and m = 0-rich (−1.2) fills cancels acceptance bin by
+  bin, turns relative luminosity into a constant, and is 1.5× more
+  precise (`reco.harmonic_ratio_fit`);
+- the crossing angle changes only odd harmonics of the e′ azimuth
+  (≈ 10⁻³ cos φ, cos 2φ untouched) because the ePIC axis is the electron
+  beam; the covariant φ_S equals φ_e − φ_S exactly (massless target),
+  O(γ²) < 5 mrad for the nucleus;
+- coherent: the anchored deformation term modulates the recoil azimuth
+  φ_t − φ_S (not the electron azimuth of money plot 6); the RP cutout
+  fakes ⟨cos 2φ_t⟩ = 0.49 (0.71) for aspect ratio 1.25 (1.5) against a
+  physics a₂ ≈ 0.036; the near-beam cut is angular, pT_cut = 10σ_θ·6p_u,
+  giving 67% / 9% / 10⁻⁸ tag acceptance at 20.5 / 50 / 137.5 GeV/u.
 
 ## Step-5.A validation gates (plans/05 §5.4) — all passing
 

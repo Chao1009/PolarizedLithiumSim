@@ -139,6 +139,24 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
     §VIII, 2602.04636). Make-or-break for the coherent intact-⁶Li tag
     (plans/06 §6.2). *Engage:* ePIC FF WG (A. Jentsch). *Default:*
     assume no event-by-event Z-ID at IP6 → two-component |t| fit.
+20. **Roman-Pot cutout geometry and Li beam divergence** (reconstruction-
+    chain note, 2026-08-24). The near-beam cut is angular,
+    pT_cut = 10σ_θ·A·p_u, so the same optics gives tag acceptances of
+    67% / 9% / 10⁻⁸ at 20.5 / 50 / 137.5 GeV/u for ⁶Li (constant 0.20 GeV
+    in the code → 13.5%); and the pots' rectangular cutout has its sides
+    parallel to the vertical spin axis, faking ⟨cos 2φ_t⟩ ≈ 0.5 for a 25%
+    aspect ratio (physics a₂ ≈ 0.036) unless the spin-state ratio is
+    used. *Needed:* σ_θx, σ_θy (β*, emittance) at the light-ion energies
+    and the pot geometry (`reco.rp_measure` takes both). *Engage:* ePIC
+    FF WG / C-AD optics. *Default:* proton-derived 73/149 μrad,
+    isotropic, square cutout; ratio estimator.
+21. **Hadronic-method y resolution at y = 0.01–0.05 for e + light ions**
+    (same note). Three of the four inclusive sweet spots sit at
+    y = 0.010–0.025 where the electron alone gives δy/y = 50–120%; the
+    mixed (eΣ) method needs the hadronic final state, which polligen does
+    not generate. *Needed:* δy_Σ/y vs y from the ePIC inclusive WG (or a
+    BeAGLE/PYTHIA e+Li sample through eic-smear). *Default:* 15–30%
+    band (`reco.hadronic_y`); purity 0.75–0.83 per super-bin at 15–20%.
 
 ## Tracking
 
@@ -155,3 +173,5 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
 | 17 | HepMC3 ion-spin convention | scheduled | plans/05 step 5.D → ePIC MC group |
 | 18 | coherent-⁶Li diffractive model (plans/06) | open | small-x theory engagement; scenario bands until then |
 | 19 | RP Z-ID for A/Z = 2 (plans/06) | open | ask ePIC FF WG — decides coherent-tag purity strategy |
+| 20 | RP cutout geometry + Li divergence (reco note) | open | ePIC FF WG / C-AD — decides coherent-tag energy and estimator |
+| 21 | hadronic-method δy/y at y ≈ 0.01–0.05 (reco note) | open | ePIC inclusive WG; e+Li sample through eic-smear |

@@ -49,6 +49,40 @@ brings to the EIC, in support of the ANL polarized ⁶,⁷Li ion-source program
 5. **Calendar anchor**: INT program on polarized ion beams at EIC,
    March 22 – April 2, 2027 — target for Phase-1 money plots.
 
+## Development run 6 (2026-08-24): the reconstruction chain, measured quantities, and the audit
+
+- ☑ **Analysis note `reports/reconstruction_chain_report`** (HTML/PDF,
+  three schematics, two computed figures): what the inclusive and the
+  coherent cos 2φ measurements record; the covariant azimuth of the
+  observable (= φ_e − φ_S exactly for a massless target, O(γ²) < 5 mrad
+  for ⁶Li; verified against an explicit collinear-frame construction);
+  the head-on frame (the 25 mrad crossing changes only odd harmonics of
+  the e′ azimuth, ≈ 10⁻³, because the ePIC axis is the electron beam);
+  kinematic reconstruction; the spin-state-sorted estimator; the
+  Roman-Pot measurement; Δ̂ = −Â y²D_φ/(1−y) → Δ/F₁ = −2(1+R)Â at low y;
+  a step-by-step audit table of the code.
+- ☑ **`polligen/reco.py`** (15 tests, 83 collected in evgen): frames, covariant
+  azimuths, electron/hadronic/mixed reconstruction with resolution
+  models, the harmonic ratio estimator, recoil four-vector (exact
+  light-cone t), Roman-Pot emulation (divergence smearing, rectangular/
+  elliptical cutout, angular cut) — the seed of plans/07 WP3.
+- **Findings that change the analysis** (open questions #20, #21):
+  (1) three of four inclusive sweet spots sit at y = 0.010–0.025 where
+  e′ alone gives δy/y = 50–120% → x from the hadronic (Σ) y, which
+  polligen does not generate; at 15–20% hadronic resolution the
+  super-bins keep 75–83% purity, reco-bin amplitude within 1–4% of
+  truth; (2) the single-fill fit of money plots 5–7 is biased by the
+  detector's cos 2φ′ acceptance harmonic ÷ P_zz (3% → 4× the signal);
+  the ratio of m = ±1-rich / m = 0-rich fills cancels it exactly and is
+  1.5× more precise (δA = 2√(2/N)/(P₊ − P₀)); (3) coherent: the
+  anchored a₂ lives in the recoil azimuth φ_t − φ_S, the RP cutout fakes
+  ⟨cos 2φ_t⟩ ≈ 0.5 at a 25% aspect ratio, and the near-beam cut is
+  angular (pT_cut = 10σ_θ·6p_u): 67% / 9% / 10⁻⁸ acceptance at
+  20.5 / 50 / 137.5 GeV/u for the same optics — the low-energy
+  configuration is the coherent program's home; the a_n normalization
+  convention of the deuteron anchor (factor 2) is flagged for a source
+  check.
+
 ## Development run 5 addendum (2026-08-10, later): merge + unified Δ models + 1/10-year projections
 
 - ☑ **Merged the parallel `money_delta` line** (TooLate0800/

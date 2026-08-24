@@ -40,10 +40,16 @@ MONEY_FIGS = {
     "__M6__": "evgen/money_cos2phi_coherent_6Li.png",
 }
 
+RECO_FIGS = {
+    "__RC1__": "evgen/reco_chain_inclusive_6Li.png",
+    "__RC2__": "evgen/reco_chain_coherent_6Li.png",
+}
+
 PAGES = (
     {"stem": "cos2phi_money_plots_report", "figures": MONEY_FIGS},
     {"stem": "polarized_li_primer",
      "figures": {k: MONEY_FIGS[k] for k in ("__PS__", "__M5__")}},
+    {"stem": "reconstruction_chain_report", "figures": RECO_FIGS},
 )
 
 BROWSERS = (

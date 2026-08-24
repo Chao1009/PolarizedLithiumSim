@@ -120,6 +120,37 @@ current values from the 2026-08-17 report shown as the baseline:
 - Acceptance: per-bin dilution factors; statement "Case-3-style retention X%"
   reproduced for the cos 2φ observable. Effort: ~1 week.
 
+**WP3 addendum (2026-08-24, `reports/reconstruction_chain_report`).** The
+reconstructed-level closure is now specified end to end and seeded in
+`polligen/reco.py`; the note changes three inputs of this WP:
+- ☐ **Binning must be reconstructed (x, Q²) with the mixed (eΣ) method**:
+  spots 1–3 of money plot 5 sit at y = 0.010–0.025 where the electron
+  alone gives δy/y = 50–120% (Table 1 of the note). Use
+  `reco.hadronic_y` with a 15–30% band (purity 0.75–0.83, reco-bin
+  amplitude 0.96–0.99 of truth at 15–20%); quote the e′-only variant at
+  y ≥ 0.05 and the low-energy configuration for x ≈ 0.1 (open question #21).
+- ☐ **Estimator: spin-state-sorted ratio** (`reco.harmonic_ratio_fit`) of
+  m = ±1-rich (P_zz = +0.6) and m = 0-rich (−1.2) fills, with a sin 2φ′
+  term; the single-fill fit is biased by the detector's cos 2φ′ acceptance
+  harmonic ÷ P_zz. δA becomes 2√(2/N)/(P₊ − P₀) = 0.67× the current
+  values — re-derive the §7.1 numbers with it (the 1.5× gain is real only
+  if the source delivers m = 0-rich bunches at the same purity).
+- ☐ **Angles from four-vectors**: `reco.azimuth_wrt_lepton_plane` (covariant
+  φ_S, = φ_e − φ_S to O(γ²)); head-on transformation applied (e′ odd
+  harmonics only). The 2-D φ-hole closure of the original bullet becomes
+  a smooth-ε(φ′) closure with the ratio estimator (already demonstrated
+  at the super-bin level, Fig. 1d of the note).
+- ☐ **Coherent (feeds WP5)**: present the anchored a₂ as a modulation of the
+  recoil azimuth φ_t − φ_S and the exotic-glue term of the electron azimuth;
+  fit R(α, β) in 2-D; replace the constant 0.20 GeV cut in `coherent.py` by
+  the angular cut `reco.tag_pt_cut` (67% / 9% / 10⁻⁸ at 20.5 / 50 /
+  137.5 GeV/u) and state the cutout geometry (open question #20); settle
+  the a_n normalization convention of arXiv:2408.13213 (1 + 2Σ vs 1 + Σ).
+- D2 input: the reco-level dilution is small (1–4%) and unbiased with the
+  mixed method, so the main figures can stay at generator level with
+  reco factors quoted — provided the binning and the estimator above are
+  adopted in the generator-level plots themselves.
+
 ### WP4 — Radiative-correction bound (not a calculation)
 - ☐ Leading-log unpolarized RC weights (plans/02 step 1.4 route) applied as
   (x, Q², φ) kinematic migration on the modulated cross section → bound on

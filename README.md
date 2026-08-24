@@ -27,16 +27,16 @@ on polarized ion beams at the EIC, March 22 – April 2, 2027.
 | `fastsim/` | `polli_fastsim`: analytic fast simulation — rates, FOM maps, tagging acceptance, money plots 1–3, and the dated `money_delta_*` study suite (moment-constrained Δ ansatz, detector efficiency, reco selection) with working notes in `fastsim/notes/` |
 | `evgen/` | `polligen`: the doubly polarized e+⁶,⁷Li event generator (the first of its kind) — spin-density kernel, inclusive + tagged samplers, run-plan bookkeeping, estimators, the coherent intact-⁶Li channel, money plots 4–6 |
 | `docs/` | source documents + the self-contained physics note [docs/note_cos2phi_coherent_6Li.md](docs/note_cos2phi_coherent_6Li.md) (verified 50-entry bibliography) |
-| `reports/` | circulate-able reports (self-contained HTML + rendered PDF), currently the cos 2φ money-plot report; served as a website by the GitHub Pages workflow (`.github/workflows/pages.yml` + `reports/index.html`) — activate once via Settings → Pages → Source: "GitHub Actions" (public repo required on free plans) |
+| `reports/` | circulate-able reports (self-contained HTML + rendered PDF): the cos 2φ money-plot report, the educational primer, and the reconstruction-chain analysis note (what is measured, how the azimuth and Δ are reconstructed, audit of the simulation — 2026-08-24); served as a website by the GitHub Pages workflow (`.github/workflows/pages.yml` + `reports/index.html`) — activate once via Settings → Pages → Source: "GitHub Actions" (public repo required on free plans) |
 | `tools/` | BeAGLE and full-simulation (eic-shell/ePIC) setup notes |
 
 ## Quick start
 
 ```bash
-# fast simulation (23 tests; PDF-grid tests need the `parton` package)
+# fast simulation (24 tests; PDF-grid tests need the `parton` package)
 cd fastsim && python -m pytest tests/ -q
 
-# event generator (66 tests)
+# event generator (83 tests)
 cd evgen && python -m pytest tests/ -q
 
 # money plots (outputs land next to the scripts' working directory)

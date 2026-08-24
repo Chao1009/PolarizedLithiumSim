@@ -1,0 +1,792 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>From Detector Signals to Δ(x,Q²): the Reconstruction Chain of the cos 2φ Measurements</title>
+<style>
+  :root {
+    --ground: #FFFFFF;
+    --ink: #1A2530;
+    --ink-2: #51626F;
+    --ink-3: #7C8B96;
+    --accent: #0067A0;
+    --accent-warm: #C24E00;
+    --accent-green: #1B7F5B;
+    --hairline: #D8E0E6;
+    --wash: #EFF4F7;
+    --wash-warm: #FBF1E9;
+  }
+  @page { size: A4; margin: 12mm 8mm 14mm 8mm; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: Charter, "Bitstream Charter", "Iowan Old Style", Georgia, serif;
+    font-size: 10.2pt;
+    line-height: 1.52;
+  }
+  .page { max-width: 178mm; margin: 0 auto; }
+  .eyebrow {
+    font-family: "Segoe UI", system-ui, sans-serif;
+    font-size: 7.6pt;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 600;
+    margin: 0 0 4pt;
+  }
+  h1 { font-size: 17.5pt; line-height: 1.22; margin: 0 0 4pt; font-weight: 700; letter-spacing: -0.01em; }
+  .dateline { font-family: "Segoe UI", system-ui, sans-serif; font-size: 8pt; color: var(--ink-3); margin: 0 0 10pt; }
+  h2 { font-size: 12.5pt; margin: 16pt 0 5pt; letter-spacing: -0.005em; break-after: avoid; }
+  h3 { font-size: 10.5pt; margin: 10pt 0 3pt; break-after: avoid; }
+  p { margin: 4.5pt 0; }
+  .lede { font-size: 10.8pt; color: var(--ink-2); }
+  em.k { font-style: normal; color: var(--accent-warm); font-weight: 600; }
+  figure { margin: 10pt 0; break-inside: avoid; }
+  figure .panel { background: #FFFFFF; border: 0.7pt solid var(--hairline); border-radius: 5pt; padding: 4pt; }
+  figure img { display: block; width: 100%; height: auto; }
+  figure svg { display: block; width: 100%; height: auto; }
+  figcaption { margin: 5pt 2pt 0; font-family: "Segoe UI", system-ui, sans-serif; font-size: 7.8pt; color: var(--ink-2); line-height: 1.5; }
+  figcaption b { color: var(--ink); }
+  .eq { text-align: center; margin: 8pt 0; break-inside: avoid; }
+  .eq img.tex { display: inline-block; max-width: 100%; height: auto; vertical-align: middle; }
+  table { border-collapse: collapse; width: 100%; font-family: "Segoe UI", system-ui, sans-serif; font-size: 7.9pt; line-height: 1.45; margin: 6pt 0; }
+  th { text-align: left; font-size: 6.8pt; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); font-weight: 600; padding: 3pt 7pt 3pt 0; border-bottom: 1.1pt solid var(--hairline); }
+  td { padding: 3.5pt 7pt 3.5pt 0; border-bottom: 0.6pt solid var(--hairline); vertical-align: top; }
+  .mono { font-family: Consolas, "Cascadia Mono", monospace; font-variant-numeric: tabular-nums; font-size: 7.7pt; }
+  .callout { background: var(--wash); border-left: 2.2pt solid var(--accent); border-radius: 0 4pt 4pt 0; padding: 6pt 9pt; margin: 8pt 0; font-size: 9.4pt; break-inside: avoid; }
+  .callout.warm { background: var(--wash-warm); border-left-color: var(--accent-warm); }
+  code { font-family: Consolas, "Cascadia Mono", monospace; font-size: 0.86em; background: var(--wash); border-radius: 3pt; padding: 0.5pt 3pt; }
+  .refs { font-family: "Segoe UI", system-ui, sans-serif; font-size: 7.6pt; color: var(--ink-2); line-height: 1.5; }
+  .refs p { margin: 2.6pt 0; padding-left: 18pt; text-indent: -18pt; }
+  .foot { margin-top: 14pt; padding-top: 6pt; border-top: 0.7pt solid var(--hairline); font-family: "Segoe UI", system-ui, sans-serif; font-size: 7.4pt; color: var(--ink-3); line-height: 1.55; }
+  ol.steps { padding-left: 18pt; }
+  ol.steps li { margin: 3pt 0; }
+  .status-ok { color: var(--accent-green); font-weight: 600; }
+  .status-part { color: var(--accent-warm); font-weight: 600; }
+  .status-no { color: #A12B2B; font-weight: 600; }
+  .schem text { font-family: "Segoe UI", system-ui, sans-serif; fill: #1A2530; }
+  .schem .h { font-weight: 600; fill: #0067A0; }
+  .schem .n { fill: #51626F; }
+  .schem .box { fill: #FFFFFF; stroke: #B9C6D0; stroke-width: 1; }
+  .schem .boxa { fill: #EFF4F7; stroke: #0067A0; stroke-width: 1; }
+  .schem .arr { stroke: #51626F; stroke-width: 1.1; fill: none; marker-end: url(#ah); }
+  .schem .arrb { stroke: #0067A0; stroke-width: 1.4; fill: none; marker-end: url(#ahb); }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <p class="eyebrow">Polarized ⁶,⁷Li @ EIC · Analysis note · reports/</p>
+  <h1>From detector signals to Δ(x,Q²): the reconstruction chain of the inclusive and coherent cos 2φ measurements</h1>
+  <p class="dateline">2026-08-24 · companion to the cos 2φ projection report (money plots 5–7) and to plans/07 WP3 · quantitative figures from the new <code>polligen.reco</code> module (15 tests) · every number below is reproducible with <code>evgen/scripts/reco_chain_figures.py</code></p>
+
+  <p class="lede">The projection report presents the double-helicity-flip structure function
+  Δ(x,Q²) as φ′ pseudo-data and as extracted xΔ points. This note asks the experimentalist's
+  question behind those plots: what does the detector actually record, event by event, in the
+  inclusive and in the coherent intact-⁶Li measurement; how is the azimuth that carries the
+  observable built from the reconstructed four-vectors and the known spin direction; which
+  kinematic reconstruction assigns (x, Q²) to an event; which estimator turns spin-sorted
+  φ′ histograms into an amplitude; and how the amplitude becomes Δ. It then audits, step by
+  step, which of these operations the simulation performs. The audit's conclusion is that the
+  generator-level machinery is complete and validated but that the <i>measurement</i> layer —
+  four-vectors, frames, kinematic reconstruction, spin-state sorting, the Roman-Pot
+  measurement — was absent; a seed of that layer now exists, and three of its first results
+  change the analysis design.</p>
+
+  <div class="callout">
+    <b>Three findings that change the analysis.</b>
+    (1) Three of the four inclusive sweet-spot bins of money plot 5 sit at y = 0.010–0.025,
+    where the scattered electron carries 98–99% of the beam energy and the electron method
+    gives δy/y = 50–120% even with a 1.2% calorimeter: x must come from the hadronic final
+    state (Σ or Jacquet–Blondel y), which the simulation does not generate. With a 15–20%
+    hadronic-y resolution the super-bins keep 75–83% purity and the amplitude in the
+    reconstructed bin is within 1–4% of the true-bin value.
+    (2) The single-fill cos 2φ′ fit — the estimator of money plots 5–7 — measures the
+    detector's own cos 2φ′ acceptance harmonic divided by P<sub>zz</sub>: a 3% harmonic
+    aligned with the vertical spin axis (the natural symmetry axis of both the crossing angle
+    and the Roman-Pot cutout) fakes an amplitude four times the signal. The spin-state-sorted
+    ratio of m = ±1-rich and m = 0-rich fills cancels any acceptance bin by bin, turns
+    relative-luminosity errors into a constant, and is 1.5× <i>more</i> precise than the
+    single fill. (3) In the coherent channel the anchored deformation term modulates the
+    <i>recoil</i> azimuth φ<sub>t</sub> − φ<sub>S</sub>, not the electron azimuth used in the
+    projection; the Roman-Pot cutout fakes ⟨cos 2φ<sub>t</sub>⟩ ≈ 0.5 for a 25% aspect ratio
+    (against a physics a₂ ≈ 0.036), and the near-beam cut is angular, so the tag acceptance
+    is 67% / 9% / 10⁻⁸ at 20.5 / 50 / 137.5 GeV/u for the same optics.
+  </div>
+
+  <h2>1 · What is measured</h2>
+
+  <p>Both measurements share the trigger object — a scattered electron in the central
+  detector — and the spin bookkeeping of the ion beam. The coherent measurement adds the
+  intact ⁶Li in the far-forward spectrometers and an exclusivity selection. The observable in
+  both cases is not a cross section but a <i>Fourier coefficient of a ratio</i> of spin-sorted
+  azimuthal distributions; Δ follows from that coefficient through kinematic factors and the
+  unpolarized structure functions of the same data set.</p>
+
+  <table>
+    <tr><th>Recorded per event</th><th>Inclusive e ⁶Li → e′ X</th><th>Coherent e ⁶Li → e′ X ⁶Li(g.s.)</th></tr>
+    <tr><td>Beam and spin</td><td colspan="2">Bunch-crossing ID → spin state of the ion bunch (source pattern: m = ±1-rich, m = 0-rich); tensor polarization P<sub>zz</sub> per fill from the polarimeter (scale ≈ 3%); alignment axis n̂ = stable spin direction (vertical at IP6) with its measured tilt; luminosity per spin state.</td></tr>
+    <tr><td>Central detector</td><td>e′ candidate: track (p, θ, φ at the vertex, charge) matched to an EMCal cluster (E, position); E/p and shower shape for electron ID; the hadronic final state (all other tracks and clusters) for Σ = Σ<sub>h</sub>(E<sub>h</sub> − p<sub>z,h</sub>); vertex.</td><td>The same, plus the diffractive system X (its mass M<sub>X</sub> and the rapidity gap) — the only handle on x<sub>P</sub>, since the recoil momentum is unresolved.</td></tr>
+    <tr><td>Far forward</td><td>Not required (breakup fragments of ⁶Li are mostly beam-blind at IP6; plans/00).</td><td>Roman-Pot track at beam rigidity (|R − 1| &lt; 0.05) with transverse displacement above the 10σ envelope → (θ<sub>x</sub>, θ<sub>y</sub>) at the IP via the optics transport → p<sub>T</sub>, φ<sub>t</sub>, t; vetoes in OMD (p, ³He), ZDC (n), B0 EMCal (de-excitation γ); Z-identification if available (open question #19).</td></tr>
+    <tr><td>Observable</td><td>cos 2φ′ coefficient of the ratio of spin-sorted N<sub>f</sub>(φ′) in (x, Q²) bins, φ′ = φ<sub>e</sub> − φ<sub>S</sub></td><td>cos 2α, cos 2β and cos(α+β) coefficients of the same ratio in (x<sub>P</sub>, t, Q²) bins, α = φ<sub>e</sub> − φ<sub>S</sub>, β = φ<sub>t</sub> − φ<sub>S</sub></td></tr>
+  </table>
+
+  <h2>2 · Angles and frames</h2>
+
+  <p>For an unpolarized electron on a spin-1 target whose alignment axis has polar angle
+  θ<sub>S</sub> and azimuth φ relative to the virtual photon and the lepton plane, the
+  Hoodbhoy–Jaffe–Manohar cross section for the projection state m reads [1,2]</p>
+
+  <p class="eq"><img class="tex" data-tex="\frac{d\sigma^{(m)}}{dx\,dy\,d\phi} = \frac{2y\alpha^2}{Q^2}\left[F_1 + \frac{2}{3}a_m b_1 + \frac{1-y}{x y^2}\left(F_2 + \frac{2}{3}a_m b_2\right) - \frac{1-y}{y^2}\,c_m \sin^2\theta_S\,\Delta(x,Q^2)\,\cos 2\phi\right],\qquad c_m = 3m^2-2"></p>
+
+  <p>and a fill with populations p<sub>m</sub> along a transverse axis (θ<sub>S</sub> = 90°)
+  has the φ′ distribution 1 + a₂ cos 2φ′ with</p>
+
+  <p class="eq"><img class="tex" data-tex="a_2 = -P_{zz}\,\frac{1-y}{y^2}\,\frac{\Delta}{D_\phi},\qquad D_\phi = F_1 + \frac{1-y}{x y^2}F_2,\qquad \hat A \equiv \frac{a_2}{P_{zz}},\qquad P_{zz}=\sum_m p_m c_m ."></p>
+
+  <p><b>Which angle.</b> The φ of the master formula is defined in a frame in which the
+  target momentum P and the virtual photon q are collinear; it is the azimuth of the
+  transverse spin about q measured from the lepton plane. The covariant definition used for
+  every transverse-spin azimuth in SIDIS and exclusive analyses [3,4] applies verbatim to the
+  spin four-vector S (and, with P′ in place of S, to the recoil azimuth of §4):</p>
+
+  <p class="eq"><img class="tex" data-tex="\cos\phi_S = -\frac{l_\perp\cdot S_\perp}{|l_\perp|\,|S_\perp|},\qquad \sin\phi_S = -\frac{\epsilon_{\mu\nu\rho\sigma}\,l^\mu S^\nu P^\rho q^\sigma}{(P\cdot q)\sqrt{1+\gamma^2}\;|l_\perp|\,|S_\perp|},\qquad v_\perp^\mu = g_\perp^{\mu\nu}v_\nu,\quad \gamma^2 = \frac{M^2Q^2}{(P\cdot q)^2}"></p>
+
+  <p>with g<sub>⊥</sub> the projector orthogonal to P and q [3]. Evaluated in the head-on
+  frame — ion along +z, electron along −z, the frame of the whole fast simulation — with a
+  spin axis transverse to the beam at lab azimuth φ<sub>S</sub> and the scattered electron at
+  lab azimuth φ<sub>e</sub>, this reduces <i>exactly</i> to φ′ = φ<sub>e</sub> − φ<sub>S</sub>
+  for a massless target, and to the same with corrections of order γ² (below 5 mrad for
+  γ² ≤ 0.02, i.e. everywhere in the sweet spots) for the massive nucleus
+  (<code>reco.azimuth_wrt_lepton_plane</code>, verified against an explicit boost-and-rotate
+  construction of the collinear frame to 10⁻¹³). The lab-angle shortcut is therefore
+  legitimate for the inclusive measurement; the analysis should nevertheless evaluate the
+  covariant formula from the reconstructed four-vectors, because it is exact, costs nothing,
+  and is the same code that the coherent channel needs.</p>
+
+  <p><b>Which frame.</b> The beams cross at 25 mrad in the horizontal plane at IP6. The
+  ePIC axis coincides with the electron beam, and the ion beam enters at −25 mrad in x (the
+  convention of the far-forward gun scan in <code>tools/fullsim</code>). The head-on frame
+  is reached by a rotation of 12.5 mrad about y followed by a boost β<sub>x</sub> = sin 12.5
+  mrad; energies change by 8×10⁻⁵ and the vertical spin direction is untouched. For the
+  scattered electron the boost and the rotation cancel at first order because the detector
+  axis is the electron axis: the residual distortion of its azimuth about the detector axis is
+  an odd-harmonic effect of 0.7×10⁻³ (θ′ = 107 mrad) to 2.4×10⁻³ (383 mrad) in cos φ, with
+  the cos 2φ harmonic untouched to 10⁻¹⁷ and the response of a true cos 2φ term equal to one
+  within 10⁻⁵. The transformation is applied anyway (it is the standard first step of every
+  ePIC inclusive analysis and it is exact), but the crossing angle is not a source of a fake
+  cos 2φ′ for the electron. It <i>is</i> one for the recoil (§4).</p>
+
+  <p><b>Orientation and the axis.</b> The tensor alignment axis is headless — the m = +1 and
+  m = −1 populations enter through c<sub>m</sub> = 3m² − 2 symmetrically — and cos 2φ′ is even
+  under φ′ → −φ′ and φ′ → φ′ + π, so neither the orientation convention of φ nor the sign of
+  n̂ can change the result. What matters is the axis direction modulo π: a misalignment δ
+  of the assumed azimuth rotates the modulation, cos 2(φ′ − δ) = cos 2δ cos 2φ′ + sin 2δ sin 2φ′,
+  so the fit should carry a sin 2φ′ term; since the only physics harmonic in the tensor
+  ratio is cos 2φ′ (the m-symmetric fills set a₁ = 0, and the b₁-type constant is
+  φ′-independent), the sin 2φ′ coefficient measures δ from the data themselves — a
+  self-calibration of the spin axis at the precision of the modulation itself. A polar tilt
+  ε of the axis out of the transverse plane dilutes by sin²θ<sub>S</sub> = 1 − ε² (0.8% at 5°).</p>
+
+  <figure>
+    <div class="panel">
+    <svg class="schem" viewBox="0 0 740 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Frames and the azimuth of the observable">
+      <defs>
+        <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#51626F"/></marker>
+        <marker id="ahb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#0067A0"/></marker>
+        <marker id="ahw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#C24E00"/></marker>
+        <marker id="ahg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1B7F5B"/></marker>
+      </defs>
+      <!-- left: lab frame, side view -->
+      <text x="14" y="18" font-size="11" class="h">Lab (detector) frame — side view, horizontal x–z plane</text>
+      <line x1="20" y1="160" x2="350" y2="160" stroke="#D8E0E6" stroke-width="1.2"/>
+      <text x="252" y="174" font-size="8.5" class="n">detector axis = electron-beam axis (z)</text>
+      <line x1="340" y1="160" x2="188" y2="160" stroke="#0067A0" stroke-width="2" marker-end="url(#ahb)"/>
+      <text x="262" y="152" font-size="9" fill="#0067A0">e beam (−z)</text>
+      <line x1="22" y1="182" x2="160" y2="162" stroke="#1B7F5B" stroke-width="2" marker-end="url(#ahg)"/>
+      <text x="22" y="198" font-size="9" fill="#1B7F5B">⁶Li beam, −25 mrad in x (drawn ×5)</text>
+      <circle cx="176" cy="160" r="3.5" fill="#1A2530"/>
+      <text x="168" y="150" font-size="8.5">IP</text>
+      <line x1="176" y1="160" x2="62" y2="98" stroke="#C24E00" stroke-width="2" marker-end="url(#ahw)"/>
+      <text x="30" y="90" font-size="9" fill="#C24E00">e′ at θ′ from the e beam (0.1–0.4 rad at the sweet spots)</text>
+      <path d="M 150 160 A 26 26 0 0 1 154 147" stroke="#C24E00" stroke-width="1" fill="none"/>
+      <text x="128" y="145" font-size="8.5" fill="#C24E00">θ′</text>
+      <line x1="176" y1="160" x2="126" y2="252" stroke="#7C8B96" stroke-width="1.4" stroke-dasharray="4 3" marker-end="url(#ah)"/>
+      <text x="132" y="266" font-size="8.5" class="n">γ* (q = k − k′): at y ≈ 0.01 almost transverse in the lab —</text>
+      <text x="132" y="278" font-size="8.5" class="n">the azimuth of the observable is defined covariantly, not about z</text>
+      <rect x="196" y="196" width="160" height="66" rx="5" class="boxa"/>
+      <text x="204" y="211" font-size="8.5" font-weight="600" fill="#0067A0">head-on transformation</text>
+      <text x="204" y="224" font-size="8.2">rotate 12.5 mrad about y, then</text>
+      <text x="204" y="236" font-size="8.2">boost β<tspan font-size="6.5" dy="2">x</tspan><tspan dy="-2"> = sin 12.5 mrad → beams collinear;</tspan></text>
+      <text x="204" y="248" font-size="8.2">vertical spin unchanged; ΔE/E = 8×10⁻⁵</text>
+      <!-- right: head-on frame, transverse view -->
+      <text x="392" y="18" font-size="11" class="h">Head-on frame — transverse plane, viewed along the ⁶Li beam</text>
+      <line x1="420" y1="160" x2="720" y2="160" stroke="#D8E0E6" stroke-width="1.2"/>
+      <line x1="570" y1="290" x2="570" y2="30" stroke="#D8E0E6" stroke-width="1.2"/>
+      <text x="708" y="174" font-size="8.5" class="n">x</text>
+      <text x="576" y="40" font-size="8.5" class="n">y</text>
+      <line x1="570" y1="262" x2="570" y2="58" stroke="#1B7F5B" stroke-width="2.6" marker-end="url(#ahg)" marker-start="url(#ahg)"/>
+      <text x="580" y="70" font-size="9" fill="#1B7F5B">n̂: alignment axis, vertical</text>
+      <text x="580" y="82" font-size="8.5" fill="#1B7F5B">(stable spin direction; headless)</text>
+      <line x1="470" y1="228" x2="670" y2="92" stroke="#7C8B96" stroke-width="1" stroke-dasharray="5 3"/>
+      <text x="640" y="88" font-size="8.5" class="n">lepton plane</text>
+      <line x1="570" y1="160" x2="666" y2="95" stroke="#C24E00" stroke-width="2.2" marker-end="url(#ahw)"/>
+      <text x="612" y="130" font-size="9" fill="#C24E00">k′<tspan font-size="6.5" dy="2">T</tspan><tspan dy="-2"> (scattered electron), azimuth φ</tspan><tspan font-size="6.5" dy="2">e</tspan></text>
+      <path d="M 570 120 A 40 40 0 0 1 603 138" stroke="#1A2530" stroke-width="1.1" fill="none" marker-end="url(#ah)"/>
+      <text x="586" y="118" font-size="9.5" font-weight="600">φ′ = φ<tspan font-size="7" dy="2">e</tspan><tspan dy="-2"> − φ</tspan><tspan font-size="7" dy="2">S</tspan></text>
+      <text x="432" y="262" font-size="8.2" class="n">cos 2φ′ is even under φ′ → −φ′ and φ′ → φ′ + π: the orientation convention and the sign of n̂</text>
+      <text x="432" y="274" font-size="8.2" class="n">drop out; a residual sin 2φ′ term measures the azimuthal misalignment of the assumed axis.</text>
+      <text x="432" y="290" font-size="8.2" class="n">Covariant φ<tspan font-size="6.5" dy="2">S</tspan><tspan dy="-2"> = φ</tspan><tspan font-size="6.5" dy="2">e</tspan><tspan dy="-2"> − φ</tspan><tspan font-size="6.5" dy="2">S</tspan><tspan dy="-2"> exactly (massless target); O(γ²) &lt; 5 mrad for the ⁶Li nucleus.</tspan></text>
+    </svg>
+    </div>
+    <figcaption><b>Schematic 1 — frames and the azimuth of the observable.</b> Left: the
+    detector frame with the 25 mrad crossing angle; the scattered electron is measured at
+    (E′, θ′, φ<sub>e</sub>) about the electron-beam axis, and the virtual photon is far from
+    the beam axis at low y. Right: in the head-on frame the alignment axis is vertical and the
+    physics azimuth is the angle between the lepton plane and the axis, which the covariant
+    formula reproduces as φ<sub>e</sub> − φ<sub>S</sub>.</figcaption>
+  </figure>
+
+  <h2>3 · The inclusive chain</h2>
+
+  <ol class="steps">
+    <li><b>Event selection and electron identification.</b> One e′ candidate with a track
+    matched to an EMCal cluster; E/p and shower-shape cuts against π⁻ (photoproduction) and
+    a charge-symmetric subtraction (wrong-sign tracks, positron running) for pair-symmetric
+    background at high y. Efficiency ε<sub>eID</sub>(η) = 0.70–0.95 in the ATHENA/ECCE
+    anchors used by the money_delta study; no official ePIC curve exists.</li>
+    <li><b>Scattered-electron kinematics.</b> E′ from the calorimeter (2%/√E ⊕ 1%,
+    i.e. 1.2% at E′ ≈ E<sub>e</sub>) or the tracker (3% at η ≈ −3 in the tracking-only
+    table), θ′ and φ<sub>e</sub> from the track at the vertex (1–3 mrad), transformed to the
+    head-on frame. The four-vectors k, k′, P and the spin four-vector S = (0, n̂) enter the
+    covariant azimuth.</li>
+    <li><b>Kinematic reconstruction.</b> The electron method,</li>
+  </ol>
+
+  <p class="eq"><img class="tex" data-tex="Q^2_e = 4E_eE'\sin^2\frac{\theta'}{2},\qquad y_e = 1-\frac{E'}{E_e}\cos^2\frac{\theta'}{2},\qquad x_e = \frac{Q^2_e}{s\,y_e},\qquad \frac{\delta y_e}{y_e} = \frac{1-y}{y}\left[\frac{\delta E'}{E'}\oplus\tan\frac{\theta'}{2}\,\delta\theta'\oplus\frac{\delta E_e}{E_e}\right]"></p>
+
+  <p>has an excellent Q² (δQ²/Q² ≈ δE′/E′ ⊕ cot(θ′/2)δθ′ ≈ 1–2%) but loses y as
+  (1 − y)/y: at y = 0.01 a 1.2% energy resolution gives δy/y = 120%, and the electron-ring
+  energy spread alone (≈ 10⁻³) gives 10%. Table 1 shows where money plot 5 sits. At the
+  mid-energy configuration three of the four sweet spots are at y = 0.010–0.025, the
+  scattered electron carries 98–99% of the beam energy at η ≈ −2.9 to −2.4, and x is not
+  measurable from e′ alone; at the top energy all four spots sit at y ≈ 0.01. The remedy is
+  the one HERA used at low y [5,6]: y from the hadronic final state,</p>
+
+  <p class="eq"><img class="tex" data-tex="y_{JB} = \frac{\Sigma}{2E_e},\qquad y_\Sigma = \frac{\Sigma}{\Sigma + E'(1-\cos\theta_e)},\qquad \Sigma = \sum_{h\neq e'}(E_h - p_{z,h}),\qquad x = \frac{Q^2_e}{s\,y_\Sigma}\;\;(\mathrm{mixed\ method})"></p>
+
+  <p>with θ<sub>e</sub> measured from the ion direction. The Σ method is insensitive to
+  collinear initial-state radiation, and both are insensitive to particles lost along the ion
+  beam (E − p<sub>z</sub> ≈ 0 for forward remnants). Their resolution is set by hadronic
+  calorimetry and by losses in the electron direction; the Yellow-Report-era studies reach
+  y ≈ 0.01 with δy/y of order 15–30%, which is the band assumed here. The
+  low-energy configuration moves the same (x, Q²) to y = 0.03–0.2 (Table 1), so the
+  energy scan is itself part of the reconstruction strategy for the x ≈ 0.1 bins.</p>
+
+  <table>
+    <tr><th>Sweet spot</th><th>x, Q² [GeV²]</th><th>e(5)×⁶Li(20.5): y</th><th>e(10)×⁶Li(50): y, E′ [GeV], θ′ [mrad], η</th><th>e(18)×⁶Li(137.5): y</th><th>δy/y, e′ alone (1.2%)</th></tr>
+    <tr><td class="mono">1</td><td class="mono">0.056, 1.14</td><td class="mono">0.031</td><td class="mono">0.010, 9.93, 107, −2.93</td><td class="mono">0.011 (x = 0.014)</td><td class="mono">1.2</td></tr>
+    <tr><td class="mono">2</td><td class="mono">0.022, 1.14</td><td class="mono">0.078</td><td class="mono">0.025, 9.78, 108, −2.92</td><td class="mono">0.026 (x = 0.0056)</td><td class="mono">0.47</td></tr>
+    <tr><td class="mono">3</td><td class="mono">0.141, 3.13</td><td class="mono">0.054</td><td class="mono">0.011, 9.97, 177, −2.42</td><td class="mono">0.011 (x = 0.028)</td><td class="mono">1.1</td></tr>
+    <tr><td class="mono">4</td><td class="mono">0.141, 14.3</td><td class="mono">0.196</td><td class="mono">0.051, 9.85, 383, −1.64</td><td class="mono">0.010</td><td class="mono">0.23</td></tr>
+  </table>
+  <p style="font-size:8pt;color:var(--ink-2);margin-top:-2pt">Table 1 — the four sweet-spot super-bins of money plot 5 (selected per Q² band from the significance map at e(10)×⁶Li(50)) and where the same bins sit at the other two energies; the top-energy spots are chosen by the same rule and land at different x.</p>
+
+  <ol class="steps" start="4">
+    <li><b>The azimuth.</b> φ′ = φ<sub>e</sub> − φ<sub>S</sub> from the covariant formula
+    (§2), with φ<sub>S</sub> the alignment-axis azimuth of that bunch from the spin
+    bookkeeping. The angular resolution of the track (1–3 mrad) dilutes cos 2φ′ by
+    exp(−2σ<sub>φ</sub>²) ≈ 1 − 2×10⁻⁵: negligible.</li>
+    <li><b>Binning in reconstructed (x, Q²).</b> Figure 1(c) quantifies the migration for
+    the mixed method with the sampler's own events: with δy<sub>had</sub>/y = 15% (20%, 30%)
+    the 3×3 super-bins keep a purity of 0.81–0.83 (0.74–0.77, 0.61–0.65) and the amplitude
+    seen in the reconstructed bin is 0.98–0.99 (0.96–0.99, 0.92–0.98) of the true-bin value,
+    because A(x) varies slowly across the bin. With the electron method alone the low-y
+    spots collapse to purities of 0.41–0.56 with 26–53% of the events surviving in the bin.
+    The standard treatment — a migration matrix from the same simulation and either an
+    unfolding or model bin-centering — is the same as for any structure-function
+    measurement; what is new is only that the correction must be built on the
+    hadronic-method resolution.</li>
+    <li><b>Spin-state sorting and the estimator.</b> The events of each (x, Q²) bin are
+    histogrammed in φ′ separately for each spin state f of the bunch pattern,
+    N<sub>f</sub>(φ′). Any smooth φ′-dependent efficiency ε(φ′) multiplies every
+    N<sub>f</sub> identically, so the bin-wise ratio</li>
+  </ol>
+
+  <p class="eq"><img class="tex" data-tex="R(\phi') = \frac{\sum_f w_f\,Y_f(\phi')}{\sum_f Y_f(\phi')},\qquad Y_f = \frac{N_f}{L_f},\qquad w_f = P_f - \bar P,\qquad R(\phi') \simeq \sigma_P^2\left[\kappa + \hat A\cos 2\phi'\right],\qquad \sigma_P^2 = \frac{\sum_f L_f (P_f-\bar P)^2}{\sum_f L_f}"></p>
+
+  <p>is free of ε(φ′) exactly, and a relative-luminosity error δ<sub>f</sub> enters it only as
+  the φ′-independent constant Σw<sub>f</sub>δ<sub>f</sub>/F, orthogonal to the harmonic (second
+  order: δ × Â ≈ 10⁻⁶). A weighted least-squares fit of R(φ′) = c + d cos 2φ′ (+ e sin 2φ′)
+  gives Â = d/σ<sub>P</sub>² after the finite-bin dilution sin w/w is divided out, and κ = c/σ<sub>P</sub>²
+  is the transverse tensor asymmetry of the b₁ sector, a by-product. For two fill types with
+  equal luminosity the statistical error is</p>
+
+  <p class="eq"><img class="tex" data-tex="\delta\hat A = \frac{2}{P_+-P_0}\sqrt{\frac{2}{N}}\;\;\mathrm{(two\ fills)}\qquad\mathrm{vs}\qquad \delta\hat A = \frac{1}{P_{zz}}\sqrt{\frac{2}{N}}\;\;\mathrm{(single\ fill)}"></p>
+
+  <p>so that m = ±1-rich bunches at P<sub>+</sub> = +0.6 alternated with m = 0-rich bunches at
+  P<sub>0</sub> = −1.2 (the same source purity gives −2P<sub>+</sub>, the pattern of the
+  A<sub>zz</sub> run plan) are 1.5× more precise than a single P<sub>zz</sub> = 0.6 fill with
+  the whole luminosity; an unpolarized reference fill (P<sub>0</sub> = 0) would instead cost a
+  factor two. Figure 1(d) shows the pseudo-experiments: under an efficiency
+  ε = 1 + 0.03 cos 2φ′ + 0.02 cos φ′ the single-fill fit returns Â = 0.062 for a true
+  0.0118 — the acceptance harmonic divided by P<sub>zz</sub> — while the ratio is unbiased with
+  the analytic error. The projection report's statement that the modulation is
+  "self-normalized within a single fill" holds for relative luminosity but not for acceptance;
+  since a percent-level cos 2φ harmonic aligned with the vertical axis is expected (the
+  crossing-angle plane is horizontal, module boundaries and dead areas are not azimuthally
+  random, and the Roman-Pot cutout is a rectangle), the spin-state-sorted ratio is the
+  estimator of the measurement.</p>
+
+  <ol class="steps" start="7">
+    <li><b>Amplitude to Δ.</b> With F₂ and R = σ<sub>L</sub>/σ<sub>T</sub> of ⁶Li per nucleon
+    measured in the same data (the unpolarized cross section of the same sample, with its own
+    radiative corrections) or taken from nuclear-PDF fits,</li>
+  </ol>
+
+  <p class="eq"><img class="tex" data-tex="\hat\Delta(x,Q^2) = -\hat A\,\frac{y^2\,D_\phi}{1-y}\;\rightarrow\;-\hat A\,\frac{F_2}{x} = -2(1+R)\,F_1\,\hat A\quad(y\ll1),\qquad\mathrm{i.e.}\quad \frac{\Delta}{F_1} = -2(1+R)\hat A"></p>
+
+  <p>At the sweet spots the conversion is therefore insensitive to y — the (1 − y)/y² factor
+  that makes low y attractive for the amplitude cancels against D<sub>φ</sub> — and Δ/F₁ is
+  essentially a direct ratio measurement; the y mis-measurement of the electron method
+  affects the x label of the point, not the amplitude. Remaining corrections: the tensor rate
+  shift (2/3)a<sub>m</sub>(b₁ + …) in D<sub>φ</sub>, at the 10⁻³ level and measured by κ;
+  target-mass terms of order γ²; radiative corrections, uncalculated for tensor observables
+  (plans/07 WP4); the per-nucleon and dilution conventions, which are interpretation rather
+  than reconstruction; and the polarimetry scale δP<sub>zz</sub>/P<sub>zz</sub> ≈ 3%, common
+  with A<sub>zz</sub>.</p>
+
+  <figure>
+    <div class="panel">
+    <svg class="schem" viewBox="0 0 740 470" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Inclusive reconstruction chain">
+      <text x="20" y="16" font-size="10.5" class="h">Beam and spin bookkeeping</text>
+      <text x="262" y="16" font-size="10.5" class="h">ePIC central detector</text>
+      <text x="500" y="16" font-size="10.5" class="h">Reconstruction and analysis</text>
+      <!-- column A -->
+      <rect x="20" y="28" width="212" height="54" rx="5" class="box"/>
+      <text x="28" y="43" font-size="8.4" font-weight="600">Bunch spin pattern (source)</text>
+      <text x="28" y="55" font-size="8">m = ±1-rich bunches, P<tspan font-size="6" dy="2">zz</tspan><tspan dy="-2"> = +0.6, interleaved</tspan></text>
+      <text x="28" y="67" font-size="8">with m = 0-rich bunches, P<tspan font-size="6" dy="2">zz</tspan><tspan dy="-2"> = −1.2</tspan></text>
+      <text x="28" y="78" font-size="8">→ spin state f per bunch crossing</text>
+      <rect x="20" y="94" width="212" height="54" rx="5" class="box"/>
+      <text x="28" y="109" font-size="8.4" font-weight="600">Polarimetry and spin axis</text>
+      <text x="28" y="121" font-size="8">P<tspan font-size="6" dy="2">zz</tspan><tspan dy="-2"> per fill (scale ≈ 3%); axis n̂ vertical</tspan></text>
+      <text x="28" y="133" font-size="8">(stable spin direction); tilt → sin²θ<tspan font-size="6" dy="2">S</tspan><tspan dy="-2"> dilution;</tspan></text>
+      <text x="28" y="144" font-size="8">axis azimuth self-calibrated by the sin 2φ′ term</text>
+      <rect x="20" y="160" width="212" height="42" rx="5" class="box"/>
+      <text x="28" y="175" font-size="8.4" font-weight="600">Luminosity per spin state L<tspan font-size="6" dy="2">f</tspan></text>
+      <text x="28" y="187" font-size="8">bunch-by-bunch; a relative error enters the</text>
+      <text x="28" y="198" font-size="8">ratio only as a φ′-independent constant</text>
+      <!-- column B -->
+      <rect x="258" y="28" width="220" height="66" rx="5" class="box"/>
+      <text x="266" y="43" font-size="8.4" font-weight="600">Scattered-electron candidate</text>
+      <text x="266" y="55" font-size="8">track: p, θ′, φ<tspan font-size="6" dy="2">e</tspan><tspan dy="-2"> at the vertex, charge;</tspan></text>
+      <text x="266" y="67" font-size="8">EMCal cluster: E′ (2%/√E ⊕ 1%), position;</text>
+      <text x="266" y="79" font-size="8">E/p, shower shape → e-ID, ε<tspan font-size="6" dy="2">eID</tspan><tspan dy="-2">(η) ≈ 0.7–0.95;</tspan></text>
+      <text x="266" y="90" font-size="8">charge-symmetric background subtraction</text>
+      <rect x="258" y="106" width="220" height="54" rx="5" class="box"/>
+      <text x="266" y="121" font-size="8.4" font-weight="600">Hadronic final state</text>
+      <text x="266" y="133" font-size="8">all tracks and clusters except e′:</text>
+      <text x="266" y="145" font-size="8">Σ = Σ<tspan font-size="6" dy="2">h</tspan><tspan dy="-2">(E</tspan><tspan font-size="6" dy="2">h</tspan><tspan dy="-2"> − p</tspan><tspan font-size="6" dy="2">z,h</tspan><tspan dy="-2">)  (robust to forward losses;</tspan></text>
+      <text x="266" y="156" font-size="8">Σ method also to collinear ISR)</text>
+      <rect x="258" y="172" width="220" height="30" rx="5" class="box"/>
+      <text x="266" y="187" font-size="8.4" font-weight="600">Vertex; bunch-crossing ID; timing</text>
+      <text x="266" y="198" font-size="8">→ spin state f, beam-gas rejection</text>
+      <!-- column C -->
+      <rect x="504" y="28" width="226" height="40" rx="5" class="boxa"/>
+      <text x="512" y="43" font-size="8.4" font-weight="600" fill="#0067A0">1  Head-on frame</text>
+      <text x="512" y="55" font-size="8">undo the 25 mrad crossing; four-vectors k, k′, P, S</text>
+      <text x="512" y="66" font-size="8">(exact; for e′ only odd harmonics change, ≈ 10⁻³)</text>
+      <rect x="504" y="80" width="226" height="60" rx="5" class="boxa"/>
+      <text x="512" y="95" font-size="8.4" font-weight="600" fill="#0067A0">2  Kinematic reconstruction</text>
+      <text x="512" y="107" font-size="8">Q² = 4E<tspan font-size="6" dy="2">e</tspan><tspan dy="-2">E′ sin²(θ′/2)  (electron, 1–2%)</tspan></text>
+      <text x="512" y="119" font-size="8">y<tspan font-size="6" dy="2">Σ</tspan><tspan dy="-2"> = Σ/(Σ + E′(1 − cos θ</tspan><tspan font-size="6" dy="2">e</tspan><tspan dy="-2">))  (hadronic, 15–30%)</tspan></text>
+      <text x="512" y="131" font-size="8">x = Q²/(s y<tspan font-size="6" dy="2">Σ</tspan><tspan dy="-2">)   [e′ alone: δy/y = 120% at y = 0.01]</tspan></text>
+      <rect x="504" y="152" width="226" height="40" rx="5" class="boxa"/>
+      <text x="512" y="167" font-size="8.4" font-weight="600" fill="#0067A0">3  Azimuth</text>
+      <text x="512" y="179" font-size="8">φ′ = φ<tspan font-size="6" dy="2">e</tspan><tspan dy="-2"> − φ</tspan><tspan font-size="6" dy="2">S</tspan><tspan dy="-2"> from the covariant formula</tspan></text>
+      <text x="512" y="190" font-size="8">(= lab difference to O(γ²) &lt; 5 mrad)</text>
+      <rect x="504" y="204" width="226" height="40" rx="5" class="boxa"/>
+      <text x="512" y="219" font-size="8.4" font-weight="600" fill="#0067A0">4  Histograms per spin state</text>
+      <text x="512" y="231" font-size="8">bin in (x, Q²)<tspan font-size="6" dy="2">reco</tspan><tspan dy="-2">; N</tspan><tspan font-size="6" dy="2">f</tspan><tspan dy="-2">(φ′) in 24 bins;</tspan></text>
+      <text x="512" y="242" font-size="8">purity 0.75–0.83 for δy<tspan font-size="6" dy="2">had</tspan><tspan dy="-2">/y = 15–20%</tspan></text>
+      <rect x="504" y="256" width="226" height="62" rx="5" class="boxa"/>
+      <text x="512" y="271" font-size="8.4" font-weight="600" fill="#0067A0">5  Spin-state ratio and fit</text>
+      <text x="512" y="283" font-size="8">R(φ′) = Σ<tspan font-size="6" dy="2">f</tspan><tspan dy="-2"> w</tspan><tspan font-size="6" dy="2">f</tspan><tspan dy="-2">Y</tspan><tspan font-size="6" dy="2">f</tspan><tspan dy="-2"> / Σ</tspan><tspan font-size="6" dy="2">f</tspan><tspan dy="-2"> Y</tspan><tspan font-size="6" dy="2">f</tspan><tspan dy="-2">, Y</tspan><tspan font-size="6" dy="2">f</tspan><tspan dy="-2"> = N</tspan><tspan font-size="6" dy="2">f</tspan><tspan dy="-2">/L</tspan><tspan font-size="6" dy="2">f</tspan></text>
+      <text x="512" y="295" font-size="8">fit c + d cos 2φ′ + e sin 2φ′: acceptance cancels</text>
+      <text x="512" y="307" font-size="8">bin by bin; rel. luminosity → constant c only;</text>
+      <text x="512" y="317" font-size="8">single-fill fit biased by ε's harmonic ÷ P<tspan font-size="6" dy="2">zz</tspan></text>
+      <rect x="504" y="330" width="226" height="52" rx="5" class="boxa"/>
+      <text x="512" y="345" font-size="8.4" font-weight="600" fill="#0067A0">6  Amplitude and corrections</text>
+      <text x="512" y="357" font-size="8">Â = d/σ<tspan font-size="6" dy="2">P</tspan><tspan dy="-2">²/dilution; δÂ = 2√(2/N)/(P</tspan><tspan font-size="6" dy="2">+</tspan><tspan dy="-2"> − P</tspan><tspan font-size="6" dy="2">0</tspan><tspan dy="-2">)</tspan></text>
+      <text x="512" y="369" font-size="8">migration matrix / bin centering; radiative corr.;</text>
+      <text x="512" y="380" font-size="8">polarimetry scale; axis-tilt dilution</text>
+      <rect x="504" y="394" width="226" height="52" rx="5" class="boxa"/>
+      <text x="512" y="409" font-size="8.4" font-weight="600" fill="#0067A0">7  Structure function</text>
+      <text x="512" y="421" font-size="8">Δ̂ = −Â y² D<tspan font-size="6" dy="2">φ</tspan><tspan dy="-2">/(1 − y), D</tspan><tspan font-size="6" dy="2">φ</tspan><tspan dy="-2"> from F</tspan><tspan font-size="6" dy="2">2</tspan><tspan dy="-2">, R of the same data;</tspan></text>
+      <text x="512" y="433" font-size="8">low y: Δ/F<tspan font-size="6" dy="2">1</tspan><tspan dy="-2"> = −2(1 + R)Â  → xΔ(x, Q²) points</tspan></text>
+      <text x="512" y="444" font-size="8">(money plot 7 presentation)</text>
+      <!-- arrows -->
+      <line x1="478" y1="61" x2="504" y2="48" class="arr"/>
+      <line x1="478" y1="133" x2="504" y2="110" class="arr"/>
+      <line x1="478" y1="187" x2="504" y2="222" class="arr"/>
+      <path d="M 232 55 C 250 55, 380 20, 504 224" class="arr" stroke-dasharray="3 3"/>
+      <path d="M 232 121 C 300 121, 420 350, 504 356" class="arr" stroke-dasharray="3 3"/>
+      <path d="M 232 181 C 300 181, 420 285, 504 287" class="arr" stroke-dasharray="3 3"/>
+      <line x1="617" y1="68" x2="617" y2="80" class="arrb"/>
+      <line x1="617" y1="140" x2="617" y2="152" class="arrb"/>
+      <line x1="617" y1="192" x2="617" y2="204" class="arrb"/>
+      <line x1="617" y1="244" x2="617" y2="256" class="arrb"/>
+      <line x1="617" y1="318" x2="617" y2="330" class="arrb"/>
+      <line x1="617" y1="382" x2="617" y2="394" class="arrb"/>
+      <!-- side notes -->
+      <text x="20" y="232" font-size="8.2" class="n">Dashed arrows: bookkeeping inputs (spin state → sorting; P</text>
+      <text x="20" y="244" font-size="8.2" class="n">per fill → amplitude normalization; L<tspan font-size="6" dy="2">f</tspan><tspan dy="-2"> → yields).</tspan></text>
+      <text x="20" y="266" font-size="8.2" class="n">Simple-detector version of steps 1–7 that the simulation</text>
+      <text x="20" y="278" font-size="8.2" class="n">needs: Gaussian E′/θ′/φ<tspan font-size="6" dy="2">e</tspan><tspan dy="-2"> smearing, parametrized hadronic y,</tspan></text>
+      <text x="20" y="290" font-size="8.2" class="n">η-dependent e-ID, a smooth ε(φ′), exact frames and angles,</text>
+      <text x="20" y="302" font-size="8.2" class="n">spin-sorted Poisson histograms, the ratio fit (§5).</text>
+      <text x="20" y="326" font-size="8.2" class="n">What is NOT simple and stays for Phase 2: the hadronic final</text>
+      <text x="20" y="338" font-size="8.2" class="n">state itself (Σ resolution at y ≈ 0.01, e-ID purity, radiative</text>
+      <text x="20" y="350" font-size="8.2" class="n">events), the real φ acceptance map, beam-gas backgrounds.</text>
+    </svg>
+    </div>
+    <figcaption><b>Schematic 2 — the inclusive reconstruction chain.</b> Left and middle: what
+    is recorded; right: the seven reconstruction and analysis steps of §3 with the quantity
+    each produces and its dominant limitation. The measurement's observable is the cos 2φ′
+    coefficient of the spin-state ratio (step 5), not the modulation of a single histogram.</figcaption>
+  </figure>
+
+  <figure>
+    <div class="panel"><img src="data:image/png;base64,__RC1__" alt="Inclusive reconstruction figures: phase space with sweet spots and electron-method limit; resolution versus y; migration purities; estimator comparison"></div>
+    <figcaption><b>Figure 1 — the inclusive measurement quantified</b> (e10 × ⁶Li50,
+    <code>reco_chain_figures.py</code>). <b>(a)</b> The analysis acceptance with iso-y lines
+    and the four sweet-spot super-bins of money plot 5; the shaded band is where the electron
+    alone gives δy/y &gt; 30% for a 1.2% energy resolution: spots 1–3 lie inside it, spot 4
+    just above. <b>(b)</b> The electron-method δy/y versus y for calorimeter, tracking, and
+    beam-energy-spread inputs, with the sweet spots of the three energies placed on the
+    calorimeter curve and the assumed 15–30% hadronic-method band. <b>(c)</b> Purity of each
+    super-bin after smearing the sampler's events with the mixed method for three hadronic-y
+    resolutions and with the electron method alone; the numbers give the ratio of the
+    amplitude averaged over the events landing in the reconstructed bin to that of the true
+    bin. <b>(d)</b> Four hundred pseudo-experiments of the spot-1 super-bin at the 1-year
+    statistics: the single-fill fit with a uniform efficiency (green) recovers the truth, the
+    same fit under ε = 1 + 0.03 cos 2φ′ + 0.02 cos φ′ (vermillion) is biased by 0.03/P<sub>zz</sub>,
+    and the two-fill ratio fit under the same efficiency (blue) is unbiased and 1.5× more
+    precise (inset).</figcaption>
+  </figure>
+
+  <h2>4 · The coherent chain</h2>
+
+  <p>The coherent measurement keeps steps 1–7 for the electron and adds the recoil. Its
+  kinematics is fixed by two facts of the projection report: the recoil keeps the beam
+  rigidity (R = 1.000 for A/Z = 2, and the momentum loss x<sub>P</sub> &lt; 0.01 is below the
+  Roman-Pot momentum resolution), so the only measured recoil quantity is its transverse
+  displacement from the beam orbit; and coherence confines the sample to x ≲ 0.01, i.e. to
+  y ≳ 0.05 at the mid energy (median x = 3.5×10⁻³, y ≈ 0.2), where the electron method is
+  adequate and the low-y problem of §3 does not arise.</p>
+
+  <ol class="steps">
+    <li><b>Roman-Pot track.</b> Hits in the two stations (AC-LGAD, ≈ 30 ps timing for
+    bunch association) form a local track; the optics transfer matrices referenced to the
+    beam orbit convert it to the angle pair (θ<sub>x</sub>, θ<sub>y</sub>) at the IP relative
+    to the ion axis, so the crossing angle and the reference orbit are removed by
+    construction, and the vertex from the central detector supplies the position term. The
+    momentum fraction x<sub>L</sub> is set to 1 (unresolved), hence p<sub>T</sub> = A p<sub>u</sub>
+    √(θ<sub>x</sub>² + θ<sub>y</sub>²) and φ<sub>t</sub> = atan2(θ<sub>y</sub>, θ<sub>x</sub>).
+    The resolution is dominated by the angular divergence of the bunch itself,
+    δp<sub>T</sub> = A p<sub>u</sub>σ<sub>θ</sub> = 22 MeV at 50 GeV/u for σ<sub>θ</sub> = 73 μrad,
+    giving σ(φ<sub>t</sub>) = 0.09 rad at p<sub>T</sub> = 0.25 GeV and a cos 2φ<sub>t</sub>
+    dilution of 1.5% (Figure 2d).</li>
+    <li><b>Momentum transfer.</b> Exactly, with x<sub>L</sub> = 1 − x<sub>P</sub> the
+    plus-momentum fraction,</li>
+  </ol>
+
+  <p class="eq"><img class="tex" data-tex="t = -\frac{p_T^2 + M^2 x_P^2}{1-x_P}\;\simeq\;-p_T^2,\qquad t_{\min} = \frac{M^2x_P^2}{1-x_P} = 3.2\times10^{-3}\ \mathrm{GeV^2}\ (x_P = 0.01),\qquad x_P = \frac{M_X^2 + Q^2 - t}{W^2 + Q^2 - M^2}"></p>
+
+  <p>so the Roman Pots give t, and x<sub>P</sub> (or β = x<sub>A</sub>/x<sub>P</sub>) must come
+  from the diffractive mass M<sub>X</sub> of the central detector — a coarse variable (a
+  few x<sub>P</sub> bins), sufficient for the x<sub>P</sub>-dependence test of the two-component
+  fit. The covariant recoil azimuth differs from the lab difference φ<sub>e</sub> − φ<sub>t</sub>
+  by less than 0.2 mrad at these kinematics, so here too the lab shortcut is safe.</p>
+
+  <ol class="steps" start="3">
+    <li><b>Exclusivity selection.</b> A beam-rigidity Roman-Pot track above the envelope;
+    no OMD track (p at R = 0.5, ³He at 0.75 in the main window), no ZDC neutron, no B0 EMCal
+    photon (the 3.56 MeV state's de-excitation γ boosted to 0.1–0.4 GeV); a rapidity gap
+    between X and the beam; Z-identification of the track if the pots resolve
+    Z = 3 from 2 and 1 (open question #19), otherwise a two-component fit of the |t| spectrum
+    against the ten-times-flatter α + d breakup slope; timing and vertex association against
+    beam-gas coincidences. Because the incoherent cross section is m-state-blind, residual
+    breakup dilutes the tensor ratio without faking it; its fraction is measured in the same
+    data from the |t| fit.</li>
+    <li><b>Three azimuths, two harmonics.</b> With the recoil measured there are two physical
+    azimuths besides the spin: α = φ<sub>e</sub> − φ<sub>S</sub> (lepton plane to axis) and
+    β = φ<sub>t</sub> − φ<sub>S</sub> (recoil to axis), and α − β = φ<sub>e</sub> − φ<sub>t</sub>
+    is the lepton-plane–recoil angle of unpolarized diffractive DIS. The rank-2 tensor
+    polarization enters only through e<sup>±2iφ<sub>S</sub></sup>, so at leading power in the
+    momentum transfer the spin-sorted distribution has the structure</li>
+  </ol>
+
+  <p class="eq"><img class="tex" data-tex="N_f(\alpha,\beta) \propto \varepsilon(\alpha,\beta)\left[1 + u_1\cos(\alpha-\beta) + u_2\cos 2(\alpha-\beta) + P_f\left(\kappa + a_e\cos 2\alpha + a_t\cos 2\beta + a_m\cos(\alpha+\beta)\right)\right]"></p>
+
+  <p>The deformation term of the polarized-deuteron anchor — the modulation of the
+  diffractive slope by the aligned gluon density, a₂(t) ∝ |t|, digitized in
+  <code>coherent.MANTYSAARI_A2_DEUTERON</code> — is a<sub>t</sub>: it lives in the <i>recoil</i>
+  azimuth β, requires no photon helicity flip, and vanishes as t → 0. The
+  double-helicity-flip term — the coherent counterpart of Δ, an interference of the two
+  transverse photon helicities that needs the linear polarization of the photon and hence
+  the lepton plane — is a<sub>e</sub>: it lives in α and is flat in t at leading power. The two
+  mechanisms of the projection report are thus separated not only by their t-dependence but
+  by the azimuth they modulate, which is a stronger discriminant; the mixed term
+  a<sub>m</sub> and the unpolarized u<sub>1,2</sub> are nuisance harmonics. The money-plot-6
+  pseudo-data place the anchored ⟨a₂⟩ on an axis labelled φ′ = φ − φ<sub>S</sub> of the
+  electron, which is the α axis: numerically harmless for a statistical projection, but the
+  measurement must histogram (α, β) in two dimensions per (x<sub>P</sub>, t, Q²) bin and
+  extract a<sub>t</sub> and a<sub>e</sub> from the spin-state ratio R(α, β); in that ratio
+  u(α − β) survives in the denominator and feeds the pure harmonics only at second order
+  (u₁² ≈ 1%) but the mixed term at first order (a<sub>t</sub>u₁/2), which fixes the fit
+  model. (One normalization caveat to settle at the source: whether the anchor's a<sub>n</sub>
+  are defined with 1 + 2Σa<sub>n</sub> cos nΦ or with 1 + Σa<sub>n</sub> cos nΦ — a factor two on
+  the digitized amplitudes that the projection code treats as the latter.)</p>
+
+  <ol class="steps" start="5">
+    <li><b>Acceptance geometry and the estimator.</b> The Roman-Pot acceptance is not a
+    circular p<sub>T</sub> cut. The pots sit outside the 10σ beam envelope, whose section at the
+    pots is set by β<sub>x</sub>, β<sub>y</sub> and the emittances, and the sensors leave a
+    rectangular cutout whose sides are horizontal and vertical — parallel to the spin axis.
+    For the exponential recoil spectrum the tagged sample's azimuthal distribution is
+    ε(φ<sub>t</sub>) = exp[−B ρ(φ<sub>t</sub>)²] with ρ the cutout boundary, and its
+    ⟨cos 2φ<sub>t</sub>⟩ is 0 for a square, 0.49 for an aspect ratio of 1.25 and 0.71 for 1.5
+    (Figure 2b) — ten to twenty times the anchored a<sub>t</sub> ≈ 0.036, with the same
+    symmetry axis. A square still carries ⟨cos 4φ<sub>t</sub>⟩ = 0.34, which mixes into
+    cos 2β at second order through the physics term. No single-fill fit can survive this;
+    the spin-state ratio of §3 cancels it exactly, bin by bin in (α, β), and the same
+    m = ±1-rich / m = 0-rich pattern serves both measurements.</li>
+    <li><b>The near-beam cut is angular.</b> The documented 0.20 GeV (high-acceptance) and
+    ≈ 0.41–0.45 GeV (high-divergence) cuts are ten beam divergences times the 275 GeV
+    proton momentum, σ<sub>θ</sub> ≈ 73 and 149 μrad. The same envelope applied to a
+    ⁶Li nucleus of momentum 6p<sub>u</sub> is p<sub>T</sub><sup>cut</sup> = 10σ<sub>θ</sub>·6p<sub>u</sub>:
+    0.09, 0.22 and 0.60 GeV at 20.5, 50 and 137.5 GeV/u, giving tag acceptances of 67%, 9%
+    and 1.5×10⁻⁸ for B = 50 GeV⁻² (Figure 2c). The projection's constant 0.20 GeV cut
+    (13.5%) is close to the mid-energy value and far from the others; whether the lithium
+    divergence at a given energy equals the proton's is precisely the undocumented optics
+    question of plans/04 #11, but the scaling with A p<sub>u</sub> is kinematics, not optics,
+    and it makes the low-energy configuration the natural home of the coherent program.</li>
+    <li><b>Resolution and unfolding.</b> The divergence smearing moves the effective
+    slope from B to 1/(1/B + 2δp<sub>T</sub>²) (47.7 for the numbers above) and smears
+    |t| by 2p<sub>T</sub>δp<sub>T</sub> ≈ 0.01 GeV² — small against the 0.04–0.2 GeV² window
+    (Figure 2d); the t-binning migration and the acceptance edge are unfolded with the same
+    emulation, and t<sub>min</sub> is a known bias of 3×10⁻³ GeV² at x<sub>P</sub> = 0.01 once
+    x<sub>P</sub> is known from M<sub>X</sub>.</li>
+  </ol>
+
+  <figure>
+    <div class="panel">
+    <svg class="schem" viewBox="0 0 740 340" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Coherent channel: far-forward measurement and the three azimuths">
+      <text x="14" y="16" font-size="10.5" class="h">Far-forward side view along the ⁶Li beam (not to scale)</text>
+      <rect x="40" y="82" width="690" height="16" fill="#EFF4F7"/>
+      <text x="44" y="112" font-size="8" class="n">beam envelope (10σ): everything at R = 1 inside it is invisible</text>
+      <line x1="40" y1="90" x2="730" y2="90" stroke="#7C8B96" stroke-width="1"/>
+      <circle cx="40" cy="90" r="3.5" fill="#1A2530"/>
+      <text x="30" y="76" font-size="8.5">IP</text>
+      <!-- detectors -->
+      <rect x="112" y="60" width="8" height="60" fill="#D8E0E6" stroke="#7C8B96" stroke-width="0.8"/>
+      <text x="96" y="52" font-size="8">B0 tracker + EMCal</text>
+      <text x="96" y="132" font-size="7.6" class="n">5.5–20 mrad, z ≈ 5–6 m: charged fragments, γ veto</text>
+      <rect x="392" y="100" width="8" height="34" fill="#D8E0E6" stroke="#7C8B96" stroke-width="0.8"/>
+      <rect x="418" y="100" width="8" height="34" fill="#D8E0E6" stroke="#7C8B96" stroke-width="0.8"/>
+      <text x="366" y="150" font-size="8">off-momentum detectors</text>
+      <text x="366" y="161" font-size="7.6" class="n">R ≈ 0.4–0.6, z ≈ 22–24 m: p veto</text>
+      <rect x="520" y="56" width="8" height="26" fill="#D8E0E6" stroke="#0067A0" stroke-width="0.9"/>
+      <rect x="520" y="98" width="8" height="26" fill="#D8E0E6" stroke="#0067A0" stroke-width="0.9"/>
+      <rect x="560" y="56" width="8" height="26" fill="#D8E0E6" stroke="#0067A0" stroke-width="0.9"/>
+      <rect x="560" y="98" width="8" height="26" fill="#D8E0E6" stroke="#0067A0" stroke-width="0.9"/>
+      <text x="500" y="46" font-size="8" fill="#0067A0">Roman Pots (2 stations), 10σ cutout</text>
+      <text x="500" y="140" font-size="7.6" class="n">z ≈ 26/28 m (YR) → 32.5/34.3 m (epic-main)</text>
+      <rect x="690" y="66" width="12" height="48" fill="#D8E0E6" stroke="#7C8B96" stroke-width="0.8"/>
+      <text x="672" y="56" font-size="8">ZDC (neutrals)</text>
+      <text x="654" y="130" font-size="7.6" class="n">&lt; 4 mrad, z ≈ 35 m: n veto</text>
+      <!-- tracks -->
+      <line x1="40" y1="90" x2="700" y2="90" stroke="#1B7F5B" stroke-width="1.4" stroke-dasharray="6 3"/>
+      <text x="196" y="74" font-size="8" fill="#1B7F5B">⁶Li(g.s.), R = 1.000, p<tspan font-size="6" dy="2">T</tspan><tspan dy="-2"> below cut: inside the envelope (also α + d fragments, R = 1)</tspan></text>
+      <line x1="40" y1="90" x2="524" y2="66" stroke="#1B7F5B" stroke-width="2"/>
+      <circle cx="524" cy="66" r="3" fill="#0067A0"/>
+      <text x="290" y="64" font-size="8" fill="#1B7F5B">tagged ⁶Li: p<tspan font-size="6" dy="2">T</tspan><tspan dy="-2"> &gt; 10σ</tspan><tspan font-size="6" dy="2">θ</tspan><tspan dy="-2">·6p</tspan><tspan font-size="6" dy="2">u</tspan><tspan dy="-2"> → RP hit → (θ</tspan><tspan font-size="6" dy="2">x</tspan><tspan dy="-2">, θ</tspan><tspan font-size="6" dy="2">y</tspan><tspan dy="-2">) → p</tspan><tspan font-size="6" dy="2">T</tspan><tspan dy="-2">, φ</tspan><tspan font-size="6" dy="2">t</tspan><tspan dy="-2">, t = −p</tspan><tspan font-size="6" dy="2">T</tspan><tspan dy="-2">²</tspan></text>
+      <path d="M 40 90 C 200 95, 330 105, 396 118" stroke="#51626F" stroke-width="1.2" fill="none"/>
+      <text x="300" y="118" font-size="7.6" class="n">p (R = 0.5) bends to the OMD</text>
+      <line x1="40" y1="90" x2="694" y2="72" stroke="#7C8B96" stroke-width="1" stroke-dasharray="2 2"/>
+      <text x="596" y="66" font-size="7.6" class="n">n → ZDC</text>
+      <!-- bottom left: three azimuths -->
+      <text x="14" y="186" font-size="10.5" class="h">Transverse plane: three azimuths</text>
+      <line x1="30" y1="270" x2="300" y2="270" stroke="#D8E0E6" stroke-width="1.2"/>
+      <line x1="165" y1="335" x2="165" y2="200" stroke="#D8E0E6" stroke-width="1.2"/>
+      <line x1="165" y1="326" x2="165" y2="208" stroke="#1B7F5B" stroke-width="2.4" marker-end="url(#ahg)" marker-start="url(#ahg)"/>
+      <text x="170" y="214" font-size="8.5" fill="#1B7F5B">n̂</text>
+      <line x1="165" y1="270" x2="248" y2="216" stroke="#C24E00" stroke-width="2" marker-end="url(#ahw)"/>
+      <text x="236" y="212" font-size="8.5" fill="#C24E00">k′<tspan font-size="6.5" dy="2">T</tspan><tspan dy="-2"> (e′), α = φ</tspan><tspan font-size="6.5" dy="2">e</tspan><tspan dy="-2"> − φ</tspan><tspan font-size="6.5" dy="2">S</tspan></text>
+      <line x1="165" y1="270" x2="100" y2="228" stroke="#0067A0" stroke-width="2" marker-end="url(#ahb)"/>
+      <text x="34" y="222" font-size="8.5" fill="#0067A0">p<tspan font-size="6.5" dy="2">T</tspan><tspan dy="-2">(⁶Li), β = φ</tspan><tspan font-size="6.5" dy="2">t</tspan><tspan dy="-2"> − φ</tspan><tspan font-size="6.5" dy="2">S</tspan></text>
+      <path d="M 165 238 A 32 32 0 0 1 191 253" stroke="#C24E00" stroke-width="1" fill="none"/>
+      <text x="178" y="246" font-size="8" fill="#C24E00">α</text>
+      <path d="M 165 244 A 26 26 0 0 0 144 256" stroke="#0067A0" stroke-width="1" fill="none"/>
+      <text x="140" y="250" font-size="8" fill="#0067A0">β</text>
+      <text x="30" y="298" font-size="8" class="n">cos 2β: deformation (∝ |t|, the d anchor)   cos 2α: double helicity flip (flat in t)</text>
+      <text x="30" y="310" font-size="8" class="n">cos(α+β): mixed   cos n(α−β): unpolarized L–T interference (nuisance)</text>
+      <text x="30" y="326" font-size="8" class="n">fit R(α, β) of the spin-state ratio in 2-D per (x<tspan font-size="6" dy="2">P</tspan><tspan dy="-2">, t, Q²) bin</tspan></text>
+      <!-- bottom right: RP plane -->
+      <text x="392" y="186" font-size="10.5" class="h">Roman-Pot plane (view along the beam)</text>
+      <rect x="430" y="200" width="270" height="130" fill="#EFF4F7" stroke="#7C8B96" stroke-width="0.8"/>
+      <rect x="520" y="228" width="90" height="72" fill="#FFFFFF" stroke="#C24E00" stroke-width="1.4"/>
+      <ellipse cx="565" cy="264" rx="6" ry="4.5" fill="#0067A0" opacity="0.7"/>
+      <text x="578" y="268" font-size="7.6" class="n">beam spot</text>
+      <text x="522" y="223" font-size="7.6" fill="#C24E00">10σ<tspan font-size="6" dy="2">x</tspan></text>
+      <text x="614" y="262" font-size="7.6" fill="#C24E00">10σ<tspan font-size="6" dy="2">y</tspan></text>
+      <circle cx="486" cy="222" r="3.5" fill="#0067A0"/>
+      <text x="436" y="214" font-size="7.6" fill="#0067A0">tagged recoil hit</text>
+      <text x="436" y="316" font-size="7.6" class="n">sensors (light) around a rectangular cutout whose sides are ∥ n̂:</text>
+      <text x="436" y="327" font-size="7.6" class="n">aspect ratio ≠ 1 fakes cos 2(φ<tspan font-size="6" dy="2">t</tspan><tspan dy="-2"> − φ</tspan><tspan font-size="6" dy="2">S</tspan><tspan dy="-2">) at the 0.5 level → ratio estimator</tspan></text>
+    </svg>
+    </div>
+    <figcaption><b>Schematic 3 — the coherent channel.</b> Top: the far-forward measurement of
+    the intact recoil, visible only when its transverse momentum carries it outside the beam
+    envelope at the Roman Pots, and the vetoes that define exclusivity. Bottom left: the two
+    physical azimuths relative to the alignment axis and the harmonic each mechanism
+    modulates. Bottom right: the rectangular cutout of the pots, whose symmetry axes coincide
+    with the spin axis.</figcaption>
+  </figure>
+
+  <figure>
+    <div class="panel"><img src="data:image/png;base64,__RC2__" alt="Coherent reconstruction figures: recoil plane with cutout; fake a2 versus aspect ratio; acceptance versus beam energy; Roman-Pot emulation"></div>
+    <figcaption><b>Figure 2 — the coherent measurement quantified.</b> <b>(a)</b> The recoil
+    transverse-momentum plane: the exponential coherent spectrum, the rectangular 10σ cutout
+    (aspect ratio 1.5 drawn) against the circular cut of the routing code, and the vertical
+    alignment axis. <b>(b)</b> ⟨cos 2φ<sub>t</sub>⟩ of the tagged sample versus the cutout
+    aspect ratio for rectangular and elliptical cutouts, with the cos 4φ<sub>t</sub> coefficient
+    of the square, the anchored deformation band and the 5σ statistical floors of the 1- and
+    10-year programs. <b>(c)</b> Tag acceptance versus beam momentum per nucleon for the two
+    proton-derived divergences, with the B = 40–60 GeV⁻² bands, the three beam
+    configurations, and the constant-cut value of the projection. <b>(d)</b> The Roman-Pot
+    emulation (<code>reco.rp_measure</code>): true and accepted |t| spectra, the reconstructed
+    |t| = p<sub>T</sub>² after divergence smearing, and (inset) the φ<sub>t</sub> resolution
+    against δp<sub>T</sub>/p<sub>T</sub>.</figcaption>
+  </figure>
+
+  <h2>5 · Does the simulation do this? An audit</h2>
+
+  <p>The table walks the chain of §§3–4 and states, for each step, what an experiment does,
+  what the repository does, and where. "Seeded" marks the operations added in this run in
+  <code>evgen/polligen/reco.py</code> (15 tests in <code>tests/test_reco.py</code>); they are
+  building blocks and quantified checks, not yet a reconstructed-level pseudo-experiment.</p>
+
+  <table>
+    <tr><th>Step</th><th>Experiment</th><th>Repository</th><th>Status</th></tr>
+    <tr><td>Spin bookkeeping, luminosity per state, polarimetry</td><td>Bunch pattern, L<sub>f</sub>, P<sub>zz</sub> per fill with a 3% scale</td><td><code>bookkeeping.SpinCategory / RunPlan</code>: categories with lumi shares, relative-luminosity offsets, polarimetry smearing (not exercised in the money plots)</td><td class="status-ok">exists</td></tr>
+    <tr><td>e′ four-vector, lab frame, crossing angle, head-on frame</td><td>Track + cluster → k′ in the lab; head-on transformation</td><td>Everything is computed in the head-on frame; <code>kinematics.scattered_electron</code> gives (E′, θ, η) for acceptance only; φ<sub>e</sub> was never constructed. Seeded: <code>reco.electron_fourvector</code>, <code>head_on_to_lab</code>, <code>lab_to_head_on</code></td><td class="status-part">partial → seeded</td></tr>
+    <tr><td>Electron ID and efficiency</td><td>E/p, shower shape, charge-symmetric subtraction</td><td><code>money_delta_20260729.eps_eid(η)</code>, ATHENA/ECCE anchors (fastsim script-local); no purity model</td><td class="status-part">partial</td></tr>
+    <tr><td>e′ resolution</td><td>Calorimeter energy, track angles</td><td><code>money_delta_20260729.smear_config</code>: Gaussian tracking-only σ<sub>p</sub>/p, σ<sub>θ</sub> = σ<sub>φ</sub>; φ smeared but unused. Seeded: <code>reco.smear_electron</code>, <code>emcal_resolution</code>, <code>tracking_resolution</code></td><td class="status-part">partial → seeded</td></tr>
+    <tr><td>Kinematic reconstruction (electron / JB / Σ / mixed)</td><td>Mixed method at low y from the hadronic final state</td><td>Electron method only (20260729); no hadronic final state anywhere in polligen. Seeded: <code>reco.electron_method</code>, <code>electron_method_resolution</code>, parametrized <code>hadronic_y</code>, <code>mixed_method</code></td><td class="status-no">missing → stand-in</td></tr>
+    <tr><td>The physics azimuth</td><td>Covariant φ<sub>S</sub> from k, k′, P, S</td><td><code>sample._sample_state</code> draws φ′ directly from the modulation and adds a known φ<sub>S</sub>; no reconstruction. Seeded: <code>reco.azimuth_wrt_lepton_plane</code> (verified against an explicit collinear-frame construction)</td><td class="status-no">missing → seeded</td></tr>
+    <tr><td>Reconstructed-level (x, Q²) binning and migration</td><td>Reco bins, migration matrix, unfolding</td><td>(x, Q²) migration in 20260729 with the electron method, amplitude carried as a per-bin truth label; money plots 5–7 bin in true (x, Q²). Seeded: the migration study of Figure 1(c)</td><td class="status-part">partial</td></tr>
+    <tr><td>Spin-state-sorted ratio estimator for cos 2φ′</td><td>R(φ′) of m = ±1-rich vs m = 0-rich fills; fit with sin 2φ′</td><td><code>transverse_tensor_plan</code> is a single category; <code>estimators.cos2phi_fit_binned</code> fits one histogram with boolean holes only; the thirds ratio exists for A<sub>zz</sub> alone. Seeded: <code>reco.harmonic_ratio_fit</code>, <code>spin_state_ratio</code>, <code>expected_counts_by_fill</code></td><td class="status-no">missing → seeded</td></tr>
+    <tr><td>Full-luminosity pseudo-data</td><td>—</td><td><code>sample.phi_histogram_pseudo</code>: exact expected counts per φ′ bin, Poisson-fluctuated; statistically exact for a binned estimator, blind to reconstruction by construction</td><td class="status-ok">exists (statistics only)</td></tr>
+    <tr><td>Amplitude → Δ</td><td>Kinematic conversion with measured F₂, R; unfolding</td><td><code>money_delta_extraction.py</code>: model bin-centering K-factor with true kinematics; no migration matrix, model F₂</td><td class="status-part">partial</td></tr>
+    <tr><td>Radiative corrections</td><td>Unpolarized RC on the yields; tensor RC</td><td>None (plans/07 WP4 bound planned)</td><td class="status-no">missing</td></tr>
+    <tr><td>Coherent: recoil four-vector and t</td><td>t from the recoil, x<sub>P</sub> from M<sub>X</sub></td><td><code>coherent.recoil_lab</code> (p<sub>T</sub> = √|t|, R, x<sub>L</sub>), <code>sample_t</code>; t never reconstructed; x<sub>P</sub> and M<sub>X</sub> absent (f<sub>coh</sub> written against Bjorken x). Seeded: <code>reco.recoil_fourvector</code> (exact light-cone), <code>t_from_fourvectors</code></td><td class="status-part">partial → seeded</td></tr>
+    <tr><td>Coherent: Roman-Pot measurement</td><td>Transport, divergence smearing, rectangular cutout, angular cut</td><td><code>farforward.route_charged</code>: scalar, φ-symmetric p<sub>T</sub> cut, no resolution, constant 0.20 GeV at all energies. Seeded: <code>reco.rp_measure</code>, <code>rp_hole_acceptance</code>, <code>tag_pt_cut</code></td><td class="status-part">partial → seeded</td></tr>
+    <tr><td>Coherent: exclusivity and vetoes</td><td>OMD/ZDC/B0 vetoes, rapidity gap, Z-ID, |t| fit</td><td><code>coherent.veto_table</code> bookkeeping only; no event-level breakup model (BeAGLE blocked on FLUKA)</td><td class="status-no">missing</td></tr>
+    <tr><td>Coherent: two-azimuth harmonic analysis</td><td>R(α, β) per (x<sub>P</sub>, t, Q²) bin</td><td>Single φ′ (electron) with the anchored a₂ of the recoil azimuth; no 2-D structure</td><td class="status-no">missing</td></tr>
+    <tr><td>Full-simulation far-forward</td><td>Geant4 acceptance, EICrecon transport</td><td><code>tools/fullsim</code> gun scans (hit level, RP at 32.5/34.3 m); no ⁶Li-nucleus gun, no reconstruction</td><td class="status-part">partial</td></tr>
+  </table>
+
+  <div class="callout warm">
+    <b>Verdict.</b> The simulation is a validated <i>truth-level</i> modulation machine with
+    exact statistics: the physics kernel, the spin-density bookkeeping and the binned
+    estimator are correct and tested, and the money plots are statistically faithful
+    projections. What it did not contain is the measurement layer: no four-vectors, no
+    frames, no kinematic-reconstruction method, no hadronic final state, no reconstructed
+    azimuth, no spin-state-sorted ratio, no Roman-Pot measurement model. Two of the missing
+    pieces matter for the headline numbers rather than for their decoration — the
+    hadronic-method requirement at the y ≈ 0.01 sweet spots (which changes the binning and the
+    energy strategy, not the reach) and the estimator (which changes the error by 0.67× and
+    removes an uncontrolled systematic) — and one changes the coherent case (the angular cut
+    and the cutout geometry). None of them touches the generator kernel; all of them belong to
+    plans/07 WP3.
+  </div>
+
+  <h3>5.1 · What a minimal realistic chain looks like in polligen</h3>
+
+  <p>With the seeded module the reconstructed-level pseudo-experiment of WP3 is a composition,
+  not a new design. For the inclusive channel: (i) sample spin-labelled events from
+  <code>InclusiveSampler</code> for the m = ±1-rich and m = 0-rich categories of a two-fill
+  run plan (<code>bookkeeping</code> already supports it); (ii) build k′ with
+  <code>reco.electron_fourvector</code> and a uniform φ<sub>e</sub>, transform to the lab and
+  back, smear with <code>smear_electron</code> (calorimeter energy, track angles) and weight
+  with ε<sub>eID</sub>(η) and a smooth ε(φ′); (iii) reconstruct Q² with
+  <code>electron_method</code> and x with <code>mixed_method</code> from a parametrized
+  <code>hadronic_y</code>; (iv) compute φ′ with <code>azimuth_wrt_lepton_plane</code>;
+  (v) histogram per spin state in reconstructed bins and fit with
+  <code>harmonic_ratio_fit</code>; (vi) correct with the migration matrix of the same sample
+  and convert with the model F₂; (vii) close against the truth amplitudes of
+  <code>effective_modulation</code> — the reconstructed-level analogue of the existing
+  generator-level gate. For the coherent channel: sample t, φ<sub>t</sub>, x<sub>P</sub>;
+  build P′ with <code>recoil_fourvector</code>; emulate the pots with <code>rp_measure</code>
+  (rectangular cutout, angular cut at the beam's p<sub>u</sub>); compute α and β covariantly;
+  inject a<sub>t</sub>, a<sub>e</sub> and the unpolarized u<sub>1,2</sub>; fit the 2-D ratio.
+  The hadronic final state itself, the breakup backgrounds and the real acceptance maps
+  remain Phase-2 items and are the honest limit of "simple detector effects".</p>
+
+  <h2>6 · Recommendations</h2>
+
+  <ol class="steps">
+    <li>Re-derive money plots 5 and 7 in reconstructed (x, Q²) bins with the mixed method
+    and a 15–30% hadronic-y band; quote the electron-method-only variant at y ≥ 0.05 as
+    the fallback, and use the low-energy configuration for the x ≈ 0.1 bins.</li>
+    <li>Replace the single-fill fit by the spin-state-sorted ratio with the
+    m = ±1-rich / m = 0-rich pattern in all projections; update δA to
+    2√(2/N)/(P<sub>+</sub> − P<sub>0</sub>) (0.67× the current values at the same source
+    purity) and drop the "self-normalized within a single fill" wording in favour of
+    "acceptance and relative luminosity cancel in the spin-state ratio".</li>
+    <li>Fit cos 2φ′ and sin 2φ′ together; report the sin 2φ′ coefficient as the spin-axis
+    calibration.</li>
+    <li>In the coherent channel, present the anchored deformation term as a modulation of
+    the recoil azimuth, add the two-azimuth harmonic fit to the analysis description, replace
+    the constant 0.20 GeV cut by the angular cut 10σ<sub>θ</sub>·6p<sub>u</sub> in
+    <code>coherent.py</code> (curves versus σ<sub>θ</sub> and p<sub>u</sub>, plans/07 WP5), and
+    state the cutout geometry as an explicit assumption to be replaced by the ePIC design.</li>
+    <li>Resolve the a<sub>n</sub> normalization convention of the deuteron anchor at the
+    source before the amplitudes are quoted again.</li>
+    <li>Ask the ePIC far-forward and inclusive working groups for two numbers the
+    simulation cannot produce: the Σ-method δy/y at y = 0.01–0.05 for e + light ions, and the
+    Roman-Pot cutout dimensions (β*, emittance, pot geometry) for the light-ion optics.</li>
+  </ol>
+
+  <h2>References</h2>
+  <div class="refs">
+    <p>[1] R. L. Jaffe, A. Manohar, <i>Nuclear gluonometry</i>, Phys. Lett. B 223 (1989) 218.</p>
+    <p>[2] P. Hoodbhoy, R. L. Jaffe, A. Manohar, <i>Novel effects in deep inelastic scattering from spin-one hadrons</i>, Nucl. Phys. B 312 (1989) 571.</p>
+    <p>[3] A. Bacchetta, M. Diehl, K. Goeke, A. Metz, P. J. Mulders, M. Schlegel, <i>Semi-inclusive deep inelastic scattering at small transverse momentum</i>, JHEP 02 (2007) 093, hep-ph/0611265 (covariant definitions of the azimuthal angles, Eqs. 2.4–2.5).</p>
+    <p>[4] A. Bacchetta, U. D'Alesio, M. Diehl, C. A. Miller, <i>Single-spin asymmetries: the Trento conventions</i>, Phys. Rev. D 70 (2004) 117504; M. Diehl, S. Sapeta, <i>On the analysis of lepton scattering on longitudinally or transversely polarized protons</i>, Eur. Phys. J. C 41 (2005) 515.</p>
+    <p>[5] F. Jacquet, A. Blondel, in <i>Proceedings of the Study of an ep Facility for Europe</i>, DESY 79/48 (1979) 391 (the hadronic-method kinematics).</p>
+    <p>[6] U. Bassler, G. Bernardi, <i>On the kinematic reconstruction of deep inelastic scattering at HERA: the Σ method</i>, Nucl. Instrum. Meth. A 361 (1995) 197.</p>
+    <p>[7] R. Abdul Khalek et al., <i>Science requirements and detector concepts for the Electron-Ion Collider: EIC Yellow Report</i>, Nucl. Phys. A 1026 (2022) 122447 (kinematic reconstruction methods, far-forward detectors, 10σ Roman-Pot cut, beam parameters).</p>
+    <p>[8] A. Jentsch, Z. Tu, C. Weiss, <i>Deep-inelastic electron-deuteron scattering with spectator nucleon tagging at the future Electron-Ion Collider: extracting free nucleon structure</i>, Phys. Rev. C 104 (2021) 065205, arXiv:2108.08314 (far-forward acceptance and resolution model).</p>
+    <p>[9] H. Mäntysaari, F. Salazar, B. Schenke, C. Shen, W. Zhao, <i>Spatial imaging of polarized deuterons at the Electron-Ion Collider</i>, Phys. Lett. B 858 (2024) 139053, arXiv:2408.13213 (the recoil-azimuth modulation anchoring the deformation term).</p>
+    <p>[10] W. Chang, E.-C. Aschenauer, A. Jentsch, A. Kumar, Z. Tu, Z. Yin, <i>Opportunities for imaging light nuclei with a second interaction region at the Electron-Ion Collider</i>, Phys. Rev. D 113 (2026) 032018, arXiv:2511.05638 (IR-8 secondary focus, intact-recoil tagging).</p>
+    <p>[11] This repository: <code>reports/cos2phi_money_plots_report</code> (projections and assumptions), <code>plans/06</code> (coherent background budget), <code>plans/07</code> (letter plan, WP3), <code>evgen/polligen/reco.py</code> and <code>evgen/scripts/reco_chain_figures.py</code> (this note's computations).</p>
+  </div>
+
+  <div class="foot">
+    Conventions: head-on frame with the ion along +z and the electron along −z; θ′ is the
+    scattered-electron angle from the electron beam; per-nucleon (x, y, s) throughout;
+    whole-nucleus four-momenta where a mass matters. Beam divergences are the proton values
+    implied by the documented Roman-Pot cuts (73 and 149 μrad); the lithium optics are
+    undocumented (plans/04 #11). Hadronic-method resolutions are assumptions (15–30%), not
+    ePIC results. Built by <code>reports/build_report.py</code>; figures from
+    <code>evgen/scripts/reco_chain_figures.py</code>; display mathematics typeset at build time.
+  </div>
+</div>
+</body>
+</html>
