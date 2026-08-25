@@ -41,8 +41,9 @@ full test suites (118 passed: 94 evgen + 24 fastsim).
   signal, 10⁻³ → 0.56×, 10⁻⁴ → 6% (§5.1). Fill-by-fill alternation
   therefore needs 10⁻⁴ stability of the acceptance harmonic; bunch-by-bunch
   alternation within a fill (plans/04 #3) makes the cancellation exact.
-  The coherent cutout has the same property (a 1% change of the vertical
-  envelope between the samples biases a_t by 1.3%, 5% by 6%).
+  The coherent cutout has the same property, and far more sharply than
+  this pass estimated: 10⁻³ of the vertical envelope between the samples
+  biases a_t by 19% (§5.2, superseded note; plans/08 A1b).
 * **Consistency with the references:** the generator kernel, the
   covariant azimuth, the estimator algebra, the Mäntysaari 2a₂
   convention, the Jentsch far-forward windows, the ZEUS u₁/u₂ bounds and
@@ -147,8 +148,9 @@ docstring (`tensor_flip_plan`) describes *bunches*, the plan and the
 category names say *fills*; plans/04 #3 already lists "bunch-by-bunch
 spin patterns" as an unknown of tensor operations. The same holds for
 the coherent cutout (§5.2): the fake ⟨cos 2β⟩ of the slot changes by
-0.0027 per 1% change of the vertical envelope (10σ_y), i.e. a bias of
-0.0015 on a_t ≈ 0.12 (1.3%); 5% on both half-widths → 6%. *Action:*
+0.0027 per 1% change of the vertical envelope (10σ_y), i.e. a naive bias
+of 0.0015 on a_t ≈ 0.12 (1.3%) — an estimate the template fit refutes by
+two orders of magnitude (§5.2 superseded note; plans/08 A1b). *Action:*
 state the requirement (bunch-by-bunch alternation, or 10⁻⁴ acceptance
 stability and 1% envelope stability) in the report, plans/04 #3 and the
 plans/07 systematics list; add a per-fill efficiency option to the
@@ -361,6 +363,17 @@ P₊ − P₀ = 1.8, i.e. 1.3% of a_t = 0.117); +1% of c_x: no change (the
 slot's x-sides are outside the spectrum); +5% of both: −0.0132 (→ −0.007,
 6%). The envelope is set by the beam size at the pots (β-function,
 emittance, orbit), which can differ between fills.
+
+*Superseded 2026-08-25 (plans/08 A1b).* This analytic estimate is the
+naive one and understates the effect by about two orders of magnitude.
+Feeding a per-fill cutout through the template fit
+(`CoherentResponse.with_cut`, `measure_coherent(responses=...)`) gives
++19% on a_t for a **10⁻³** relative change of the vertical half-height
+and +169% for 1%, with exact closure at zero. The cause is in the fit,
+not in ⟨cos 2β⟩: the slot leaves only 12 of 24 β bins live, where the
+t-shape template is 99% anti-correlated with the constant. The
+requirement is bunch-by-bunch alternation or ≈10⁻⁴ envelope stability;
+the higher-|t| bins are far less exposed (+3.9%, +0.04%).
 
 ### 5.3 Resolutions and purities of the response (F3)
 

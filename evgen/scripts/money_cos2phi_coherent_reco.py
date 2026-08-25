@@ -90,6 +90,24 @@ def main():
                     help="cutout half-height in y in units of 10 sigma_y")
     ap.add_argument("--shape", default="rectangle",
                     choices=("rectangle", "ellipse"))
+    ap.add_argument("--envelope-split", type=float, default=0.0,
+                    help="RELATIVE difference of the Roman-Pot vertical "
+                         "half-height between the m=+-1-rich and m=0-rich "
+                         "fills.  The spin-state ratio cancels a COMMON "
+                         "cutout exactly; a difference is the one "
+                         "systematic it cannot cancel (code review F1), "
+                         "and the slot amplifies it far beyond the naive "
+                         "d<cos 2beta>/(P+ - P0).  0 = common")
+    ap.add_argument("--u1-assumed", type=float, default=None,
+                    help="u1 the ANALYSIS subtracts (default: the "
+                         "generated value, i.e. exactly known)")
+    ap.add_argument("--u2-assumed", type=float, default=None,
+                    help="u2 the ANALYSIS subtracts.  An error here "
+                         "reaches a_e at FIRST order as a_t du2 "
+                         "<cos 2beta>, amplified by the cutout")
+    ap.add_argument("--rel-lumi-offset", type=float, default=0.0,
+                    help="relative-luminosity error unknown to the "
+                         "analysis (second order in the ratio)")
     ap.add_argument("--n-mc", type=int, default=600000)
     ap.add_argument("--seed", type=int, default=20260824)
     ap.add_argument("--outdir", default=".")
@@ -117,15 +135,44 @@ def main():
     def a_t_func(t):   # cos 2beta coefficient per unit P_zz (Eq. 9 convention)
         return sc.cos2phi_coefficient_deformation(t, 1.0)
 
+    # what the analysis ASSUMES, where that differs from the truth
+    responses = None
+    if args.envelope_split:
+        responses = [cresp.with_cut((args.cut_scale_x,
+                                     args.cut_scale_y
+                                     * (1.0 + args.envelope_split))),
+                     cresp]
+        print("fill-dependent Roman-Pot envelope: vertical half-height "
+              "%+.2e relative on the +Pzz fill (%.4f vs %.4f GeV); the "
+              "ratio cancels only a COMMON cutout"
+              % (args.envelope_split, responses[0].cut_pt_xy[1],
+                 cresp.cut_pt_xy[1]))
+    u_assumed = None
+    if args.u1_assumed is not None or args.u2_assumed is not None:
+        u_assumed = (args.u1 if args.u1_assumed is None else args.u1_assumed,
+                     args.u2 if args.u2_assumed is None else args.u2_assumed)
+        print("assumed unpolarized harmonics (u1, u2) = (%.4f, %.4f) "
+              "against generated (%.4f, %.4f)"
+              % (u_assumed[0], u_assumed[1], args.u1, args.u2))
+    lumi_assumed = None
+    if args.rel_lumi_offset:
+        lumi_assumed = [0.5 * (1.0 + args.rel_lumi_offset),
+                        0.5 * (1.0 - args.rel_lumi_offset)]
+        print("assumed luminosity shares %s against equal truth"
+              % (["%.6f" % v for v in lumi_assumed],))
+
     t_edges = [0.05, 0.08, 0.12, 0.17, 0.25]
     fits1, fits10 = [], []
     for tlo, thi in zip(t_edges[:-1], t_edges[1:]):
         fits1.append(rp.measure_coherent(
             cresp, n_produced, plan, tlo, thi, args.amp, a_t_func, a_m=args.a_m,
-            u1=args.u1, u2=args.u2, rng=rng))
+            u1=args.u1, u2=args.u2, rng=rng, responses=responses,
+            u_coeffs_assumed=u_assumed, lumi_assumed=lumi_assumed))
         fits10.append(rp.measure_coherent(
             cresp, n_produced * lumi_ratio, plan, tlo, thi, args.amp, a_t_func,
-            a_m=args.a_m, u1=args.u1, u2=args.u2, rng=rng))
+            a_m=args.a_m, u1=args.u1, u2=args.u2, rng=rng,
+            responses=responses, u_coeffs_assumed=u_assumed,
+            lumi_assumed=lumi_assumed))
 
     fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(11.8, 8.6))
     f0 = fits1[0]

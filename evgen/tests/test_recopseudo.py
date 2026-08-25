@@ -226,3 +226,119 @@ def test_project_coherent_angular_cut():
     ratio = tagged[key].sum() / n_coh.sum()
     cut = reco.tag_pt_cut(reco.SIGMA_THETA_HA, CONFIG.ion_momentum_per_nucleon)
     assert ratio == pytest.approx(np.exp(-sc.slope_b * cut * cut), rel=1e-9)
+
+
+# --- what the coherent ratio does NOT cancel (code review F1, F6) -----------
+
+@pytest.fixture(scope="module")
+def slot_response():
+    """The 6R default: slot-like cutout, isotropic divergence."""
+    sc = coh.CoherentScenario(amp=0.01, eps_b0=-0.08)
+    return sc, rp.CoherentResponse(sc, CONFIG, reco.SIGMA_THETA_HA,
+                                   aspect=1.0, cut_scale_xy=(2.5, 1.0),
+                                   n_mc=300000, rng=np.random.default_rng(11))
+
+
+def _slot_fit(cr, sc, responses=None, u_assumed=None, lumi_assumed=None,
+              n=8e7):
+    plan = bk.tensor_flip_plan(0.6)
+    a_t = lambda t: sc.cos2phi_coefficient_deformation(t, 1.0)  # noqa: E731
+    fit = rp.measure_coherent(cr, n, plan, 0.05, 0.08, a_e=0.010,
+                              a_t_func=a_t, u1=0.05, u2=0.02, poisson=False,
+                              responses=responses, u_coeffs_assumed=u_assumed,
+                              lumi_assumed=lumi_assumed)
+    return fit, fit["truth"]
+
+
+def test_with_cut_is_a_view_of_the_same_recoils(slot_response):
+    _sc, cr = slot_response
+    same = cr.with_cut(cr.cut_scale_xy)
+    np.testing.assert_array_equal(same.t_reco, cr.t_reco)
+    np.testing.assert_array_equal(same.beta_reco, cr.beta_reco)
+    assert same.acceptance == cr.acceptance
+    assert cr.cut_scale_xy == (2.5, 1.0)          # the original is untouched
+    tighter = cr.with_cut((2.5, 1.02))
+    assert tighter.acceptance < cr.acceptance
+    assert tighter.cut_pt_xy[1] == pytest.approx(1.02 * cr.cut_pt_xy[1],
+                                                 rel=1e-9)
+
+
+def test_fill_dependent_envelope_biases_a_t(slot_response):
+    """The coherent counterpart of F1.  The spin-state ratio cancels a
+    COMMON cutout exactly; a difference between the fills does not, and
+    the slot amplifies it far beyond the naive d<cos 2beta>/(P+ - P0):
+    only half the beta bins are live and the t-shape template is ~99%
+    anti-correlated with the constant there."""
+    sc, cr = slot_response
+    ref, truth = _slot_fit(cr, sc)
+    assert ref["a_t"] == pytest.approx(truth["a_t"], rel=1e-5)   # closure
+    cov = ref["cov"]
+    d = np.sqrt(np.diag(cov))
+    assert cov[0, 2] / (d[0] * d[2]) < -0.9      # const/a_t degeneracy
+
+    bias = {}
+    for delta in (1e-4, 1e-3, 1e-2):
+        f, _ = _slot_fit(cr, sc, responses=[cr.with_cut((2.5, 1.0 + delta)),
+                                            cr])
+        bias[delta] = (f["a_t"] - truth["a_t"]) / truth["a_t"]
+    assert 0.0 < bias[1e-4] < bias[1e-3] < bias[1e-2]
+    # 1e-3 of the vertical envelope already moves a_t by more than 10%,
+    # i.e. by more than the one-year statistical error -- the documented
+    # "1% envelope -> 1.3% a_t" estimate is two orders of magnitude out
+    assert bias[1e-3] > 0.10
+    assert bias[1e-2] > 1.0
+
+
+def test_assumed_u2_leaks_into_a_e_at_first_order(slot_response):
+    """u2 is NOT a second-order nuisance: an error in it reaches a_e as
+    a_t x du2 x <cos 2beta>, and the slot's fake <cos 2beta> = +0.77 with
+    a_t/a_e ~ 12 makes a ZEUS-1sigma du2 a ~20% shift of a_e."""
+    sc, cr = slot_response
+    ref, truth = _slot_fit(cr, sc)
+    fake_c2 = float(np.mean(np.cos(2.0 * cr.beta_reco)))
+    assert fake_c2 > 0.5
+
+    for du2 in (-0.024, +0.024):
+        f, _ = _slot_fit(cr, sc, u_assumed=(0.05, 0.02 + du2))
+        shift = f["a_e"] - 0.010
+        assert np.sign(shift) == np.sign(du2)
+        assert abs(shift / 0.010) == pytest.approx(0.20, abs=0.06)
+        # first order: the estimate a_t * du2 * <cos 2beta> gets the size
+        assert abs(shift) == pytest.approx(
+            abs(truth["a_t"] * du2 * fake_c2), rel=0.35)
+        # a_t itself is immune
+        assert abs(f["a_t"] / truth["a_t"] - 1.0) < 5e-3
+
+    # linearity: a ten-times-smaller error gives a ten-times-smaller shift
+    small, _ = _slot_fit(cr, sc, u_assumed=(0.05, 0.02 + 0.0024))
+    big, _ = _slot_fit(cr, sc, u_assumed=(0.05, 0.02 + 0.024))
+    assert (big["a_e"] - 0.010) / (small["a_e"] - 0.010) == \
+        pytest.approx(10.0, rel=0.05)
+
+
+def test_assumed_u1_moves_the_mixed_term_not_a_e(slot_response):
+    sc, cr = slot_response
+    ref, truth = _slot_fit(cr, sc)
+    f, _ = _slot_fit(cr, sc, u_assumed=(0.05 + 0.03, 0.02))
+    assert abs(f["a_e"] / 0.010 - 1.0) < 0.03           # a_e barely moves
+    assert abs(f["a_m"] - ref["a_m"]) > 1e-3            # a_m does
+
+
+def test_assumed_luminosity_is_second_order_in_the_coherent_ratio(slot_response):
+    """As on the inclusive side, a relative-luminosity error enters the
+    ratio only through Pbar: a constant offset plus a second-order
+    rescaling."""
+    sc, cr = slot_response
+    ref, truth = _slot_fit(cr, sc)
+    f, _ = _slot_fit(cr, sc, lumi_assumed=[0.5 * 1.001, 0.5 * 0.999])
+    assert abs(f["a_t"] / truth["a_t"] - 1.0) < 2e-3
+    assert abs(f["a_e"] / 0.010 - 1.0) < 5e-3
+    assert abs(f["const"] - ref["const"]) > 1e-4        # absorbed by kappa
+
+
+def test_measure_coherent_rejects_a_wrong_number_of_responses(slot_response):
+    sc, cr = slot_response
+    plan = bk.tensor_flip_plan(0.6)
+    with pytest.raises(ValueError):
+        rp.measure_coherent(cr, 1e7, plan, 0.05, 0.08, 0.01,
+                            lambda t: 0.1 * t, responses=[cr])

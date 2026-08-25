@@ -631,9 +631,14 @@
   electron, which is the α axis: numerically harmless for a statistical projection, but the
   measurement must histogram (α, β) in two dimensions per (x<sub>P</sub>, t, Q²) bin and
   extract a<sub>t</sub> and a<sub>e</sub> from the spin-state ratio R(α, β); in that ratio
-  u(α − β) survives in the denominator and feeds the pure harmonics only at second order
-  (u₁² ≈ 1%) but the mixed term at first order (a<sub>t</sub>u₁/2), which fixes the fit
-  model.</p>
+  u(α − β) survives in the denominator, so the fit must carry it. An <i>error</i> δu in the
+  assumed value does not stay second order: it reaches the pure harmonics as
+  a<sub>t</sub>·δu₂·⟨cos 2β⟩ and a<sub>e</sub>·δu₁, and with the cutout's fake
+  ⟨cos 2β⟩ = +0.77 and a<sub>t</sub>/a<sub>e</sub> ≈ 12–34 the first of these dominates —
+  a ZEUS-1σ δu₂ = 0.024 shifts a<sub>e</sub> by 20%, 1.6 one-year statistical errors, while
+  the same δu₁ moves a<sub>e</sub> by under 1% and shows up in the mixed term instead
+  (§7.1). u₂, not u₁, is the nuisance to measure in situ from the spin-averaged counts of
+  the same data.</p>
 
   <ol class="steps" start="5">
     <li><b>Acceptance geometry and the estimator.</b> The Roman-Pot acceptance is not a
@@ -790,7 +795,7 @@
     <tr><td>Radiative corrections</td><td>Unpolarized RC on the yields; tensor RC</td><td>None (plans/07 WP4 bound planned)</td><td class="status-no">missing</td></tr>
     <tr><td>Coherent: recoil four-vector and t</td><td>t from the recoil, x<sub>P</sub> from M<sub>X</sub></td><td><code>reco.recoil_fourvector</code> (exact light-cone), <code>t_from_fourvectors</code>; x<sub>P</sub> is sampled, never reconstructed — M<sub>X</sub> and the diffractive system are absent</td><td class="status-part">partial</td></tr>
     <tr><td>Coherent: Roman-Pot measurement</td><td>Transport, divergence smearing, cutout geometry, angular cut</td><td><code>reco.rp_measure</code>, <code>rp_hole_acceptance</code>, <code>tag_pt_cut</code> = 10σ<sub>θ</sub>·6p<sub>u</sub>; <code>coherent.py</code> keeps the older scalar p<sub>T</sub> cut for the truth-level projections</td><td class="status-ok">done</td></tr>
-    <tr><td>Coherent: two-azimuth harmonic analysis</td><td>R(α, β) per (x<sub>P</sub>, t, Q²) bin</td><td><code>reco.harmonic_ratio_fit_2d</code> with the acceptance-weighted template basis (§7); α is integrated analytically — there is no reconstructed electron on the coherent side</td><td class="status-part">done, no electron side</td></tr>
+    <tr><td>Coherent: two-azimuth harmonic analysis</td><td>R(α, β) per (x<sub>P</sub>, t, Q²) bin</td><td><code>reco.harmonic_ratio_fit_2d</code> with the acceptance-weighted template basis (§7), and the assumed u₁, u₂, luminosity shares and per-fill cutout as fit arguments; α is integrated analytically — there is no reconstructed electron on the coherent side</td><td class="status-part">done, no electron side</td></tr>
     <tr><td>Coherent: exclusivity and vetoes</td><td>OMD/ZDC/B0 vetoes, rapidity gap, Z-ID, |t| fit</td><td><code>coherent.veto_table</code> bookkeeping only; no event-level breakup model (BeAGLE blocked on FLUKA)</td><td class="status-no">missing</td></tr>
     <tr><td>Full-simulation far-forward</td><td>Geant4 acceptance, EICrecon transport</td><td><code>tools/fullsim</code> gun scans (hit level, RP at 32.5/34.3 m); no ⁶Li-nucleus gun, no reconstruction</td><td class="status-part">partial</td></tr>
   </table>
@@ -980,7 +985,7 @@
   sweet spots — reproduced by the toy final state with a 50 MeV noise floor (§3), so the
   open item is the noise and threshold floor of the real detector at that Σ<sub>h</sub> and
   the PYTHIA fragmentation in place of the toy (plans/04 #21); u₁, u₂
-  sit at the ZEUS 1σ bounds [13] and the slot dimensions are illustrative (#20); the
+  are generated at the ZEUS 1σ bounds [13] and the slot dimensions are illustrative (#20); the
   φ′-efficiency harmonics are illustrative magnitudes; radiative corrections and
   backgrounds are not included; the 7R points are centered with the injected model (as in
   money plot 7); the template assumes the linear t-shape it fits, so a different shape is
@@ -992,14 +997,25 @@
   (<code>reco.fill_acceptance_bias</code>): δε₂ = 10⁻³ fakes 5.6×10⁻⁴, which is 5% of the
   sweet-spot amplitudes but 4.6 times the one-year statistical error and 14 times the
   ten-year one. Bunch-by-bunch alternation, or stability of the harmonic to ≈ 10⁻⁴ between
-  fills, is therefore a requirement of the measurement, and the cutout's fake harmonic must
-  be stable to ≈ 1% of the vertical envelope for a 1% a<sub>t</sub> systematic; K is
+  fills, is therefore a requirement of the measurement. The coherent counterpart is
+  <i>tighter</i> than the earlier estimate: a naive δ⟨cos 2β⟩/(P₊ − P₀) gives 1.3% of
+  a<sub>t</sub> for a 1% change of the vertical envelope between fills, but the fit gives
+  +19% for a <b>10⁻³</b> change and +169% for 1% — under the slot only half the β bins are
+  live and the t-shape template is 99% anti-correlated with the constant there, so a shape
+  perturbation is amplified about a hundredfold. The requirement is bunch-by-bunch
+  alternation or ≈ 10⁻⁴ envelope stability; the mitigation, if neither is available, is that
+  the higher-|t| bins are far less exposed (+3.9% and +0.04% at the same 10⁻³ for
+  |t| = 0.08–0.12 and 0.12–0.17 GeV², where more of the circle is live). K is
   model-dependent at the 3–11% level between the repository's Δ shapes
   (moment_A/moment_B/toy at the four spots), larger than the 10-year statistical errors;
   the EMCal term 2%/√E ⊕ 1% is the backward specification applied at all η (the
   sweet-spot electrons are backward, the high-x bins of the amplitude panels are not); the
-  6R sample is background-free and Z-identified by assumption, and u₁, u₂ and the 6R
-  luminosity shares are taken as exactly known.</p>
+  6R sample is background-free and Z-identified by assumption. u₁, u₂ and the luminosity
+  shares are exactly known in Table 3, but no longer only by assumption: they are arguments
+  of the fit (<code>measure_coherent(u_coeffs_assumed=, lumi_assumed=, responses=)</code>,
+  <code>money_cos2phi_coherent_reco.py --u2-assumed --rel-lumi-offset --envelope-split</code>),
+  and the sensitivities above are what they produce. The relative luminosity is second order
+  here as it is inclusively (10⁻³ moves a<sub>t</sub> by 0.08%).</p>
 
   <h2>References</h2>
   <div class="refs">

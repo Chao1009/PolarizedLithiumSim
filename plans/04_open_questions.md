@@ -60,10 +60,16 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
    (ε₂⁺ − ε₂⁰)/(P₊ − P₀) = 5.6×10⁻⁴ — half a Δ/F₁ ~ 10⁻³ signal, 5% of the
    sweet-spot amplitudes, and 4.6 one-year statistical errors (modelled
    since 2026-08-25 by `reco.fill_acceptance_bias` and
-   `money_cos2phi_reco.py --eff-cos2-split`; plans/08 A1).  A 1% change of the
-   Roman-Pot vertical envelope between the samples biases the coherent
-   a_t by 1.3%. Bunch-by-bunch alternation is therefore a requirement of
-   the measurement; fill-by-fill needs 10⁻⁴ acceptance stability.
+   `money_cos2phi_reco.py --eff-cos2-split`; plans/08 A1).  The coherent counterpart is
+   tighter than the naive estimate: 10⁻³ of the Roman-Pot vertical
+   envelope between the samples biases a_t by **19%** and 1% by 169%
+   (measured, plans/08 A1b — under the slot half the β bins are blind and
+   the t-template is 99% anti-correlated with the constant, so a shape
+   perturbation is amplified ~100× over δ⟨cos 2β⟩/(P₊ − P₀) = 1.3%).
+   Bunch-by-bunch alternation is therefore a requirement of the
+   measurement; fill-by-fill needs 10⁻⁴ stability of both the φ′
+   efficiency and the pot envelope.  The higher-|t| bins are the
+   fallback: +3.9% and +0.04% at the same 10⁻³.
    *Default:* equal thirds (+,0,−), δ(rel-lumi) as a Phase-2 systematic.
 4. **Li luminosity.** Confirmed gap — no Li number exists in any document
    (EPIOS included). Space charge, IBS, cooling for Li bunches unstudied.

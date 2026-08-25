@@ -35,6 +35,7 @@ package; the hadronic final state is NOT generated -- its only entry is
 the parametrized y resolution (open question #21).
 """
 
+import copy
 from dataclasses import dataclass, replace
 
 import numpy as np
@@ -354,7 +355,7 @@ class CoherentResponse:
         rng = rng or np.random.default_rng(20260824)
         self.scenario, self.config = scenario, config
         self.sigma_theta, self.aspect, self.shape = sigma_theta, aspect, shape
-        self.cut_scale_xy = tuple(cut_scale_xy)
+        self.n_sigma, self.phi_s = n_sigma, phi_s
         _k, p_ion = reco.beam_fourvectors(config)
         t = -scenario.sample_t(n_mc, rng, t_max=t_max)
         lo, hi = np.log10(x_pom_range[0]), np.log10(x_pom_range[1])
@@ -364,21 +365,50 @@ class CoherentResponse:
         t, x_pom = t[ok], x_pom[ok]
         phi_t = rng.uniform(0.0, 2.0 * np.pi, size=t.size)
         pp = reco.recoil_fourvector(t, phi_t, x_pom, p_ion)
-        m = reco.rp_measure(pp, p_ion, (sigma_theta, sigma_theta * aspect),
-                            n_sigma=n_sigma, shape=shape, rng=rng,
-                            cut_scale_xy=cut_scale_xy)
-        acc = m["accepted"]
-        self.cut_pt_xy = m["cut_pt_xy"]
+        # the PRE-CUT measurement is kept so that a perturbed cutout is a
+        # re-masking of the SAME recoils (with_cut): rebuilding the
+        # response would cancel the common mode only to MC statistics,
+        # which is far larger than the perturbation of interest.
+        self._m = reco.rp_measure(pp, p_ion,
+                                  (sigma_theta, sigma_theta * aspect),
+                                  n_sigma=n_sigma, shape=shape, rng=rng,
+                                  cut_scale_xy=(1.0, 1.0))
+        self._t, self._phi_t, self._x_pom = t, phi_t, x_pom
         self.n_produced_mc = n_mc
-        self.acceptance = float(acc.sum()) / n_mc
-        self.t_true = -t[acc]
-        self.t_reco = -m["t_reco"][acc]
-        self.beta_true = np.mod(phi_t[acc] - phi_s, 2.0 * np.pi)
-        self.beta_reco = np.mod(m["phi_t"][acc] - phi_s, 2.0 * np.pi)
-        self.x_pom = x_pom[acc]
-        self.w = np.full(self.t_true.size, 1.0 / n_mc)   # per produced recoil
         self.pt_cut = reco.tag_pt_cut(sigma_theta, config.ion_momentum_per_nucleon,
                                       a_beam=config.ion.A, n_sigma=n_sigma)
+        self._apply_cut(cut_scale_xy)
+
+    def _apply_cut(self, cut_scale_xy):
+        """(Re)select the tagged sample for a cutout of half-widths
+        (n_sigma sigma_x, n_sigma sigma_y) * cut_scale_xy, from the
+        already-smeared angle pair."""
+        self.cut_scale_xy = tuple(float(v) for v in cut_scale_xy)
+        m, n_mc = self._m, self.n_produced_mc
+        sx, sy = self.sigma_theta, self.sigma_theta * self.aspect
+        cx = self.n_sigma * sx * self.cut_scale_xy[0]
+        cy = self.n_sigma * sy * self.cut_scale_xy[1]
+        thx, thy = m["theta_x"], m["theta_y"]
+        if self.shape == "rectangle":
+            acc = (np.abs(thx) > cx) | (np.abs(thy) > cy)
+        else:
+            acc = (thx / cx) ** 2 + (thy / cy) ** 2 > 1.0
+        p_beam = self.config.ion.A * self.config.ion_momentum_per_nucleon
+        self.cut_pt_xy = (p_beam * cx, p_beam * cy)
+        self.acceptance = float(acc.sum()) / n_mc
+        self.t_true = -self._t[acc]
+        self.t_reco = -m["t_reco"][acc]
+        self.beta_true = np.mod(self._phi_t[acc] - self.phi_s, 2.0 * np.pi)
+        self.beta_reco = np.mod(m["phi_t"][acc] - self.phi_s, 2.0 * np.pi)
+        self.x_pom = self._x_pom[acc]
+        self.w = np.full(self.t_true.size, 1.0 / n_mc)   # per produced recoil
+        return self
+
+    def with_cut(self, cut_scale_xy):
+        """A view of the SAME recoils behind a perturbed cutout -- the
+        fill-dependent acceptance the spin-state ratio cannot cancel
+        (code review F1, coherent half).  Cheap: no resampling."""
+        return copy.copy(self)._apply_cut(cut_scale_xy)
 
     def t_bin_fraction(self, tlo, thi):
         sel = (self.t_reco >= tlo) & (self.t_reco < thi)
@@ -483,23 +513,43 @@ class CoherentResponse:
 
 def measure_coherent(cresp, n_produced, plan, tlo, thi, a_e, a_t_func,
                      a_m=0.0, u1=0.0, u2=0.0, kappa=0.0, n_alpha=12,
-                     n_beta=24, rng=None, poisson=True):
+                     n_beta=24, rng=None, poisson=True, responses=None,
+                     lumi_assumed=None, u_coeffs_assumed=None):
     """One two-azimuth pseudo-measurement of a reco t bin: expected 2-D
     counts per spin state -> Poisson -> reco.harmonic_ratio_fit_2d with
-    the unpolarized (u1, u2) taken as known and the acceptance-weighted
-    beta basis from the same response (cresp.basis_means)."""
+    the acceptance-weighted beta basis from the same response
+    (cresp.basis_means).
+
+    Three arguments separate what the analysis ASSUMES from what is true,
+    so that the systematics the ratio does not cancel can be exercised
+    (code review F1, F6):
+      `responses`      one CoherentResponse per fill for GENERATION (e.g.
+                       cresp.with_cut(...) with a perturbed envelope);
+                       the basis and the truth reference stay on `cresp`,
+                       which is what a real analysis has.
+      `lumi_assumed`   luminosity fractions the analysis believes.
+      `u_coeffs_assumed`  (u1, u2) the analysis subtracts, if not the
+                       generated ones.
+    """
     rng = rng or np.random.default_rng(20260824)
     ae = np.linspace(0.0, 2.0 * np.pi, n_alpha + 1)
     be = np.linspace(0.0, 2.0 * np.pi, n_beta + 1)
     pzz = [float(c.moments()[1]) for c in plan.categories]
     frac = [c.lumi_fraction for c in plan.categories]
-    mu = cresp.expected_counts_2d(n_produced, pzz, frac, tlo, thi, ae, be,
-                                  a_e, a_t_func, a_m=a_m, u1=u1, u2=u2,
-                                  kappa=kappa)
+    gens = list(responses) if responses is not None else [cresp] * len(pzz)
+    if len(gens) != len(pzz):
+        raise ValueError("responses must have one entry per fill")
+    mu = np.concatenate([
+        g.expected_counts_2d(n_produced, [pf], [lf], tlo, thi, ae, be,
+                             a_e, a_t_func, a_m=a_m, u1=u1, u2=u2,
+                             kappa=kappa)
+        for g, pf, lf in zip(gens, pzz, frac)], axis=0)
     counts = rng.poisson(mu) if poisson else mu
     bm = cresp.basis_means(tlo, thi, be)
-    fit = reco.harmonic_ratio_fit_2d(counts, frac, pzz, ae, be,
-                                     u_coeffs=(u1, u2), beta_means=bm)
+    lum = frac if lumi_assumed is None else list(lumi_assumed)
+    u_ass = (u1, u2) if u_coeffs_assumed is None else tuple(u_coeffs_assumed)
+    fit = reco.harmonic_ratio_fit_2d(counts, lum, pzz, ae, be,
+                                     u_coeffs=u_ass, beta_means=bm)
     fit["beta_means"] = bm
     fit.update({"counts": counts, "expected": mu, "alpha_edges": ae,
                 "beta_edges": be, "n": float(mu.sum()),
