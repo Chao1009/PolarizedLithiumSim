@@ -282,7 +282,10 @@
 
   <p class="eq"><img class="tex" data-tex="Q^2_e = 4E_eE'\sin^2\frac{\theta'}{2},\qquad y_e = 1-\frac{E'}{E_e}\cos^2\frac{\theta'}{2},\qquad x_e = \frac{Q^2_e}{s\,y_e},\qquad \frac{\delta y_e}{y_e} = \frac{1-y}{y}\left[\frac{\delta E'}{E'}\oplus\tan\frac{\theta'}{2}\,\delta\theta'\oplus\frac{\delta E_e}{E_e}\right]"></p>
 
-  <p>has an excellent Q² (δQ²/Q² ≈ δE′/E′ ⊕ cot(θ′/2)δθ′ ≈ 1–2%) but loses y as
+  <p>has a good Q² (δQ²/Q² ≈ δE′/E′ ⊕ cot(θ′/2)δθ′, dominated by the angle at the sweet
+  spots: 5.2% for the 3 mrad track table used in §7 at θ′ ≈ 0.1 rad, 1.6% at spot 4,
+  2% if the backward disks reach 1 mrad — the table is an unsourced placeholder, code review
+  2026-08-25) but loses y as
   (1 − y)/y: at y = 0.01 a 1.2% energy resolution gives δy/y = 120%, and the electron-ring
   energy spread alone (≈ 10⁻³) gives 10%. Table 1 shows where money plot 5 sits. At the
   mid-energy configuration three of the four sweet spots are at y = 0.010–0.025, the
@@ -322,8 +325,9 @@
   <ol class="steps" start="4">
     <li><b>The azimuth.</b> φ′ = φ<sub>e</sub> − φ<sub>S</sub> from the covariant formula
     (§2), with φ<sub>S</sub> the alignment-axis azimuth of that bunch from the spin
-    bookkeeping. The angular resolution of the track (1–3 mrad) dilutes cos 2φ′ by
-    exp(−2σ<sub>φ</sub>²) ≈ 1 − 2×10⁻⁵: negligible.</li>
+    bookkeeping. The track direction resolution enters the azimuth as σ<sub>φ</sub> = σ<sub>θ</sub>/sin θ′
+    ≈ 20–30 mrad at the sweet spots and dilutes cos 2φ′ by ⟨cos 2δφ′⟩ = 0.985–0.999
+    (§7): negligible.</li>
     <li><b>Binning in reconstructed (x, Q²).</b> Figure 1(c) quantifies the migration for
     the mixed method with the sampler's own events: with δy<sub>had</sub>/y = 15% (20%, 30%)
     the 3×3 super-bins keep a purity of 0.81–0.83 (0.74–0.77, 0.61–0.65) and the amplitude
@@ -340,13 +344,20 @@
     N<sub>f</sub> identically, so the bin-wise ratio</li>
   </ol>
 
-  <p class="eq"><img class="tex" data-tex="R(\phi') = \frac{\sum_f w_f\,Y_f(\phi')}{\sum_f Y_f(\phi')},\qquad Y_f = \frac{N_f}{L_f},\qquad w_f = P_f - \bar P,\qquad R(\phi') \simeq \sigma_P^2\left[\kappa + \hat A\cos 2\phi'\right],\qquad \sigma_P^2 = \frac{\sum_f L_f (P_f-\bar P)^2}{\sum_f L_f}"></p>
+  <p class="eq"><img class="tex" data-tex="R(\phi') = \frac{\sum_f w_f\,N_f(\phi')}{\sum_f N_f(\phi')},\qquad w_f = P_f - \bar P,\qquad \bar P = \frac{\sum_f L_f P_f}{\sum_f L_f},\qquad R = \frac{\sigma_P^2\,T(\phi')}{1 + \bar P\,T(\phi')},\qquad T = \kappa + \hat A\cos 2\phi',\qquad \sigma_P^2 = \frac{\sum_f L_f (P_f-\bar P)^2}{\sum_f L_f}"></p>
 
-  <p>is free of ε(φ′) exactly, and a relative-luminosity error δ<sub>f</sub> enters it only as
-  the φ′-independent constant Σw<sub>f</sub>δ<sub>f</sub>/F, orthogonal to the harmonic (second
-  order: δ × Â ≈ 10⁻⁶). A weighted least-squares fit of R(φ′) = c + d cos 2φ′ (+ e sin 2φ′)
-  gives Â = d/σ<sub>P</sub>² after the finite-bin dilution sin w/w is divided out, and κ = c/σ<sub>P</sub>²
-  is the transverse tensor asymmetry of the b₁ sector, a by-product. For two fill types with
+  <p>is free of ε(φ′) exactly (raw counts with luminosity-weighted w<sub>f</sub>, so that
+  Σ<sub>f</sub>L<sub>f</sub>w<sub>f</sub> = 0), and a relative-luminosity error δ<sub>f</sub> enters it only
+  through P̄, as a φ′-independent constant plus a second-order rescaling (δ × P̄/σ<sub>P</sub>²).
+  The cancellation presumes that both spin states see the <i>same</i> ε(φ′): a difference of
+  its cos 2φ′ harmonic between the m = ±1-rich and the m = 0-rich samples enters Â directly
+  as (ε₂⁺ − ε₂⁰)/(P₊ − P₀) — 10⁻³ fakes half the signal — so the two states must alternate
+  bunch by bunch within a fill (the pattern of Schematic 2), or the harmonic must be stable
+  to 10⁻⁴ between fills (code review 2026-08-25, docs/code_review_2026-08-25.md §5.1).
+  A weighted least-squares fit of T(φ′) = c + d cos 2φ′ (+ e sin 2φ′), with T obtained from
+  R bin by bin (the inversion is exact), gives Â = d after the finite-bin dilution sin w/w
+  is divided out, and κ = c is the transverse tensor asymmetry of the b₁ sector, a
+  by-product. For two fill types with
   equal luminosity the statistical error is</p>
 
   <p class="eq"><img class="tex" data-tex="\delta\hat A = \frac{2}{P_+-P_0}\sqrt{\frac{2}{N}}\;\;\mathrm{(two\ fills)}\qquad\mathrm{vs}\qquad \delta\hat A = \frac{1}{P_{zz}}\sqrt{\frac{2}{N}}\;\;\mathrm{(single\ fill)}"></p>
@@ -426,7 +437,7 @@
       <text x="512" y="66" font-size="8">(exact; for e′ only odd harmonics change, ≈ 10⁻³)</text>
       <rect x="504" y="80" width="226" height="60" rx="5" class="boxa"/>
       <text x="512" y="95" font-size="8.4" font-weight="600" fill="#0067A0">2  Kinematic reconstruction</text>
-      <text x="512" y="107" font-size="8">Q² = 4E<tspan font-size="6" dy="2">e</tspan><tspan dy="-2">E′ sin²(θ′/2)  (electron, 1–2%)</tspan></text>
+      <text x="512" y="107" font-size="8">Q² = 4E<tspan font-size="6" dy="2">e</tspan><tspan dy="-2">E′ sin²(θ′/2)  (electron, 2–5%)</tspan></text>
       <text x="512" y="119" font-size="8">y<tspan font-size="6" dy="2">Σ</tspan><tspan dy="-2"> = Σ/(Σ + E′(1 − cos θ</tspan><tspan font-size="6" dy="2">e</tspan><tspan dy="-2">))  (hadronic, 15–30%)</tspan></text>
       <text x="512" y="131" font-size="8">x = Q²/(s y<tspan font-size="6" dy="2">Σ</tspan><tspan dy="-2">)   [e′ alone: δy/y = 120% at y = 0.01]</tspan></text>
       <rect x="504" y="152" width="226" height="40" rx="5" class="boxa"/>
@@ -440,7 +451,7 @@
       <rect x="504" y="256" width="226" height="62" rx="5" class="boxa"/>
       <text x="512" y="271" font-size="8.4" font-weight="600" fill="#0067A0">5  Spin-state ratio and fit</text>
       <text x="512" y="283" font-size="8">R(φ′) = Σ<tspan font-size="6" dy="2">f</tspan><tspan dy="-2"> w</tspan><tspan font-size="6" dy="2">f</tspan><tspan dy="-2">Y</tspan><tspan font-size="6" dy="2">f</tspan><tspan dy="-2"> / Σ</tspan><tspan font-size="6" dy="2">f</tspan><tspan dy="-2"> Y</tspan><tspan font-size="6" dy="2">f</tspan><tspan dy="-2">, Y</tspan><tspan font-size="6" dy="2">f</tspan><tspan dy="-2"> = N</tspan><tspan font-size="6" dy="2">f</tspan><tspan dy="-2">/L</tspan><tspan font-size="6" dy="2">f</tspan></text>
-      <text x="512" y="295" font-size="8">fit c + d cos 2φ′ + e sin 2φ′: acceptance cancels</text>
+      <text x="512" y="295" font-size="8">fit T = c + d cos 2φ′ + e sin 2φ′: common acceptance cancels</text>
       <text x="512" y="307" font-size="8">bin by bin; rel. luminosity → constant c only;</text>
       <text x="512" y="317" font-size="8">single-fill fit biased by ε's harmonic ÷ P<tspan font-size="6" dy="2">zz</tspan></text>
       <rect x="504" y="330" width="226" height="52" rx="5" class="boxa"/>
@@ -782,7 +793,9 @@
   <code>effective_modulation</code> — the reconstructed-level analogue of the existing
   generator-level gate. For the coherent channel: sample t, φ<sub>t</sub>, x<sub>P</sub>;
   build P′ with <code>recoil_fourvector</code>; emulate the pots with <code>rp_measure</code>
-  (rectangular cutout, angular cut at the beam's p<sub>u</sub>); compute α and β covariantly;
+  (rectangular cutout, angular cut at the beam's p<sub>u</sub>); take α analytically and β
+  from the pot angles (the lab shortcut, exact to 0.2 mrad here; the coherent
+  pseudo-experiment of §7 carries no electron side and bins in reconstructed |t| only);
   inject a<sub>t</sub>, a<sub>e</sub> and the unpolarized u<sub>1,2</sub>; fit the 2-D ratio.
   The hadronic final state itself, the breakup backgrounds and the real acceptance maps
   remain Phase-2 items and are the honest limit of "simple detector effects".</p>
@@ -817,7 +830,8 @@
   <p>The pieces of §5.1 are composed in <code>polligen/recopseudo.py</code>. The inclusive
   response is importance-sampled: every accepted sampler cell (60×45 grid, generator cuts
   loosened to y ≥ 0.004, Q² ≥ 0.7 GeV², |η| ≤ 3.8, E′ ≥ 0.3 GeV so that events can migrate
-  <i>into</i> the analysis window) receives 400 pseudo-events with weight σ<sub>c</sub>/400,
+  <i>into</i> the analysis window) receives 400 pseudo-events with weight σ<sub>c</sub>/n<sub>kept</sub> (n<sub>kept</sub> = those
+  inside the generator acceptance, so the cell rate is conserved),
   each carried through the lab frame (25 mrad crossing), Gaussian smearing of E′ (EMCal
   2%/√E ⊕ 1%) and of the track direction (1–5 mrad by η), the head-on transformation, the
   electron-method Q², a hadronic y with the documented 25% resolution [18,19], the
@@ -841,7 +855,7 @@
     <tr><td class="mono">3: x = 0.141, Q² = 3.13</td><td class="mono">7.6×10⁷</td><td class="mono">0.66</td><td class="mono">0.37</td><td class="mono">0.910</td><td class="mono">11.58 ± 0.18</td><td class="mono">11.71</td><td class="mono">0.058</td><td class="mono">0.26</td></tr>
     <tr><td class="mono">4: x = 0.141, Q² = 14.3</td><td class="mono">2.8×10⁷</td><td class="mono">0.68</td><td class="mono">0.64</td><td class="mono">0.969</td><td class="mono">9.52 ± 0.30</td><td class="mono">9.32</td><td class="mono">0.095</td><td class="mono">0.45</td></tr>
   </table>
-  <p style="font-size:8pt;color:var(--ink-2);margin-top:-2pt">Table 2 — money plot 5R: the four sweet-spot super-bins in reconstructed (x, Q²) with the mixed method and the documented 25% hadronic-y resolution [18,19]. Efficiency = fraction of the true-bin rate reconstructed in the bin after ε<sub>eID</sub>; D = ratio of the rate-weighted model amplitude of the events in the reconstructed bin to that of the true bin. The last column is the single-fill, truth-binned error of the projection report.</p>
+  <p style="font-size:8pt;color:var(--ink-2);margin-top:-2pt">Table 2 — money plot 5R: the four sweet-spot super-bins in reconstructed (x, Q²) with the mixed method and the documented 25% hadronic-y resolution [18,19]. Efficiency = fraction of the true-bin rate reconstructed in the bin after ε<sub>eID</sub>; D = ratio of the rate- and ε<sub>eID</sub>-weighted, φ′-diluted model amplitude of the events in the reconstructed bin to the rate-weighted amplitude of the true bin. The last column is the single-fill, truth-binned error of the projection report.</p>
 
   <p>Three observations. (i) The fit is unbiased at the reconstructed level: every Â agrees
   with its reco-bin truth within the statistical error while the acceptance harmonic and
@@ -952,7 +966,17 @@
   φ′-efficiency harmonics are illustrative magnitudes; radiative corrections and
   backgrounds are not included; the 7R points are centered with the injected model (as in
   money plot 7); the template assumes the linear t-shape it fits, so a different shape is
-  a model systematic to be varied.</p>
+  a model systematic to be varied. Added by the code review of 2026-08-25
+  (docs/code_review_2026-08-25.md): the φ′ efficiency is common to both fills here — the
+  ratio cancels only a common acceptance, so bunch-by-bunch alternation (or 10⁻⁴ stability of
+  the cos 2φ′ harmonic between fills) is a requirement of the measurement, and the cutout's
+  fake harmonic must be stable to ≈ 1% of the vertical envelope for a 1% a<sub>t</sub>
+  systematic; K is model-dependent at the 3–11% level between the repository's Δ shapes
+  (moment_A/moment_B/toy at the four spots), larger than the 10-year statistical errors;
+  the EMCal term 2%/√E ⊕ 1% is the backward specification applied at all η (the
+  sweet-spot electrons are backward, the high-x bins of the amplitude panels are not); the
+  6R sample is background-free and Z-identified by assumption, and u₁, u₂ and the 6R
+  luminosity shares are taken as exactly known.</p>
 
   <h2>References</h2>
   <div class="refs">

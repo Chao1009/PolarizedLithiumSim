@@ -95,6 +95,25 @@ brings to the EIC, in support of the ANL polarized ⁶,⁷Li ion-source program
   Parts I/II (the “order unity at ≳ 300 MeV” statement is verbatim in the
   Part II abstract). Only HJM/JM 1989, Sather–Schmidt, Jacquet–Blondel
   1979 and Li–Sick 1971 have no free copy.
+- ☑ **Simulation code review and reconstruction audit** (2026-08-25,
+  `docs/code_review_2026-08-25.md`): whole code base read under three
+  lenses (consistency with the references, truth-information use,
+  measurability with the ePIC design), three independent reviewers plus
+  numerical checks. Verdict: no truth-only quantity enters the 5R/7R/6R
+  selections, azimuths, binning or fits (truth only in the response and
+  the closure references). Findings: the spin-state ratio cancels only an
+  acceptance common to both spin states — a 10⁻³ fill-to-fill
+  difference of the cos 2φ′ efficiency harmonic fakes half the signal,
+  so bunch-by-bunch alternation is a requirement (plans/04 #3); the
+  hadronic-y stand-in is an absolute 50–125 MeV resolution on
+  Σ_h = 0.2–0.5 GeV at the sweet spots (no published ePIC number, #21);
+  report §3 numbers corrected (δQ²/Q² = 5% with the unsourced 3 mrad
+  angular table, φ′ dilution 0.99); K model dependence 3–11%;
+  EMCal term applied at all η. Outside the chain: the b₁-sector sign is
+  opposite to HJM/HERMES/Cosyn Eq. (27) (A_zz = −(2/3)b₁/F₁; Δ sector
+  untouched) and the fast-sim `r1998` returns R = 1 at low x (July
+  L_5σ values 1.5–2× too pessimistic; polligen unaffected) — both
+  left for an author decision. Documentation-only changes in this pass.
 
 ## Development run 6 (2026-08-24): the reconstruction chain, measured quantities, and the audit
 

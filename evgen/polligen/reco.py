@@ -263,14 +263,21 @@ def electron_method_resolution(y, theta_prime, de_over_e, dtheta,
 
 def emcal_resolution(e_prime, stoch=0.02, const=0.01, noise=0.0):
     """dE/E of an EM calorimeter: stoch/sqrt(E) (+) const (+) noise/E.
-    Defaults are PbWO4-class (backward ePIC EMCal specification scale)."""
+    Defaults are PbWO4-class (backward ePIC EMCal specification scale,
+    eta < -2).  The barrel and forward calorimeters are coarser (Yellow
+    Report requirements 7-12%/sqrt(E) (+) 1-3%): RecoModel applies these
+    defaults at every eta, which is optimistic outside the backward endcap
+    (code review 2026-08-25, docs/code_review_2026-08-25.md F4)."""
     e = np.maximum(np.asarray(e_prime, dtype=float), 1e-9)
     return np.sqrt((stoch / np.sqrt(e)) ** 2 + const ** 2 + (noise / e) ** 2)
 
 
 def tracking_resolution(e_prime, eta, a=None, b=None):
     """dp/p = sqrt((a p)^2 + b^2) with the eta-piecewise ePIC-like table of
-    fastsim/scripts/money_delta_20260729.py (tracking only)."""
+    fastsim/scripts/money_delta_20260729.py (tracking only).  PLACEHOLDER:
+    that table has no published source ("provided in parent communication"
+    per its docstring); replace by the ePIC full-simulation values when
+    available (code review 2026-08-25)."""
     eta = np.asarray(eta, dtype=float)
     p = np.asarray(e_prime, dtype=float)
     if a is None or b is None:
@@ -290,7 +297,11 @@ def tracking_resolution(e_prime, eta, a=None, b=None):
 def tracking_angular_resolution(eta):
     """Track direction resolution sigma_theta [rad] (also the transverse
     direction resolution used for phi), eta-piecewise table of
-    fastsim/scripts/money_delta_20260729.py: 5/3/2/1/2/3/5 mrad."""
+    fastsim/scripts/money_delta_20260729.py: 5/3/2/1/2/3/5 mrad.
+    PLACEHOLDER without a published source; it sets the electron-method
+    Q2 resolution at the low-y sweet spots (cot(theta'/2) dtheta' = 5%
+    at theta' = 0.1 rad for 3 mrad, 2% for 1 mrad -- code review
+    2026-08-25, F3)."""
     eta = np.asarray(eta, dtype=float)
     out = np.full_like(eta, 1.0e-3)
     for lo, hi, val in ((-np.inf, -3.5, 5.0e-3), (-3.5, -2.5, 3.0e-3),

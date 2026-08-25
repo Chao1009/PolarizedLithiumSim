@@ -147,17 +147,22 @@ def transverse_tensor_plan(pzz, phi_s=0.0, name="cos2phi"):
     return RunPlan(cats, pzz_true=pzz)
 
 
-def tensor_flip_plan(pzz, phi_s=0.0, share_plus=0.5, rel_lumi_offset=0.0,
-                     name="flip"):
+def tensor_flip_plan(pzz, phi_s=np.pi / 2.0, share_plus=0.5,
+                     rel_lumi_offset=0.0, name="flip"):
     """Gluonometry run plan with the acceptance-cancelling spin-state
     pattern (reconstruction-chain note, 2026-08-24): m = +-1-rich bunches
     at (P_z, P_zz) = (0, +pzz) and m = 0-rich bunches at (0, -2 pzz) --
     the same source purity, as in tensor_thirds_plan -- both with the
     alignment axis transverse (theta_S = 90 deg) at azimuth phi_s and
-    unpolarized electrons.  `share_plus` is the luminosity share of the
-    +pzz fill; `rel_lumi_offset` boosts that share by (1+offset) without
-    the analysis knowing (the bookkeeper's convention).  The analysis
-    estimator is reco.harmonic_ratio_fit."""
+    unpolarized electrons; phi_s defaults to the vertical stable-spin
+    direction (pi/2), the same axis as recopseudo.RecoModel.phi_s.
+    `share_plus` is the luminosity share of the +pzz sample;
+    `rel_lumi_offset` boosts that share by (1+offset) without the analysis
+    knowing (the bookkeeper's convention).  The two states are meant to
+    alternate BUNCH BY BUNCH: the ratio estimator cancels only an
+    acceptance common to both samples (a 1e-3 difference of its cos 2phi'
+    harmonic between fills fakes half the gluonometry signal; code review
+    2026-08-25).  The analysis estimator is reco.harmonic_ratio_fit."""
     pops_p = spinmod.spin1_populations(0.0, pzz)
     pops_0 = spinmod.spin1_populations(0.0, -2.0 * pzz)
     cats = [

@@ -53,6 +53,14 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
 3. **Tensor (λ=0) bunch operations.** Source RF transitions can prepare
    m = 0 (proposal Sec. 3.5); unknowns: survival through acceleration,
    bunch-by-bunch spin patterns, relative-luminosity control at 10⁻⁴.
+   *Code review 2026-08-25 (docs/code_review_2026-08-25.md, F1):* the
+   spin-state ratio cancels the φ′ acceptance only when both spin states
+   see the same acceptance — a 10⁻³ difference of its cos 2φ′ harmonic
+   between the m = ±1-rich and m = 0-rich samples fakes half the
+   gluonometry signal ((ε₂⁺ − ε₂⁰)/(P₊ − P₀)), and a 1% change of the
+   Roman-Pot vertical envelope between the samples biases the coherent
+   a_t by 1.3%. Bunch-by-bunch alternation is therefore a requirement of
+   the measurement; fill-by-fill needs 10⁻⁴ acceptance stability.
    *Default:* equal thirds (+,0,−), δ(rel-lumi) as a Phase-2 systematic.
 4. **Li luminosity.** Confirmed gap — no Li number exists in any document
    (EPIOS included). Space charge, IBS, cooling for Li bunches unstudied.

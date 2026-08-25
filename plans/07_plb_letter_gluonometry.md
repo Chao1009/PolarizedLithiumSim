@@ -236,7 +236,7 @@ exist and close:
 | 3 | Simulation framework: beams (EPIOS), polligen validation (one paragraph), grid SFs, acceptance, statistics method | 500 | Fig. 1 |
 | 4 | Inclusive projections: φ′ pseudo-data, amplitude vs x, xΔ extraction, A-vs-B discrimination | 700 | Figs. 2–3, Table 1 |
 | 5 | Coherent channel: detection at IP6/IR-8, rate model bands, anchored a₂, sign flip, null test, two-component fit | 700 | Fig. 4 |
-| 6 | Systematics and assumptions: reco dilution, RC bound, polarimetry, purity via |t| fit, condensed assumptions | 450 | — |
+| 6 | Systematics and assumptions: reco dilution, RC bound, polarimetry, purity via |t| fit, acceptance stability between the spin-state samples (bunch-by-bunch requirement: a 10⁻³ difference of the cos 2φ′ efficiency harmonic fakes half the signal), K model dependence (3–11% between Δ shapes), O(γ²) b₁ leakage γ²b₁/6, R model in Δ/F₁ = −2(1+R)Â — code review 2026-08-25 — condensed assumptions | 450 | — |
 | 7 | Summary and outlook (theory and machine asks) | 250 | — |
 
 Title candidates (D5): (a) "Nuclear gluonometry with a tensor-polarized ⁶Li
