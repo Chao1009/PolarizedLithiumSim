@@ -80,7 +80,7 @@ current values from the 2026-08-17 report shown as the baseline:
 | 2 | polarization placeholder | single P_zz = 0.6, full luminosity in one fill | δA vs P_zz ∈ {0.4, 0.6, 0.8} and fill-share ∈ {0.5, 1}; one table | WP2 | **yes** |
 | 3 | dilution convention (plans/04 #6) | 1/3 baseline (Cloët convention); cluster picture gives ≈0.81 (×2.4) | keep 1/3 as conservative baseline, quote the cluster value as labeled upside; ask Cloët (D3) | WP2 | yes (one paragraph) |
 | 4 | detector level | generator-level φ′; smearing machinery exists (money_delta_20260729: ePIC tracking + ε_eID, Case-3 retains ~92% S/N) | reco-level amplitude dilution + δA inflation per super-bin; 2-D φ-hole closure (plans/03 2.3.3) | WP3 | **yes** |
-| 5 | radiative corrections | uncalculated for tensor observables (flagged) | quantified migration bound + self-normalization argument + explicit open-theory statement | WP4 | yes (as a bound, not a calculation) |
+| 5 | radiative corrections | uncalculated for tensor observables (flagged) | quantified migration bound + spin-state-ratio cancellation argument (common acceptance, bunch-by-bunch) + explicit open-theory statement | WP4 | yes (as a bound, not a calculation) |
 | 6 | coherent optics cut | two-point (0.20/0.45 GeV); Li optics undocumented (report assumption #1) | acceptance, N_tag, δA as curves vs pT_cut ∈ [0.1, 0.7] GeV; IR-8 alternative with published efficiencies; t_min and ×0.73 rate-weighting folded into the central curve | WP5 | **yes** |
 | 7 | far-forward geometry | RP z = 26/28 m (YR-era) in text; run-2 Geant4 scan found 32.5/34.3 m in epic-main | quote current ePIC geometry, windows unchanged in θ/R | WP5 | minor |
 | 8 | coherent fraction f₀ | scenario 0.04 [×2/÷2] | unchanged (no light-A prediction exists — stated); theory ask on record (IP-Glasma α–d, #18) | — | no |
@@ -146,7 +146,7 @@ reconstructed-level closure is now specified end to end and seeded in
   the angular cut `reco.tag_pt_cut` (67% / 9% / 10⁻⁸ at 20.5 / 50 /
   137.5 GeV/u) and state the cutout geometry (open question #20); settle
   the a_n normalization convention of arXiv:2408.13213 (1 + 2Σ vs 1 + Σ).
-- D2 input: the reco-level dilution is small (1–4%) and unbiased with the
+- D2 input: the reco-level dilution is small (1–9% at the 25% default, 1–4% at 15–20%) and unbiased with the
   mixed method, so the main figures can stay at generator level with
   reco factors quoted — provided the binning and the estimator above are
   adopted in the generator-level plots themselves.
@@ -188,8 +188,10 @@ exist and close:
 - ☐ Leading-log unpolarized RC weights (plans/02 step 1.4 route) applied as
   (x, Q², φ) kinematic migration on the modulated cross section → bound on
   amplitude dilution and on a fake-a₁ term.
-- ☐ Self-normalization argument (single-fill modulation; no relative-lumi
-  lever) written up with the bound.
+- ☐ Spin-state-ratio cancellation argument (acceptance and relative
+  luminosity cancel for a common acceptance; bunch-by-bunch alternation —
+  supersedes the single-fill self-normalization wording) written up with
+  the bound.
 - ☐ Gate: bound ≤ ~5% of amplitude → one paragraph + assumptions row;
   larger → appendix in the arXiv version and a flagged systematic band.
 - Effort: 3–5 days.
@@ -250,7 +252,7 @@ double-helicity-flip structure function of ⁶Li at the EIC"; (c) variant of
 |---|---|---|
 | "The Δ model is arbitrary" | moment-constrained (Δ⁺⁺ bag provenance stated); A/B interpretations bracket; the measurement discriminates them — that is the point | §2, §4 |
 | "Bag moment ported to a nucleus" | labeled scenario; literature brackets both directions (NPLQCD suppression vs binding enhancement); x-shape ours by necessity (S–S give none) | §2, §6 |
-| "No tensor radiative corrections" | quantified migration bound; self-normalization; open-theory statement with citation trail | §6 (WP4) |
+| "No tensor radiative corrections" | quantified migration bound; spin-state-ratio cancellation; open-theory statement with citation trail | §6 (WP4) |
 | "Li beams do not exist; no luminosity" | EPIOS PRC 113:060501 feasibility; stated 10 fb⁻¹/u with linear scaling; P_zz band quoted | §3, Table 1 |
 | "Coherent fraction is invented" | explicit f₀ band bracketing HERA ep and heavy-A saturation; first-of-kind labeled; IP-Glasma ask on record | §5 |
 | "pT cut undocumented for Li" | curves vs cut, not a point estimate; documented anchors marked; IR-8 alternative with published numbers | §5 (WP5) |

@@ -25,7 +25,7 @@ on polarized ion beams at the EIC, March 22 – April 2, 2027.
 |---|---|
 | `plans/` | the program plan and findings — start at [plans/00_README.md](plans/00_README.md) (document map + development-run log) |
 | `fastsim/` | `polli_fastsim`: analytic fast simulation — rates, FOM maps, tagging acceptance, money plots 1–3, and the dated `money_delta_*` study suite (moment-constrained Δ ansatz, detector efficiency, reco selection) with working notes in `fastsim/notes/` |
-| `evgen/` | `polligen`: the doubly polarized e+⁶,⁷Li event generator (the first of its kind) — spin-density kernel, inclusive + tagged samplers, run-plan bookkeeping, estimators, the coherent intact-⁶Li channel, money plots 4–6 |
+| `evgen/` | `polligen`: the doubly polarized e+⁶,⁷Li event generator (the first of its kind) — spin-density kernel, inclusive + tagged samplers, run-plan bookkeeping, estimators, the coherent intact-⁶Li channel, money plots 4–7 and their reconstructed-level versions 5R/7R/6R |
 | `docs/` | source documents + the self-contained physics note [docs/note_cos2phi_coherent_6Li.md](docs/note_cos2phi_coherent_6Li.md) (verified 50-entry bibliography) + the simulation code review and reconstruction audit [docs/code_review_2026-08-25.md](docs/code_review_2026-08-25.md) (measurability audit of 5R/7R/6R, findings F1-F13, numerical checks) |
 | `reports/` | circulate-able reports (self-contained HTML + rendered PDF): the cos 2φ money-plot report, the educational primer, and the reconstruction-chain analysis note (what is measured, how the azimuth and Δ are reconstructed, audit of the simulation — 2026-08-24); served as a website by the GitHub Pages workflow (`.github/workflows/pages.yml` + `reports/index.html`) — activate once via Settings → Pages → Source: "GitHub Actions" (public repo required on free plans) |
 | `tools/` | BeAGLE and full-simulation (eic-shell/ePIC) setup notes |
@@ -36,7 +36,7 @@ on polarized ion beams at the EIC, March 22 – April 2, 2027.
 # fast simulation (24 tests; PDF-grid tests need the `parton` package)
 cd fastsim && python -m pytest tests/ -q
 
-# event generator (83 tests)
+# event generator (94 tests)
 cd evgen && python -m pytest tests/ -q
 
 # money plots (outputs land next to the scripts' working directory)
@@ -61,7 +61,7 @@ python scripts/money_tagged_azz.py --events 400000    # tagged tensor asymmetry
   the 1-/10-year programs; modulation amplitude anchored on the
   polarized-deuteron CGC calculation (sign flip vs d predicted).
 - **Tagging inverts between isotopes at IP6**: ⁷Li α-tag works
-  (96–99% to the Roman Pots); ⁶Li α-tag is beam-blind (3–9%);
+  (96–99% to the Roman Pots); ⁶Li α-tag is beam-blind (3–9% with the constant 0.20 GeV proton cut; ≈ 1–3% once the 10σ envelope is scaled to the α momentum — code review 2026-08-25);
   tritons need IR-8.
 - **First systematics numbers**: relative-luminosity bias formulas
   (removed exactly by lumi-corrected estimators); the α+d breakup

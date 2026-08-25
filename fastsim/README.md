@@ -43,13 +43,21 @@ yes | python3 -m parton install NNPDFpol11_100
   ⁷Li α-tag ≈ **96–99% into the Roman Pots** (optics-robust);
   ⁶Li α-tag ≈ **3–9%** (high-acceptance optics; tail-dominated, ×3 model
   spread) collapsing to 1–2% with high-divergence optics; ⁷Li t-tag ~ 0.
+  Caveat (code review 2026-08-25, S8): these apply the 0.20 GeV *proton*
+  p_T threshold to the α; the 10σ envelope is angular, i.e. 0.40 GeV for
+  a 4 × 137.5 GeV α, which gives ≈ 0.7–2.7%.
 - **Gluonometry**: 5σ on Δ/F₁ = 10⁻³ (Sather–Schmidt scale) at
   **~25–37 fb⁻¹/u** with CT18 grid inputs (15–22 with the toy F2) —
-  inside the plausible program either way.
+  inside the plausible program either way. Caveat (code review
+  2026-08-25, S1/S4): this headline uses P_zz = 0.8 without the 2-of-6
+  dilution; the scripts' central P_zz = 0.267 gives 131/275 fb⁻¹/u, and
+  the money_delta scripts' `r1998` returns R = 1 at low x (≈ 63–69 /
+  152–164 fb⁻¹/u once corrected) — to be re-derived.
 - **Polarized EMC**: δΔR ≈ 2.6–4% per x-bin at x = 0.3–0.5 at 10 fb⁻¹/u
   (grid inputs, 3 energies combined; 12% at x = 0.7); CBT-vs-TMT
   discrimination ≈ 5σ at x ≈ 0.5–0.7 with 100 fb⁻¹/u.
-- **b₁**: δA_zz ≈ 10⁻³-level per x-bin at 10 fb⁻¹/u, P_zz = 0.6–0.8.
+- **b₁**: δA_zz ≈ 10⁻⁴ (x < 0.05) to 10⁻³ (x > 0.3) per x-bin, combined over
+  Q² and the three energies (`money_b1.py`), at 10 fb⁻¹/u, P_zz = 0.6–0.8.
 
 ## Big caveats (by design — see plans/02 steps 1.2–1.5)
 

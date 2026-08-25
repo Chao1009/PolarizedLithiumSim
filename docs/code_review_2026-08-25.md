@@ -28,7 +28,8 @@ full test suites (118 passed: 94 evgen + 24 fastsim).
 * **Where the chain is not yet the experiment's:** the hadronic-method y
   is a Gaussian stand-in smeared around the true y (no hadronic final
   state is generated, plans/04 #21) — at the sweet spots that means an
-  absolute resolution of 50–125 MeV on an E − p_z sum of 0.2–0.5 GeV,
+  absolute resolution of 50–255 MeV on an E − p_z sum of 0.2–1.0 GeV
+  (50–125 MeV at spots 1–3),
   which no published ePIC study covers (§2, F2); radiative events,
   backgrounds and the coherent exclusivity selection (Z-ID of the intact
   ⁶Li, vetoes, M_X) are absent, as the report states.
@@ -169,7 +170,7 @@ as the top external request (an ePIC full-simulation Σ_h/DA resolution
 at Q² ≈ 1–3 GeV², Σ_h ≈ 0.2–1 GeV, e + light ions); quote 5R/7R for the
 15–30% band *and* for an absolute-noise model (e.g. σ(Σ_h) = 25% ⊕
 50 MeV) so the reader sees the sensitivity; the low-energy configuration
-(y = 0.03–0.2 at the same (x, Q²)) is the fallback the report already
+(y = 0.05–0.25 at the same (x, Q²)) is the fallback the report already
 names.
 
 **F3 — MEDIUM (report ↔ code inconsistency; unsourced table).** Report
@@ -352,7 +353,8 @@ replaces it by the *difference* between the samples.
 ### 5.2 Cutout stability (F1, coherent)
 
 `reco.rp_hole_acceptance(B = 50, c_x = 2.5 c, c_y = c)` for the mid-energy
-envelope c = 0.219 GeV (acceptance 2.85%, fake ⟨cos 2β⟩ = −0.772 about
+envelope c = 0.219 GeV (acceptance 2.85% analytic and unsmeared — the smeared MC
+of 6R gives 3.2% —, fake ⟨cos 2β⟩ = −0.772 about
 the horizontal, +0.772 about the vertical spin axis): a +1% change of
 c_y moves the fake coefficient by −0.0027 (→ a_t bias −0.0015 for
 P₊ − P₀ = 1.8, i.e. 1.3% of a_t = 0.117); +1% of c_x: no change (the
@@ -362,7 +364,8 @@ emittance, orbit), which can differ between fills.
 
 ### 5.3 Resolutions and purities of the response (F3)
 
-`RecoResponse` with the script defaults (200 events per cell), events of
+`RecoResponse` with the script defaults except 200 events per cell (the
+script uses 400), events of
 the true super-bin that pass the selection:
 
 | Spot (x, Q², y) | rms δQ²/Q² | rms δy/y | rms δx/x | purity | efficiency | D | ⟨cos 2Δφ′⟩ |
@@ -474,7 +477,7 @@ as in CW).
 **G8 — documented scenario:** coherent `f₀ = 0.04`, `x_coh = 0.01`
 written against Bjorken x rather than x_P, the constant proton p_T cut
 coexisting with the angular cut (both reported by `project_coherent`;
-0.668/0.0909/1.3×10⁻⁸ at 20.5/50/137.5 GeV/u reproduced), t_min
+0.668/0.0909/1.5×10⁻⁸ at 20.5/50/137.5 GeV/u reproduced), t_min
 neglected in `recoil_lab` (−15% at x_P = 0.01, as the docstring states),
 `a2_deformation` a population average (RATE_WEIGHT_SYST = 0.73). The
 2a₂ convention is verified verbatim from Mäntysaari Eq. (9).

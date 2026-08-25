@@ -348,7 +348,8 @@ def hadronic_y(y_true, rel_res, rng, floor=1e-4):
     simulation of Arratia et al. (NIM A 1025 (2022) 166164, Fig. 5,
     Q2 > 200 GeV2) gives RMS(y)/y ~ 0.13-0.17 for ISigma/DA/JB at
     y ~ 0.05-0.2.  rel_res ~ 0.15-0.30 therefore brackets the documented
-    expectation; 0.20 is the default, 0.25 the ePIC study's own value."""
+    expectation; 0.25 (the ePIC study's own value) is the default of
+    recopseudo.RecoModel and of the R-scripts."""
     y = np.asarray(y_true, dtype=float)
     return np.maximum(y * (1.0 + rel_res * rng.standard_normal(y.shape)),
                       floor)
@@ -379,7 +380,10 @@ def spin_state_ratio(counts, lumis, pzz):
         sigma_P^2 = sum_f L_f (P_f - Pbar)^2 / sum_f L_f,
 
     because sum_f L_f w_f = 0: any phi-dependent acceptance/efficiency
-    eps_i cancels bin by bin, and a relative-luminosity error enters
+    eps_i COMMON TO ALL FILLS cancels bin by bin (a fill-dependent
+    harmonic enters as (eps2_f - eps2_f')/(P_f - P_f'): bunch-by-bunch
+    alternation is required, code review 2026-08-25), and a
+    relative-luminosity error enters
     only through Pbar, i.e. as a bin-INDEPENDENT offset of R plus a
     second-order rescaling (delta x Pbar/sigma_P^2).  Returns
     (R, var_R, sigma_P2, Pbar) with var_R from linear error propagation

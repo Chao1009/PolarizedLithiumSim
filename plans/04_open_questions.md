@@ -2,7 +2,7 @@
 
 Items that gate or shape the simulation program but are *not* solvable
 inside it. Each has an owner-to-engage and a default assumption we proceed
-with until answered. Updated 2026-06-12 after the fetch-verified literature
+with until answered. Updated 2026-08-25 (first version 2026-06-12) after the fetch-verified literature
 sweep — several items moved from "unknown" to "answered, needs adoption".
 
 ## Answered by the literature sweep (adopt, then verify with owners)
@@ -157,7 +157,8 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
     used. *Needed:* σ_θx, σ_θy (β*, emittance) at the light-ion energies
     and the pot geometry (`reco.rp_measure` takes both). *Engage:* ePIC
     FF WG / C-AD optics. *Default:* proton-derived 73/149 μrad,
-    isotropic, square cutout; ratio estimator.
+    slot-like cutout (2.5 : 1, `rp_measure(cut_scale_xy=(2.5, 1))`), angular
+    envelope 10σ_θ·A·p_u; ratio estimator.
     *2026-08-25 (refs/):* the ePIC pots are sensor planes around a
     horizontal SLOT (Jentsch DIS 2023, slide 15) — wide in x for the
     beam's momentum spread and dispersion, tight in y — so the cutout
@@ -176,7 +177,8 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
     mixed (eΣ) method needs the hadronic final state, which polligen does
     not generate. *Needed:* δy_Σ/y vs y from the ePIC inclusive WG (or a
     BeAGLE/PYTHIA e+Li sample through eic-smear). *Default:* 15–30%
-    band (`reco.hadronic_y`); purity 0.75–0.83 per super-bin at 15–20%.
+    band (`reco.hadronic_y`); purity 0.75–0.83 per super-bin at 15–20%
+    (0.64–0.68 at the 25% default).
     *2026-08-25 (web search, refs/README.md):* now bracketed by documents —
     ATHENA proposal JINST 17:P10019 Sec. 3.1/Fig. 22 (e−Σ or DA for
     y ≲ 0.1; ≈ 25% y resolution at y ≈ 0.01 → ≈ 10% at y ≈ 0.1; JB 20–30%);
@@ -184,8 +186,8 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
     σ(δ_h)/δ_h = 25% and shows Σ/JB/DA widths of 0.2–0.3 in
     0.01 < y < 0.05 with the electron method flat; Arratia et al. NIM A
     1025:166164 Fig. 5 (ATHENA fast sim, Q² > 200): RMS(y)/y ≈ 0.13–0.17
-    for IΣ/DA/JB at y ≈ 0.05–0.2. The 15–30% band stands (20% default,
-    25% = ePIC's own). Remaining gap: no published ePIC full-simulation
+    for IΣ/DA/JB at y ≈ 0.05–0.2. The 15–30% band stands (25% default = ePIC's
+    own value). Remaining gap: no published ePIC full-simulation
     number at Q² ≈ 1–3 GeV², y ≈ 0.01, for e + light ions specifically.
 
 ## Tracking

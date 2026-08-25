@@ -7,7 +7,7 @@ companion presents what that amplitude DELIVERS -- the double-helicity-
 flip structure function itself, unfolded per (x, Q2) bin:
 
     A^cos2phi = -(1-y)/y^2 * Delta / D_phi   (D_phi = F1 + (1-y)/(xy^2) F2)
-    =>  Delta_hat = A_hat * y^2 D_phi / (1 - y)
+    =>  Delta_hat = -A_hat * y^2 D_phi / (1 - y)
 
 implemented as model bin-centering: Delta_hat = A_hat * K with
 K = Delta_model(x_c, Q2_c) / A_model(bin) -- identical to the pure
@@ -171,7 +171,7 @@ def main():
     fig.suptitle(
         r"Extracted double-helicity-flip $\Delta(x,Q^2)$ of $^6$Li, %s, "
         r"$P_{zz}=%.2f$""\n"
-        r"$\hat\Delta = \hat A\, y^2 D_\phi/(1-y)$ per bin "
+        r"$\hat\Delta = -\hat A\, y^2 D_\phi/(1-y)$ per bin "
         "(model bin-centering; dilution 1/3 incl.; stat. only, bkg & "
         "tensor RC unquantified); area = S-S moment "
         r"$-0.012\,\alpha_s/3$"

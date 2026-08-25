@@ -74,7 +74,7 @@ event-rate maps on the 40×30 analysis grid (1-yr program) for the
 inclusive DIS and the RP-tagged coherent channel, with every bin of
 the detailed plots overlaid: the four sweet-spot φ′ super-bins
 (plot 5), the three Q² slices with their merged x-bin pairs (the
-Δ-extraction points of plots 5R/7, exact money-plot selection), and
+Δ-extraction points of plots 5/7, exact money-plot selection), and
 the tagged-count-maximal super-bin of plot 6(d). 98% of the tagged
 sample sits at x < 0.03 (median 3.5×10⁻³).
 
@@ -106,13 +106,16 @@ quantifies the findings with `polligen/reco.py`:
 - three of the four sweet spots of money plot 5 sit at y = 0.010–0.025,
   where e′ alone gives δy/y = 50–120%: x needs the hadronic (Σ/JB) y;
   with a 15–20% hadronic resolution the super-bins keep 75–83% purity
-  and the reco-bin amplitude is within 1–4% of the true-bin value;
+  and the reco-bin amplitude is within 1–4% of the true-bin value
+  (0.64–0.68 and 1–9% at the 25% default of the R-plots);
 - the single-fill cos 2φ′ fit measures the detector's own cos 2φ′
   acceptance harmonic ÷ P_zz (a 3% harmonic aligned with the vertical
   spin axis fakes 4× the signal); the spin-state ratio of m = ±1-rich
-  (P_zz = +0.6) and m = 0-rich (−1.2) fills cancels acceptance bin by
-  bin, turns relative luminosity into a constant, and is 1.5× more
-  precise (`reco.harmonic_ratio_fit`);
+  (P_zz = +0.6) and m = 0-rich (−1.2) bunches cancels any acceptance
+  common to both states bin by bin (bunch-by-bunch alternation required:
+  a 10⁻³ difference of the harmonic between the states fakes half the
+  signal — code review 2026-08-25), turns relative luminosity into a
+  constant, and is 1.5× more precise (`reco.harmonic_ratio_fit`);
 - the crossing angle changes only odd harmonics of the e′ azimuth
   (≈ 10⁻³ cos φ, cos 2φ untouched) because the ePIC axis is the electron
   beam; the covariant φ_S equals φ_e − φ_S exactly (massless target),
@@ -134,7 +137,7 @@ electron/mixed reconstruction → reco cuts → ε_eID → covariant φ′),
 migration), `CoherentResponse` (RP emulation + exact two-azimuth counts)
 and `measure_coherent` (template fit `reco.harmonic_ratio_fit_2d` with
 the acceptance-weighted basis). Results (mid energy, P_zz = 0.6, moment_A,
-mixed method 20%, ε(φ′) harmonic + 10⁻³ rel-lumi offset on):
+mixed method 25%, ε(φ′) harmonic + 10⁻³ rel-lumi offset on):
 
 - 5R (25% hadronic y — the ePIC kinematic-fit study's smearing and the
   ATHENA Fig. 22 value at y ≈ 0.01, `refs/README.md`): sweet spots 1–4 in
@@ -190,7 +193,7 @@ luminosity-corrected estimators remove both exactly.
   A∥ = D·A1 (γ²-suppressed η term dropped); A⊥ = d·(A2 − ξA1)
   = d·γ·((y/2)g₁ + g₂)/F₁ at leading γ (both O(γ) pieces kept — the
   ξA1 term is the same order as A2). The exact Cosyn–Weiss factors
-  replace two functions when step 5.B lands.
+  can replace two functions behind the same interface when adopted.
 - Spin-1 vector fills at |P_z| > 2/3 require tensor polarization
   (positivity); `helicity_flip_plan` defaults to spin-temperature
   populations, which record their implied P_zz in `pzz_true`.

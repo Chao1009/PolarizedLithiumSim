@@ -105,7 +105,7 @@ brings to the EIC, in support of the ANL polarized ⁶,⁷Li ion-source program
   acceptance common to both spin states — a 10⁻³ fill-to-fill
   difference of the cos 2φ′ efficiency harmonic fakes half the signal,
   so bunch-by-bunch alternation is a requirement (plans/04 #3); the
-  hadronic-y stand-in is an absolute 50–125 MeV resolution on
+  hadronic-y stand-in is an absolute 50–255 MeV (50–125 MeV at spots 1–3) resolution on
   Σ_h = 0.2–0.5 GeV at the sweet spots (no published ePIC number, #21);
   report §3 numbers corrected (δQ²/Q² = 5% with the unsourced 3 mrad
   angular table, φ′ dilution 0.99); K model dependence 3–11%;
@@ -149,7 +149,7 @@ brings to the EIC, in support of the ANL polarized ⁶,⁷Li ion-source program
   convention of the deuteron anchor (factor 2) is flagged for a source
   check.
 - ☑ **Second pass (same day): WP3 reconstructed-level pseudo-experiments**
-  — `polligen/recopseudo.py` (+10 tests, 93 collected), money plots
+  — `polligen/recopseudo.py` (+11 tests, 94 collected), money plots
   5R/7R (`money_cos2phi_reco.py`) and 6R (`money_cos2phi_coherent_reco.py`),
   report §7. Inclusive, mid energy, mixed method (20% hadronic y), EMCal
   + track angles + ε_eID, spin-state ratio with the acceptance harmonic
@@ -193,7 +193,7 @@ brings to the EIC, in support of the ANL polarized ⁶,⁷Li ion-source program
   (50 verified references); PDF report in `reports/`.
 - ☑ **Money plot 7** (`money_delta_extraction.py`): the extracted
   Δ(x,Q²) itself as xΔ data points at the three sweet-spot Q² slices
-  (Δ̂ = Â·y²D_φ/(1−y), model bin-centering, independent 1-/10-yr
+  (Δ̂ = −Â·y²D_φ/(1−y), model bin-centering, independent 1-/10-yr
   draws) — best bins δΔ ≈ (0.7–1.4)×10⁻³ (1 yr) on Δ ≈ −0.03…−0.09.
 
 ## Development run 5 (2026-08-10): cos 2φ money plots + coherent channel

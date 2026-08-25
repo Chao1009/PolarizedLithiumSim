@@ -303,10 +303,13 @@ with a quiet central detector. Ranked:
 6. **e′-side**: photoproduction π and pair-symmetric electrons at high
    y — standard DIS practice plus (e′, recoil) kinematic consistency.
 
-Systematics of the extraction: the modulation is measured within a
-single fill and self-normalized in φ — relative-luminosity systematics
-drop out; φ-acceptance holes are handled by the binned-LSQ estimator
-(demonstrated unbiased with holey acceptance); polarimetry scale
+Systematics of the extraction (revised 2026-08-25): the amplitude is
+extracted from the spin-state ratio of m = ±1-rich and m = 0-rich bunches,
+in which relative-luminosity errors enter only as a constant and any
+φ-acceptance common to both states cancels bin by bin — a single-fill fit
+is biased by the detector's cos 2φ acceptance harmonic ÷ P_zz, and the
+cancellation requires bunch-by-bunch alternation (reconstruction-chain
+report §3; code review F1); polarimetry scale
 δP_zz/P_zz ≈ 3% is common with A_zz; tensor-observable radiative
 corrections remain uncharted and are flagged on every plot.
 

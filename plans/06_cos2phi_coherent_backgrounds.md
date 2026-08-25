@@ -219,7 +219,12 @@ subtraction with wrong-sign tracks / positron running). For the
   single fill category* (transverse tensor fill), self-normalized in φ —
   the 10⁻⁴-level rel-lumi systematics of A_zz/A∥ (step 5.A) do not
   enter. This is a real advantage of the cos 2φ observable and worth
-  stating on the plot.
+  stating on the plot. *Superseded 2026-08-24/25:* the single-fill fit is
+  biased by the detector's cos 2φ acceptance harmonic ÷ P_zz; the
+  estimator is the spin-state ratio of m = ±1-rich / m = 0-rich bunches
+  (acceptance and relative luminosity cancel for a common acceptance,
+  bunch-by-bunch alternation required) — reconstruction-chain report §3,
+  code review F1.
 - **Spin-axis control**: dilution ∝ sin²θ_S (a 5° polar error is a
   0.8% dilution — negligible); a *drifting* φ_S rotates the modulation
   phase — bunch-by-bunch φ_S bookkeeping is already in the run-plan
@@ -352,7 +357,8 @@ the arXiv source (now in `coherent.MANTYSAARI_A2_DEUTERON`):
   demonstrated ~95% of maximal tensor polarization, so the in-ring 0.6
   default stands. The eSTARlight IR-8 study's intact-recoil efficiencies
   (d 47%, ³He 32%, ⁴He 29%, ⁷Li 17.8%) interpolate to ≈ 20% for ⁶Li at
-  IR-8 — versus our 13.5% RP pT-tail estimate at IP6, an independent
+  IR-8 — versus our 13.5% RP pT-tail estimate at IP6 (constant 0.20 GeV cut;
+  9% for the angular envelope at 50 GeV/u, reconstruction-chain report §4), an independent
   cross-check of the tagging scale.
 
 **Convention check (2026-08-24, full text of arXiv:2408.13213).** Its

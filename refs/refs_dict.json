@@ -398,7 +398,7 @@
         "Table I"
       ],
       "key_content": [
-        "Table I far-forward acceptance and resolution model (RP z = 26/28 m, theta < 5 mrad, 10 sigma beam cut; OMD 22.5/24.5 m; B0 5.5-20 mrad; ZDC) used as the Phase-1 parameterization; pT resolution ~20% at 100 MeV/c for spectators.",
+        "Table I far-forward acceptance and resolution model (RP z = 26/28 m, theta < 5 mrad, 10 sigma beam cut; OMD 22.5/24.5 m; B0 5.5-20 mrad; ZDC) used as the Phase-1 parameterization; spectator-proton pT resolution ~10% at pT = 100 MeV/c in the Roman Pots (driven by the beam angular divergence) and ~20% at 100 MeV/c in the Off-Momentum Detectors (transfer-matrix reconstruction) -- repo-verified 2026-08-25 from the PDF text (earlier dictionary text quoted only the 20%).",
         "Table I (repo-verified 2026-08-25 from the PDF): geometric acceptance of the baseline EIC far-forward design -- B0 tracker p 5.5-20.0 mrad; Off-Momentum p 0.0-5.0 mrad, xi 0.45-0.65; Roman Pots p 0.0-5.0 mrad, xi 0.6-0.95 (the RP acceptance at high xi is limited by the beam-size cut, footnote); ZDC n 0.0-4.0 mrad (symmetric; up to ~5.5 mrad for phi = 0). Analysis: 18 x 110 GeV/u e-d, Q2 > 10 GeV2, 0.01 < y < 0.95, 1e8 events = 1 fb^-1; BeAGLE 1.01.03."
       ],
       "used_in": [

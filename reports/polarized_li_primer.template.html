@@ -144,7 +144,7 @@
 
   <p class="eyebrow">Polarized ⁶,⁷Li @ EIC · Educational note · reports/</p>
   <h1>Deep inelastic scattering on polarized lithium: the physics behind the planned measurements</h1>
-  <p class="dateline">2026-08-17, revised 2026-08-21 (why lithium, why polarization, fixed target versus collider, beam requirements and uniqueness by observable; fact-checked against primary sources) · companion to the cos 2φ projection report and to plans/01 (physics case) · written for students and colleagues joining the program</p>
+  <p class="dateline">2026-08-17, revised 2026-08-21 (why lithium, why polarization, fixed target versus collider, beam requirements and uniqueness by observable; fact-checked against primary sources); revised 2026-08-25 (estimator, angular-cut, α-tag and sign-convention notes from the reconstruction-chain report and the code review) · companion to the cos 2φ projection report, the reconstruction-chain report and plans/01 (physics case) · written for students and colleagues joining the program</p>
 
   <p class="lede">Polarized lithium beams would provide the EIC with spin-polarized
   <i>nuclei</i> that are light enough for ab initio computation yet complex enough to
@@ -395,10 +395,10 @@
   <table>
     <tr><th>Observable</th><th>Beam polarization required</th><th>Electrons</th><th>Reach at 10 fb⁻¹/u</th><th>Binding requirement</th></tr>
     <tr><td>g₁ᴬ, polarized EMC (⁷Li; ⁶Li for the isoscalar pair)</td><td>Vector P<sub>z</sub> ≥ 0.7, <b>longitudinal</b> (spin rotators). A spin-3/2 spin-temperature fill at P<sub>z</sub> = 0.8 also carries P<sub>zz</sub> ≈ 0.55 and P<sub>zzz</sub> ≈ 0.11; the octupole term enters the asymmetry numerator and is corrected through the fill model [45]</td><td>Polarized, P<sub>e</sub> ≈ 0.7, helicity flipped bunch by bunch</td><td>δΔR ≈ 2.6–4% per x-bin at x = 0.3–0.5 (three energies combined); CBT-vs-TMT ≈ 1.5σ per bin, 5σ at x ≈ 0.5–0.7 with 100 fb⁻¹/u</td><td>Polarimetry scale δP<sub>z</sub>/P<sub>z</sub> ≤ 3%; P<sub>p</sub> from VMC [17]; Q² lever arm at fixed x (gluon-spin EMC)</td></tr>
-    <tr><td>b₁ via A<sub>zz</sub> (⁶Li)</td><td><b>Tensor</b> P<sub>zz</sub>, longitudinal or along <b>q</b> [26]; fills of different P<sub>zz</sub> ("tensor thirds": m = +1-, 0-, −1-rich), i.e. m = 0 bunches from the source</td><td>Unpolarized (helicity-averaged)</td><td>δA<sub>zz</sub> ≈ 1×10⁻⁴ per x-bin at x &lt; 0.05 (7×10⁻⁵ at P<sub>zz</sub> = 0.8) against scenario |A<sub>zz</sub>| = (2–10)×10⁻³ (HERMES-like b₁ with the 0.29 dilution) or ten times smaller (convolution): both ≥ 10σ per bin at x &lt; 0.05. At x &gt; 0.3, δA<sub>zz</sub> ≈ 10⁻³ against a signal ≤ 2×10⁻³ — JLab's domain</td><td>Relative luminosity between fills at the 10⁻⁴ level (a 10⁻⁴ offset biases A<sub>zz</sub> by 1×10⁻⁴; the luminosity-corrected estimator removes it exactly); tensor polarimetry, which needs dedicated development [1]</td></tr>
-    <tr><td>Δ via cos 2φ (⁶Li; ⁷Li eligible)</td><td><b>Tensor</b> P<sub>zz</sub> with the alignment axis <b>transverse</b> (the native vertical direction); fills of opposite P<sub>zz</sub> sign flip the modulation — the decisive systematic check</td><td>Unpolarized</td><td>δA = (1.5–4.5)×10⁻⁴ per sweet-spot bin (x ≈ 0.02–0.14, Q² = 1.1–14 GeV²) against moment-constrained amplitudes of (0.7–1.2)×10⁻², ≥ 21σ; a 3×10⁻³ flat amplitude stays 3–10σ per bin even at P<sub>zz</sub> = 0.3</td><td>Full azimuthal coverage for the scattered electron (the binned fit tolerates holes); δP<sub>zz</sub>/P<sub>zz</sub> ≈ 3% scale; tensor radiative corrections not yet calculated</td></tr>
-    <tr><td>Spectator-tagged DIS</td><td>⁷Li α-tag: any polarization for tagged F₂; vector P<sub>z</sub> with polarized electrons for tagged g₁ of the bound proton. ⁶Li α-tag: tensor P<sub>zz</sub> for the order-unity tagged tensor asymmetries at p<sub>s</sub> ≈ 300 MeV/c [41]</td><td>As for the inclusive observable</td><td>⁷Li α → Roman Pots (R = 0.857), 96–99% acceptance, optics-robust; ⁶Li α beam-blind at IP6 (3–9% with high-acceptance optics, 1–2% with high-divergence) → IR-8 secondary focus</td><td>Spectator p<sub>T</sub> resolution ~10% at 100 MeV/c [22]; charge identification of α against A/Z = 2 fragments in the Roman Pots (open); pole extrapolation in p<sub>T</sub> [20]</td></tr>
-    <tr><td>Coherent intact-⁶Li cos 2φ</td><td><b>Tensor</b> P<sub>zz</sub> ≥ 0.6, <b>transverse</b></td><td>Unpolarized</td><td>x ≲ 0.01, |t| &lt; 0.2 GeV²; 1.1×10⁷ tagged events (high-acceptance optics; f₀ = 0.04 scenario), best-bin δA = 1.9×10⁻³ (5σ floor at a 1.0% modulation); deformation-anchored ⟨a₂⟩ = 0.036 (band 0.018–0.059); a flat gluonic 3×10⁻³–10⁻² gives 1.6–5σ, or 5–16σ with 100 fb⁻¹/u</td><td>High-acceptance optics (13.5% acceptance against 4×10⁻⁵ with high divergence) or IR-8; Roman-Pot p<sub>T</sub> cut ≤ 0.2 GeV; Z-identification against α+d (both R = 1); B0 calorimeter veto of the 3.56 MeV de-excitation γ</td></tr>
+    <tr><td>b₁ via A<sub>zz</sub> (⁶Li)</td><td><b>Tensor</b> P<sub>zz</sub>, longitudinal or along <b>q</b> [26]; fills of different P<sub>zz</sub> ("tensor thirds": m = +1-, 0-, −1-rich), i.e. m = 0 bunches from the source</td><td>Unpolarized (helicity-averaged)</td><td>δA<sub>zz</sub> ≈ 1×10⁻⁴ per x-bin (combined over Q² and the three energies) at x &lt; 0.05 (7×10⁻⁵ at P<sub>zz</sub> = 0.8) against scenario |A<sub>zz</sub>| = (2–10)×10⁻³ (HERMES-like b₁ with the 0.29 dilution) or ten times smaller (convolution): both ≥ 10σ per bin at x &lt; 0.05. At x &gt; 0.3, δA<sub>zz</sub> ≈ 10⁻³ against a signal ≤ 2×10⁻³ — JLab's domain</td><td>Relative luminosity between fills at the 10⁻⁴ level (a 10⁻⁴ offset biases A<sub>zz</sub> by 1×10⁻⁴; the luminosity-corrected estimator removes it exactly); tensor polarimetry, which needs dedicated development [1]</td></tr>
+    <tr><td>Δ via cos 2φ (⁶Li; ⁷Li eligible)</td><td><b>Tensor</b> P<sub>zz</sub> with the alignment axis <b>transverse</b> (the native vertical direction); fills of opposite P<sub>zz</sub> sign flip the modulation — the decisive systematic check</td><td>Unpolarized</td><td>δA = (1.5–4.5)×10⁻⁴ per sweet-spot bin (x ≈ 0.02–0.14, Q² = 1.1–14 GeV²) against moment-constrained amplitudes of (0.7–1.2)×10⁻², ≥ 21σ; a 3×10⁻³ flat amplitude stays 3–10σ per bin even at P<sub>zz</sub> = 0.3; at the reconstructed level (25% hadronic-y resolution, two-state ratio) δÂ = (1.0–3.0)×10⁻⁴ with bin purities 0.64–0.68 — the 25% being an absolute 50–125 MeV on the hadronic E − p<sub>z</sub> sum of 0.2–0.5 GeV at the sweet spots, a regime no published ePIC study covers</td><td>Spin-state-sorted ratio of m = ±1-rich and m = 0-rich bunches, alternating bunch by bunch (it cancels the detector's cos 2φ acceptance harmonic, which biases a single-state fit by ε₂/P<sub>zz</sub>); hadronic-method y at the y ≈ 0.01 sweet spots; δP<sub>zz</sub>/P<sub>zz</sub> ≈ 3% scale; tensor radiative corrections not yet calculated</td></tr>
+    <tr><td>Spectator-tagged DIS</td><td>⁷Li α-tag: any polarization for tagged F₂; vector P<sub>z</sub> with polarized electrons for tagged g₁ of the bound proton. ⁶Li α-tag: tensor P<sub>zz</sub> for the order-unity tagged tensor asymmetries at p<sub>s</sub> ≈ 300 MeV/c [41]</td><td>As for the inclusive observable</td><td>⁷Li α → Roman Pots (R = 0.857), 96–99% acceptance, optics-robust; ⁶Li α beam-blind at IP6 (3–9% with the constant 0.20 GeV proton cut; ≈ 1–3% once the 10σ envelope is scaled to the α momentum — code review 2026-08-25) → IR-8 secondary focus</td><td>Spectator p<sub>T</sub> resolution ~10% at 100 MeV/c [22]; charge identification of α against A/Z = 2 fragments in the Roman Pots (open); pole extrapolation in p<sub>T</sub> [20]</td></tr>
+    <tr><td>Coherent intact-⁶Li cos 2φ</td><td><b>Tensor</b> P<sub>zz</sub> ≥ 0.6, <b>transverse</b></td><td>Unpolarized</td><td>x ≲ 0.01, |t| &lt; 0.2 GeV²; 1.1×10⁷ tagged events (high-acceptance optics; f₀ = 0.04 scenario), best-bin δA = 1.9×10⁻³ (5σ floor at a 1.0% modulation); deformation-anchored ⟨a₂⟩ = 0.036 (band 0.018–0.059; the anchor's convention makes the cos 2β coefficient 2a₂); a flat gluonic 3×10⁻³–10⁻² gives 1.6–5σ, or 5–16σ with 100 fb⁻¹/u. Reconstructed level (angular envelope, 0.22 GeV at 50 GeV/u, and the slot-like pot cutout): 2.7×10⁶ tagged events, a<sub>t</sub> = 0.117 ± 0.007 and a<sub>e</sub> = 0.010 ± 0.001 in year 1 (background-free sample by assumption)</td><td>High-acceptance optics (13.5% for the constant 0.20 GeV cut; 67% / 9% / 10⁻⁸ at 20.5 / 50 / 137.5 GeV/u for the angular envelope, so the low-energy configuration) or IR-8; Z-identification against α+d (both R = 1); B0 calorimeter veto of the 3.56 MeV de-excitation γ</td></tr>
   </table>
 
   <p>What lithium alone provides is clearest species by species. Of the ions the EIC can
@@ -529,6 +529,14 @@
 
   <p class="eq"><img class="tex" data-tex="a_m = \frac{1}{4}\,c_m\left(3\cos^2\theta_m - 1\right),\qquad c_m = 3|\lambda_m| - 2 \;\rightarrow\; (1,\,-2,\,1)\ \mathrm{for}\ m = (+1,\,0,\,-1)"></p>
 
+  <p><i>Sign convention.</i> The b₁, b₂ terms are written in the transcription used throughout
+  the program. In the Hoodbhoy–Jaffe–Manohar convention as used by HERMES and by Cosyn et al.
+  [26] (their Eq. 27: A<sub>zz</sub> = −(2/3) b₁/F₁ for the axis along the photon, with the
+  A<sub>zz</sub> estimator of §4.1) the tensor-rate terms carry the opposite sign, so that the
+  m = 0 state has the larger rate for b₁ &gt; 0. Only the sign of A<sub>zz</sub> relative to b₁ is
+  affected — the magnitudes, the errors and the Δ term are not (code review,
+  docs/code_review_2026-08-25.md).</p>
+
   <p>The weights (1, −2, 1) organize all tensor observables: the m = ±1 states enter
   together and against m = 0, precisely the combination measured by P<sub>zz</sub>.
   Averaging the formula over a fill with populations p<sub>m</sub> replaces every
@@ -616,7 +624,8 @@
   and recoils intact. There the cos 2φ modulation mixes two mechanisms: the nuclear
   <i>shape</i>, in which a deformed gluon density modulates the diffractive slope (the
   mechanism computed for polarized deuterons in the only existing calculation of this kind
-  [23]), and exotic glue proper. ⁶Li discriminates between the two because its quadrupole
+  [23]), and exotic glue proper, which persists at small x where it connects to the
+  elliptic-gluon program [24]. ⁶Li discriminates between the two because its quadrupole
   moment is anomalously small (Q = −0.0806 fm², roughly 50 times smaller than that of
   ⁷Li): the shape term is bounded and linear in t, so a flat-in-t modulation cannot be a
   shape effect. Detection of the intact recoil is itself nontrivial: the nucleus keeps
@@ -694,23 +703,29 @@
   <h2>5 · Rates and statistical precision</h2>
 
   <p>All projections use luminosity per nucleon, with 10 fb⁻¹/u — 30 weeks of operation
-  at 10³³ cm⁻² s⁻¹ in the Yellow Report's accounting [25], rounded here to "one EIC
+  at 10³³ cm⁻² s⁻¹ with 60% efficiency in the Yellow Report's accounting [25], rounded here to "one EIC
   year" — and 100 fb⁻¹/u for the ten-year program, and in-ring polarization
   placeholders P<sub>z</sub> = 0.7 and P<sub>zz</sub> = 0.6 (ring transport
   from the source values is an open accelerator question). The statistical uncertainties
   behind every money plot are</p>
 
-  <p class="eq"><img class="tex" data-tex="\delta A_{\parallel} = \frac{1}{P_e P_z \sqrt{N}},\qquad \delta A_{zz} = \frac{\sqrt{2/N}}{P_{zz}},\qquad \delta A^{\cos 2\phi} = \frac{\sqrt{2/N}}{P_{zz}}"></p>
+  <p class="eq"><img class="tex" data-tex="\delta A_{\parallel} = \frac{1}{P_e P_z \sqrt{N}},\qquad \delta A_{zz} = \frac{\sqrt{2/N}}{P_{zz}},\qquad \delta A^{\cos 2\phi} = \frac{\sqrt{2/N}}{P_{zz}}\ \mathrm{(single\ state)},\qquad \delta\hat A = \frac{2}{P_+-P_0}\sqrt{\frac{2}{N}}\ \mathrm{(two\ states)}"></p>
 
   <p>The factor √2 in the tensor uncertainties follows from ⟨cos²2φ⟩ = ½ (equivalently,
   from the three-fill estimator variance); the polarization appears in the denominator
   because the fill dilutes the physical asymmetry. These formulas, and their behavior
   under realistic φ-acceptance holes (where a binned fit replaces the naive moment), are
   validated end to end by pseudo-experiments with the polligen event generator. Tensor
-  observables enjoy a structural advantage in systematics: the cos 2φ modulation is
-  self-normalized within a single fill, so relative-luminosity errors largely cancel; what
-  remains is the polarimetry scale (δP<sub>zz</sub>/P<sub>zz</sub> ≈ 3%) and radiative
-  corrections, which for tensor observables have not yet been calculated.</p>
+  observables enjoy a structural advantage in systematics when the m = ±1-rich and m = 0-rich
+  states are measured with the same detector and compared bin by bin: in their spin-state
+  ratio the φ acceptance cancels and relative-luminosity errors enter only as a constant (a
+  single-state fit, by contrast, measures the detector's own cos 2φ acceptance harmonic
+  divided by P<sub>zz</sub>), and the two-state pattern P₊ = +0.6, P₀ = −1.2 is 1.5× more
+  precise than a single state at the same source purity — provided the states alternate
+  bunch by bunch, since a 10⁻³ difference of the acceptance harmonic between them fakes half
+  the signal (reconstruction-chain report; code review 2026-08-25). What remains is the
+  polarimetry scale (δP<sub>zz</sub>/P<sub>zz</sub> ≈ 3%) and radiative corrections, which for
+  tensor observables have not yet been calculated.</p>
 
   <figure>
     <div class="panel"><img src="data:image/png;base64,__PS__" alt="Phase space maps in x and Q2 for the inclusive and tagged-coherent measurements, with analysis bins overlaid"></div>
@@ -718,7 +733,8 @@
     year at e(10 GeV) × ⁶Li(50 GeV/u). Left: inclusive DIS (4.6×10⁹ accepted events) with
     the bins of the cos 2φ analysis overlaid; the measurement is limited by polarization,
     acceptance, and systematics rather than by statistics. Right: the coherent intact-⁶Li
-    channel (1.1×10⁷ tagged events), confined to x ≲ 0.03 because coherence requires the
+    channel (1.1×10⁷ tagged events with the constant 0.20 GeV cut; 2.7×10⁶ with the angular
+    envelope and slot cutout of the reconstruction-chain report), confined to x ≲ 0.03 because coherence requires the
     photon to resolve the whole nucleus, a condition that fails once x ≳ 0.01.</figcaption>
   </figure>
 
@@ -729,7 +745,8 @@
     moment-constrained Δ model and the binned fit; right, the extracted amplitude versus x
     against alternative model readings. The projected precision distinguishes between the
     models rather than only from zero. Assumptions and caveats are detailed in the
-    companion report.</figcaption>
+    companion report; its reconstructed-level version (money plot 5R, reconstruction-chain
+    report §7) uses the spin-state ratio in reconstructed bins.</figcaption>
   </figure>
 
   <h2>6 · Further reading</h2>
@@ -749,7 +766,9 @@
 
   <div class="foot">
     Educational companion to <code>reports/cos2phi_money_plots_report.html</code> (projections
-    and caveats) and <code>plans/01_findings_physics_case.md</code> (sourced physics case).
+    and caveats), <code>reports/reconstruction_chain_report.html</code> (the measurement chain and
+    the reconstructed-level results) and <code>plans/01_findings_physics_case.md</code> (sourced
+    physics case).
     Generated by <code>reports/build_report.py</code>; display math typeset at build time
     (matplotlib mathtext, STIX), figures from the evgen scripts. Projections use scenario
     structure functions with explicit bands.

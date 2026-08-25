@@ -237,7 +237,7 @@ def main():
         Line2D([], [], color=C_BIN, lw=1.5,
                label=r"$\phi'$ super-bins 1–4 (plot 5)"),
         Line2D([], [], color=C_COMB, lw=0.7,
-               label=r"$\Delta$-extraction $x$ bins (plots 5R/7)"),
+               label=r"$\Delta$-extraction $x$ bins (plots 5/7)"),
         Line2D([], [], color="0.55", lw=0.8, ls="--",
                label=r"$y$ / $W^2$ cut boundaries"),
     ], loc="upper left", fontsize=6.5, framealpha=0.92,
