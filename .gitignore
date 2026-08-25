@@ -28,6 +28,7 @@ fastsim/scripts/out_coverage/
 # macOS Finder metadata
 .DS_Store
 
-# local copies of reference papers consulted for the reconstruction-chain
-# work (index in refs/README.md; fetch the PDFs from arXiv/INSPIRE)
-refs/*.pdf
+# reference papers: the PDFs in refs/ ARE tracked (index in refs/README.md,
+# dictionary refs/refs_dict.json).  Only the unsplit EIC Yellow Report is
+# ignored (124 MB > GitHub's 100 MB limit; it is committed as four parts).
+refs/2103.05419.pdf

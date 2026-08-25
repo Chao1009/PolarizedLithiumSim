@@ -52,7 +52,7 @@ brings to the EIC, in support of the ANL polarized ⁶,⁷Li ion-source program
 ## Development run 6 addendum (2026-08-25): placeholders filled from the references in refs/
 
 - ☑ Seven papers added by the user to `refs/` (index: `refs/README.md`;
-  PDFs git-ignored) read and folded into the reconstruction-chain report,
+  PDFs tracked in git since 2026-08-25) read and folded into the reconstruction-chain report,
   the code defaults and plans/04: **ZEUS LPS** (NPB 816:1) bounds the
   diffractive azimuthal harmonics u₁, u₂ (A_LT, A_TT consistent with zero
   within ±0.03–0.05) and documents a beam pT spread of 45 (x) vs 100 (y)
@@ -80,6 +80,21 @@ brings to the EIC, in support of the ANL polarized ⁶,⁷Li ion-source program
   default hadronic-y resolution is now 25% (money plots 5R/7R rerun);
   #21 reduced to "no published ePIC full-sim number at Q² ≈ 1–3 GeV²,
   y ≈ 0.01, for light ions".
+- ☑ **Reference copies committed** (2026-08-25, second pass): every
+  dictionary entry with a free copy is now in `refs/` (13 arXiv PDFs incl.
+  the Yellow Report, split into four < 50 MB parts, plus the TUNL A = 6
+  evaluation from nucldata.tunl.duke.edu) and the PDFs are tracked in git
+  at the user's request (≈ 240 MB; `refs/find_ref.py --check` / `--fetch`).
+  First pages and the cited numbers were verified against the dictionary:
+  Jentsch–Tu–Weiss Table I, the IR-8 efficiencies (17.75% ⁷Li, no ⁶Li),
+  the EPIOS G-factors, the TUNL widths (24 keV, 541 keV) all confirmed;
+  two citations corrected — arXiv:2509.18558 is Hamwi–Hoffstaetter,
+  *Polarization transmission in the EIC's Hadron Storage Ring* (Devlin is
+  acknowledged, not an author; Table I with 81/573 resonances confirmed),
+  and arXiv:2603.23699/23700 are *SIDIS on a polarized spin-1 target*,
+  Parts I/II (the “order unity at ≳ 300 MeV” statement is verbatim in the
+  Part II abstract). Only HJM/JM 1989, Sather–Schmidt, Jacquet–Blondel
+  1979 and Li–Sick 1971 have no free copy.
 
 ## Development run 6 (2026-08-24): the reconstruction chain, measured quantities, and the audit
 

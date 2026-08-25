@@ -190,11 +190,17 @@ corrections to entries above:
   online tables 0.8675/−0.0374). Shell model 13/15 = 0.867 (proposal),
   Cohen–Kurath via Cloët–Bentz–Thomas; earliest QMC 0.88/−0.04 (Pudliner).
   Say "VMC", not "GFMC".
-- **Tagged tensor asymmetries O(1) at ~300 MeV/c** are from Cosyn–Weiss
-  PRC 114:025202 (2026), arXiv:2603.23700 (Part I: 025201, 2603.23699) — not
-  PRC 102:065204 (vector) or PLB 799:135035.
+- **Tagged tensor asymmetries O(1) at ~300 MeV/c** are from Cosyn–Weiss,
+  *Semi-inclusive DIS on a polarized spin-1 target, II. Deuteron and spectator
+  nucleon tagging*, PRC 114:025202 (2026), arXiv:2603.23700 (Part I, *Cross
+  section and spin observables*: 025201, 2603.23699) — not PRC 102:065204
+  (vector) or PLB 799:135035. Verified verbatim from the Part II abstract on
+  2026-08-25 (local copies refs/2603.23699.pdf, refs/2603.23700.pdf).
 - **Resonance counts 81 (⁶Li) / 573 (⁷Li) / 63 (d) / 2457 (³He)** are from
-  Hamwi–Devlin–Hoffstaetter, PRAB 29:073501 (2026), arXiv:2509.18558, Table I
+  Hamwi–Hoffstaetter, *Polarization transmission in the EIC's Hadron Storage
+  Ring*, PRAB 29:073501 (2026), arXiv:2509.18558, Table I (title and author
+  list verified from the arXiv PDF on 2026-08-25: J. Devlin is acknowledged,
+  not a co-author)
   (G = −0.1818 / +1.5196 there; EPIOS Table III gives −0.178 / +1.532). Top
   energies ~138 / ~117 GeV/u are the rigidity limit 275 GeV × Z/A (137.5 /
   117.9), not a number quoted by EPIOS.

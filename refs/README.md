@@ -1,8 +1,12 @@
 # refs/ — reference papers consulted for the reconstruction-chain work
 
-PDFs are kept locally only (`refs/*.pdf` is git-ignored, like the other
-local paper copies); this index records what each one was used for and
-which numbers were taken from it (2026-08-25 read-through).
+The PDFs are committed in this directory (tracked in git since
+2026-08-25 at the user's request, about 240 MB in total; the EIC Yellow
+Report is stored as four parts because GitHub rejects single files above
+100 MB). This index records what each one was used for and which numbers
+were taken from it (2026-08-25 read-through). A missing arXiv copy can be
+re-fetched with `python refs/find_ref.py --fetch`; `--check` lists the
+local-copy status of every dictionary entry.
 
 **Machine-readable dictionary:** `refs/refs_dict.json` maps every local
 file (and the external references the reports lean on) to identifiers,
@@ -14,6 +18,8 @@ python refs/find_ref.py slot            # keyword search over all fields
 python refs/find_ref.py "Eq. (9)" a2    # several terms, all must match
 python refs/find_ref.py --key maple     # full entry
 python refs/find_ref.py --list
+python refs/find_ref.py --check     # local-copy status per entry
+python refs/find_ref.py --fetch     # re-download missing arXiv PDFs
 ```
 
 | file | reference | used for |
@@ -30,7 +36,7 @@ python refs/find_ref.py --list
 
 The item still missing after the first read-through — Σ / Jacquet–Blondel
 δy/y at y ≈ 0.01 — is now bracketed by these documents (downloaded into
-refs/; PDFs git-ignored):
+refs/):
 
 | file | reference | used for |
 |---|---|---|
@@ -40,11 +46,38 @@ refs/; PDFs git-ignored):
 | `2206.04897.pdf` | R. Aggarwal, A. Caldwell, JINST 17 (2022) P09035 | The Bayesian kinematic-fit method (HERA kinematics, Q² > 400 GeV²) that the ePIC seminar applies. |
 | `2209.14489.pdf` | C. Pecar, A. Vossen, DIS2022 proceedings | SIDIS reconstruction with a particle-flow network vs electron/JB/DA: HFS methods surpass the electron method at very low y. |
 
-Not downloaded: M. Diefenthaler et al., EPJ C 82 (2022) 1064
-(arXiv:2108.11638) — ZEUS-based DNN reconstruction; the ePIC Inclusive WG
-wiki (open task on hadron treatment in JB/DA/(e)Σ), the BNL "DIS
-Kinematics" wiki page and B. Schmookler's `JeffersonLab/dis-reconstruction`
-repository (Yellow-Report kinematic maps) are recorded in
-`refs_dict.json` as the places to look for newer ePIC numbers. What is
-still not published anywhere we found: an ePIC full-simulation δy/y at
-Q² ≈ 1–3 GeV², y ≈ 0.01, for e + light ions.
+| `2108.11638.pdf` | M. Diefenthaler, A. Farhat, A. Verbytskyi, Y. Xu, EPJ C 82 (2022) 1064 | ZEUS-based DNN reconstruction of Q², x (HERA, not EIC) — search record only. |
+
+The ePIC Inclusive WG wiki (open task on hadron treatment in JB/DA/(e)Σ),
+the BNL "DIS Kinematics" wiki page and B. Schmookler's
+`JeffersonLab/dis-reconstruction` repository (Yellow-Report kinematic
+maps) are recorded in `refs_dict.json` as the places to look for newer
+ePIC numbers. What is still not published anywhere we found: an ePIC
+full-simulation δy/y at Q² ≈ 1–3 GeV², y ≈ 0.01, for e + light ions.
+
+## Downloaded 2026-08-25 (second pass): the external references of the dictionary
+
+Every dictionary entry with a free copy now has one here (`python
+refs/find_ref.py --check`). First pages and the cited numbers were checked
+against the dictionary; two entries had wrong titles/authors in the repo
+text and were corrected (marked below).
+
+| file | reference | used for / verified |
+|---|---|---|
+| `hep-ph_0611265.pdf` | A. Bacchetta, M. Diehl, K. Goeke, A. Metz, P. J. Mulders, M. Schlegel, *SIDIS at small transverse momentum*, JHEP 02 (2007) 093 | Eqs. (2.4)–(2.5): covariant azimuths cos φ_S, sin φ_S with g_⊥, ε_⊥ — `reco.azimuth_wrt_lepton_plane`. |
+| `hep-ph_0410050.pdf` | A. Bacchetta, U. D'Alesio, M. Diehl, C. A. Miller, *Single-spin asymmetries: the Trento conventions*, PRD 70 (2004) 117504 | Sign/orientation conventions of the azimuthal angles about the virtual photon. |
+| `hep-ph_0503023.pdf` | M. Diehl, S. Sapeta, *On the analysis of lepton scattering on longitudinally or transversely polarized protons*, EPJ C 41 (2005) 515 | O(γ) mixing of longitudinal/transverse target polarization between the lab and photon frames. |
+| `hep-ex_9412004.pdf` | U. Bassler, G. Bernardi, *On the kinematic reconstruction of DIS at HERA: the Σ method*, NIM A 361 (1995) 197 (DESY 94-231) | y_Σ = Σ/(Σ + E′(1 − cos θ_e)), ISR insensitivity; the e−Σ mixed method of `reco.mixed_method`. (Jacquet–Blondel 1979, DESY 79/48, has no free copy.) |
+| `2103.05419_part1..4.pdf` | R. Abdul Khalek et al., *EIC Yellow Report*, NPA 1026 (2022) 122447 — arXiv v3, 902 pages, split with PyMuPDF into pages 1–300 / 301–450 / 451–600 / 601–902 (the unsplit 124 MB file is git-ignored) | Sec. 8.1 kinematic-reconstruction comparison; far-forward 10σ Roman-pot cuts; luminosity accounting. |
+| `2108.08314.pdf` | A. Jentsch, Z. Tu, C. Weiss, PRC 104 (2021) 065205 | Table I verified: B0 5.5–20 mrad; OMD 0–5 mrad, ξ 0.45–0.65; RP 0–5 mrad, ξ 0.6–0.95; ZDC 0–4 mrad — the Phase-1 far-forward model of `fastsim/polli_fastsim/farforward.py`. |
+| `2511.05638.pdf` | W. Chang, E.-C. Aschenauer, A. Jentsch, A. Kumar, Z. Tu, Z. Yin, PRD 113 (2026) 032018 | Verified: IR-8 intact-recoil efficiencies 47.12 / 32.23 / 29.42 / **17.75** / 12.37 / 6.36 / 1.59% for d / ³He / ⁴He / ⁷Li / ⁹Be / ¹²C / ¹⁶O; no ⁶Li sample. |
+| `2603.23699.pdf`, `2603.23700.pdf` | W. Cosyn, C. Weiss, *SIDIS on a polarized spin-1 target. I. Cross section and spin observables; II. Deuteron and spectator nucleon tagging* (JLAB-THY-26-4663/-4661) — **titles corrected** (the repo had called them "tagged DIS on spin-1 targets") | Part II abstract verbatim: "Tensor-polarized spin asymmetries of order unity are achieved for spectator momenta ≳ 300 MeV, which select configurations with large D-wave" (plans/01 §2.4, primer §4.4). |
+| `2510.10794.pdf` | G. Atoian et al. (EPIOS), *Realizing the scientific program with polarized ion beams at EIC*, PRC 113 (2026) 060501 | Verified: G = 1.793 / −0.143 / −4.184 / −0.178 / 1.532 for p / d / ³He / ⁶Li / ⁷Li; "⁶Li, ¹⁴N which, together with the deuteron, are the only stable spin-one nuclei"; Δ(x,Q²) needs transversely polarized spin ≥ 1 nuclei. |
+| `2509.18558.pdf` | E. Hamwi, G. H. Hoffstaetter, *Polarization transmission in the EIC's Hadron Storage Ring* (Cornell; PRAB 29 (2026) 073501 as cited in plans/01) — **title and author list corrected** (the repo had "Hamwi–Devlin–Hoffstaetter, *Spin dynamics of light polarized ions in the EIC hadron ring*"; J. Devlin is acknowledged, not an author) | Table I verified: G / max\|Gγ\| / resonances = p 1.7928 / 525 / 1575; d −0.1430 / 21 / 63; ³He −4.1842 / 819 / 2457; ⁶Li −0.1818 / 27 / 81; ⁷Li 1.5196 / 191 / 573; "particles with small anomalous magnetic moment (²H, ⁶Li) are not amenable to Siberian snake devices". |
+| `TUNL_A6_2002.pdf` | D. R. Tilley et al. (TUNL), *Energy levels of light nuclei A = 6*, NPA 708 (2002) 3 — the 2017 revised manuscript from nucldata.tunl.duke.edu (`ourpubs/06_2002.pdf`) | Verified: 2.186 MeV 3⁺;0 Γ = 24 ± 2 keV (α, d); 5.366 MeV 2⁺;1 Γ = 541 ± 20 keV (γ, n, p, α); Q_m(⁴He(d,γ)⁶Li) = 1.4743 MeV; 3.5629 MeV 0⁺ α + d decay via (1996CS03) — `coherent.LI6_BREAKUP`, plans/06 §6.2. |
+
+No free copy exists for: Hoodbhoy–Jaffe–Manohar NPB 312 (1989) 571 and
+Jaffe–Manohar PLB 223 (1989) 218 (the Δ definition), Sather–Schmidt PRD 42
+(1990) 1424, Jacquet–Blondel DESY 79/48, and Li–Sick–Whitney–Yearian NPA
+162 (1971) 583 (`find_ref.py --check` lists them as "no free copy"); the
+dictionary entries carry what the repo takes from each.
