@@ -27,3 +27,7 @@ fastsim/scripts/out_coverage/
 
 # macOS Finder metadata
 .DS_Store
+
+# local copies of reference papers consulted for the reconstruction-chain
+# work (index in refs/README.md; fetch the PDFs from arXiv/INSPIRE)
+refs/*.pdf

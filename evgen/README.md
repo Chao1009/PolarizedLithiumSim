@@ -142,10 +142,15 @@ mixed method 20%, ε(φ′) harmonic + 10⁻³ rel-lumi offset on):
   single-fill errors (the m = 0-rich fill gain beats the efficiency loss);
 - 7R: best bins δΔ = 1.0×10⁻³ (Q² = 1.14) and 0.5×10⁻³ (3.13 GeV²) in
   year 1, purities ≈ 0.6;
-- 6R: angular cut (0.22 GeV at 50 GeV/u) + rectangular cutout r = 1.25 →
-  N_tag = 3.4×10⁶ (1 yr); the cutout fakes ⟨cos 2β⟩ = −0.44; the template
-  fit recovers a_t(t_ref) = 0.121 ± 0.002 (inj. 0.119) … 0.341 ± 0.009
-  (0.335) and a_e = 0.0101 ± 0.0013 (inj. 0.010) in year 1.
+- 6R: angular envelope (0.22 GeV at 50 GeV/u) + slot-like cutout
+  (|p_x| < 0.55, |p_y| < 0.22 GeV — the ePIC sensor planes surround a
+  horizontal slot, Jentsch DIS 2023) → N_tag = 2.7×10⁶ (1 yr); the cutout
+  fakes ⟨cos 2β⟩ = +0.77; the template fit recovers a_t(t_ref) =
+  0.117 ± 0.007 (inj. 0.119) … 0.331 ± 0.018 (0.343) and a_e = 0.0101 ±
+  0.0013 (inj. 0.010) in year 1 — the slot concentrates the recoils where
+  cos 2β hardly varies, costing ~3× in the deformation-term error relative
+  to a square cutout (a_e untouched). u₁ = 0.05, u₂ = 0.02 sit at the ZEUS
+  LPS 1σ bounds (NPB 816:1); see `refs/README.md` for the sources.
   **Convention (verified in the paper's Eq. 9):** arXiv:2408.13213 expands
   1 + 2Σ a_n cos nΦ with Φ the vector-meson (recoil) azimuth relative to
   the polarization axis, so the deformation modulation coefficient is

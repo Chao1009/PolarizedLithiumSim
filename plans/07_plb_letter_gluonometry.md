@@ -164,12 +164,16 @@ exist and close:
   55–60% of their events to the reco y cut; D = 0.91 there.
 - ☑ 7R: δΔ best bins 1.0×10⁻³ (Q² = 1.14) / 0.5×10⁻³ (3.13 GeV²) in year 1
   (vs 0.7–1.4 ×10⁻³ baseline), purities ≈ 0.6.
-- ☑ Coherent 6R (feeds WP5): angular cut 10σ_θ·6p_u (0.22 GeV at 50 GeV/u)
-  + rectangular cutout r = 1.25 → N_tag = 3.4×10⁶ (1 yr) vs 1.1×10⁷;
-  fake ⟨cos 2β⟩ = −0.44 cancelled by the spin-state ratio; template fit
-  (acceptance-weighted MC basis, a_t ∝ |t|) recovers a_t(t_ref) in four
-  |t| bins (e.g. 0.121 ± 0.002 vs 0.119 injected) and the flat a_e = 0.010
-  ± 0.0013 (1 yr; ± 0.0004 at 10 yr). **Convention verified in
+- ☑ Coherent 6R (feeds WP5): angular envelope 10σ_θ·6p_u (0.22 GeV at
+  50 GeV/u) + slot-like cutout |p_x| < 0.55, |p_y| < 0.22 GeV (ePIC pots
+  surround a horizontal slot; 2026-08-25 refs pass) → N_tag = 2.7×10⁶
+  (1 yr) vs 1.1×10⁷; fake ⟨cos 2β⟩ = +0.77 cancelled by the spin-state
+  ratio; template fit (acceptance-weighted MC basis, a_t ∝ |t|) recovers
+  a_t(t_ref) in four |t| bins (0.117 ± 0.007 vs 0.119 injected at 1 yr;
+  ± 0.002 at 10 yr) and the flat a_e = 0.010 ± 0.0013 (1 yr; ± 0.0004 at
+  10 yr). The slot geometry costs ~3× in the deformation-term error vs a
+  square cutout (a_e untouched) — a pot-design lever for WP5. u₁/u₂ at
+  the ZEUS LPS 1σ bounds (A_LT, A_TT consistent with zero, NPB 816:1). **Convention verified in
   arXiv:2408.13213 Eq. (9): 1 + 2Σ a_n e^{inΦ} → the deformation
   modulation is 2a₂ = 0.072 at P_zz = 0.6, ⟨|t|⟩ = 0.06 (money plot 6
   injects a₂: conservative ×2).** Update §7.1 / plans/06 / the projection

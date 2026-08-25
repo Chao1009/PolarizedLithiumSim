@@ -593,20 +593,28 @@ def tag_pt_cut(sigma_theta, p_per_nucleon, a_beam=6, n_sigma=10.0):
 
 
 def rp_measure(Pprime, P, sigma_theta_xy, n_sigma=10.0, rng=None,
-               shape="rectangle", sigma_pos_over_l=0.0):
+               shape="rectangle", sigma_pos_over_l=0.0,
+               cut_scale_xy=(1.0, 1.0)):
     """Emulated Roman-Pot measurement of an intact recoil at R ~ 1.
 
     The pots see the transverse displacement of the track from the beam
     orbit; the momentum (x_L ~ 1) is unresolved.  What the reconstruction
     returns is the angle pair at the IP relative to the beam axis,
     smeared by the bunch's own angular deviation (beam divergence,
-    sigma_theta_xy = (sx, sy) rad -- the dominant resolution) and an
-    optional position term sigma_pos/L_eff.  Acceptance: outside the
-    n_sigma beam envelope, a RECTANGLE |theta_x| > n sx OR |theta_y| > n sy
-    (pots on all four sides, ePIC-style cutout) or an ELLIPSE
-    (theta_x/sx)^2 + (theta_y/sy)^2 > n^2 ("circular pT cut" of the
-    routing code when sx = sy).  Returns dict with theta_x/y, pT, phi_t,
-    t_reco = -pT^2 (x_L set to 1) and the acceptance mask.
+    sigma_theta_xy = (sx, sy) rad -- the dominant resolution: the ePIC
+    far-forward simulation with all beam effects gives dpT ~ 40 MeV for
+    275 GeV protons with the detector alone at the 1% level, Jentsch
+    DIS 2023 [refs/]; ZEUS's LPS was likewise beam-spread dominated) and
+    an optional position term sigma_pos/L_eff.  Acceptance: outside the
+    envelope cutout with half-widths (c_x, c_y) = (n sx, n sy) scaled by
+    `cut_scale_xy` -- a RECTANGLE |theta_x| > c_x OR |theta_y| > c_y, or
+    an ELLIPSE (theta_x/c_x)^2 + (theta_y/c_y)^2 > 1 (the "circular pT
+    cut" of the routing code when c_x = c_y).  The ePIC pots are planes
+    around a horizontal SLOT (wide in x for the beam's momentum spread
+    and dispersion, tight in y at the beam size; refs/README.md), i.e. a
+    rectangle with c_x >> c_y: cut_scale_xy = (2.5, 1.0) emulates it.
+    Returns dict with theta_x/y, pT, phi_t, t_reco = -pT^2 (x_L set to 1),
+    the acceptance mask and the cut half-widths in GeV.
     """
     rng = rng or np.random.default_rng(20260824)
     Pp = np.asarray(Pprime, dtype=float)
@@ -615,22 +623,24 @@ def rp_measure(Pprime, P, sigma_theta_xy, n_sigma=10.0, rng=None,
     thx = Pp[..., 1] / Pp[..., 3]
     thy = Pp[..., 2] / Pp[..., 3]
     sx, sy = sigma_theta_xy
+    cx, cy = n_sigma * sx * cut_scale_xy[0], n_sigma * sy * cut_scale_xy[1]
     n = thx.shape
     s_eff_x = np.hypot(sx, sigma_pos_over_l)
     s_eff_y = np.hypot(sy, sigma_pos_over_l)
     thx_m = thx + s_eff_x * rng.standard_normal(n)
     thy_m = thy + s_eff_y * rng.standard_normal(n)
     if shape == "rectangle":
-        acc = (np.abs(thx_m) > n_sigma * sx) | (np.abs(thy_m) > n_sigma * sy)
+        acc = (np.abs(thx_m) > cx) | (np.abs(thy_m) > cy)
     elif shape == "ellipse":
-        acc = (thx_m / sx) ** 2 + (thy_m / sy) ** 2 > n_sigma ** 2
+        acc = (thx_m / cx) ** 2 + (thy_m / cy) ** 2 > 1.0
     else:
         raise ValueError("shape must be 'rectangle' or 'ellipse'")
     pt = p_beam * np.hypot(thx_m, thy_m)
     return {"theta_x": thx_m, "theta_y": thy_m, "pT": pt,
             "phi_t": np.arctan2(thy_m, thx_m), "t_reco": -pt * pt,
             "accepted": acc, "pT_true": p_beam * np.hypot(thx, thy),
-            "phi_t_true": np.arctan2(thy, thx)}
+            "phi_t_true": np.arctan2(thy, thx),
+            "cut_pt_xy": (float(np.mean(p_beam) * cx), float(np.mean(p_beam) * cy))}
 
 
 def rp_hole_acceptance(slope_b, cut_x, cut_y, shape="rectangle", nphi=3600):

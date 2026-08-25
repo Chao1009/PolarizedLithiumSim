@@ -314,10 +314,18 @@ class CoherentResponse:
 
     def __init__(self, scenario, config, sigma_theta, aspect=1.0,
                  shape="rectangle", n_mc=400000, x_pom_range=(1e-3, 1e-2),
-                 t_max=0.5, phi_s=np.pi / 2.0, n_sigma=10.0, rng=None):
+                 t_max=0.5, phi_s=np.pi / 2.0, n_sigma=10.0, rng=None,
+                 cut_scale_xy=(1.0, 1.0)):
+        """`aspect` = sigma_theta_y / sigma_theta_x (beam divergence
+        anisotropy; HERA's proton beam had 45 vs 100 MeV horizontal vs
+        vertical pT spread at the IP, ZEUS NPB 816:1); `cut_scale_xy`
+        scales the cutout half-widths (n_sigma sigma_x, n_sigma sigma_y):
+        the ePIC pots surround a horizontal slot, cut_scale_xy = (2.5, 1)
+        (see reco.rp_measure)."""
         rng = rng or np.random.default_rng(20260824)
         self.scenario, self.config = scenario, config
         self.sigma_theta, self.aspect, self.shape = sigma_theta, aspect, shape
+        self.cut_scale_xy = tuple(cut_scale_xy)
         _k, p_ion = reco.beam_fourvectors(config)
         t = -scenario.sample_t(n_mc, rng, t_max=t_max)
         lo, hi = np.log10(x_pom_range[0]), np.log10(x_pom_range[1])
@@ -328,8 +336,10 @@ class CoherentResponse:
         phi_t = rng.uniform(0.0, 2.0 * np.pi, size=t.size)
         pp = reco.recoil_fourvector(t, phi_t, x_pom, p_ion)
         m = reco.rp_measure(pp, p_ion, (sigma_theta, sigma_theta * aspect),
-                            n_sigma=n_sigma, shape=shape, rng=rng)
+                            n_sigma=n_sigma, shape=shape, rng=rng,
+                            cut_scale_xy=cut_scale_xy)
         acc = m["accepted"]
+        self.cut_pt_xy = m["cut_pt_xy"]
         self.n_produced_mc = n_mc
         self.acceptance = float(acc.sum()) / n_mc
         self.t_true = -t[acc]

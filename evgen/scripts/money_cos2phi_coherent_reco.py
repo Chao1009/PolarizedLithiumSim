@@ -4,15 +4,20 @@ level (plans/07 WP3 -> WP5) -- money plot 6 re-derived with
 
   * the ANGULAR near-beam cut, pT_cut = 10 sigma_theta A p_u (proton-
     derived sigma_theta = 73 microrad, high-acceptance optics), and a
-    rectangular Roman-Pot cutout of aspect ratio r (default 1.25) whose
-    sides are parallel to the vertical spin axis;
+    slot-like Roman-Pot cutout (the ePIC sensor planes surround a
+    horizontal slot for the beam's momentum spread and dispersion,
+    Jentsch DIS 2023: default half-widths 2.5 x 10 sigma in x, 1 x 10
+    sigma in y) whose sides are parallel to the vertical spin axis;
   * the Roman-Pot emulation: divergence smearing of the recoil angle,
     |t| = pT^2 reconstructed with x_L = 1, reco t bins;
   * the TWO azimuths: alpha = phi_e - phi_S (electron) and beta =
     phi_t - phi_S (recoil); the deformation term modulates cos 2beta and
     the gluon-transversity term cos 2alpha; the unpolarized lepton-plane
     /recoil-plane harmonics u_1 cos(alpha-beta), u_2 cos 2(alpha-beta)
-    are placeholders (assumption);
+    (the L-T and T-T' interference of diffractive DIS, Nikolaev-
+    Pronyaev-Zakharov hep-ph/9812212) are set at the 1-sigma edge of the
+    ZEUS LPS measurement (A_LT, A_TT consistent with zero within
+    +-0.03-0.05; NPB 816 (2009) 1, Sec. 10.2);
   * the anchor convention (arXiv:2408.13213 Eq. 9: 1 + 2 sum a_n cos n Phi):
     the cos 2beta COEFFICIENT is 2 a_2 -- twice what money plot 6 injects;
   * the spin-state-sorted 2-D ratio fit (reco.harmonic_ratio_fit_2d) of
@@ -61,13 +66,28 @@ def main():
     ap.add_argument("--a-m", type=float, default=0.0,
                     help="mixed cos(alpha+beta) coefficient per unit P_zz")
     ap.add_argument("--u1", type=float, default=0.05,
-                    help="unpolarized cos(alpha-beta) [placeholder]")
+                    help="unpolarized cos(alpha-beta) coefficient (L-T "
+                         "interference).  ZEUS LPS, NPB 816 (2009) 1 "
+                         "[refs/0812.2003]: A_LT = -0.036 +- 0.036 (x_P < "
+                         "0.01), +0.051 +- 0.024 (0.01-0.1); default at the "
+                         "1-sigma edge")
     ap.add_argument("--u2", type=float, default=0.02,
-                    help="unpolarized cos 2(alpha-beta) [placeholder]")
+                    help="unpolarized cos 2(alpha-beta) coefficient (T-T' "
+                         "interference).  ZEUS LPS: A_TT = -0.030 +- 0.037, "
+                         "-0.010 +- 0.024; default inside the 1-sigma band")
     ap.add_argument("--sigma-theta", type=float, default=reco.SIGMA_THETA_HA,
                     help="beam angular divergence [rad] (proton-derived)")
-    ap.add_argument("--aspect", type=float, default=1.25,
-                    help="cutout aspect ratio c_y/c_x [assumption]")
+    ap.add_argument("--aspect", type=float, default=1.0,
+                    help="beam-divergence anisotropy sigma_y/sigma_x "
+                         "(HERA: 100/45 MeV vertical/horizontal pT spread, "
+                         "ZEUS NPB 816:1; Li optics undocumented, #20)")
+    ap.add_argument("--cut-scale-x", type=float, default=2.5,
+                    help="cutout half-width in x in units of 10 sigma_x: "
+                         "the ePIC pots surround a horizontal SLOT (beam "
+                         "momentum spread + dispersion), Jentsch DIS 2023 "
+                         "slide 15 [illustrative value]")
+    ap.add_argument("--cut-scale-y", type=float, default=1.0,
+                    help="cutout half-height in y in units of 10 sigma_y")
     ap.add_argument("--shape", default="rectangle",
                     choices=("rectangle", "ellipse"))
     ap.add_argument("--n-mc", type=int, default=600000)
@@ -87,7 +107,9 @@ def main():
     n_produced = float(n_coh.sum())          # coherent recoils, 1 yr
     cresp = rp.CoherentResponse(sc, config, args.sigma_theta,
                                 aspect=args.aspect, shape=args.shape,
-                                n_mc=args.n_mc, rng=rng)
+                                n_mc=args.n_mc, rng=rng,
+                                cut_scale_xy=(args.cut_scale_x,
+                                              args.cut_scale_y))
     n_tag = n_produced * cresp.acceptance
     plan = bk.tensor_flip_plan(args.pzz)
     pzz_list = [args.pzz, -2.0 * args.pzz]
@@ -118,10 +140,12 @@ def main():
         ax1.errorbar(bc, yb / yb.mean(), yerr=np.sqrt(yb) / yb.mean(), fmt="o-",
                      color=col, ms=3.5, lw=1, capsize=2, label=lab)
     fake = np.mean(np.cos(2.0 * cresp.beta_reco))
-    ax1.annotate(r"cutout $r=%.2f$: $\langle\cos2\beta\rangle=%.2f$ of the "
-                 r"tagged sample" "\n" r"(a single-fill fit would report "
-                 r"$a_t\approx%.2f$ vs truth %.3f)"
-                 % (args.aspect, fake, fake / args.pzz, f0["truth"]["a_t"]),
+    ax1.annotate(r"slot cutout $|p_x|<%.2f$, $|p_y|<%.2f$ GeV: "
+                 r"$\langle\cos2\beta\rangle=%.2f$ of the tagged sample" "\n"
+                 r"(a single-fill fit would report $a_t\approx%.2f$ vs "
+                 r"truth %.3f)"
+                 % (cresp.cut_pt_xy[0], cresp.cut_pt_xy[1], fake,
+                    fake / args.pzz, f0["truth"]["a_t"]),
                  xy=(0.03, 0.05), xycoords="axes fraction", fontsize=7.2)
     ax1.set_xlim(0, 2 * np.pi)
     ax1.set_xticks([0, np.pi, 2 * np.pi])
@@ -142,11 +166,18 @@ def main():
     t2d, var2d = reco._ratio_to_modulation(r, var, sig2, pbar, u=u)
     t2d = t2d.reshape(aa.shape)
     var2d = var2d.reshape(aa.shape)
-    c2_mean = float(np.mean(bm["c2"]))   # a_t offset of the alpha projection
-    tb = t2d.mean(axis=0) - f0["const"]
-    eb = np.sqrt(var2d.sum(axis=0)) / aa.shape[0]
-    ta = t2d.mean(axis=1) - f0["const"] - f0["a_t"] * c2_mean
-    ea = np.sqrt(var2d.sum(axis=1)) / aa.shape[1]
+    # projections over LIVE bins only (bins inside the cutout are empty):
+    # remove the fitted a_t template per bin before averaging over beta,
+    # so that the alpha projection isolates a_e cos 2alpha
+    live = np.isfinite(var2d)
+    resid = t2d - f0["const"] - f0["a_t"] * bm["c2t"][None, :]
+    nb_live = np.maximum(live.sum(axis=0), 1)
+    tb = np.where(live, t2d - f0["const"], 0.0).sum(axis=0) / nb_live
+    eb = np.sqrt(np.where(live, var2d, 0.0).sum(axis=0)) / nb_live
+    na_live = np.maximum(live.sum(axis=1), 1)
+    ta = np.where(live, resid, 0.0).sum(axis=1) / na_live
+    ea = np.sqrt(np.where(live, var2d, 0.0).sum(axis=1)) / na_live
+    tb = np.where(live.sum(axis=0) > 0, tb, np.nan)
     ax2.errorbar(bc, tb, yerr=eb, fmt="o", color=C_TRUTH, ms=3.5, capsize=2,
                  lw=1, label=r"$T(\beta)$ ($\alpha$-averaged)")
     ax2.errorbar(ac, ta, yerr=ea, fmt="s", color=C_FIT, ms=3.5, capsize=2,
@@ -221,23 +252,28 @@ def main():
 
     fig.suptitle(
         r"Coherent $e\,^6$Li$\to e'X\,^6$Li(g.s.) at the reconstructed level "
-        r"(6R), %s, $P_{zz}=%.2f$: angular cut $10\sigma_\theta A p_u$ "
-        r"($\sigma_\theta=%.0f\,\mu$rad $\to p_T>%.2f$ GeV), %s cutout $r=%.2f$"
+        r"(6R), %s, $P_{zz}=%.2f$: $\sigma_\theta=%.0f\,\mu$rad "
+        r"($10\sigma_\theta A p_u=%.2f$ GeV), slot-like %s cutout "
+        r"$|p_x|<%.2f$, $|p_y|<%.2f$ GeV"
         "\n" r"$N_{\rm tag}$ = %.2g (1 yr) vs %.2g with the constant 0.20 GeV cut; "
-        r"deformation $c_2=2a_2$ (Eq. 9 convention), $a_e=%.3f$, "
-        r"$u_1=%.2f$, $u_2=%.2f$ placeholders; two-fill ratio fit; stat. only"
+        r"deformation $c_2=2a_2$ (Eq. 9 convention), $a_e=%.3f$"
+        "\n" r"$u_1=%.2f$, $u_2=%.2f$ (ZEUS LPS $1\sigma$ bounds); "
+        r"two-fill ratio fit with the MC template basis; statistical errors only"
         % (config.label(), args.pzz, 1e6 * args.sigma_theta, cresp.pt_cut,
-           args.shape, args.aspect, n_tag, tagged[HIGH_ACCEPTANCE.name].sum(),
-           args.amp, args.u1, args.u2), fontsize=9.3)
-    fig.tight_layout(rect=(0, 0, 1, 0.92))
+           args.shape, cresp.cut_pt_xy[0], cresp.cut_pt_xy[1], n_tag,
+           tagged[HIGH_ACCEPTANCE.name].sum(), args.amp, args.u1, args.u2),
+        fontsize=9)
+    fig.tight_layout(rect=(0, 0, 1, 0.905))
     outdir = pathlib.Path(args.outdir)
     outdir.mkdir(parents=True, exist_ok=True)
     out = outdir / "money_cos2phi_coherent_reco_6Li.png"
     fig.savefig(out, dpi=140)
     print("wrote", out)
-    print("coherent produced (1 yr): %.3g; tagged: angular %s cutout r=%.2f "
-          "-> acc %.4f, N_tag %.3g; constant-cut reference %.3g"
-          % (n_produced, args.shape, args.aspect, cresp.acceptance, n_tag,
+    print("coherent produced (1 yr): %.3g; tagged: %s cutout |px|<%.3f, "
+          "|py|<%.3f GeV (divergence aspect %.2f) -> acc %.4f, N_tag %.3g; "
+          "constant-cut reference %.3g"
+          % (n_produced, args.shape, cresp.cut_pt_xy[0], cresp.cut_pt_xy[1],
+             args.aspect, cresp.acceptance, n_tag,
              tagged[HIGH_ACCEPTANCE.name].sum()))
     print("cutout fake <cos 2beta> = %.3f" % fake)
     for (tlo, thi), f1, f10 in zip(zip(t_edges[:-1], t_edges[1:]), fits1, fits10):

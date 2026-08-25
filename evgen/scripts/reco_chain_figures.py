@@ -359,7 +359,7 @@ def coherent_figure(outdir):
     ax1.tick_params(labelsize=8)
 
     # --- (b) fake a2 vs aspect ratio ---------------------------------------
-    rr = np.linspace(0.6, 2.0, 141)
+    rr = np.linspace(0.3, 2.0, 171)
     for shape, ls, lab in (("rectangle", "-", "rectangular cutout"),
                            ("ellipse", "--", "elliptical cutout")):
         a2 = [reco.rp_hole_acceptance(slope_b, cut, cut * r, shape)["a2"]
@@ -376,6 +376,9 @@ def coherent_figure(outdir):
         ax2.axhline(lvl, color="black", lw=0.7, ls=":")
         ax2.annotate(lab, xy=(1.92, lvl * 1.1), fontsize=6.5, ha="right")
     ax2.axhline(0, color="0.8", lw=0.6)
+    ax2.axvspan(0.3, 0.6, color="0.5", alpha=0.10, lw=0)
+    ax2.annotate("ePIC slot-like cutout\n(wide in $x$, tight in $y$)",
+                 xy=(0.45, 2e-3), fontsize=6.6, ha="center", color="0.3")
     ax2.set_yscale("symlog", linthresh=1e-3)
     ax2.set_xlabel(r"cutout aspect ratio $r=c_y/c_x$ ($c_x=%.2f$ GeV)" % cut)
     ax2.set_ylabel(r"$\langle\cos2\phi_t\rangle$ of the tagged sample")

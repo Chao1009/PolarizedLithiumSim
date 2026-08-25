@@ -151,6 +151,22 @@ def test_coherent_response_acceptance(coherent_response):
     assert fake < -0.3
 
 
+def test_slot_cutout_flips_the_fake_harmonic():
+    """The ePIC pots surround a horizontal slot (wide in x, tight in y):
+    the tagged sample is dominated by vertical recoils, so the fake
+    harmonic w.r.t. the vertical spin axis is large and POSITIVE, and the
+    acceptance differs from the isotropic circular cut."""
+    sc = coh.CoherentScenario()
+    cr = rp.CoherentResponse(sc, CONFIG, reco.SIGMA_THETA_HA, aspect=1.0,
+                             cut_scale_xy=(2.5, 1.0), n_mc=100000,
+                             rng=np.random.default_rng(9))
+    assert np.mean(np.cos(2.0 * cr.beta_reco)) > 0.3
+    circ = sc.tag_acceptance_angular(reco.SIGMA_THETA_HA,
+                                     CONFIG.ion_momentum_per_nucleon)
+    assert 0.1 < cr.acceptance / circ < 1.0
+    assert cr.cut_pt_xy[0] == pytest.approx(2.5 * cr.cut_pt_xy[1], rel=1e-6)
+
+
 def test_two_azimuth_fit_closure(coherent_response):
     sc, cr = coherent_response
     plan = bk.tensor_flip_plan(0.6)

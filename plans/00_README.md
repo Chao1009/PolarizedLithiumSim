@@ -49,6 +49,27 @@ brings to the EIC, in support of the ANL polarized ⁶,⁷Li ion-source program
 5. **Calendar anchor**: INT program on polarized ion beams at EIC,
    March 22 – April 2, 2027 — target for Phase-1 money plots.
 
+## Development run 6 addendum (2026-08-25): placeholders filled from the references in refs/
+
+- ☑ Seven papers added by the user to `refs/` (index: `refs/README.md`;
+  PDFs git-ignored) read and folded into the reconstruction-chain report,
+  the code defaults and plans/04: **ZEUS LPS** (NPB 816:1) bounds the
+  diffractive azimuthal harmonics u₁, u₂ (A_LT, A_TT consistent with zero
+  within ±0.03–0.05) and documents a beam pT spread of 45 (x) vs 100 (y)
+  MeV at the HERA IP, Φ resolution 0.2 rad, σ(t)/t = 0.14/√|t|; the
+  **Nikolaev–Pronyaev–Zakharov / Pronyaev** papers give the y-factors and
+  the LT/T model (A_LT ≈ 0.03 at our β ≈ 0.5); **Cosyn et al.** EPJ A 61:83
+  give the exact spin-1 harmonics — b₂–b₄ feed cos φ_TL at O(γ) and
+  cos 2φ_TT at O(γ²) (Eqs. 17d–e): ≤ 3% of the Δ amplitude at the worst
+  sweet spot, computable from A_zz; **Jentsch DIS 2023** fixes the RP
+  geometry (planes around a horizontal slot → slot-like cutout, new
+  default of money plot 6R: acceptance 3.2%, N_tag 2.7×10⁶, fake ⟨cos 2β⟩
+  = +0.77, deformation-term error ×3 vs a square cutout, a_e unaffected)
+  and the beam-effect-dominated RP resolution (ΔpT ≈ 40 MeV at 275 GeV,
+  detector ≤ 1.5%); **Mäntysaari et al.** full text confirms Eq. (9) and
+  the γ*d-frame definition of Φ. Still missing: an ePIC Σ/JB δy/y
+  performance document at y ≈ 0.01 (#21). 94 evgen tests.
+
 ## Development run 6 (2026-08-24): the reconstruction chain, measured quantities, and the audit
 
 - ☑ **Analysis note `reports/reconstruction_chain_report`** (HTML/PDF,

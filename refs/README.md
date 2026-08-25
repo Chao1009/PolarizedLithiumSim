@@ -1,0 +1,19 @@
+# refs/ — reference papers consulted for the reconstruction-chain work
+
+PDFs are kept locally only (`refs/*.pdf` is git-ignored, like the other
+local paper copies); this index records what each one was used for and
+which numbers were taken from it (2026-08-25 read-through).
+
+| file | reference | used for |
+|---|---|---|
+| `2410.12764v1.pdf` | W. Cosyn, B. Roldan Tomei, A. Sosa, A. Zec, *Polarization options in inclusive DIS off tensor polarized deuteron*, EPJ A 61 (2025) 83 | Exact spin-1 inclusive decomposition for unpolarized electrons (their Eq. 10): the tensor SFs b₁–b₄ feed the cos φ_TL term at O(γ) (Eq. 17d) and the cos 2φ_TT term at O(γ²) (Eq. 17e); ε and γ definitions (Eqs. 11c, 13); axis along q kills T_LT, T_TT (Eq. 20); b₃, b₄ non-negligible at Q² = 2 GeV² for the photon-direction axis (their Fig. 6). Their decomposition carries no Δ (b₁ focus). |
+| `2408.13213v1.pdf` | H. Mäntysaari, F. Salazar, B. Schenke, C. Shen, W. Zhao, *Spatial imaging of polarized deuterons at the EIC*, PLB 858 (2024) 139053 | Eq. (9): d²σ/dΦd\|t\| ∝ 1 + 2Σₙ aₙ e^{inΦ} → the cos 2Φ modulation coefficient is **2a₂**; Φ = angle between the vector-meson (recoil) momentum and the polarization axis, polarizations defined in the γ*d c.m. frame ("a Lorentz transformation is required from the lab frame ... which would mix the polarization states" at Q² > 0); Fig. 4 a₂, a₄ per m-state; effective radius R = √(2B_D) from a fit within \|t\| < 0.3 GeV². |
+| `0812.2003v3.pdf` | ZEUS Collaboration, *Deep inelastic scattering with leading protons or large rapidity gaps at HERA*, NPB 816 (2009) 1 | Sec. 10.2 azimuthal asymmetries dσ/dΦ ∝ 1 + A_LT cos Φ + A_TT cos 2Φ: A_LT = −0.036 ± 0.036 (+0.016/−0.014), A_TT = −0.030 ± 0.037 (+0.022/−0.006) for 0.0002 < x_P < 0.01; A_LT = +0.051 ± 0.024, A_TT = −0.010 ± 0.024 for 0.01 < x_P < 0.1 → our u₁ = 0.05, u₂ = 0.02 sit at the 1σ edge. LPS: t-resolution σ(t)/t = 0.14 GeV/√\|t\| dominated by the beam angular spread; Φ resolution ≈ 0.2 rad; **beam transverse-momentum spread at the IP ≈ 45 MeV horizontal, 100 MeV vertical** (an anisotropic divergence, ×2); t-slope b = 7.0 ± 0.3 GeV⁻²; LPS acceptance ≈ 2% at x_L > 0.98; 0.09 < \|t\| < 0.55 GeV². |
+| `9812212v1.pdf` | N. N. Nikolaev, A. V. Pronyaev, B. G. Zakharov, *Azimuthal asymmetry as a new handle on σ_L/σ_T in diffractive DIS*, hep-ph/9812212 | Eq. (1): the y-dependence of the cos φ and cos 2φ terms of diffractive DIS with a detected proton: u₁ = (2−y)√(1−y) A_LT/[2(1−y)+y²], u₂ = 2(1−y) A_TT/[2(1−y)+y²]; A_LT = F_LT/(F_T+F_L); LT/T ratio model-independent at large β. |
+| `9808432v1.pdf` | A. V. Pronyaev, *The forward cone and L/T separation in diffractive DIS*, hep-ph/9808432 | Eq. (7): R_LT/T = (p_⊥/Q)·12β³(2−3β)/[(1−β)(3+4β+8β²)] — at our coherent kinematics (β ≈ 0.5, p_T/Q ≈ 0.2) this gives A_LT ≈ 0.03, consistent with the ZEUS bound; sign change at β = 2/3. |
+| `0206031v1.pdf` | M. Ruspa (H1/ZEUS), *Inclusive diffraction at HERA*, hep-ex/0206031 | Diffractive-to-total ratio dσ_diff/dM_X/σ_tot vs W (Fig. 5) — the qualitative basis of the f₀ bracket in plans/06 (no single number quoted in the text). |
+| `ePIC_far_forward_talk_DIS_2023_v2.pdf` | A. Jentsch (ePIC), *Far-Forward Detectors and Physics with ePIC @ the EIC*, DIS 2023 | Far-forward acceptance table (RP 0.0* < θ < 5.0 mrad, lower bound optics-dependent; OMD 0–5 mrad; B0 5.5–20 mrad; ZDC < 5.5 mrad); RP technology (500 μm AC-LGAD, "potless" RF-foil design, stations 2 m apart, 25.6 × 12.8 cm sensors); OMD implemented as horizontal RP-style sensors (protons 45% < x_L < 55%); "beam effects the dominant source of momentum smearing" (angular divergence, crossing angle, crab rotation / vertex smearing); RP p_T resolution plots with and without beam effects. |
+
+Still missing (asked for, not yet available): an ePIC inclusive-DIS
+kinematic-reconstruction performance document (Σ / Jacquet–Blondel
+δy/y at y = 0.01–0.05) — plans/04 #21.

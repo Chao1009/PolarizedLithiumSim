@@ -150,6 +150,18 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
     and the pot geometry (`reco.rp_measure` takes both). *Engage:* ePIC
     FF WG / C-AD optics. *Default:* proton-derived 73/149 μrad,
     isotropic, square cutout; ratio estimator.
+    *2026-08-25 (refs/):* the ePIC pots are sensor planes around a
+    horizontal SLOT (Jentsch DIS 2023, slide 15) — wide in x for the
+    beam's momentum spread and dispersion, tight in y — so the cutout
+    aspect ratio is < 1 and the fake ⟨cos 2β⟩ w.r.t. the vertical axis
+    is large and positive; HERA's proton beam had a 45 (x) vs 100 (y)
+    MeV transverse-momentum spread at the IP (ZEUS NPB 816:1), i.e.
+    factor-2 anisotropies are the norm; ePIC's full-beam-effects
+    simulation gives ΔpT ≈ 40 MeV at 275 GeV with the detector alone at
+    ≤ 1.5% ("beam effects the dominant source", slide 20) —
+    `reco.rp_measure(cut_scale_xy=(2.5, 1))` is the new default of
+    money plot 6R. Still needed: the slot dimensions and the light-ion
+    optics.
 21. **Hadronic-method y resolution at y = 0.01–0.05 for e + light ions**
     (same note). Three of the four inclusive sweet spots sit at
     y = 0.010–0.025 where the electron alone gives δy/y = 50–120%; the
@@ -157,6 +169,7 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
     not generate. *Needed:* δy_Σ/y vs y from the ePIC inclusive WG (or a
     BeAGLE/PYTHIA e+Li sample through eic-smear). *Default:* 15–30%
     band (`reco.hadronic_y`); purity 0.75–0.83 per super-bin at 15–20%.
+    *2026-08-25:* not among the references added to refs/ — still open.
 
 ## Tracking
 
