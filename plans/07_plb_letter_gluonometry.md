@@ -184,6 +184,48 @@ exist and close:
   presentation is reco-level 5R/7R with the ratio estimator (errors improve,
   not degrade), and 6R with the angular cut curves vs σ_θ and p_u.
 
+### WP3-HFS — Hadronic final state and hadron-side detection (◐ chain built, sample pending)
+Decision 2026-08-25 (option 1 of the reconstruction-note discussion): replace
+the 25% Gaussian stand-in for the hadronic y by a real hadronic final state
+through a hadron-side detector response, and treat the hadron-side detection
+efficiency explicitly.
+- ☑ `polligen/hfs.py`: `HFSSample` (generator-independent .npz format:
+  scattered electron + final-state hadrons, head-on frame, per-nucleon
+  kinematics), exact hadronic sums, Σ / Jacquet–Blondel / double-angle /
+  mixed methods (`hadronic_kinematics`, identities tested against the truth
+  with a perfect response), `HadronResponse` (tracker |η| ≤ 3.5, p_T > 0.2 GeV
+  with a 95% plateau efficiency and the repository's momentum/angle tables;
+  calorimeters |η| ≤ 3.7: photons in the EMCal above 0.1 GeV, neutral and
+  untracked charged hadrons in the HCal above 0.5 GeV at 90% efficiency, Yellow
+  Report resolution requirements per region; Gaussian noise on Σ and on each
+  p_T component, 50 MeV default), `ToyHFS` (vectorized string-fragmentation
+  stand-in with exact four-momentum closure and π⁰ → γγ), `HFSLibrary` +
+  `HFSResponse` ((x, Q²)-cell library transferring the captured Σ fraction
+  and p_T ratio onto the pseudo-events; noise per event).  7 tests.
+- ☑ `recopseudo.RecoModel(y_source="hfs", hadronic_method=...)` and
+  `RecoResponse(..., hfs=...)`; `money_cos2phi_reco.py --y-source hfs
+  [--hfs-sample ...] [--hfs-noise ...]`; `scripts/hfs_resolution.py`
+  (Figure 3 of the reconstruction report).
+- ☑ `tools/pythia8/gen_dis_hfs.py` + README: PYTHIA 8 e+p / e+n DIS at the
+  per-nucleon beam energies (head-on frame, dipole recoil, Q² > 0.7, lepton
+  radiation off) → HFS .npz.  **Runs in eic-shell on the Linux box (no PYTHIA
+  on the analysis machine); one command per target, ~1 M events each.**
+- Results with the toy (illustrative): captured Σ fraction 0.90 (tracks 0.60,
+  photons 0.30, neutral hadrons 0.03); Σ-method δy/y at the four sweet spots
+  0.28 / 0.17 / 0.24 / 0.07 with 50 MeV noise (9–12% without noise; ×2 at
+  100 MeV) — the 25% stand-in is what a 50 MeV noise floor does to
+  Σ_h = 0.2 GeV; 5R rerun with the HFS-based y: purities 0.60 / 0.68 / 0.68 /
+  0.86, δÂ = 1.2 / 1.0 / 1.8 / 3.0 × 10⁻⁴ (Table 2 unchanged), 7R unchanged.
+- ☐ Generate the PYTHIA 8 samples (p and n, 10 × 50; later 5 × 20.5 and
+  18 × 137.5), rerun `hfs_resolution.py` and 5R/7R with them; quote the
+  resolution table by y and Q² in the reconstruction report.
+- ☐ Replace the Yellow-Report response magnitudes by the ePIC design values
+  (calorimeter noise/threshold floor at Σ_h ≈ 0.2–0.5 GeV is the decisive
+  input — plans/04 #21 narrowed to it); add the HFS energy-scale
+  calibration and the Σ-method ISR test once WP4 exists.
+- Effort: sample generation ≈ 1 h machine time; the rerun and the report
+  update 1 day.
+
 ### WP4 — Radiative-correction bound (not a calculation)
 - ☐ Leading-log unpolarized RC weights (plans/02 step 1.4 route) applied as
   (x, Q², φ) kinematic migration on the modulated cross section → bound on

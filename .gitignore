@@ -32,3 +32,6 @@ fastsim/scripts/out_coverage/
 # dictionary refs/refs_dict.json).  Only the unsplit EIC Yellow Report is
 # ignored (124 MB > GitHub's 100 MB limit; it is committed as four parts).
 refs/2103.05419.pdf
+
+# hadronic-final-state generator samples (large; regenerate with tools/pythia8/gen_dis_hfs.py)
+evgen/samples/*.npz

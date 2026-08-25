@@ -49,7 +49,7 @@ from money_cos2phi import (build_delta_model, pick_sweet_spots_banded,  # noqa: 
                            superbin_edges)
 
 from polligen import bookkeeping as bk  # noqa: E402
-from polligen import reco, recopseudo as rp  # noqa: E402
+from polligen import hfs, reco, recopseudo as rp  # noqa: E402
 from polligen.sample import InclusiveSampler  # noqa: E402
 from polligen.xsec import InclusiveKernel  # noqa: E402
 
@@ -96,6 +96,20 @@ def main():
                          "refs/README.md)")
     ap.add_argument("--energy", default="emcal",
                     choices=("emcal", "tracking", "best"))
+    ap.add_argument("--y-source", default="param", choices=("param", "hfs"),
+                    help="hadronic y from the Gaussian stand-in (param) or "
+                         "from a hadronic-final-state library through the "
+                         "hadron-side detector response (hfs)")
+    ap.add_argument("--hfs-sample", nargs="*", default=None,
+                    help="HFS sample file(s) (.npz from tools/pythia8/"
+                         "gen_dis_hfs.py); default: toy string fragmentation")
+    ap.add_argument("--hfs-method", default="sigma", choices=("sigma", "jb", "da"))
+    ap.add_argument("--hfs-noise", type=float, default=0.05,
+                    help="calorimeter noise on Sigma and each pT component [GeV]")
+    ap.add_argument("--hfs-library-events", type=int, default=300000,
+                    help="toy library size when no sample is given")
+    ap.add_argument("--tag", default=None,
+                    help="output-name suffix (default: '_hfs' for --y-source hfs)")
     ap.add_argument("--n-mc-per-cell", type=int, default=400)
     ap.add_argument("--eff-cos2", type=float, default=0.03,
                     help="cos 2phi' harmonic of the phi' efficiency")
@@ -127,13 +141,31 @@ def main():
     sampler = InclusiveSampler(kern, config, gen, nx=60, nq2=45,
                                q2_range=(0.7, 2e3))
     rmodel = rp.RecoModel(energy=args.energy, y_method=args.y_method,
+                          y_source=args.y_source, hadronic_method=args.hfs_method,
                           y_had_res=args.y_had_res,
                           q2_min=analysis.q2_min, y_min=analysis.y_min,
                           y_max=analysis.y_max, w2_min=analysis.w2_min,
                           eta_min=analysis.eta_min, eta_max=analysis.eta_max,
                           e_prime_min=analysis.e_prime_min)
+    hfs_resp = None
+    if args.y_source == "hfs":
+        hresp = hfs.HadronResponse(noise_sigma=args.hfs_noise)
+        if args.hfs_sample:
+            smp = hfs.HFSSample.concatenate([hfs.HFSSample.load(f)
+                                             for f in args.hfs_sample])
+            src = "%s (%d events)" % (smp.meta.get("generator", "sample"),
+                                      smp.n_events)
+        else:
+            smp = hfs.toy_library_sample(sampler, args.hfs_library_events, rng)
+            src = "TOY string fragmentation (%d events)" % smp.n_events
+        lib = hfs.HFSLibrary(smp, hresp, nx=48, nq2=36, rng=rng)
+        hfs_resp = hfs.HFSResponse(lib, method=args.hfs_method)
+        print("HFS library: %s; %s method; %s | coverage %s"
+              % (src, args.hfs_method.upper(), hresp.describe(), lib.coverage()))
     resp = rp.RecoResponse(sampler, rmodel, n_mc_per_cell=args.n_mc_per_cell,
-                           rng=rng)
+                           rng=rng, hfs=hfs_resp)
+    suffix = (args.tag if args.tag is not None
+              else ("_hfs" if args.y_source == "hfs" else ""))
     plan = bk.tensor_flip_plan(args.pzz, rel_lumi_offset=args.rel_lumi_offset)
     lumi_assumed = [0.5, 0.5]
     cat_plus = plan.categories[0]
@@ -256,8 +288,15 @@ def main():
                  r"reco bins" % q2_spot, fontsize=9)
     ax.legend(fontsize=7, loc="upper left")
 
-    ymeth = ("mixed: $Q^2_e$ + hadronic $y$ ($%.0f\\%%$)" % (100 * args.y_had_res)
-             if args.y_method == "mixed" else "electron method only")
+    if args.y_method != "mixed":
+        ymeth = "electron method only"
+    elif args.y_source == "hfs":
+        ymeth = ("mixed: $Q^2_e$ + hadronic $y$ from the %s final state, "
+                 "%s method, noise %.0f MeV"
+                 % ("TOY" if not args.hfs_sample else "PYTHIA8",
+                    args.hfs_method.upper(), 1e3 * args.hfs_noise))
+    else:
+        ymeth = "mixed: $Q^2_e$ + hadronic $y$ ($%.0f\\%%$)" % (100 * args.y_had_res)
     fig.suptitle(
         r"Reconstructed-level gluonometry (5R), %s, $P_{zz}=%.2f$, "
         r"$\Delta$: %s" "\n"
@@ -272,7 +311,7 @@ def main():
     fig.subplots_adjust(top=0.84, bottom=0.09, left=0.06, right=0.985)
     outdir = pathlib.Path(args.outdir)
     outdir.mkdir(parents=True, exist_ok=True)
-    out = outdir / "money_cos2phi_reco_6Li.png"
+    out = outdir / ("money_cos2phi_reco_6Li%s.png" % suffix)
     fig.savefig(out, dpi=140)
     print("wrote", out)
     print("delta model:", model.info(),
@@ -280,6 +319,10 @@ def main():
     print("response: %d MC events, generator sigma = %.4g pb, "
           "selected+eID = %.4g pb" % (resp.w.size, resp.w.sum(),
                                       (resp.w * resp.eff).sum()))
+    if resp.sigma_capture is not None:
+        fc = resp.sigma_capture[resp.eff > 0]
+        print("HFS captured Sigma fraction (selected events): median %.3f, "
+              "16/84%% %.3f/%.3f" % (np.median(fc), *np.percentile(fc, [16, 84])))
     for line in summary:
         print(line)
 
@@ -357,7 +400,7 @@ def main():
         "stat. only; area = S–S moment $-0.012\\,\\alpha_s/3$"
         % (config.label(), plan.pzz_true, ymeth), fontsize=9.5)
     fig.tight_layout(rect=(0, 0, 1, 0.88))
-    out = outdir / "money_delta_extracted_reco_6Li.png"
+    out = outdir / ("money_delta_extracted_reco_6Li%s.png" % suffix)
     fig.savefig(out, dpi=140)
     print("wrote", out)
     for line in summary7:

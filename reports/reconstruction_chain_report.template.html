@@ -331,6 +331,51 @@
   </table>
   <p style="font-size:8pt;color:var(--ink-2);margin-top:-2pt">Table 1 — the four sweet-spot super-bins of money plot 5 (selected per Q² band from the significance map at e(10)×⁶Li(50)) and where the same (x, Q²) bins sit at the low energy (y = Q²/(sx) with s = 4·5·20.5 GeV²); the top-energy spots are chosen by the same rule from the top-energy significance map and land at different x; Figure 1(b) places the re-selected spots of all three energies.</p>
 
+  <p><b>The hadronic final state in the chain.</b> The hadronic y is not a parametrized
+  number any more: <code>polligen.hfs</code> carries the hadronic final state of unpolarized
+  DIS events through a hadron-side detector response and the Σ, Jacquet–Blondel and
+  double-angle methods, and hands the result to the pseudo-experiments as a library — for
+  a pseudo-event at (x, Q²) the captured fraction of Σ = Σ(E − p<sub>z</sub>) and the
+  p<sub>T</sub> ratio of a generator event from the same (x, Q²) cell are applied to the
+  pseudo-event's exact truth, the calorimeter noise is added per event, and y follows from
+  the chosen method with the <i>reconstructed</i> electron. The tensor polarization enters
+  only the inclusive azimuthal weight, so an unpolarized generator is the right source: the
+  production sample is PYTHIA 8 (<code>tools/pythia8/gen_dis_hfs.py</code>, e + p and e + n
+  at the per-nucleon beam energies, lepton radiation off), which runs in the eic-shell
+  container; on the analysis machine the chain runs on a toy string-fragmentation
+  stand-in (<code>hfs.ToyHFS</code>: uniform-rapidity string between the struck quark
+  and the remnant, Gaussian p<sub>T</sub>, exact four-momentum closure, π⁰ → γγ), whose
+  numbers are illustrative. The hadron-side response is the detection efficiency the
+  measurement will live with: tracks for charged particles within |η| ≤ 3.5 above
+  p<sub>T</sub> = 0.2 GeV (95% plateau efficiency, the repository's momentum and angle
+  tables), calorimeter objects within |η| ≤ 3.7 for photons (EMCal, 0.1 GeV threshold),
+  neutral and untracked charged hadrons (HCal, 0.5 GeV threshold, 90% efficiency), Yellow
+  Report resolution requirements per region, and a Gaussian noise term on Σ and on each
+  p<sub>T</sub> component (50 MeV by default, the magnitude Arratia et al. needed to
+  reproduce the H1 full simulation at low y [20]). Figure 3 quantifies the toy: the
+  detector captures 0.90 of Σ (0.60 in tracks, 0.30 in photons, 0.03 in neutral hadrons,
+  the rest below threshold or beyond |η| = 3.7); without noise the Σ method resolves y to
+  9–12% everywhere in 0.005 &lt; y &lt; 0.1, and with 50 MeV of noise the resolution at
+  the four sweet spots is 0.28 / 0.17 / 0.24 / 0.07 (Σ and JB alike; DA 0.37 / 0.29 /
+  0.28 / 0.10; the electron method 1.2 / 0.46 / 1.1 / 0.23) — the 25% used for §7 is what
+  a 50 MeV noise floor does to a 0.2 GeV E − p<sub>z</sub> sum, and 100 MeV would double it.
+  The noise and threshold floor of the ePIC calorimeters at Σ<sub>h</sub> ≈ 0.2–0.5 GeV is
+  therefore the number that decides the y ≈ 0.01 bins, not the relative resolution at high
+  Σ<sub>h</sub>; the PYTHIA sample replaces the toy's fragmentation, the response parameters
+  stay the same, and both are run by <code>evgen/scripts/hfs_resolution.py</code>.</p>
+
+  <figure>
+    <div class="panel"><img src="data:image/png;base64,__RC6__" alt="Hadronic-method resolution with a hadronic final state and the hadron-side detector response: methods versus y, captured fraction of Sigma, sweet spots, noise scan"></div>
+    <figcaption><b>Figure 3 — hadronic-method resolution with a hadronic final state</b>
+    (e10 × ⁶Li50, toy string fragmentation, <code>hfs_resolution.py</code>; illustrative until
+    the PYTHIA 8 sample is generated). <b>(a)</b> δy/y (68% half-width; dotted: rms) of the
+    Σ, Jacquet–Blondel and double-angle methods at Q² &lt; 3 GeV² with the default response and
+    50 MeV noise, against the electron method and the 25% stand-in. <b>(b)</b> Captured
+    fraction of Σ by detector object, no noise. <b>(c)</b> The four sweet spots of money plot 5.
+    <b>(d)</b> The Σ-method resolution for calorimeter noise of 0, 25, 50 and 100 MeV: at
+    y ≈ 0.01 the noise floor, not the fragmentation, sets the resolution.</figcaption>
+  </figure>
+
   <ol class="steps" start="4">
     <li><b>The azimuth.</b> φ′ = φ<sub>e</sub> − φ<sub>S</sub> from the covariant formula
     (§2), with φ<sub>S</sub> the alignment-axis azimuth of that bunch from the spin
@@ -819,7 +864,9 @@
     and a 15–30% hadronic-y band; quote the electron-method-only variant at y ≥ 0.05 as
     the fallback, and use the low-energy configuration for the x ≈ 0.1 bins. <i>Status:</i>
     done at the 25% central value (§7, money plots 5R and 7R; the electron-method variant is
-    the <code>--y-method electron</code> option); the band and the low-energy bins remain.</li>
+    the <code>--y-method electron</code> option); the hadronic y itself now comes from a
+    hadronic final state through the hadron-side response (§3, Figure 3; toy stand-in
+    until the PYTHIA sample exists); the band and the low-energy bins remain.</li>
     <li>Replace the single-fill fit by the spin-state-sorted ratio with the
     m = ±1-rich / m = 0-rich pattern in all projections; update δA to
     2√(2/N)/(P<sub>+</sub> − P<sub>0</sub>) (0.67× the current values at the same source
@@ -842,7 +889,9 @@
     <li>Ask the ePIC far-forward and inclusive working groups for two numbers the
     simulation cannot produce: the Σ-method δy/y at y = 0.01–0.05 for e + light ions, and the
     Roman-Pot cutout dimensions (β*, emittance, pot geometry) for the light-ion optics.
-    <i>Status:</i> open (plans/04 #20, #21).</li>
+    <i>Status:</i> open (plans/04 #20, #21); for #21 the chain that produces the number from
+    a generator sample exists (§3), so the ask narrows to the calorimeter noise and
+    threshold floor at Σ<sub>h</sub> ≈ 0.2–0.5 GeV.</li>
   </ol>
 
   <h2>7 · Reconstructed-level closure: money plots 5R, 7R and 6R</h2>
@@ -912,6 +961,17 @@
     analysis); 1-year (open) and 10-year (filled) draws are independent.</figcaption>
   </figure>
 
+  <p><b>Cross-check with the hadronic final state.</b> Rerunning 5R with the hadronic y
+  from the toy final state through the hadron-side response (Σ method, 50 MeV noise;
+  <code>money_cos2phi_reco.py --y-source hfs</code>) instead of the 25% Gaussian gives
+  purities 0.60 / 0.68 / 0.68 / 0.86, efficiencies 0.41 / 0.65 / 0.39 / 0.84,
+  D = 0.900 / 0.939 / 0.913 / 0.986 and δÂ = 1.2 / 1.0 / 1.8 / 3.0 × 10⁻⁴ at the four
+  spots — the same errors as Table 2, a worse spot 1 and a better spot 4 (where y = 0.05
+  and the resolution is 7% rather than 25%), with the fit unbiased and the median captured
+  Σ fraction 0.99 for the selected events; 7R is unchanged (δΔ = 1.0×10⁻³ at Q² = 1.14 and
+  0.5×10⁻³ at 3.13 GeV² in year 1). The Table 2 numbers therefore stand as long as the
+  calorimeter noise floor is ≈ 50 MeV; they degrade in proportion to it.</p>
+
   <p><b>Coherent channel (money plot 6R).</b> The coherent response samples recoils from the
   exponential spectrum with x<sub>P</sub> ∈ [10⁻³, 10⁻²], builds the exact four-vector,
   and emulates the pots with the angular envelope 10σ<sub>θ</sub>·6p<sub>u</sub> at
@@ -980,10 +1040,12 @@
   3×10⁻⁵); empty φ bins inside the cutout are handled with zero weight; the α-integrals
   of the coherent counts are analytic per event and the β smearing is absorbed in the MC
   basis, so the fitted coefficients refer to the unsmeared truth. Known limits, stated
-  rather than hidden: the hadronic y is a parametrized 25% Gaussian (the
+  rather than hidden: the hadronic y of Table 2 is a parametrized 25% Gaussian (the
   ePIC study's own smearing and the ATHENA value at y ≈ 0.01, inside the 15–30% of
-  [18–20]; no light-ion number exists, and at the sweet spots 25% is an absolute 50–125 MeV on
-  Σ<sub>h</sub> = 0.2–0.5 GeV, plans/04 #21); u₁, u₂
+  [18–20]; at the sweet spots 25% is an absolute 50–125 MeV on Σ<sub>h</sub> = 0.2–0.5 GeV) —
+  reproduced by the toy hadronic final state with a 50 MeV noise floor (§3, Figure 3), so
+  the open item is the noise and threshold floor of the real detector at that Σ<sub>h</sub>
+  and the PYTHIA fragmentation in place of the toy (plans/04 #21); u₁, u₂
   sit at the ZEUS 1σ bounds [13] and the slot dimensions are illustrative (#20); the
   φ′-efficiency harmonics are illustrative magnitudes; radiative corrections and
   backgrounds are not included; the 7R points are centered with the injected model (as in
@@ -1036,6 +1098,7 @@
     <tr><td class="mono">2026-08-25</td><td>Corrections from the code review (docs/code_review_2026-08-25.md): the electron-method δQ²/Q² of §3 (5.2% with the 3 mrad track table, 2% at 1 mrad — an unsourced placeholder) and the φ′ dilution (0.985–0.999); the ratio written with raw counts and luminosity-weighted weights; the acceptance-stability requirement (bunch-by-bunch alternation) in §3 and §7.1; the coherent pseudo-experiment described as it is (no electron side, lab β); weight σ<sub>c</sub>/n<sub>kept</sub>; the Table 2 caption; the sign-convention note of §2; the further known limits of §7.1 (K model dependence, EMCal term at all η, background-free 6R, u₁, u₂ and the 6R luminosity shares exact).</td></tr>
     <tr><td class="mono">2026-08-25</td><td>Consistency pass: 25% central wording; Table 1 low-energy column replaced by the same-(x, Q²) values (0.049 / 0.124 / 0.054 / 0.247) with the per-energy re-selection explained; the Figure 2b fake-harmonic range corrected to −0.36…−0.45 (the 6R slot's −0.77 stated separately); efficiency 0.37–0.64, N = 1.72×10⁸, 0.64–0.70; the settled 2a₂ convention replaces the earlier caveat; the recommendations annotated with their status; [7], [8], [10], [11], [16] cited in the body; the 6R table and figure labelled background-free by assumption; the HERMES b₁/F₁ bound qualified; the growth of the O(γ²) leakage at x ≳ 0.2 stated.</td></tr>
     <tr><td class="mono">2026-08-25</td><td>Modification history moved to this appendix; the main text restated as current content; the Schematic 2 ratio formula aligned with §3.</td></tr>
+    <tr><td class="mono">2026-08-25</td><td>Hadronic final state added to the chain (WP3-HFS): <code>polligen.hfs</code> — sample format, hadronic sums and the Σ/JB/DA/mixed methods, the hadron-side detector response (tracker coverage and thresholds, tracking efficiency, EMCal/HCal response, calorimeter noise), a toy string-fragmentation stand-in, the (x, Q²) event library that transfers a generator's response onto the pseudo-experiments; PYTHIA 8 generation script for eic-shell (<code>tools/pythia8</code>); §3 paragraph and Figure 3 (resolution versus y, captured Σ fraction, sweet spots, noise scan); §7 cross-check of Table 2 with the HFS-based y (same errors at 50 MeV noise); recommendations 1 and 6 and §7.1 updated.</td></tr>
   </table>
 
   <div class="foot">

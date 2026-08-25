@@ -11,7 +11,7 @@ next. Imports `../fastsim/polli_fastsim` — nothing there is duplicated.
 
 ```bash
 cd evgen
-python3 -m pytest tests/ -q            # 94 tests (grid tests auto-skip)
+python3 -m pytest tests/ -q            # 101 tests (grid tests auto-skip)
 python3 scripts/closure_fom.py --ion 6Li --events 200000 --trials 200
 python3 scripts/closure_fom.py --ion 7Li --events 200000 --trials 200
 python3 scripts/money_tagged_azz.py --events 400000       # money plot 4
@@ -161,6 +161,30 @@ mixed method 25%, ε(φ′) harmonic + 10⁻³ rel-lumi offset on):
   the polarization axis, so the deformation modulation coefficient is
   2a₂ — money plot 6 injects a₂ and is conservative by ×2
   (`coherent.cos2phi_coefficient_deformation`).
+
+### Hadronic final state and hadron-side detection (WP3-HFS, 2026-08-25)
+
+`polligen/hfs.py` replaces the 25% Gaussian stand-in for the hadronic y by a
+hadronic final state through a hadron-side detector response: `HFSSample`
+(generator-independent .npz), exact hadronic sums and the Σ / Jacquet–Blondel /
+double-angle / mixed methods, `HadronResponse` (tracker |η| ≤ 3.5, p_T > 0.2 GeV,
+95% efficiency; calorimeters |η| ≤ 3.7 with photon/neutral-hadron thresholds,
+Yellow-Report resolutions, 50 MeV noise), `ToyHFS` (string-fragmentation
+stand-in, exact four-momentum closure, π⁰ → γγ) and `HFSLibrary`/`HFSResponse`
+((x, Q²) library transferring a generator's response onto the pseudo-events).
+The production sample is PYTHIA 8 (`tools/pythia8/gen_dis_hfs.py`, runs in
+eic-shell); locally the toy is used and labelled.
+
+```bash
+python3 scripts/hfs_resolution.py --outdir .                 # Figure 3: resolution vs y, captured Σ, sweet spots, noise scan
+python3 scripts/money_cos2phi_reco.py --y-source hfs --outdir .   # 5R/7R with the HFS-based y (…_hfs.png)
+python3 scripts/hfs_resolution.py --sample samples/pythia8_e10_p50_dis.npz samples/pythia8_e10_n50_dis.npz
+```
+
+Toy result (illustrative): captured Σ fraction 0.90; Σ-method δy/y at the four
+sweet spots 0.28 / 0.17 / 0.24 / 0.07 with 50 MeV noise (9–12% without noise) —
+the 25% stand-in is the noise floor acting on Σ_h ≈ 0.2 GeV; 5R rerun with the
+HFS-based y reproduces the Table 2 errors (purities 0.60 / 0.68 / 0.68 / 0.86).
 
 ## Step-5.A validation gates (plans/05 §5.4) — all passing
 

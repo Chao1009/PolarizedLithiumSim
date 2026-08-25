@@ -1,6 +1,6 @@
 """polligen — doubly polarized e+(6,7)Li event generation (plans/05).
 
-Step 5.A scope: the physics kernel (spin-density matrices, inclusive
+Step 5.A scope (plus reco/recopseudo/hfs, WP3): the physics kernel (spin-density matrices, inclusive
 doubly polarized master cross section) and the inclusive spin-labeled
 sampler with run-plan bookkeeping.  Tagged mode (5.B), reweighting (5.C)
 and HepMC3 output (5.D) build on these modules.
@@ -20,8 +20,8 @@ if str(_FASTSIM) not in sys.path:
 import polli_fastsim  # noqa: E402,F401  (path check; polligen depends on it)
 
 from . import (spin, xsec, bookkeeping, sample,  # noqa: E402
-               estimators, tagged, coherent, reco, recopseudo)
+               estimators, tagged, coherent, reco, recopseudo, hfs)
 
 __all__ = ["spin", "xsec", "bookkeeping", "sample", "estimators", "tagged",
-           "coherent", "reco", "recopseudo"]
+           "coherent", "reco", "recopseudo", "hfs"]
 __version__ = "0.1.0"

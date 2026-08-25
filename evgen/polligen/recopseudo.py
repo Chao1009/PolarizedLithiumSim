@@ -54,10 +54,14 @@ class RecoModel:
     emcal_stoch: float = 0.02
     emcal_const: float = 0.01
     y_method: str = "mixed"        # "mixed" (Q2_e, y_had) | "electron"
+    y_source: str = "param"        # "param": reco.hadronic_y Gaussian stand-in
+    #   | "hfs": hadronic final state through hfs.HFSResponse (library of
+    #   generator events + hadron-side detector response; plans/07 WP3-HFS)
+    hadronic_method: str = "sigma" # HFS method for y: "sigma" | "jb" | "da"
     y_had_res: float = 0.25        # hadronic-method dy/y: 0.15-0.30 band;
     #   0.25 = the ePIC kinematic-fit study's own smearing of delta_h and
     #   the ATHENA Fig. 22 value at y ~ 0.01 (-> ~0.10 at y ~ 0.1); see
-    #   reco.hadronic_y for the sources
+    #   reco.hadronic_y for the sources (y_source = "param" only)
     beam_e_spread: float = 1.0e-3
     eid: bool = True
     xing: float = reco.XING_IP6
@@ -97,12 +101,21 @@ class RecoResponse:
     """Importance-sampled reconstructed-level response of an
     InclusiveSampler under a RecoModel (see module docstring)."""
 
-    def __init__(self, sampler, model=None, n_mc_per_cell=400, rng=None):
+    def __init__(self, sampler, model=None, n_mc_per_cell=400, rng=None,
+                 hfs=None):
+        """`hfs`: an hfs.HFSResponse (required when model.y_source == "hfs"):
+        the hadronic y of every pseudo-event then comes from a generator
+        event of the same (x, Q2) cell passed through the hadron-side
+        detector response, instead of the Gaussian stand-in."""
         self.sampler = sampler
         self.model = model or RecoModel()
         self.n_mc_per_cell = n_mc_per_cell
         rng = rng or np.random.default_rng(20260824)
         m = self.model
+        if m.y_source == "hfs" and hfs is None:
+            raise ValueError("y_source='hfs' needs an hfs.HFSResponse")
+        self.hfs = hfs
+        self.sigma_capture = None
         cfg = sampler.config
         s = sampler.s
         e_e = cfg.electron_energy
@@ -157,7 +170,16 @@ class RecoResponse:
         q2_e = q2_e * (1.0 + spread)
         y_e = 1.0 - (1.0 - y_e) * (1.0 + spread)
         if m.y_method == "mixed":
-            y_r = reco.hadronic_y(y, m.y_had_res, rng)
+            if m.y_source == "hfs":
+                # hadronic final state of a library event from the same
+                # (x, Q2) cell, through the hadron-side response, combined
+                # with the RECONSTRUCTED electron (Sigma / JB / DA methods)
+                y_r, hk = self.hfs.y_hadronic(x, q2, y, e_r, th_r, e_e, s, rng)
+                self.sigma_capture = hk["f_sigma"]
+            elif m.y_source == "param":
+                y_r = reco.hadronic_y(y, m.y_had_res, rng)
+            else:
+                raise ValueError("y_source must be 'param' or 'hfs'")
             x_r = reco.mixed_method(q2_e, y_r, s)
         elif m.y_method == "electron":
             y_r = y_e

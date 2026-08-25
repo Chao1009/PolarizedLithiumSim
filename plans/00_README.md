@@ -114,6 +114,18 @@ brings to the EIC, in support of the ANL polarized ⁶,⁷Li ion-source program
   untouched) and the fast-sim `r1998` returns R = 1 at low x (July
   L_5σ values 1.5–2× too pessimistic; polligen unaffected) — both
   left for an author decision. Documentation-only changes in this pass.
+- ◐ **WP3-HFS: hadronic final state and hadron-side detection**
+  (2026-08-25, option 1 of the reconstruction-note discussion):
+  `polligen/hfs.py` (sample format, exact hadronic sums, Σ/JB/DA/mixed
+  methods, hadron-side response with tracker/calorimeter coverage,
+  thresholds, efficiencies, resolutions and noise, toy string-fragmentation
+  stand-in, (x, Q²) event library → `recopseudo` hook, 7 tests, 101 evgen
+  tests); `tools/pythia8/gen_dis_hfs.py` for the PYTHIA 8 sample (eic-shell);
+  `scripts/hfs_resolution.py` → Figure 3 of the reconstruction report. Toy
+  result: Σ-method δy/y 0.28 / 0.17 / 0.24 / 0.07 at the sweet spots with a
+  50 MeV noise floor (9–12% without noise) — the 25% stand-in is the noise
+  floor on Σ_h ≈ 0.2 GeV; 5R with the HFS-based y reproduces Table 2's
+  errors. Pending: the PYTHIA sample and the ePIC noise/threshold floor.
 
 ## Development run 6 (2026-08-24): the reconstruction chain, measured quantities, and the audit
 

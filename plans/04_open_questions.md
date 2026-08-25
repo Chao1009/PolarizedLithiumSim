@@ -179,6 +179,14 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
     BeAGLE/PYTHIA e+Li sample through eic-smear). *Default:* 15–30%
     band (`reco.hadronic_y`); purity 0.75–0.83 per super-bin at 15–20%
     (0.64–0.68 at the 25% default).
+    *2026-08-25 (WP3-HFS, plans/07):* the chain now takes the hadronic y from
+    a hadronic final state through a hadron-side detector response
+    (`polligen/hfs.py`; PYTHIA 8 sample via `tools/pythia8`, toy stand-in
+    locally). Toy result: Σ-method δy/y = 0.28 / 0.17 / 0.24 / 0.07 at the
+    sweet spots with a 50 MeV calorimeter noise floor (9–12% without noise),
+    i.e. the 25% default is the noise floor acting on Σ_h ≈ 0.2 GeV. *Needed
+    now:* the PYTHIA sample (one eic-shell command) and the ePIC calorimeter
+    noise/threshold floor at Σ_h ≈ 0.2–0.5 GeV.
     *2026-08-25 (web search, refs/README.md):* now bracketed by documents —
     ATHENA proposal JINST 17:P10019 Sec. 3.1/Fig. 22 (e−Σ or DA for
     y ≲ 0.1; ≈ 25% y resolution at y ≈ 0.01 → ≈ 10% at y ≈ 0.1; JB 20–30%);
