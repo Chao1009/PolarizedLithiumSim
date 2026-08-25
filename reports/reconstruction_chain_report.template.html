@@ -123,9 +123,9 @@
 
   <table>
     <tr><th>Recorded per event</th><th>Inclusive e ⁶Li → e′ X</th><th>Coherent e ⁶Li → e′ X ⁶Li(g.s.)</th></tr>
-    <tr><td>Beam and spin</td><td colspan="2">Bunch-crossing ID → spin state of the ion bunch (source pattern: m = ±1-rich, m = 0-rich); tensor polarization P<sub>zz</sub> per fill from the polarimeter (scale ≈ 3%); alignment axis n̂ = stable spin direction (vertical at IP6) with its measured tilt; luminosity per spin state.</td></tr>
-    <tr><td>Central detector</td><td>e′ candidate: track (p, θ, φ at the vertex, charge) matched to an EMCal cluster (E, position); E/p and shower shape for electron ID; the hadronic final state (all other tracks and clusters) for Σ = Σ<sub>h</sub>(E<sub>h</sub> − p<sub>z,h</sub>); vertex.</td><td>The same, plus the diffractive system X (its mass M<sub>X</sub> and the rapidity gap) — the only handle on x<sub>P</sub>, since the recoil momentum is unresolved.</td></tr>
-    <tr><td>Far forward</td><td>Not required (breakup fragments of ⁶Li are mostly beam-blind at IP6; plans/00).</td><td>Roman-Pot track at beam rigidity (|R − 1| &lt; 0.05) with transverse displacement above the 10σ envelope → (θ<sub>x</sub>, θ<sub>y</sub>) at the IP via the optics transport → p<sub>T</sub>, φ<sub>t</sub>, t; vetoes in OMD (p, ³He), ZDC (n), B0 EMCal (de-excitation γ); Z-identification if available (open question #19).</td></tr>
+    <tr><td>Beam and spin</td><td colspan="2">Bunch-crossing ID → spin state (m = ±1-rich / m = 0-rich pattern); P<sub>zz</sub> per fill from the polarimeter (scale ≈ 3%); alignment axis n̂, vertical at IP6, with its measured tilt; luminosity per spin state.</td></tr>
+    <tr><td>Central detector</td><td>e′ candidate: track (p, θ, φ at the vertex) matched to an EMCal cluster, with E/p and shower shape for electron ID; the hadronic final state (all other tracks and clusters) for Σ = Σ<sub>h</sub>(E<sub>h</sub> − p<sub>z,h</sub>); vertex.</td><td>The same, plus the diffractive system X (its mass M<sub>X</sub> and the rapidity gap) — the only handle on x<sub>P</sub>, since the recoil momentum is unresolved.</td></tr>
+    <tr><td>Far forward</td><td>Not required (breakup fragments of ⁶Li are mostly beam-blind at IP6; plans/00).</td><td>Roman-Pot track at beam rigidity (|R − 1| &lt; 0.05) with transverse displacement above the 10σ envelope (§4 step 1); vetoes in OMD (p, ³He), ZDC (n), B0 EMCal (de-excitation γ); Z-identification if available (open question #19).</td></tr>
     <tr><td>Observable</td><td>cos 2φ′ coefficient of the ratio of spin-sorted N<sub>f</sub>(φ′) in (x, Q²) bins, φ′ = φ<sub>e</sub> − φ<sub>S</sub></td><td>cos 2α, cos 2β and cos(α+β) coefficients of the same ratio in (x<sub>P</sub>, t, Q²) bins, α = φ<sub>e</sub> − φ<sub>S</sub>, β = φ<sub>t</sub> − φ<sub>S</sub></td></tr>
   </table>
 
@@ -141,11 +141,6 @@
   has the φ′ distribution 1 + a₂ cos 2φ′ with</p>
 
   <p class="eq"><img class="tex" data-tex="a_2 = -P_{zz}\,\frac{1-y}{y^2}\,\frac{\Delta}{D_\phi},\qquad D_\phi = F_1 + \frac{1-y}{x y^2}F_2,\qquad \hat A \equiv \frac{a_2}{P_{zz}},\qquad P_{zz}=\sum_m p_m c_m ."></p>
-
-  <p>(Sign convention: the b₁, b₂ terms follow the program's transcription; in the HJM/HERMES
-  convention — Cosyn et al. [12], Eq. 27, A<sub>zz</sub> = −(2/3)b₁/F₁ — they carry the opposite
-  sign, which flips the sign of the constant κ of the spin-state ratio in §3 but nothing in the
-  Δ sector; docs/code_review_2026-08-25.md, item G1.)</p>
 
   <p><b>Which angle.</b> The φ of the master formula is defined in a frame in which the
   target momentum P and the virtual photon q are collinear; it is the azimuth of the
@@ -163,9 +158,8 @@
   γ² ≤ 0.02, i.e. everywhere in the sweet spots) for the massive nucleus
   (<code>reco.azimuth_wrt_lepton_plane</code>, verified against an explicit boost-and-rotate
   construction of the collinear frame to 10⁻¹³). The lab-angle shortcut is therefore
-  legitimate for the inclusive measurement; the analysis should nevertheless evaluate the
-  covariant formula from the reconstructed four-vectors, because it is exact, costs nothing,
-  and is the same code that the coherent channel needs.</p>
+  legitimate for the inclusive measurement; the analysis evaluates the covariant formula
+  anyway, because the coherent channel needs the same code.</p>
 
   <p><b>Which frame.</b> The beams cross at 25 mrad in the horizontal plane at IP6. The
   ePIC axis coincides with the electron beam, and the ion beam enters at −25 mrad in x (the
@@ -176,8 +170,7 @@
   axis is the electron axis: the residual distortion of its azimuth about the detector axis is
   an odd-harmonic effect of 0.7×10⁻³ (θ′ = 107 mrad) to 2.4×10⁻³ (383 mrad) in cos φ, with
   the cos 2φ harmonic untouched to 10⁻¹⁷ and the response of a true cos 2φ term equal to one
-  within 10⁻⁵. The transformation is applied anyway (it is the standard first step of every
-  ePIC inclusive analysis and it is exact), but the crossing angle is not a source of a fake
+  within 10⁻⁵. The transformation is applied, but the crossing angle is not a source of a fake
   cos 2φ′ for the electron. It <i>is</i> one for the recoil (§4).</p>
 
   <p><b>Orientation and the axis.</b> The tensor alignment axis is headless — the m = +1 and
@@ -321,8 +314,8 @@
   </table>
   <p style="font-size:8pt;color:var(--ink-2);margin-top:-2pt">Table 1 — the four sweet-spot super-bins of money plot 5 (selected per Q² band from the significance map at e(10)×⁶Li(50)) and where the same (x, Q²) bins sit at the low energy (y = Q²/(sx) with s = 4·5·20.5 GeV²); the top-energy spots are chosen by the same rule from the top-energy significance map and land at different x; Figure 1(b) places the re-selected spots of all three energies.</p>
 
-  <p><b>The hadronic final state in the chain.</b> The hadronic y is not a parametrized
-  number any more: <code>polligen.hfs</code> carries the hadronic final state of unpolarized
+  <p><b>The hadronic final state in the chain.</b> The hadronic y comes from a generated
+  final state: <code>polligen.hfs</code> carries the hadronic final state of unpolarized
   DIS events through a hadron-side detector response and the Σ, Jacquet–Blondel and
   double-angle methods, and hands the result to the pseudo-experiments as a library — for
   a pseudo-event at (x, Q²) the captured fraction of Σ = Σ(E − p<sub>z</sub>) and the
@@ -332,10 +325,8 @@
   only the inclusive azimuthal weight, so an unpolarized generator is the right source: the
   production sample is PYTHIA 8 (<code>tools/pythia8/gen_dis_hfs.py</code>, e + p and e + n
   at the per-nucleon beam energies, lepton radiation off), which runs in the eic-shell
-  container; on the analysis machine the chain runs on a toy string-fragmentation
-  stand-in (<code>hfs.ToyHFS</code>: uniform-rapidity string between the struck quark
-  and the remnant, Gaussian p<sub>T</sub>, exact four-momentum closure, π⁰ → γγ), whose
-  numbers are illustrative. The hadron-side response is the detection efficiency the
+  container; locally the chain runs on a toy string-fragmentation stand-in
+  (<code>hfs.ToyHFS</code>), whose numbers are illustrative. The hadron-side response is the detection efficiency the
   measurement will live with: tracks within |η| ≤ 3.5 above p<sub>T</sub> = 0.2 GeV (95%
   plateau), calorimeter objects within |η| ≤ 3.7 (EMCal photons above 0.1 GeV; neutral and
   untracked charged hadrons in the HCal above 0.5 GeV at 90%), Yellow Report resolution
@@ -377,10 +368,8 @@
     seen in the reconstructed bin is 0.98–0.99 (0.96–0.99, 0.92–0.98) of the true-bin value,
     because A(x) varies slowly across the bin. With the electron method alone the low-y
     spots collapse to purities of 0.41–0.56 with 26–53% of the events surviving in the bin.
-    The standard treatment — a migration matrix from the same simulation and either an
-    unfolding or model bin-centering — is the same as for any structure-function
-    measurement; what is new is only that the correction must be built on the
-    hadronic-method resolution.</li>
+    The correction is the standard migration matrix of any structure-function measurement;
+    what is new is only that it must be built on the hadronic-method resolution.</li>
     <li><b>Spin-state sorting and the estimator.</b> The events of each (x, Q²) bin are
     histogrammed in φ′ separately for each spin state f of the bunch pattern,
     N<sub>f</sub>(φ′). Any smooth φ′-dependent efficiency ε(φ′) multiplies every
@@ -400,7 +389,9 @@
   A weighted least-squares fit of T(φ′) = c + d cos 2φ′ (+ e sin 2φ′), with T obtained from
   R bin by bin (the inversion is exact), gives Â = d after the finite-bin dilution sin w/w
   is divided out, and κ = c is the transverse tensor asymmetry of the b₁ sector, a
-  by-product. For two fill types with
+  by-product — whose sign follows the program's b₁ transcription rather than the HJM/HERMES
+  convention (Cosyn et al. [12], Eq. 27: A<sub>zz</sub> = −(2/3)b₁/F₁; code review G1), which
+  changes nothing in the Δ sector. For two fill types with
   equal luminosity the statistical error is</p>
 
   <p class="eq"><img class="tex" data-tex="\delta\hat A = \frac{2}{P_+-P_0}\sqrt{\frac{2}{N}}\;\;\mathrm{(two\ fills)}\qquad\mathrm{vs}\qquad \delta\hat A = \frac{1}{P_{zz}}\sqrt{\frac{2}{N}}\;\;\mathrm{(single\ fill)}"></p>
@@ -412,12 +403,10 @@
   factor two. Figure 1(d) shows the pseudo-experiments: under an efficiency
   ε = 1 + 0.03 cos 2φ′ + 0.02 cos φ′ the single-fill fit returns Â = 0.062 for a true
   0.0118 — the acceptance harmonic divided by P<sub>zz</sub> — while the ratio is unbiased with
-  the analytic error. A single-state modulation is "self-normalized" with respect to
-  relative luminosity but not with respect to acceptance;
-  since a percent-level cos 2φ harmonic aligned with the vertical axis is expected (the
-  crossing-angle plane is horizontal, module boundaries and dead areas are not azimuthally
-  random, and the Roman-Pot cutout is a rectangle), the spin-state-sorted ratio is the
-  estimator of the measurement.</p>
+  the analytic error. A percent-level cos 2φ harmonic aligned with the vertical axis is to be
+  expected (the crossing-angle plane is horizontal, module boundaries and dead areas are not
+  azimuthally random, and the Roman-Pot cutout is a rectangle), so the spin-state-sorted
+  ratio is the estimator of the measurement.</p>
 
   <ol class="steps" start="7">
     <li><b>Amplitude to Δ.</b> With F₂ and R = σ<sub>L</sub>/σ<sub>T</sub> of ⁶Li per nucleon
@@ -644,9 +633,7 @@
   extract a<sub>t</sub> and a<sub>e</sub> from the spin-state ratio R(α, β); in that ratio
   u(α − β) survives in the denominator and feeds the pure harmonics only at second order
   (u₁² ≈ 1%) but the mixed term at first order (a<sub>t</sub>u₁/2), which fixes the fit
-  model. (The anchor's Eq. (9) uses 1 + 2Σa<sub>n</sub> cos nΦ, so the cos 2β coefficient is
-  2a₂ — §7 and the projection report's convention note; the projection's coherent numbers are
-  conservative by that factor two.)</p>
+  model.</p>
 
   <ol class="steps" start="5">
     <li><b>Acceptance geometry and the estimator.</b> The Roman-Pot acceptance is not a
@@ -970,8 +957,7 @@
     and a<sub>e</sub>cos 2α curves. <b>(c)</b> The expected (noise-free) modulation map in
     (α, β): rows from the deformation term, columns from the gluon-transversity term.
     <b>(d)</b> Extracted a<sub>t</sub>(t<sub>ref</sub>) and a<sub>e</sub> per reco |t| bin (1 yr
-    open, 10 yr filled) against the injected curves. Background-free, Z-identified sample by
-    assumption.</figcaption>
+    open, 10 yr filled) against the injected curves.</figcaption>
   </figure>
 
   <h3>7.1 · Audit notes and known limits</h3>
@@ -1049,9 +1035,7 @@
     scattered-electron angle from the electron beam; per-nucleon (x, y, s) throughout;
     whole-nucleus four-momenta where a mass matters. Beam divergences are the proton values
     implied by the documented Roman-Pot cuts (73 and 149 μrad); the lithium optics are
-    undocumented (plans/04 #11). Hadronic-method resolutions are assumptions (15–30%), not
-    ePIC results (plans/04 #21); u₁, u₂ sit at the ZEUS 1σ bounds; the slot dimensions of
-    the Roman-Pot cutout are illustrative (#20). Built by <code>reports/build_report.py</code>;
+    undocumented (plans/04 #11). Built by <code>reports/build_report.py</code>;
     figures from the <code>evgen/scripts</code> named in the text; display mathematics typeset
     at build time.
   </div>
