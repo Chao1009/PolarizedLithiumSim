@@ -108,6 +108,22 @@ def main():
     ap.add_argument("--rel-lumi-offset", type=float, default=0.0,
                     help="relative-luminosity error unknown to the "
                          "analysis (second order in the ratio)")
+    ap.add_argument("--no-sin", action="store_true",
+                    help="drop the sin 2alpha / sin 2beta / sin(alpha+beta) "
+                         "null columns.  They are exactly forbidden by the "
+                         "reflection symmetry of an unpolarized lepton on a "
+                         "headless axis, are orthogonal to the cos columns "
+                         "on the full grid (so they cost nothing), and "
+                         "separate a spin-axis error from a Roman-Pot "
+                         "azimuthal roll")
+    ap.add_argument("--axis-tilt", type=float, default=0.0,
+                    help="inject a spin-axis azimuth error [rad]: rotates "
+                         "BOTH tensor harmonics, so both sin ratios return "
+                         "tan 2delta")
+    ap.add_argument("--pot-roll", type=float, default=0.0,
+                    help="inject a Roman-Pot azimuthal roll [rad]: rotates "
+                         "only the RECOIL harmonic, so sin 2alpha stays "
+                         "null -- the signature that separates the two")
     ap.add_argument("--n-mc", type=int, default=600000)
     ap.add_argument("--seed", type=int, default=20260824)
     ap.add_argument("--outdir", default=".")
@@ -161,18 +177,35 @@ def main():
         print("assumed luminosity shares %s against equal truth"
               % (["%.6f" % v for v in lumi_assumed],))
 
+    # azimuthal misalignment: a rotation of the tensor modulation, which
+    # is what the sin columns are there to catch (rotating phi_S in the
+    # response injects nothing -- it only relabels beta)
+    d_e, d_t = args.axis_tilt, args.axis_tilt + args.pot_roll
+    amp_c = args.amp * np.cos(2.0 * d_e)
+    kw_sin = dict(with_sin=not args.no_sin,
+                  a_e_s=args.amp * np.sin(2.0 * d_e),
+                  a_t_s_func=(lambda t: a_t_func(t) * np.sin(2.0 * d_t)))
+    if d_e or d_t:
+        print("injected misalignment: spin axis %+.4f rad, pot roll %+.4f "
+              "rad -> expected sin/cos ratios %.5f (alpha) and %.5f (beta)"
+              % (args.axis_tilt, args.pot_roll, np.tan(2 * d_e),
+                 np.tan(2 * d_t)))
+
+    def a_t_rot(t):
+        return a_t_func(t) * np.cos(2.0 * d_t)
+
     t_edges = [0.05, 0.08, 0.12, 0.17, 0.25]
     fits1, fits10 = [], []
     for tlo, thi in zip(t_edges[:-1], t_edges[1:]):
         fits1.append(rp.measure_coherent(
-            cresp, n_produced, plan, tlo, thi, args.amp, a_t_func, a_m=args.a_m,
+            cresp, n_produced, plan, tlo, thi, amp_c, a_t_rot, a_m=args.a_m,
             u1=args.u1, u2=args.u2, rng=rng, responses=responses,
-            u_coeffs_assumed=u_assumed, lumi_assumed=lumi_assumed))
+            u_coeffs_assumed=u_assumed, lumi_assumed=lumi_assumed, **kw_sin))
         fits10.append(rp.measure_coherent(
-            cresp, n_produced * lumi_ratio, plan, tlo, thi, args.amp, a_t_func,
+            cresp, n_produced * lumi_ratio, plan, tlo, thi, amp_c, a_t_rot,
             a_m=args.a_m, u1=args.u1, u2=args.u2, rng=rng,
             responses=responses, u_coeffs_assumed=u_assumed,
-            lumi_assumed=lumi_assumed))
+            lumi_assumed=lumi_assumed, **kw_sin))
 
     fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(11.8, 8.6))
     f0 = fits1[0]
@@ -331,6 +364,15 @@ def main():
               % (tlo, thi, f1["n"], tr["a_t"], f1["a_t"], f1["err_t"],
                  f10["a_t"], f10["err_t"], tr["a_e"], f1["a_e"], f1["err_e"],
                  f10["a_e"], f10["err_e"], f1["a_m"], f1["err_m"]))
+        if not args.no_sin:
+            print("    null test: a_e_s %+.4f +- %.4f, a_t_s %+.4f +- %.4f, "
+                  "a_m_s %+.4f +- %.4f  -> sin/cos %+.4f (alpha) %+.4f "
+                  "(beta); axis resolution %.0f / %.0f mrad (1 yr)"
+                  % (f1["a_e_s"], f1["err_e_s"], f1["a_t_s"], f1["err_t_s"],
+                     f1["a_m_s"], f1["err_m_s"],
+                     f1["a_e_s"] / f1["a_e"], f1["a_t_s"] / f1["a_t"],
+                     5e2 * f1["err_e_s"] / abs(f1["a_e"]),
+                     5e2 * f1["err_t_s"] / abs(f1["a_t"])))
 
 
 if __name__ == "__main__":

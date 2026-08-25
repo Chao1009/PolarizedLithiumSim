@@ -640,6 +640,21 @@
   (§7.1). u₂, not u₁, is the nuisance to measure in situ from the spin-averaged counts of
   the same data.</p>
 
+  <p><b>The forbidden harmonics.</b> With unpolarized electrons and a headless alignment
+  axis the cross section is even under (α, β) → (−α, −β), so sin 2α, sin 2β and sin(α+β) are
+  exactly zero: they are the coherent channel's null test, the counterpart of the inclusive
+  sin 2φ′ term. Their pattern says <i>which</i> azimuth is misaligned — a spin-axis azimuth
+  error δ rotates both tensor harmonics and gives sin/cos = tan 2δ in α <i>and</i> in β,
+  whereas a Roman-Pot azimuthal roll δ<sub>t</sub> leaves the lepton-plane harmonic exactly
+  null and gives tan 2δ<sub>t</sub> in β alone (verified to 10⁻⁵ in
+  <code>tests/test_recopseudo.py</code>). Because a<sub>t</sub> is an order of magnitude
+  larger than a<sub>e</sub>, the recoil null is the sensitive one: it resolves a pot roll to
+  5–8 mrad per |t| bin in one year, while the α null resolves the spin axis only to
+  60–300 mrad — the inclusive sin 2φ′ fit does that job far better. The sin columns are
+  orthogonal to the cos ones on the full grid, so the null costs nothing (§7). The
+  t-dependent sine must use the same t-shape template as its cosine partner; with a plain
+  ⟨sin 2β⟩ the null misses its own closure by 5%.</p>
+
   <ol class="steps" start="5">
     <li><b>Acceptance geometry and the estimator.</b> The Roman-Pot acceptance is not a
     circular p<sub>T</sub> cut. The ePIC pots are 25.6 × 12.8 cm AC-LGAD planes surrounding a
@@ -949,7 +964,7 @@
     <tr><td class="mono">0.12–0.17</td><td class="mono">1.3×10⁵</td><td class="mono">0.252</td><td class="mono">0.250 ± 0.008</td><td class="mono">0.2533 ± 0.0024</td><td class="mono">0.0106 ± 0.0043</td><td class="mono">0.0137 ± 0.0014</td></tr>
     <tr><td class="mono">0.17–0.25</td><td class="mono">1.8×10⁴</td><td class="mono">0.343</td><td class="mono">0.331 ± 0.018</td><td class="mono">0.337 ± 0.006</td><td class="mono">0.003 ± 0.012</td><td class="mono">0.013 ± 0.004</td></tr>
   </table>
-  <p style="font-size:8pt;color:var(--ink-2);margin-top:-2pt">Table 3 — money plot 6R: template fit of the two-azimuth spin-state ratio per reconstructed |t| bin (coefficients per unit P<sub>zz</sub>; ε<sub>B0</sub> = −0.08, B = 50 GeV⁻²; u₁ = 0.05, u₂ = 0.02 at the ZEUS 1σ bounds [13]; N<sub>tag</sub> = 2.7×10⁶ in year 1 for the angular envelope and the slot-like cutout, against 1.1×10⁷ for the constant 0.20 GeV cut). The cutout's fake ⟨cos 2β⟩ of the tagged sample is +0.77 (a single-fill fit would report a<sub>t</sub> ≈ +1.3 for a true 0.12); the ratio removes it entirely. The sample is background-free and Z-identified by assumption (plans/06 carries the breakup budget).</p>
+  <p style="font-size:8pt;color:var(--ink-2);margin-top:-2pt">Table 3 — money plot 6R: template fit of the two-azimuth spin-state ratio per reconstructed |t| bin (coefficients per unit P<sub>zz</sub>; ε<sub>B0</sub> = −0.08, B = 50 GeV⁻²; u₁ = 0.05, u₂ = 0.02 at the ZEUS 1σ bounds [13]; N<sub>tag</sub> = 2.7×10⁶ in year 1 for the angular envelope and the slot-like cutout, against 1.1×10⁷ for the constant 0.20 GeV cut). The cutout's fake ⟨cos 2β⟩ of the tagged sample is +0.77 (a single-fill fit would report a<sub>t</sub> ≈ +1.3 for a true 0.12); the ratio removes it entirely. The fit also carries the three parity-forbidden sin harmonics as a null test (§4): all twelve coefficients are consistent with zero here, and their errors resolve a Roman-Pot azimuthal roll to 5–8 mrad per |t| bin in year one. The sample is background-free and Z-identified by assumption (plans/06 carries the breakup budget).</p>
 
   <figure>
     <div class="panel"><img src="data:image/png;base64,__RC5__" alt="Money plot 6R: raw spin-sorted yields versus beta, the acceptance-free modulation with fits, the two-dimensional modulation map, and the extracted coefficients versus t"></div>

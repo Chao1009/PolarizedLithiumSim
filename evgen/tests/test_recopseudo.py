@@ -342,3 +342,96 @@ def test_measure_coherent_rejects_a_wrong_number_of_responses(slot_response):
     with pytest.raises(ValueError):
         rp.measure_coherent(cr, 1e7, plan, 0.05, 0.08, 0.01,
                             lambda t: 0.1 * t, responses=[cr])
+
+
+# --- the azimuthal-alignment null test (plans/08 A2) -----------------------
+
+def _rotated_fit(cr, sc, delta, roll_only=False, drop_s2t=False, n=8e7):
+    """Generate with the tensor modulation rotated by `delta` and fit with
+    the sin columns.  A spin-axis error rotates BOTH tensor harmonics; a
+    Roman-Pot azimuthal roll rotates only the recoil one."""
+    plan = bk.tensor_flip_plan(0.6)
+    base = lambda t: sc.cos2phi_coefficient_deformation(t, 1.0)  # noqa: E731
+    c, s_ = np.cos(2 * delta), np.sin(2 * delta)
+    kw = dict(u1=0.05, u2=0.02, poisson=False, with_sin=True,
+              a_t_s_func=lambda t: base(t) * s_)
+    if not roll_only:
+        kw["a_e_s"] = 0.010 * s_
+    if drop_s2t:
+        be = np.linspace(0.0, 2.0 * np.pi, 25)
+        ae = np.linspace(0.0, 2.0 * np.pi, 13)
+        pzz = [cat.moments()[1] for cat in plan.categories]
+        frac = [cat.lumi_fraction for cat in plan.categories]
+        mu = cr.expected_counts_2d(n, pzz, frac, 0.05, 0.08, ae, be,
+                                   0.010 if roll_only else 0.010 * c,
+                                   lambda t: base(t) * c, u1=0.05, u2=0.02,
+                                   a_t_s_func=lambda t: base(t) * s_)
+        bm = dict(cr.basis_means(0.05, 0.08, be))
+        bm.pop("s2t")
+        return reco.harmonic_ratio_fit_2d(mu, frac, pzz, ae, be,
+                                          u_coeffs=(0.05, 0.02),
+                                          beta_means=bm, with_sin=True)
+    return rp.measure_coherent(cr, n, plan, 0.05, 0.08,
+                               0.010 if roll_only else 0.010 * c,
+                               lambda t: base(t) * c, **kw)
+
+
+def test_sin_nulls_vanish_and_leave_the_cos_sector_alone(slot_response):
+    """Unpolarized leptons + a headless axis forbid sin 2a, sin 2b and
+    sin(a+b) exactly, so all three must come out zero -- and turning the
+    columns on must not perturb the coefficients that are measured."""
+    sc, cr = slot_response
+    off, _ = _slot_fit(cr, sc)
+    on = rp.measure_coherent(cr, 8e7, bk.tensor_flip_plan(0.6), 0.05, 0.08,
+                             a_e=0.010,
+                             a_t_func=lambda t: sc.cos2phi_coefficient_deformation(t, 1.0),
+                             u1=0.05, u2=0.02, poisson=False, with_sin=True)
+    for key in ("a_e_s", "a_t_s", "a_m_s"):
+        assert abs(on[key]) < 1e-8
+    assert on["a_e"] == pytest.approx(off["a_e"], abs=1e-12)
+    assert on["a_t"] == pytest.approx(off["a_t"], abs=1e-9)
+    assert on["err_t"] == pytest.approx(off["err_t"], rel=1e-3)
+
+
+def test_spin_axis_error_rotates_both_tensor_harmonics(slot_response):
+    sc, cr = slot_response
+    for delta in (0.02, 0.05):
+        f = _rotated_fit(cr, sc, delta)
+        assert f["a_e_s"] / f["a_e"] == pytest.approx(np.tan(2 * delta),
+                                                      rel=1e-3)
+        assert f["a_t_s"] / f["a_t"] == pytest.approx(np.tan(2 * delta),
+                                                      rel=1e-3)
+
+
+def test_pot_roll_shows_only_in_the_recoil_harmonic(slot_response):
+    """The signature that separates the two misalignments: a Roman-Pot
+    azimuthal roll leaves the lepton-plane harmonic exactly alone."""
+    sc, cr = slot_response
+    for delta in (0.02, 0.05):
+        f = _rotated_fit(cr, sc, delta, roll_only=True)
+        assert abs(f["a_e_s"] / f["a_e"]) < 1e-5
+        assert f["a_t_s"] / f["a_t"] == pytest.approx(np.tan(2 * delta),
+                                                      rel=1e-3)
+
+
+def test_null_closure_needs_the_t_weighted_sine_template(slot_response):
+    """`t_s` must use the same t-shape template as `t`: with the plain
+    <sin 2beta> the null misses its own closure by ~5%."""
+    sc, cr = slot_response
+    good = _rotated_fit(cr, sc, 0.05, roll_only=True)
+    bad = _rotated_fit(cr, sc, 0.05, roll_only=True, drop_s2t=True)
+    tan2d = np.tan(0.10)
+    assert good["a_t_s"] / good["a_t"] == pytest.approx(tan2d, rel=1e-3)
+    assert abs(bad["a_t_s"] / bad["a_t"] / tan2d - 1.0) > 0.03
+
+
+def test_basis_2d_sin_columns_are_orthogonal_to_the_cos_ones():
+    """On a full uniform grid the six columns are mutually orthogonal, so
+    with_sin cannot inflate the cos errors."""
+    ae = np.linspace(0.0, 2.0 * np.pi, 13)
+    be = np.linspace(0.0, 2.0 * np.pi, 25)
+    b = reco.basis_2d(ae, be)
+    keys = ("e", "t", "m", "e_s", "t_s", "m_s")
+    for i, k1 in enumerate(keys):
+        for k2 in keys[i + 1:]:
+            assert abs(float(np.dot(b[k1], b[k2]))) < 1e-10

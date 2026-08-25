@@ -466,15 +466,27 @@ def _bin_dilutions(alpha_edges, beta_edges):
 def basis_2d(alpha_edges, beta_edges, beta_means=None):
     """Bin-averaged harmonic basis on the (Ka x Kb) grid, flattened in C
     order: {"e": <cos 2a>, "t": <cos 2b>, "m": <cos(a+b)>,
-    "u1": <cos(a-b)>, "u2": <cos 2(a-b)>}.  The alpha average is analytic
-    (uniform in-bin distribution).  The beta averages are analytic too
-    unless `beta_means` = {"c1","s1","c2","s2"} (Kb,) supplies the
-    ACCEPTANCE-WEIGHTED in-bin means <cos b>, <sin b>, <cos 2b>, <sin 2b>
-    of the true beta of the events reconstructed into each beta bin --
-    required when the acceptance varies strongly across a bin (the
-    Roman-Pot cutout: x25 across beta), and the way the smearing of beta
-    enters the response (the fit then estimates the UNSMEARED
-    coefficients, as an MC-corrected analysis does)."""
+    "u1": <cos(a-b)>, "u2": <cos 2(a-b)>} and the three PARITY-FORBIDDEN
+    partners {"e_s": <sin 2a>, "t_s": <sin 2b>, "m_s": <sin(a+b)>}.  The
+    alpha average is analytic (uniform in-bin distribution).  The beta
+    averages are analytic too unless `beta_means` =
+    {"c1","s1","c2","s2"} (Kb,) supplies the ACCEPTANCE-WEIGHTED in-bin
+    means <cos b>, <sin b>, <cos 2b>, <sin 2b> of the true beta of the
+    events reconstructed into each beta bin -- required when the
+    acceptance varies strongly across a bin (the Roman-Pot cutout: x25
+    across beta), and the way the smearing of beta enters the response
+    (the fit then estimates the UNSMEARED coefficients, as an
+    MC-corrected analysis does).
+
+    Why the sin columns are a null test: with unpolarized leptons and a
+    HEADLESS alignment axis the cross section is even under
+    (alpha, beta) -> (-alpha, -beta), so sin 2alpha, sin 2beta and
+    sin(alpha+beta) are exactly forbidden.  A spin-axis azimuth error
+    delta makes all three ratios (tan 2d, tan 2d, tan d); a Roman-Pot
+    azimuthal ROLL d_t gives (0, tan 2d_t, tan d_t), which separates
+    them.  `t_s` uses the same t-weighted template as `t` (beta_means
+    "s2t"): with the plain <sin 2b> the null test misses its own closure
+    by ~7%, exactly as `c2t` is needed for `t`."""
     ae = np.asarray(alpha_edges, dtype=float)
     be = np.asarray(beta_edges, dtype=float)
     ac = 0.5 * (ae[:-1] + ae[1:])
@@ -483,12 +495,13 @@ def basis_2d(alpha_edges, beta_edges, beta_means=None):
     if beta_means is None:
         c1, s1 = np.cos(bc) * d1b, np.sin(bc) * d1b
         c2, s2 = np.cos(2 * bc) * d2b, np.sin(2 * bc) * d2b
-        c2t = c2
+        c2t, s2t = c2, s2
     else:
         c1, s1, c2, s2 = (np.asarray(beta_means[k], dtype=float)
                           for k in ("c1", "s1", "c2", "s2"))
         # template basis of a t-dependent a_t (recopseudo.basis_means)
         c2t = np.asarray(beta_means.get("c2t", c2), dtype=float)
+        s2t = np.asarray(beta_means.get("s2t", s2), dtype=float)
     ca1, sa1 = (np.cos(ac) * d1a)[:, None], (np.sin(ac) * d1a)[:, None]
     ca2, sa2 = (np.cos(2 * ac) * d2a)[:, None], (np.sin(2 * ac) * d2a)[:, None]
     ones_a = np.ones((ac.size, 1))
@@ -496,7 +509,10 @@ def basis_2d(alpha_edges, beta_edges, beta_means=None):
             "t": (ones_a * c2t[None, :]).ravel(),
             "m": (ca1 * c1[None, :] - sa1 * s1[None, :]).ravel(),
             "u1": (ca1 * c1[None, :] + sa1 * s1[None, :]).ravel(),
-            "u2": (ca2 * c2[None, :] + sa2 * s2[None, :]).ravel()}
+            "u2": (ca2 * c2[None, :] + sa2 * s2[None, :]).ravel(),
+            "e_s": (sa2 * np.ones((1, bc.size))).ravel(),
+            "t_s": (ones_a * s2t[None, :]).ravel(),
+            "m_s": (sa1 * c1[None, :] + ca1 * s1[None, :]).ravel()}
 
 
 def unpolarized_modulation_2d(alpha_edges, beta_edges, u1, u2,
@@ -508,7 +524,7 @@ def unpolarized_modulation_2d(alpha_edges, beta_edges, u1, u2,
 
 
 def harmonic_ratio_fit_2d(counts, lumis, pzz, alpha_edges, beta_edges,
-                          u_coeffs=None, beta_means=None):
+                          u_coeffs=None, beta_means=None, with_sin=False):
     """Two-azimuth version for the coherent channel: counts (F, Ka, Kb)
     per fill in bins of alpha = phi_e - phi_S and beta = phi_t - phi_S.
     The spin-sorted yields are modelled as
@@ -520,8 +536,14 @@ def harmonic_ratio_fit_2d(counts, lumis, pzz, alpha_edges, beta_edges,
     R = sigma_P^2 T/(1 + u + Pbar T) is inverted for the bin-averaged T
     and fitted linearly on the bin-averaged basis (basis_2d; pass
     `beta_means` from the MC response for an acceptance-shaped beta).
+    With `with_sin` the three parity-forbidden partners sin 2alpha,
+    sin 2beta and sin(alpha+beta) are fitted alongside as a null test
+    (basis_2d): all three vanish for an aligned axis and an unrolled pot,
+    and their pattern identifies which of the two is misaligned.
+
     Returns {"const", "a_e", "a_t", "a_m", "err_e", "err_t", "err_m",
-    "cov", "sigma_p2", "pbar"}."""
+    "cov", "sigma_p2", "pbar"} (+ "a_e_s", "a_t_s", "a_m_s" and their
+    errors with with_sin)."""
     n = np.asarray(counts, dtype=float)
     nf, ka, kb = n.shape
     r, var, sig2, pbar = spin_state_ratio(n.reshape(nf, ka * kb), lumis, pzz)
@@ -529,15 +551,17 @@ def harmonic_ratio_fit_2d(counts, lumis, pzz, alpha_edges, beta_edges,
     u = (u_coeffs[0] * basis["u1"] + u_coeffs[1] * basis["u2"]
          if u_coeffs is not None else 0.0)
     t, var_t = _ratio_to_modulation(r, var, sig2, pbar, u=u)
-    design = np.vstack([np.ones(ka * kb), basis["e"], basis["t"],
-                        basis["m"]]).T
+    cols = ["e", "t", "m"] + (["e_s", "t_s", "m_s"] if with_sin else [])
+    design = np.vstack([np.ones(ka * kb)] + [basis[c] for c in cols]).T
     wgt = 1.0 / np.sqrt(np.maximum(var_t, 1e-300))
     coef, *_ = np.linalg.lstsq(design * wgt[:, None], t * wgt, rcond=None)
     cov = np.linalg.inv((design * wgt[:, None]).T @ (design * wgt[:, None]))
     err = np.sqrt(np.diag(cov))
-    return {"const": coef[0], "a_e": coef[1], "a_t": coef[2], "a_m": coef[3],
-            "err_e": err[1], "err_t": err[2], "err_m": err[3], "cov": cov,
-            "sigma_p2": sig2, "pbar": pbar}
+    out = {"const": coef[0], "cov": cov, "sigma_p2": sig2, "pbar": pbar}
+    for i, c in enumerate(cols, start=1):
+        out["a_" + c] = coef[i]
+        out["err_" + c] = err[i]
+    return out
 
 
 def err_harmonic_ratio(n_total, pzz_list, lumi_fractions=None, nbins=24):

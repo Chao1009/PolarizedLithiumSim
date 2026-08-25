@@ -416,13 +416,20 @@ class CoherentResponse:
 
     def expected_counts_2d(self, n_produced, pzz_list, lumi_fractions,
                            tlo, thi, alpha_edges, beta_edges, a_e, a_t_func,
-                           a_m=0.0, u1=0.0, u2=0.0, kappa=0.0):
+                           a_m=0.0, u1=0.0, u2=0.0, kappa=0.0,
+                           a_e_s=0.0, a_t_s_func=None, a_m_s=0.0):
         """Exact expected (F, Ka, Kb) counts for recoils reconstructed in
         [tlo, thi): per event the alpha integrals of
         1 + u1 cos(a-b) + u2 cos 2(a-b) + P_f[kappa + a_e cos 2a
         + a_t(t) cos 2b + a_m cos(a+b)] (TRUE angles/t inside, RECO beta
         for the binning) are analytic.  `n_produced` = coherent recoils
-        produced in the sample (before tagging)."""
+        produced in the sample (before tagging).
+
+        `a_e_s`, `a_t_s_func`, `a_m_s` inject the parity-FORBIDDEN sin
+        partners, which is how an azimuthal misalignment is emulated: a
+        spin-axis error delta turns a_t cos 2beta into
+        a_t cos 2d cos 2beta + a_t sin 2d sin 2beta (rotating phi_s in
+        the constructor injects nothing -- it only relabels beta)."""
         sel = (self.t_reco >= tlo) & (self.t_reco < thi)
         wgt = self.w[sel] * n_produced
         bt, br, tt = self.beta_true[sel], self.beta_reco[sel], self.t_true[sel]
@@ -439,6 +446,13 @@ class CoherentResponse:
         unpol = i0 + u1 * j1 + u2 * j2
         tens = (kappa * i0 + a_e * i2 + a_t * np.cos(2.0 * b) * i0
                 + a_m * j1p)
+        if a_e_s or a_m_s or a_t_s_func is not None:
+            i2s = (np.cos(2 * lo) - np.cos(2 * hi)) / (4.0 * np.pi)
+            j1p_s = (np.cos(lo + b) - np.cos(hi + b)) / (2.0 * np.pi)
+            a_t_s = (0.0 if a_t_s_func is None
+                     else np.asarray(a_t_s_func(tt), dtype=float)[:, None])
+            tens = (tens + a_e_s * i2s + a_t_s * np.sin(2.0 * b) * i0
+                    + a_m_s * j1p_s)
         kb = np.clip(np.digitize(br, be) - 1, 0, be.size - 2)
         out = np.zeros((len(pzz_list), ae.size - 1, be.size - 1))
         for f, (pf, lf) in enumerate(zip(pzz_list, lumi_fractions)):
@@ -457,7 +471,8 @@ class CoherentResponse:
     def basis_means(self, tlo, thi, beta_edges, t_shape=None, t_ref=None):
         """Acceptance-weighted in-bin means of cos/sin of the TRUE beta for
         the events reconstructed into each reco beta bin (the response
-        basis of reco.basis_2d): {"c1","s1","c2","s2","c2t"}, each (Kb,).
+        basis of reco.basis_2d): {"c1","s1","c2","s2","c2t","s2t"}, each
+        (Kb,).
 
         "c2t" = <g(t) cos 2beta_true>_k is the template basis of the
         t-dependent deformation term a_t(t) = a_t(t_ref) g(t/t_ref)
@@ -487,7 +502,9 @@ class CoherentResponse:
                                   ("c2", np.cos(2 * bt), np.cos(2 * bc) * d2),
                                   ("s2", np.sin(2 * bt), np.sin(2 * bc) * d2),
                                   ("c2t", g * np.cos(2 * bt),
-                                   np.cos(2 * bc) * d2)):
+                                   np.cos(2 * bc) * d2),
+                                  ("s2t", g * np.sin(2 * bt),
+                                   np.sin(2 * bc) * d2)):
             num = np.bincount(kb, weights=wgt * fn, minlength=be.size - 1)
             out[key] = np.where(tot > 0, num / np.where(tot > 0, tot, 1.0),
                                 fallback)
@@ -514,7 +531,8 @@ class CoherentResponse:
 def measure_coherent(cresp, n_produced, plan, tlo, thi, a_e, a_t_func,
                      a_m=0.0, u1=0.0, u2=0.0, kappa=0.0, n_alpha=12,
                      n_beta=24, rng=None, poisson=True, responses=None,
-                     lumi_assumed=None, u_coeffs_assumed=None):
+                     lumi_assumed=None, u_coeffs_assumed=None,
+                     with_sin=False, a_e_s=0.0, a_t_s_func=None, a_m_s=0.0):
     """One two-azimuth pseudo-measurement of a reco t bin: expected 2-D
     counts per spin state -> Poisson -> reco.harmonic_ratio_fit_2d with
     the acceptance-weighted beta basis from the same response
@@ -542,14 +560,16 @@ def measure_coherent(cresp, n_produced, plan, tlo, thi, a_e, a_t_func,
     mu = np.concatenate([
         g.expected_counts_2d(n_produced, [pf], [lf], tlo, thi, ae, be,
                              a_e, a_t_func, a_m=a_m, u1=u1, u2=u2,
-                             kappa=kappa)
+                             kappa=kappa, a_e_s=a_e_s,
+                             a_t_s_func=a_t_s_func, a_m_s=a_m_s)
         for g, pf, lf in zip(gens, pzz, frac)], axis=0)
     counts = rng.poisson(mu) if poisson else mu
     bm = cresp.basis_means(tlo, thi, be)
     lum = frac if lumi_assumed is None else list(lumi_assumed)
     u_ass = (u1, u2) if u_coeffs_assumed is None else tuple(u_coeffs_assumed)
     fit = reco.harmonic_ratio_fit_2d(counts, lum, pzz, ae, be,
-                                     u_coeffs=u_ass, beta_means=bm)
+                                     u_coeffs=u_ass, beta_means=bm,
+                                     with_sin=with_sin)
     fit["beta_means"] = bm
     fit.update({"counts": counts, "expected": mu, "alpha_edges": ae,
                 "beta_edges": be, "n": float(mu.sum()),
