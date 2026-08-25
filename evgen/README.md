@@ -136,12 +136,14 @@ and `measure_coherent` (template fit `reco.harmonic_ratio_fit_2d` with
 the acceptance-weighted basis). Results (mid energy, P_zz = 0.6, moment_A,
 mixed method 20%, ε(φ′) harmonic + 10⁻³ rel-lumi offset on):
 
-- 5R: sweet spots 1–4 in reco bins: purity 0.69–0.74, efficiency
-  0.40–0.70, D = 0.91–0.99; Â unbiased vs the reco-bin truth;
-  δÂ = 1.2 / 1.0 / 1.8 / 3.0 ×10⁻⁴ (1 yr) — 0.65–0.70 of money plot 5's
-  single-fill errors (the m = 0-rich fill gain beats the efficiency loss);
+- 5R (25% hadronic y — the ePIC kinematic-fit study's smearing and the
+  ATHENA Fig. 22 value at y ≈ 0.01, `refs/README.md`): sweet spots 1–4 in
+  reco bins: purity 0.64–0.68, efficiency 0.37–0.64, D = 0.91–0.99;
+  Â unbiased vs the reco-bin truth; δÂ = 1.2 / 1.0 / 1.8 / 3.0 ×10⁻⁴
+  (1 yr) — 0.65–0.70 of money plot 5's single-fill errors (the m = 0-rich
+  fill gain beats the efficiency loss);
 - 7R: best bins δΔ = 1.0×10⁻³ (Q² = 1.14) and 0.5×10⁻³ (3.13 GeV²) in
-  year 1, purities ≈ 0.6;
+  year 1, purities ≈ 0.55;
 - 6R: angular envelope (0.22 GeV at 50 GeV/u) + slot-like cutout
   (|p_x| < 0.55, |p_y| < 0.22 GeV — the ePIC sensor planes surround a
   horizontal slot, Jentsch DIS 2023) → N_tag = 2.7×10⁶ (1 yr); the cutout

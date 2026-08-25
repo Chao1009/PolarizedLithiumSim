@@ -4,8 +4,9 @@ RECONSTRUCTED level (plans/07 WP3), re-deriving money plots 5 and 7 with
 
   * reconstructed (x, Q2) bins: Q2 from the scattered electron (EMCal
     2%/sqrt(E) (+) 1% + track angles), y from the hadronic final state
-    (parametrized Sigma/JB resolution, default 20%) -> x by the mixed
-    method; reco-level analysis cuts; eps_eID(eta); the 25 mrad crossing
+    (parametrized Sigma/JB resolution, default 25% = the ePIC kinematic-
+    fit study's smearing and the ATHENA Fig. 22 value at y ~ 0.01) -> x by
+    the mixed method; reco-level analysis cuts; eps_eID(eta); the 25 mrad crossing
     angle undone by the head-on transformation; the physics azimuth from
     the covariant formula on the smeared four-vectors;
   * the spin-state-sorted ratio estimator (reco.harmonic_ratio_fit) on
@@ -88,8 +89,11 @@ def main():
     ap.add_argument("--lumi-10yr", type=float, default=100.0)
     ap.add_argument("--pzz", type=float, default=0.60)
     ap.add_argument("--y-method", default="mixed", choices=("mixed", "electron"))
-    ap.add_argument("--y-had-res", type=float, default=0.20,
-                    help="hadronic-method dy/y (assumption, 0.15-0.30)")
+    ap.add_argument("--y-had-res", type=float, default=0.25,
+                    help="hadronic-method dy/y: 0.25 = the ePIC kinematic-"
+                         "fit study's smearing of delta_h and the ATHENA "
+                         "Fig. 22 value at y ~ 0.01 (band 0.15-0.30; "
+                         "refs/README.md)")
     ap.add_argument("--energy", default="emcal",
                     choices=("emcal", "tracking", "best"))
     ap.add_argument("--n-mc-per-cell", type=int, default=400)

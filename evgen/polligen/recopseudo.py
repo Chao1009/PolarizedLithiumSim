@@ -54,7 +54,10 @@ class RecoModel:
     emcal_stoch: float = 0.02
     emcal_const: float = 0.01
     y_method: str = "mixed"        # "mixed" (Q2_e, y_had) | "electron"
-    y_had_res: float = 0.20        # hadronic-method dy/y (assumption)
+    y_had_res: float = 0.25        # hadronic-method dy/y: 0.15-0.30 band;
+    #   0.25 = the ePIC kinematic-fit study's own smearing of delta_h and
+    #   the ATHENA Fig. 22 value at y ~ 0.01 (-> ~0.10 at y ~ 0.1); see
+    #   reco.hadronic_y for the sources
     beam_e_spread: float = 1.0e-3
     eid: bool = True
     xing: float = reco.XING_IP6

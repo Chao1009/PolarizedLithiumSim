@@ -100,9 +100,10 @@
     (1) Three of the four inclusive sweet-spot bins of money plot 5 sit at y = 0.010–0.025,
     where the scattered electron carries 98–99% of the beam energy and the electron method
     gives δy/y = 50–120% even with a 1.2% calorimeter: x must come from the hadronic final
-    state (Σ or Jacquet–Blondel y), which the simulation does not generate. With a 15–20%
-    hadronic-y resolution the super-bins keep 75–83% purity and the amplitude in the
-    reconstructed bin is within 1–4% of the true-bin value.
+    state (Σ or Jacquet–Blondel y), which the simulation does not generate. With the
+    documented 25% hadronic-y resolution (ePIC, ATHENA) the reconstructed sweet-spot bins
+    keep 64–68% purity and the amplitude in the reconstructed bin is within 1–9% of the
+    true-bin value, known through the same response (§7).
     (2) The single-fill cos 2φ′ fit — the estimator of money plots 5–7 — measures the
     detector's own cos 2φ′ acceptance harmonic divided by P<sub>zz</sub>: a 3% harmonic
     aligned with the vertical spin axis (the natural symmetry axis of both the crossing angle
@@ -294,10 +295,20 @@
   <p>with θ<sub>e</sub> measured from the ion direction. The Σ method is insensitive to
   collinear initial-state radiation, and both are insensitive to particles lost along the ion
   beam (E − p<sub>z</sub> ≈ 0 for forward remnants). Their resolution is set by hadronic
-  calorimetry and by losses in the electron direction; the Yellow-Report-era studies reach
-  y ≈ 0.01 with δy/y of order 15–30%, which is the band assumed here. The
-  low-energy configuration moves the same (x, Q²) to y = 0.03–0.2 (Table 1), so the
-  energy scan is itself part of the reconstruction strategy for the x ≈ 0.1 bins.</p>
+  calorimetry and by losses in the electron direction. The documented expectation
+  (2026-08-25, refs/): the ATHENA proposal uses e−Σ or DA for y ≲ 0.1 — "at the lowest y
+  values the electron method resolution degrades like 1/y" — with a y resolution of
+  ≈ 25% at y ≈ 0.01 improving to ≈ 10% at y ≈ 0.1 and 20–30% for JB throughout
+  (its Sec. 3.1, Fig. 22) [18]; the ePIC kinematic-fit study smears the hadronic
+  E − p<sub>z</sub> sum with σ(δ<sub>h</sub>)/δ<sub>h</sub> = 25% and shows Σ, JB and DA
+  giving Δy/y widths of 0.2–0.3 in 0.01 &lt; y &lt; 0.05 where the electron method is flat
+  [19]; the ATHENA fast simulation of Arratia et al. gives RMS(y)/y ≈ 0.13–0.17 for
+  IΣ, DA and JB at y ≈ 0.05–0.2 [20]. The 15–30% band assumed here (20% central)
+  brackets these; the ePIC coverage rule is 0.01 &lt; y &lt; 0.95, Q² &gt; 1 GeV², five
+  logarithmic bins per decade, with "lower y accessible → easier to rely on overlap
+  between data at different √s" [19]. The low-energy configuration moves the same
+  (x, Q²) to y = 0.03–0.2 (Table 1), so the energy scan is itself part of the
+  reconstruction strategy for the x ≈ 0.1 bins.</p>
 
   <table>
     <tr><th>Sweet spot</th><th>x, Q² [GeV²]</th><th>e(5)×⁶Li(20.5): y</th><th>e(10)×⁶Li(50): y, E′ [GeV], θ′ [mrad], η</th><th>e(18)×⁶Li(137.5): y</th><th>δy/y, e′ alone (1.2%)</th></tr>
@@ -809,7 +820,8 @@
   <i>into</i> the analysis window) receives 400 pseudo-events with weight σ<sub>c</sub>/400,
   each carried through the lab frame (25 mrad crossing), Gaussian smearing of E′ (EMCal
   2%/√E ⊕ 1%) and of the track direction (1–5 mrad by η), the head-on transformation, the
-  electron-method Q², a hadronic y with 20% resolution, the mixed-method x, the analysis
+  electron-method Q², a hadronic y with the documented 25% resolution [18,19], the
+  mixed-method x, the analysis
   cuts on reconstructed quantities, ε<sub>eID</sub>(η), and the covariant φ′ on true and
   smeared four-vectors. The expected φ′ counts of any reconstructed bin are then exact
   bin integrals of den<sub>f</sub> + P<sub>f</sub>A cos 2φ′ summed over the events that land
@@ -824,22 +836,22 @@
 
   <table>
     <tr><th>Sweet spot (reco bin)</th><th>N, 1 yr (both fills)</th><th>Purity</th><th>Efficiency</th><th>D = A<sub>reco bin</sub>/A<sub>true bin</sub></th><th>Â ± δÂ (1 yr) [10⁻³]</th><th>Reco-bin truth</th><th>δÂ (10 yr)</th><th>δA of money plot 5</th></tr>
-    <tr><td class="mono">1: x = 0.056, Q² = 1.14</td><td class="mono">1.7×10⁸</td><td class="mono">0.70</td><td class="mono">0.45</td><td class="mono">0.912</td><td class="mono">10.57 ± 0.12</td><td class="mono">10.41</td><td class="mono">0.038</td><td class="mono">0.18</td></tr>
-    <tr><td class="mono">2: x = 0.022, Q² = 1.14</td><td class="mono">2.8×10⁸</td><td class="mono">0.69</td><td class="mono">0.64</td><td class="mono">0.991</td><td class="mono">6.55 ± 0.10</td><td class="mono">6.64</td><td class="mono">0.030</td><td class="mono">0.15</td></tr>
-    <tr><td class="mono">3: x = 0.141, Q² = 3.13</td><td class="mono">7.6×10⁷</td><td class="mono">0.72</td><td class="mono">0.40</td><td class="mono">0.919</td><td class="mono">11.69 ± 0.18</td><td class="mono">11.82</td><td class="mono">0.058</td><td class="mono">0.26</td></tr>
-    <tr><td class="mono">4: x = 0.141, Q² = 14.3</td><td class="mono">2.8×10⁷</td><td class="mono">0.74</td><td class="mono">0.70</td><td class="mono">0.980</td><td class="mono">9.63 ± 0.30</td><td class="mono">9.43</td><td class="mono">0.095</td><td class="mono">0.45</td></tr>
+    <tr><td class="mono">1: x = 0.056, Q² = 1.14</td><td class="mono">1.7×10⁸</td><td class="mono">0.65</td><td class="mono">0.42</td><td class="mono">0.907</td><td class="mono">10.50 ± 0.12</td><td class="mono">10.34</td><td class="mono">0.038</td><td class="mono">0.18</td></tr>
+    <tr><td class="mono">2: x = 0.022, Q² = 1.14</td><td class="mono">2.8×10⁸</td><td class="mono">0.64</td><td class="mono">0.60</td><td class="mono">0.986</td><td class="mono">6.51 ± 0.10</td><td class="mono">6.60</td><td class="mono">0.030</td><td class="mono">0.15</td></tr>
+    <tr><td class="mono">3: x = 0.141, Q² = 3.13</td><td class="mono">7.6×10⁷</td><td class="mono">0.66</td><td class="mono">0.37</td><td class="mono">0.910</td><td class="mono">11.58 ± 0.18</td><td class="mono">11.71</td><td class="mono">0.058</td><td class="mono">0.26</td></tr>
+    <tr><td class="mono">4: x = 0.141, Q² = 14.3</td><td class="mono">2.8×10⁷</td><td class="mono">0.68</td><td class="mono">0.64</td><td class="mono">0.969</td><td class="mono">9.52 ± 0.30</td><td class="mono">9.32</td><td class="mono">0.095</td><td class="mono">0.45</td></tr>
   </table>
-  <p style="font-size:8pt;color:var(--ink-2);margin-top:-2pt">Table 2 — money plot 5R: the four sweet-spot super-bins in reconstructed (x, Q²) with the mixed method (20% hadronic y). Efficiency = fraction of the true-bin rate reconstructed in the bin after ε<sub>eID</sub>; D = ratio of the rate-weighted model amplitude of the events in the reconstructed bin to that of the true bin. The last column is the single-fill, truth-binned error of the projection report.</p>
+  <p style="font-size:8pt;color:var(--ink-2);margin-top:-2pt">Table 2 — money plot 5R: the four sweet-spot super-bins in reconstructed (x, Q²) with the mixed method and the documented 25% hadronic-y resolution [18,19]. Efficiency = fraction of the true-bin rate reconstructed in the bin after ε<sub>eID</sub>; D = ratio of the rate-weighted model amplitude of the events in the reconstructed bin to that of the true bin. The last column is the single-fill, truth-binned error of the projection report.</p>
 
   <p>Three observations. (i) The fit is unbiased at the reconstructed level: every Â agrees
   with its reco-bin truth within the statistical error while the acceptance harmonic and
   the luminosity offset are on, and the sin 2φ′ coefficients are consistent with zero.
-  (ii) The two edge bins (spots 1 and 3 at y ≈ 0.01) lose 55–60% of their events to the
-  reconstructed y ≥ 0.01 cut and their amplitude reference shifts by 8–9% (the accepted
+  (ii) The two edge bins (spots 1 and 3 at y ≈ 0.01) lose about 60% of their events to the
+  reconstructed y ≥ 0.01 cut and their amplitude reference shifts by 9% (the accepted
   half of the bin sits at lower true x); the analysis knows both through K, and the
   moment-constrained model's x-dependence is still resolved bin by bin (money plot 7R,
   best bins δΔ = 1.0×10⁻³ at Q² = 1.14 and 0.5×10⁻³ at 3.13 GeV² in year 1, purities
-  0.6). (iii) The errors are <i>smaller</i> than the truth-binned single-fill projection —
+  ≈ 0.55). (iii) The errors are <i>smaller</i> than the truth-binned single-fill projection —
   0.65–0.70 of the money-plot-5 values — because the 1.5× gain of the m = 0-rich fill
   outweighs the reconstruction efficiency of 0.40–0.70; this is the number to carry into
   plans/07 §7.1, with the caveat that it presumes the source delivers m = 0-rich bunches
@@ -848,7 +860,7 @@
   <figure>
     <div class="panel"><img src="data:image/png;base64,__RC3__" alt="Money plot 5R: reconstructed-level phi-prime pseudo-data in the four sweet-spot bins and amplitude versus x in reconstructed bins"></div>
     <figcaption><b>Money plot 5R — inclusive gluonometry at the reconstructed level</b>
-    (e10 × ⁶Li50, P<sub>zz</sub> = 0.6, moment_A, mixed method with 20% hadronic y, EMCal
+    (e10 × ⁶Li50, P<sub>zz</sub> = 0.6, moment_A, mixed method with 25% hadronic y, EMCal
     energy, track angles, ε<sub>eID</sub>(η), spin-state ratio of P<sub>zz</sub> = +0.6/−1.2
     fills with the acceptance harmonic and luminosity offset on). Left: the acceptance-free
     modulation T(φ′) − κ̂ (per unit P<sub>zz</sub>) from the ratio, with the reco-bin truth
@@ -933,8 +945,9 @@
   3×10⁻⁵); empty φ bins inside the cutout are handled with zero weight; the α-integrals
   of the coherent counts are analytic per event and the β smearing is absorbed in the MC
   basis, so the fitted coefficients refer to the unsmeared truth. Known limits of this
-  pass, stated rather than hidden: the hadronic y is a parametrized 20% Gaussian (no ePIC
-  performance document for the Σ method at y ≈ 0.01 was available, plans/04 #21); u₁, u₂
+  pass, stated rather than hidden: the hadronic y is a parametrized 25% Gaussian (the
+  ePIC study's own smearing and the ATHENA value at y ≈ 0.01, inside the 15–30% of
+  [18–20]; no light-ion number exists, plans/04 #21); u₁, u₂
   sit at the ZEUS 1σ bounds [13] and the slot dimensions are illustrative (#20); the
   φ′-efficiency harmonics are illustrative magnitudes; radiative corrections and
   backgrounds are not included; the 7R points are centered with the injected model (as in
@@ -959,7 +972,10 @@
     <p>[14] N. N. Nikolaev, A. V. Pronyaev, B. G. Zakharov, <i>Azimuthal asymmetry as a new handle on σ<sub>L</sub>/σ<sub>T</sub> in diffractive DIS</i>, arXiv:hep-ph/9812212 (Eq. 1: the y-dependence of the cos φ and cos 2φ terms).</p>
     <p>[15] A. V. Pronyaev, <i>The forward cone and L/T separation in diffractive DIS</i>, arXiv:hep-ph/9808432 (Eq. 7: the LT/T ratio).</p>
     <p>[16] M. Ruspa (H1 and ZEUS), <i>Inclusive diffraction at HERA</i>, arXiv:hep-ex/0206031.</p>
-    <p>[17] A. Jentsch (ePIC), <i>Far-Forward Detectors and Physics with ePIC @ the EIC</i>, talk at DIS 2023, East Lansing, 27–31 March 2023 (far-forward acceptance table, Roman-Pot geometry, tracker p<sub>T</sub> resolution with and without beam effects). Local copies of [9], [12]–[17] are indexed in <code>refs/README.md</code>.</p>
+    <p>[17] A. Jentsch (ePIC), <i>Far-Forward Detectors and Physics with ePIC @ the EIC</i>, talk at DIS 2023, East Lansing, 27–31 March 2023 (far-forward acceptance table, Roman-Pot geometry, tracker p<sub>T</sub> resolution with and without beam effects).</p>
+    <p>[18] ATHENA Collaboration, J. Adam et al., <i>ATHENA detector proposal — a totally hermetic electron nucleus apparatus proposed for IP6 at the Electron-Ion Collider</i>, JINST 17 (2022) P10019, arXiv:2210.09048, Sec. 3.1 and Fig. 22 (best reconstruction method and y resolution over the (x, Q²) plane at 18 × 275 GeV; e−Σ/DA for y ≲ 0.1; JB 20–30%).</p>
+    <p>[19] S. Maple (ePIC), <i>Tracking and inclusive DIS reconstruction with the ePIC detector at the EIC</i>, seminar, University of Birmingham, 11 December 2024 (slides: kinematic reconstruction methods, the Bayesian kinematic fit, smearing resolutions σ(δ<sub>h</sub>)/δ<sub>h</sub> = 25%, Δy/y per method in y bins, full ePIC simulation at Q² &gt; 100 GeV²).</p>
+    <p>[20] M. Arratia, D. Britzger, O. Long, B. Nachman, <i>Reconstructing the kinematics of deep inelastic scattering with deep learning</i>, Nucl. Instrum. Meth. A 1025 (2022) 166164, arXiv:2110.05505 (Table 1: all classical methods; Fig. 5: RMS of Q², y, x versus y for the ATHENA fast simulation; Sec. 5: acceptance and noise effects on the hadronic methods at low y). Related: R. Aggarwal, A. Caldwell, <i>Kinematic fitting of neutral current events in deep inelastic ep collisions</i>, JINST 17 (2022) P09035, arXiv:2206.04897. Local copies of [9], [12]–[20] are indexed in <code>refs/README.md</code> and <code>refs/refs_dict.json</code>.</p>
   </div>
 
   <div class="foot">

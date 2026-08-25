@@ -327,8 +327,17 @@ def smear_electron(e_prime, theta, phi, de_over_e, dtheta, dphi, rng):
 def hadronic_y(y_true, rel_res, rng, floor=1e-4):
     """Parametrized hadronic-method y (Jacquet-Blondel / Sigma method):
     y_had = y_true (1 + rel_res N(0,1)).  Stand-in for the hadronic final
-    state polligen does not generate; rel_res ~ 0.15-0.30 spans the
-    Yellow-Report-era expectation at y > 0.01."""
+    state polligen does not generate.  Sources for rel_res (refs/README.md,
+    2026-08-25): the ePIC kinematic-fit study smears the hadronic
+    E - p_z sum with sigma(delta_h)/delta_h = 25% (S. Maple, ePIC seminar
+    Dec 2024, slide 44; Djangoh 18x275, Q2 > 1 GeV2); the ATHENA proposal
+    (JINST 17 (2022) P10019, Sec. 3.1 / Fig. 22) uses e-Sigma or DA for
+    y <~ 0.1 with ~25% y resolution at y ~ 0.01 improving to ~10% at
+    y ~ 0.1, and quotes 20-30% for JB throughout; the ATHENA fast
+    simulation of Arratia et al. (NIM A 1025 (2022) 166164, Fig. 5,
+    Q2 > 200 GeV2) gives RMS(y)/y ~ 0.13-0.17 for ISigma/DA/JB at
+    y ~ 0.05-0.2.  rel_res ~ 0.15-0.30 therefore brackets the documented
+    expectation; 0.20 is the default, 0.25 the ePIC study's own value."""
     y = np.asarray(y_true, dtype=float)
     return np.maximum(y * (1.0 + rel_res * rng.standard_normal(y.shape)),
                       floor)

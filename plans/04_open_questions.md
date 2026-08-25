@@ -169,7 +169,16 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
     not generate. *Needed:* δy_Σ/y vs y from the ePIC inclusive WG (or a
     BeAGLE/PYTHIA e+Li sample through eic-smear). *Default:* 15–30%
     band (`reco.hadronic_y`); purity 0.75–0.83 per super-bin at 15–20%.
-    *2026-08-25:* not among the references added to refs/ — still open.
+    *2026-08-25 (web search, refs/README.md):* now bracketed by documents —
+    ATHENA proposal JINST 17:P10019 Sec. 3.1/Fig. 22 (e−Σ or DA for
+    y ≲ 0.1; ≈ 25% y resolution at y ≈ 0.01 → ≈ 10% at y ≈ 0.1; JB 20–30%);
+    the ePIC kinematic-fit study (S. Maple, Dec 2024 seminar) smears
+    σ(δ_h)/δ_h = 25% and shows Σ/JB/DA widths of 0.2–0.3 in
+    0.01 < y < 0.05 with the electron method flat; Arratia et al. NIM A
+    1025:166164 Fig. 5 (ATHENA fast sim, Q² > 200): RMS(y)/y ≈ 0.13–0.17
+    for IΣ/DA/JB at y ≈ 0.05–0.2. The 15–30% band stands (20% default,
+    25% = ePIC's own). Remaining gap: no published ePIC full-simulation
+    number at Q² ≈ 1–3 GeV², y ≈ 0.01, for e + light ions specifically.
 
 ## Tracking
 

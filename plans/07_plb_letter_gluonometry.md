@@ -154,16 +154,18 @@ reconstructed-level closure is now specified end to end and seeded in
 **WP3 results (2026-08-24, second pass — `polligen/recopseudo.py`, money
 plots 5R/7R/6R, report §7).** ☑ Reconstructed-level pseudo-experiments
 exist and close:
-- ☑ Inclusive (mixed method, 20% hadronic y, EMCal E′, track angles,
-  ε_eID, reco cuts, covariant φ′, two-fill ratio with a 3%/2% φ′-efficiency
-  harmonic and a 10⁻³ rel-lumi offset on): sweet spots 1–4 in reco bins —
-  purity 0.70/0.69/0.72/0.74, efficiency 0.45/0.64/0.40/0.70, D = 0.912/
-  0.991/0.919/0.980; Â unbiased vs the reco-bin truth; **δÂ = 1.2 / 1.0 /
-  1.8 / 3.0 ×10⁻⁴ (1 yr)** = 0.65–0.70 × the §7.1 baseline (the m = 0-rich
-  fill gain beats the efficiency loss). The y = 0.01 edge bins (1, 3) lose
-  55–60% of their events to the reco y cut; D = 0.91 there.
+- ☑ Inclusive (mixed method, 25% hadronic y — the ePIC kinematic-fit
+  study's smearing and ATHENA Fig. 22 at y ≈ 0.01, refs/ 2026-08-25 —
+  EMCal E′, track angles, ε_eID, reco cuts, covariant φ′, two-fill ratio
+  with a 3%/2% φ′-efficiency harmonic and a 10⁻³ rel-lumi offset on):
+  sweet spots 1–4 in reco bins — purity 0.65/0.64/0.66/0.68, efficiency
+  0.42/0.60/0.37/0.64, D = 0.907/0.986/0.910/0.969; Â unbiased vs the
+  reco-bin truth; **δÂ = 1.2 / 1.0 / 1.8 / 3.0 ×10⁻⁴ (1 yr)** = 0.65–0.70 ×
+  the §7.1 baseline (the m = 0-rich fill gain beats the efficiency loss).
+  The y = 0.01 edge bins (1, 3) lose ~60% of their events to the reco y
+  cut; D = 0.91 there.
 - ☑ 7R: δΔ best bins 1.0×10⁻³ (Q² = 1.14) / 0.5×10⁻³ (3.13 GeV²) in year 1
-  (vs 0.7–1.4 ×10⁻³ baseline), purities ≈ 0.6.
+  (vs 0.7–1.4 ×10⁻³ baseline), purities ≈ 0.55.
 - ☑ Coherent 6R (feeds WP5): angular envelope 10σ_θ·6p_u (0.22 GeV at
   50 GeV/u) + slot-like cutout |p_x| < 0.55, |p_y| < 0.22 GeV (ePIC pots
   surround a horizontal slot; 2026-08-25 refs pass) → N_tag = 2.7×10⁶

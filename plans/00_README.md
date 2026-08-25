@@ -67,8 +67,19 @@ brings to the EIC, in support of the ANL polarized ⁶,⁷Li ion-source program
   = +0.77, deformation-term error ×3 vs a square cutout, a_e unaffected)
   and the beam-effect-dominated RP resolution (ΔpT ≈ 40 MeV at 275 GeV,
   detector ≤ 1.5%); **Mäntysaari et al.** full text confirms Eq. (9) and
-  the γ*d-frame definition of Φ. Still missing: an ePIC Σ/JB δy/y
-  performance document at y ≈ 0.01 (#21). 94 evgen tests.
+  the γ*d-frame definition of Φ. 94 evgen tests.
+- ☑ **Reference dictionary + web search for the missing item** (same
+  day): `refs/refs_dict.json` (machine-readable: identifiers, key content
+  with equation/figure/slide pointers, where used) + `refs/find_ref.py`
+  lookup; the ePIC inclusive-DIS reconstruction performance was found in
+  S. Maple's Dec-2024 ePIC seminar (σ(δ_h)/δ_h = 25% smearing; Δy/y per
+  method in y bins; 0.01 < y < 0.95 coverage rule; DA best at y ≈ 0.01),
+  the ATHENA proposal Sec. 3.1/Fig. 22 (e−Σ/DA for y ≲ 0.1; ≈ 25% at
+  y ≈ 0.01, ≈ 10% at y ≈ 0.1; JB 20–30%) and Arratia et al. NIM A
+  1025:166164 Fig. 5 (IΣ/DA/JB 13–17% at y ≈ 0.05–0.2) → the reco-level
+  default hadronic-y resolution is now 25% (money plots 5R/7R rerun);
+  #21 reduced to "no published ePIC full-sim number at Q² ≈ 1–3 GeV²,
+  y ≈ 0.01, for light ions".
 
 ## Development run 6 (2026-08-24): the reconstruction chain, measured quantities, and the audit
 
