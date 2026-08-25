@@ -174,7 +174,7 @@
 
   <p class="eyebrow">Polarized ⁶,⁷Li @ EIC · Simulation program report · reports/</p>
   <h1>The cos 2φ modulation on tensor-polarized ⁶Li: projected inclusive and coherent measurements</h1>
-  <p class="dateline">2026-08-17 · development run 5 · polligen (evgen/) + polli_fastsim (fastsim/) · companions: plans/06 (background budget), docs/note_cos2phi_coherent_6Li.md, reports/polarized_li_primer.html (pedagogical introduction), reports/reconstruction_chain_report.html (the reconstructed-level counterpart: money plots 5R, 7R, 6R) · external numbers verified against primary sources; the 2026-08-17 revision added dedicated fact checks of the moment constraint and of the far-forward detection chain · notes revised 2026-08-25: estimator, angular-cut and sign-convention callouts from the reconstruction-chain report and the code review (docs/code_review_2026-08-25.md); the truth-level projections and figures are unchanged</p>
+  <p class="dateline">2026-08-17 (development run 5) · revised 2026-08-25 · polligen (evgen/) + polli_fastsim (fastsim/) · companions: plans/06 (background budget), docs/note_cos2phi_coherent_6Li.md, reports/polarized_li_primer.html (pedagogical introduction), reports/reconstruction_chain_report.html (the reconstructed-level counterpart: money plots 5R, 7R, 6R) · external numbers verified against primary sources · modification history in Appendix A</p>
 
   <p class="lede">This note presents two projected EIC measurements of the cos 2φ azimuthal
   modulation on a transversely tensor-polarized ⁶Li beam: inclusive DIS, requiring only the
@@ -199,7 +199,7 @@
 
   <p class="eq"><img class="tex" data-tex="a_m = \frac{1}{4}\,c_m\left(3\cos^2\theta_m - 1\right),\qquad c_m = 3|\lambda_m| - 2 \;\rightarrow\; (1,\,-2,\,1)"></p>
 
-  <div class="callout"><b>Sign convention of the tensor-rate terms (added 2026-08-25).</b> The b₁, b₂ terms
+  <div class="callout"><b>Sign convention of the tensor-rate terms.</b> The b₁, b₂ terms
   above are written in the transcription used throughout this program. In the
   Hoodbhoy–Jaffe–Manohar convention as applied by HERMES and by Cosyn et al. (W. Cosyn,
   B. Roldan Tomei, A. Sosa, A. Zec, Eur. Phys. J. A 61 (2025) 83, Eq. 27: A<sub>zz</sub> =
@@ -207,8 +207,7 @@
   the m = 0 state has the larger rate for b₁ &gt; 0. This affects only the sign of A<sub>zz</sub>
   relative to b₁ (and of the constant term of the spin-state ratio), not its magnitude, its
   error, or anything in the Δ sector; whether to flip the transcription or to document
-  b₁ ≡ −b₁<sup>HJM</sup> is an open decision recorded in the code review
-  (docs/code_review_2026-08-25.md, G1).</div>
+  b₁ ≡ −b₁<sup>HJM</sup> is an open decision (docs/code_review_2026-08-25.md, item G1).</div>
 
   <p>The cos 2φ term requires the virtual photon to flip its helicity by two units. Since
   no spin-½ constituent can absorb two units of helicity, neither quarks nor bound nucleons
@@ -239,7 +238,7 @@
   amplitude at O(γ²), Δ<sub>fake</sub> ≈ γ²b₁/6 — at most 3% of the Δ amplitude at the sweet
   spots, but tens of percent of a 10⁻³ scenario at x ≈ 0.2, Q² ≈ 1 GeV², where the
   amplitude-versus-x panels extend; it is computable from the same data's A<sub>zz</sub>
-  (reconstruction-chain report §2; code review G2). Structure functions are toy parameterizations
+  (reconstruction-chain report §2). Structure functions are toy parameterizations
   with PDF-grid (CT18NLO/NNPDFpol11) backends behind the same interface: rates are reliable
   to a factor of ≈1.5, and asymmetry shapes are scenarios by construction.</p>
 
@@ -259,32 +258,32 @@
   (<code>sample.phi_histogram_pseudo</code>). Event-level sampling remains available and is
   what the closure tests use.</p>
 
-  <p><b>Estimator.</b> The amplitude comes from a binned least-squares fit of
-  N(φ′) = C(1 + A cos 2φ′), not the 2⟨cos 2φ′⟩ moment: with realistic φ holes the moment
-  is biased by more than the signal, while the fit stays unbiased. Errors follow
-  δA = √(2/N)/P<sub>zz</sub>, validated by pseudo-experiments. The fit carries no cos φ′
-  term; the m-symmetric tensor fills set a₁ = 0 by construction.</p>
+  <p><b>Estimator of the figures.</b> The amplitudes shown below come from a single spin
+  state: a binned least-squares fit of N(φ′) = C(1 + A cos 2φ′), not the 2⟨cos 2φ′⟩ moment
+  (with realistic φ holes the moment is biased by more than the signal, while the fit stays
+  unbiased), with δA = √(2/N)/P<sub>zz</sub> validated by pseudo-experiments and no cos φ′
+  term, since the m-symmetric tensor fills set a₁ = 0 by construction.</p>
 
-  <div class="callout"><b>Estimator update (reconstruction-chain report, 2026-08-24/25).</b> The
-  single-fill fit above measures, besides the physics, the detector's own cos 2φ′ acceptance
-  harmonic divided by P<sub>zz</sub>: a 3% harmonic aligned with the vertical spin axis fakes an
-  amplitude four times the signal. The estimator of the measurement is therefore the
-  spin-state-sorted ratio of m = ±1-rich (P<sub>zz</sub> = +0.6) and m = 0-rich (−1.2) bunches,
+  <p><b>Estimator of the measurement.</b> A single-state fit measures, besides the physics,
+  the detector's own cos 2φ′ acceptance harmonic divided by P<sub>zz</sub>: a 3% harmonic
+  aligned with the vertical spin axis fakes an amplitude four times the signal. The
+  estimator of the measurement is therefore the spin-state-sorted ratio of m = ±1-rich
+  (P<sub>zz</sub> = +0.6) and m = 0-rich (−1.2) bunches (reconstruction-chain report §3),
   which cancels any acceptance common to both states bin by bin, turns relative-luminosity
-  errors into a constant, and has δÂ = 2√(2/N)/(P₊ − P₀) = 0.67× the single-fill error at the
-  same source purity. At the reconstructed level — EMCal energy, track angles, ε<sub>eID</sub>(η),
-  hadronic-method y with the documented 25% resolution, reconstructed (x, Q²) bins — the four
-  sweet spots keep purities of 0.64–0.68 and give δÂ = 1.2 / 1.0 / 1.8 / 3.0 × 10⁻⁴ in year 1
-  (money plot 5R), 0.64–0.70 of the values annotated in money plot 5; the extracted Δ (7R)
-  reaches δΔ = 1.0×10⁻³ at Q² = 1.14 GeV² and 0.5×10⁻³ at 3.13 GeV² in year 1 (its
-  bin-centering factor K is model-dependent at the 3–11% level between the repository's Δ
-  shapes, larger than the 10-year statistical errors; and the 25% is an absolute 50–125 MeV on
-  a hadronic E − p<sub>z</sub> sum of 0.2–0.5 GeV at spots 1–3, a regime no published ePIC
-  study covers — code review F5, F2). The cancellation
-  presumes that both spin states see the same acceptance: the states must alternate bunch by
-  bunch, since a 10⁻³ fill-to-fill difference of the cos 2φ′ efficiency harmonic fakes half
-  the signal (code review 2026-08-25, F1). The figures below keep the single-fill, truth-binned
-  projections; their error bars are 1.4–1.6× those of the reconstructed-level analysis.</div>
+  errors into a constant, and has δÂ = 2√(2/N)/(P₊ − P₀) = 0.67× the single-state error at
+  the same source purity. At the reconstructed level — EMCal energy, track angles,
+  ε<sub>eID</sub>(η), hadronic-method y with the documented 25% resolution, reconstructed
+  (x, Q²) bins — the four sweet spots keep purities of 0.64–0.68 and give δÂ = 1.2 / 1.0 /
+  1.8 / 3.0 × 10⁻⁴ in year 1 (money plot 5R), 0.64–0.70 of the values annotated in money
+  plot 5; the extracted Δ (7R) reaches δΔ = 1.0×10⁻³ at Q² = 1.14 GeV² and 0.5×10⁻³ at
+  3.13 GeV² in year 1. Two caveats travel with those numbers: the bin-centering factor K is
+  model-dependent at the 3–11% level between the repository's Δ shapes, larger than the
+  10-year statistical errors, and the 25% resolution is an absolute 50–125 MeV on a hadronic
+  E − p<sub>z</sub> sum of 0.2–0.5 GeV at spots 1–3, a regime no published ePIC study covers.
+  The cancellation presumes that both spin states see the same acceptance: the states must
+  alternate bunch by bunch, since a 10⁻³ fill-to-fill difference of the cos 2φ′ efficiency
+  harmonic fakes half the signal. The figures below keep the single-state, truth-binned
+  projections; their error bars are 1.4–1.6× those of the reconstructed-level analysis.</p>
 
   <p><b>Binning.</b> The four displayed (x, Q²) super-bins are selected by statistical
   significance within Q² bands: an unconstrained ranking concentrates at the lowest Q²,
@@ -405,11 +404,11 @@
   channel. This cut is the most consequential machine input to the measurement
   (assumption #1, §6).</p>
 
-  <div class="callout"><b>Angular-cut update (reconstruction-chain report §4, 2026-08-24).</b> The
-  10σ envelope is a cut on the recoil <i>angle</i>, so the p<sub>T</sub> threshold scales with the
+  <div class="callout"><b>The near-beam cut is angular; the reconstructed-level coherent sample.</b>
+  The 10σ envelope is a cut on the recoil <i>angle</i> (reconstruction-chain report §4), so the p<sub>T</sub> threshold scales with the
   beam momentum: p<sub>T</sub><sup>cut</sup> = 10σ<sub>θ</sub>·A·p<sub>u</sub> = 0.09 / 0.22 / 0.60 GeV at
   20.5 / 50 / 137.5 GeV/u for the proton-derived σ<sub>θ</sub> = 73 μrad, i.e. tag acceptances of
-  67% / 9% / 1.5×10⁻⁸ for B = 50 GeV⁻². The constant 0.20 GeV used in this report (13.5%) is close
+  67% / 9% / 1.5×10⁻⁸ for B = 50 GeV⁻². The constant 0.20 GeV used for the figures of this report (13.5%) is close
   to the mid-energy value and far from the other two; the low-energy configuration is the
   natural home of the coherent program, and the lithium divergence itself remains undocumented
   (assumption #1). The ePIC pots surround a horizontal slot, so the cutout is a rectangle wide
@@ -471,17 +470,17 @@
 
   <p class="eq"><img class="tex" data-tex="a_2(t;P_{zz}) = -\frac{P_{zz}}{4}\,\varepsilon_{B0}\,B\,|t|,\qquad \langle a_2\rangle_{\mathrm{tag}} = a_2\!\left(p_{T,\mathrm{cut}}^2 + 1/B\right) = 0.036\ \ [0.018\mathrm{-}0.059]"></p>
 
-  <div class="callout"><b>Convention note (added 2026-08-24).</b> The anchor's Eq. (9)
+  <div class="callout"><b>Convention of the anchored coefficient.</b> The anchor's Eq. (9)
   expands d²σ/dΦd|t| ∝ 1 + 2Σ<sub>n</sub>a<sub>n</sub>e<sup>inΦ</sup>, with Φ the azimuth of
   the produced vector meson — the momentum transfer, i.e. the recoil — relative to the
   polarization axis in the γ*d frame. The cos 2Φ modulation coefficient is therefore
   2a₂, and the ⟨a₂⟩ quoted here and injected in money plot 6(d) understates the
   deformation modulation by a factor two (0.072 rather than 0.036 at P<sub>zz</sub> = 0.6):
   this report's coherent numbers are conservative by ×2 and are kept in the a₂
-  convention until the WP5 curves are redone. The modulation is one of the <i>recoil</i>
+  convention (the WP5 curves will carry the coefficient). The modulation is one of the <i>recoil</i>
   azimuth φ<sub>t</sub> − φ<sub>S</sub>, not of the electron azimuth used as the axis of
   panel (d); the reconstructed-level companion (reconstruction-chain report §7, money
-  plot 6R) injects the corrected coefficient in the recoil azimuth and fits both azimuths.</div>
+  plot 6R) injects the coefficient 2a₂ in the recoil azimuth and fits both azimuths.</div>
 
   <p>ε<sub>B0</sub> ≡ ΔB₀/B is scaled from the deuteron value of 0.21 using two indicators
   that disagree: the relative quadrupole deformation Q/⟨r²⟩ of ⁶Li is about one fifth of
@@ -567,8 +566,7 @@
     </tr>
   </table>
 
-  <p>Concerning extraction systematics (revised 2026-08-25): in the spin-state ratio of the
-  estimator update of §2, relative-luminosity errors enter only as a φ′-independent constant
+  <p>Concerning extraction systematics: in the spin-state ratio of §2, relative-luminosity errors enter only as a φ′-independent constant
   and any φ′-acceptance harmonic common to both spin states cancels bin by bin — a single-fill
   fit, by contrast, is biased by the acceptance's cos 2φ′ harmonic divided by P_zz; the
   cancellation requires bunch-by-bunch alternation of the two states (or 10⁻⁴ stability of the
@@ -690,19 +688,34 @@
     <p>[51] IR-8 far-forward tagging of nuclear breakup, arXiv:2501.12410 (bibliographic details to be completed; not in the local reference index).</p>
   </div>
 
+  <h2>Appendix A · Modification history</h2>
+
+  <p>The main text states the current content only; this appendix records what changed and
+  when (the repository history carries the full diffs).</p>
+
+  <table>
+    <tr><th>Date</th><th>Revision</th></tr>
+    <tr><td class="mono">2026-08-10</td><td>First version (development run 5): money plots 5 and 6 with the moment-constrained Δ(x,Q²) and separate 1-year / 10-year projections, the physics note with a verified bibliography (docs/note_cos2phi_coherent_6Li.md); same day, first audit round — fact-check fixes to formulas, port fidelity and documents.</td></tr>
+    <tr><td class="mono">2026-08-11</td><td>Second audit round (formulas against the literature, implementation, references, extraction logic); money plot 7 (the extracted Δ as structure-function data points) added.</td></tr>
+    <tr><td class="mono">2026-08-17</td><td>Dedicated fact checks of the Sather–Schmidt moment usage (a Δ⁺⁺ bag calculation without x-shape) and of the far-forward detection chain; phase-space figure with the analysis binning; display mathematics typeset at build time; academic-register line edit.</td></tr>
+    <tr><td class="mono">2026-08-24</td><td>§4.3 convention of the anchored coefficient: the anchor's Eq. (9) expands 1 + 2Σa<sub>n</sub>e<sup>inΦ</sup>, so the cos 2Φ coefficient is 2a₂ and this report's coherent numbers are conservative by ×2; the reconstruction-chain report created as the reconstructed-level companion.</td></tr>
+    <tr><td class="mono">2026-08-25</td><td>Estimator: the spin-state-sorted ratio of m = ±1-rich and m = 0-rich bunches replaces the single-state fit as the estimator of the measurement (0.67× error; bunch-by-bunch alternation required), with the reconstructed-level results 5R/7R quoted; the near-beam cut stated as angular (0.09 / 0.22 / 0.60 GeV → 67% / 9% / 10⁻⁸ at 20.5 / 50 / 137.5 GeV/u) with the slot-like cutout and the 6R numbers; the sign convention of the b₁, b₂ terms stated (HJM/HERMES/Cosyn: A<sub>zz</sub> = −(2/3)b₁/F₁); the inversion corrected to Δ̂ = −Â y²D<sub>φ</sub>/(1−y) (also on money plot 7); the sweet-spot γ² statement corrected (x ≤ 0.14, γ² ≤ 0.023) with the O(γ²) b₁ leakage; "self-normalized within a single fill" replaced by the ratio statement in §5; OMD window 45–65%, Roman-Pot z 26/28 m (Yellow Report) versus 32.5/34.3 m (epic-main), 149 μrad; caveats where reconstructed-level numbers are quoted (K model dependence, hadronic-y regime, background-free 6R); reference [51] flagged incomplete; test count 94 + 24. Figures and projections unchanged.</td></tr>
+    <tr><td class="mono">2026-08-25</td><td>Modification history moved to this appendix; the main text restated as current content.</td></tr>
+  </table>
+
   <div class="foot">
-    Generated from the PolarizedLithiumSim repository (development run 5, 2026-08-17; notes revised 2026-08-25):
+    Generated from the PolarizedLithiumSim repository:
     <code>evgen/scripts/money_cos2phi.py</code>,
     <code>evgen/scripts/money_cos2phi_coherent.py</code>,
     <code>evgen/scripts/money_delta_extraction.py</code>,
     <code>evgen/scripts/phase_space_bins.py</code>; models in
     <code>polli_fastsim/delta_models.py</code> and <code>evgen/polligen/coherent.py</code>;
     assembled by <code>reports/build_report.py</code> (display math typeset at build time,
-    matplotlib mathtext/STIX). 94 + 24 tests pass (2026-08-25). All rates use TOY/scenario inputs —
+    matplotlib mathtext/STIX). 94 + 24 tests pass. All rates use TOY/scenario inputs —
     bands, not predictions. External numbers verified against primary sources (nuclear
     data: TUNL; detector: EIC YR, ATHENA, ePIC and second-IR documents; theory: original
-    papers), including dedicated 2026-08-17 fact checks of the Sather–Schmidt moment usage
-    and the far-forward detection chain. Reference numbering is shared with earlier
+    papers), including dedicated fact checks of the Sather–Schmidt moment usage and the
+    far-forward detection chain (Appendix A). Reference numbering is shared across
     revisions; retired entries are omitted. Target venue: INT program on polarized ion
     beams at the EIC, March 22 – April 2, 2027.
   </div>

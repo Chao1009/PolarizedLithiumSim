@@ -80,7 +80,7 @@
 
   <p class="eyebrow">Polarized ⁶,⁷Li @ EIC · Analysis note · reports/</p>
   <h1>From detector signals to Δ(x,Q²): the reconstruction chain of the inclusive and coherent cos 2φ measurements</h1>
-  <p class="dateline">2026-08-24 · companion to the cos 2φ projection report (money plots 5–7) and to plans/07 WP3 · §§1–6: the chain and the audit, quantified with <code>polligen.reco</code> (<code>evgen/scripts/reco_chain_figures.py</code>) · §7 (same day, second pass): the reconstructed-level pseudo-experiments of WP3 — money plots 5R, 7R and 6R from <code>polligen.recopseudo</code> (<code>money_cos2phi_reco.py</code>, <code>money_cos2phi_coherent_reco.py</code>; 26 tests) · revised 2026-08-25 against the references in <code>refs/</code>: the ePIC Roman-Pot slot geometry and beam-effect resolution [17], the ZEUS bounds on the diffractive azimuthal harmonics [13,14], the exact spin-1 harmonics at finite γ [12], and the anchor's frame and convention [9] · second revision 2026-08-25 from the code review (docs/code_review_2026-08-25.md): the δQ²/Q² and φ′-dilution statements of §3, the ratio formula, the acceptance-stability requirement (§3, §7.1), the sign-convention note of §2</p>
+  <p class="dateline">2026-08-24 · revised 2026-08-25 · companion to the cos 2φ projection report (money plots 5–7) and to plans/07 WP3 · §§1–6: the chain and the audit, quantified with <code>polligen.reco</code> (<code>evgen/scripts/reco_chain_figures.py</code>) · §7: the reconstructed-level pseudo-experiments of WP3 — money plots 5R, 7R and 6R from <code>polligen.recopseudo</code> (<code>money_cos2phi_reco.py</code>, <code>money_cos2phi_coherent_reco.py</code>; 26 tests) · modification history in Appendix A</p>
 
   <p class="lede">The projection report presents the double-helicity-flip structure function
   Δ(x,Q²) as φ′ pseudo-data and as extracted xΔ points. This note asks the experimentalist's
@@ -92,8 +92,9 @@
   step, which of these operations the simulation performs. The audit's conclusion is that the
   generator-level machinery is complete and validated but that the <i>measurement</i> layer —
   four-vectors, frames, kinematic reconstruction, spin-state sorting, the Roman-Pot
-  measurement — was absent; a seed of that layer now exists, and three of its first results
-  change the analysis design.</p>
+  measurement — was absent from the truth-level simulation; that layer exists in
+  <code>polligen.reco</code> and <code>polligen.recopseudo</code> (§7), and three of its
+  results change the analysis design.</p>
 
   <div class="callout">
     <b>Three findings that change the analysis.</b>
@@ -150,7 +151,7 @@
   <p>(Sign convention: the b₁, b₂ terms follow the program's transcription; in the HJM/HERMES
   convention — Cosyn et al. [12], Eq. 27, A<sub>zz</sub> = −(2/3)b₁/F₁ — they carry the opposite
   sign, which flips the sign of the constant κ of the spin-state ratio in §3 but nothing in the
-  Δ sector; code review 2026-08-25, G1.)</p>
+  Δ sector; docs/code_review_2026-08-25.md, item G1.)</p>
 
   <p><b>Which angle.</b> The φ of the master formula is defined in a frame in which the
   target momentum P and the virtual photon q are collinear; it is the azimuth of the
@@ -211,7 +212,7 @@
   their Eq. 20, which is why that axis is the clean choice for A<sub>zz</sub> and the
   transverse axis the only choice for Δ.) For x ≳ 0.2 at Q² ≈ 1 GeV² (γ² ≈ 0.1) the leakage
   grows to tens of percent of a 10⁻³ scenario, so the A<sub>zz</sub>-based subtraction is
-  required there (code review G2).</p>
+  required there (docs/code_review_2026-08-25.md, item G2).</p>
 
   <figure>
     <div class="panel">
@@ -292,8 +293,8 @@
 
   <p>has a good Q² (δQ²/Q² ≈ δE′/E′ ⊕ cot(θ′/2)δθ′, dominated by the angle at the sweet
   spots: 5.2% for the 3 mrad track table used in §7 at θ′ ≈ 0.1 rad, 1.6% at spot 4,
-  2% if the backward disks reach 1 mrad — the table is an unsourced placeholder, code review
-  2026-08-25) but loses y as
+  2% if the backward disks reach 1 mrad — the track table is an unsourced placeholder) but
+  loses y as
   (1 − y)/y: at y = 0.01 a 1.2% energy resolution gives δy/y = 120%, and the electron-ring
   energy spread alone (≈ 10⁻³) gives 10%. Table 1 shows where money plot 5 sits. At the
   mid-energy configuration three of the four sweet spots are at y = 0.010–0.025, the
@@ -307,7 +308,7 @@
   collinear initial-state radiation, and both are insensitive to particles lost along the ion
   beam (E − p<sub>z</sub> ≈ 0 for forward remnants). Their resolution is set by hadronic
   calorimetry and by losses in the electron direction. The documented expectation
-  (2026-08-25, refs/): the ATHENA proposal uses e−Σ or DA for y ≲ 0.1 — "at the lowest y
+  (refs/): the ATHENA proposal uses e−Σ or DA for y ≲ 0.1 — "at the lowest y
   values the electron method resolution degrades like 1/y" — with a y resolution of
   ≈ 25% at y ≈ 0.01 improving to ≈ 10% at y ≈ 0.1 and 20–30% for JB throughout
   (its Sec. 3.1, Fig. 22) [18]; the ePIC kinematic-fit study smears the hadronic
@@ -361,7 +362,7 @@
   its cos 2φ′ harmonic between the m = ±1-rich and the m = 0-rich samples enters Â directly
   as (ε₂⁺ − ε₂⁰)/(P₊ − P₀) — 10⁻³ fakes half the signal — so the two states must alternate
   bunch by bunch within a fill (the pattern of Schematic 2), or the harmonic must be stable
-  to 10⁻⁴ between fills (code review 2026-08-25, docs/code_review_2026-08-25.md §5.1).
+  to 10⁻⁴ between fills (docs/code_review_2026-08-25.md, §5.1).
   A weighted least-squares fit of T(φ′) = c + d cos 2φ′ (+ e sin 2φ′), with T obtained from
   R bin by bin (the inversion is exact), gives Â = d after the finite-bin dilution sin w/w
   is divided out, and κ = c is the transverse tensor asymmetry of the b₁ sector, a
@@ -377,9 +378,8 @@
   factor two. Figure 1(d) shows the pseudo-experiments: under an efficiency
   ε = 1 + 0.03 cos 2φ′ + 0.02 cos φ′ the single-fill fit returns Â = 0.062 for a true
   0.0118 — the acceptance harmonic divided by P<sub>zz</sub> — while the ratio is unbiased with
-  the analytic error. The projection report's statement that the modulation is
-  "self-normalized within a single fill" (revised there on 2026-08-25) held for relative
-  luminosity but not for acceptance;
+  the analytic error. A single-state modulation is "self-normalized" with respect to
+  relative luminosity but not with respect to acceptance;
   since a percent-level cos 2φ harmonic aligned with the vertical axis is expected (the
   crossing-angle plane is horizontal, module boundaries and dead areas are not azimuthally
   random, and the Roman-Pot cutout is a rectangle), the spin-state-sorted ratio is the
@@ -459,7 +459,7 @@
       <text x="512" y="242" font-size="8">purity 0.64–0.68 at 25% (0.74–0.83 at 15–20%)</text>
       <rect x="504" y="256" width="226" height="62" rx="5" class="boxa"/>
       <text x="512" y="271" font-size="8.4" font-weight="600" fill="#0067A0">5  Spin-state ratio and fit</text>
-      <text x="512" y="283" font-size="8">R(φ′) = Σ<tspan font-size="6" dy="2">f</tspan><tspan dy="-2"> w</tspan><tspan font-size="6" dy="2">f</tspan><tspan dy="-2">Y</tspan><tspan font-size="6" dy="2">f</tspan><tspan dy="-2"> / Σ</tspan><tspan font-size="6" dy="2">f</tspan><tspan dy="-2"> Y</tspan><tspan font-size="6" dy="2">f</tspan><tspan dy="-2">, Y</tspan><tspan font-size="6" dy="2">f</tspan><tspan dy="-2"> = N</tspan><tspan font-size="6" dy="2">f</tspan><tspan dy="-2">/L</tspan><tspan font-size="6" dy="2">f</tspan></text>
+      <text x="512" y="283" font-size="8">R(φ′) = Σ<tspan font-size="6" dy="2">f</tspan><tspan dy="-2"> w</tspan><tspan font-size="6" dy="2">f</tspan><tspan dy="-2">N</tspan><tspan font-size="6" dy="2">f</tspan><tspan dy="-2"> / Σ</tspan><tspan font-size="6" dy="2">f</tspan><tspan dy="-2"> N</tspan><tspan font-size="6" dy="2">f</tspan><tspan dy="-2">, w</tspan><tspan font-size="6" dy="2">f</tspan><tspan dy="-2"> = P</tspan><tspan font-size="6" dy="2">f</tspan><tspan dy="-2"> − P̄ (L-weighted)</tspan></text>
       <text x="512" y="295" font-size="8">fit T = c + d cos 2φ′ + e sin 2φ′: common acceptance cancels</text>
       <text x="512" y="307" font-size="8">bin by bin; rel. luminosity → constant c only;</text>
       <text x="512" y="317" font-size="8">single-fill fit biased by ε's harmonic ÷ P<tspan font-size="6" dy="2">zz</tspan></text>
@@ -610,9 +610,8 @@
   extract a<sub>t</sub> and a<sub>e</sub> from the spin-state ratio R(α, β); in that ratio
   u(α − β) survives in the denominator and feeds the pure harmonics only at second order
   (u₁² ≈ 1%) but the mixed term at first order (a<sub>t</sub>u₁/2), which fixes the fit
-  model. (The normalization of the anchor's a<sub>n</sub> was settled from the paper's text on
-  2026-08-24: its Eq. (9) uses 1 + 2Σa<sub>n</sub> cos nΦ, so the cos 2β coefficient is 2a₂ —
-  §7 and the projection report's convention note; the projection's coherent numbers are
+  model. (The anchor's Eq. (9) uses 1 + 2Σa<sub>n</sub> cos nΦ, so the cos 2β coefficient is
+  2a₂ — §7 and the projection report's convention note; the projection's coherent numbers are
   conservative by that factor two.)</p>
 
   <ol class="steps" start="5">
@@ -747,12 +746,12 @@
   <h2>5 · Does the simulation do this? An audit</h2>
 
   <p>The table walks the chain of §§3–4 and states, for each step, what an experiment does,
-  what the repository [11] does, and where. "Seeded" marks the operations added in this run in
-  <code>evgen/polligen/reco.py</code> (15 tests in <code>tests/test_reco.py</code>); they are
-  building blocks and quantified checks. The second pass of the same day composed them into
-  the reconstructed-level pseudo-experiments of §7 (<code>polligen/recopseudo.py</code>), which
-  closes the "missing → seeded" rows below for the inclusive analysis and for the coherent
-  two-azimuth fit; the table is kept as the record of the state before that pass.</p>
+  what the repository [11] does, and where. "Seeded" marks the operations provided by
+  <code>evgen/polligen/reco.py</code> (15 tests in <code>tests/test_reco.py</code>) — building
+  blocks and quantified checks — which <code>polligen/recopseudo.py</code> composes into the
+  reconstructed-level pseudo-experiments of §7; §7 closes the "missing → seeded" rows below
+  for the inclusive analysis and for the coherent two-azimuth fit. The table records the
+  state of the truth-level simulation on which money plots 5–7 rest.</p>
 
   <table>
     <tr><th>Step</th><th>Experiment</th><th>Repository</th><th>Status</th></tr>
@@ -778,7 +777,7 @@
     <b>Verdict.</b> The simulation is a validated <i>truth-level</i> modulation machine with
     exact statistics: the physics kernel, the spin-density bookkeeping and the binned
     estimator are correct and tested, and the money plots are statistically faithful
-    projections. What it did not contain is the measurement layer: no four-vectors, no
+    projections. What the truth-level simulation did not contain is the measurement layer: no four-vectors, no
     frames, no kinematic-reconstruction method, no hadronic final state, no reconstructed
     azimuth, no spin-state-sorted ratio, no Roman-Pot measurement model. Two of the missing
     pieces matter for the headline numbers rather than for their decoration — the
@@ -786,7 +785,7 @@
     energy strategy, not the reach) and the estimator (which changes the error by 0.67× and
     removes an uncontrolled systematic) — and one changes the coherent case (the angular cut
     and the cutout geometry). None of them touches the generator kernel; all of them belong to
-    plans/07 WP3.
+    plans/07 WP3 and are realized in §7.
   </div>
 
   <h3>5.1 · What a minimal realistic chain looks like in polligen</h3>
@@ -813,32 +812,37 @@
   The hadronic final state itself, the breakup backgrounds and the real acceptance maps
   remain Phase-2 items and are the honest limit of "simple detector effects".</p>
 
-  <h2>6 · Recommendations</h2>
+  <h2>6 · Recommendations and their status</h2>
 
   <ol class="steps">
     <li>Re-derive money plots 5 and 7 in reconstructed (x, Q²) bins with the mixed method
     and a 15–30% hadronic-y band; quote the electron-method-only variant at y ≥ 0.05 as
-    the fallback, and use the low-energy configuration for the x ≈ 0.1 bins.</li>
+    the fallback, and use the low-energy configuration for the x ≈ 0.1 bins. <i>Status:</i>
+    done at the 25% central value (§7, money plots 5R and 7R; the electron-method variant is
+    the <code>--y-method electron</code> option); the band and the low-energy bins remain.</li>
     <li>Replace the single-fill fit by the spin-state-sorted ratio with the
     m = ±1-rich / m = 0-rich pattern in all projections; update δA to
     2√(2/N)/(P<sub>+</sub> − P<sub>0</sub>) (0.67× the current values at the same source
     purity) and drop the "self-normalized within a single fill" wording in favour of
-    "acceptance and relative luminosity cancel in the spin-state ratio" (done in the
-    projection report's and the primer's 2026-08-25 revisions).</li>
+    "acceptance and relative luminosity cancel in the spin-state ratio". <i>Status:</i>
+    adopted in §7 and in the projection report and the primer.</li>
     <li>Fit cos 2φ′ and sin 2φ′ together; report the sin 2φ′ coefficient as the spin-axis
-    calibration.</li>
+    calibration. <i>Status:</i> done in the §7 fit.</li>
     <li>In the coherent channel, present the anchored deformation term as a modulation of
     the recoil azimuth, add the two-azimuth harmonic fit to the analysis description, replace
     the constant 0.20 GeV cut by the angular cut 10σ<sub>θ</sub>·6p<sub>u</sub> in
     <code>coherent.py</code> (curves versus σ<sub>θ</sub> and p<sub>u</sub>, plans/07 WP5), and
-    state the cutout geometry as an explicit assumption to be replaced by the ePIC design
-    (partly done: <code>tag_acceptance_angular</code>, <code>project_coherent(sigma_theta_list)</code>;
-    the curves are WP5).</li>
+    state the cutout geometry as an explicit assumption to be replaced by the ePIC design.
+    <i>Status:</i> the angular acceptance exists (<code>tag_acceptance_angular</code>,
+    <code>project_coherent(sigma_theta_list)</code>) and §7 uses it; the curves versus
+    σ<sub>θ</sub> and p<sub>u</sub> are WP5.</li>
     <li>Resolve the a<sub>n</sub> normalization convention of the deuteron anchor at the
-    source before the amplitudes are quoted again (settled, §7: the coefficient is 2a₂).</li>
+    source before the amplitudes are quoted again. <i>Status:</i> settled — the coefficient is
+    2a₂ (§7).</li>
     <li>Ask the ePIC far-forward and inclusive working groups for two numbers the
     simulation cannot produce: the Σ-method δy/y at y = 0.01–0.05 for e + light ions, and the
-    Roman-Pot cutout dimensions (β*, emittance, pot geometry) for the light-ion optics.</li>
+    Roman-Pot cutout dimensions (β*, emittance, pot geometry) for the light-ion optics.
+    <i>Status:</i> open (plans/04 #20, #21).</li>
   </ol>
 
   <h2>7 · Reconstructed-level closure: money plots 5R, 7R and 6R</h2>
@@ -916,7 +920,7 @@
   illustrative), and divergence smearing. The two-azimuth expected counts per fill are
   exact α-integrals per event of 1 + u₁cos(α−β) + u₂cos 2(α−β) + P<sub>f</sub>[a<sub>e</sub>cos 2α
   + a<sub>t</sub>(t) cos 2β + a<sub>m</sub>cos(α+β)] with the <i>true</i> β and t inside and the
-  reconstructed β and |t| = p<sub>T</sub>² for the binning. Two lessons came out of this pass.
+  reconstructed β and |t| = p<sub>T</sub>² for the binning. Two lessons follow.
   First, the anchor convention: the full text of the deuteron paper fixes
   d²σ/dΦd|t| ∝ 1 + 2Σ<sub>n</sub>a<sub>n</sub>e<sup>inΦ</sup> (its Eq. 9, with Φ the angle
   between the vector-meson momentum and the polarization axis in the γ*d frame), so the
@@ -962,7 +966,7 @@
     assumption.</figcaption>
   </figure>
 
-  <h3>7.1 · Audit notes for this pass</h3>
+  <h3>7.1 · Audit notes and known limits</h3>
   <p>Checked independently of the code that produced the numbers: the analytic error of
   the two-fill ratio, 2√(2/N)/(P<sub>+</sub>−P<sub>0</sub>)/dilution, reproduces the
   pseudo-experiment spreads and the printed errors (spot 1: 1.21×10⁻⁴ for N = 1.72×10⁸);
@@ -975,8 +979,8 @@
   (δ·P̄/σ<sub>P</sub>² — a 2% offset moves the amplitude by 0.7%, a 10⁻⁴ offset by
   3×10⁻⁵); empty φ bins inside the cutout are handled with zero weight; the α-integrals
   of the coherent counts are analytic per event and the β smearing is absorbed in the MC
-  basis, so the fitted coefficients refer to the unsmeared truth. Known limits of this
-  pass, stated rather than hidden: the hadronic y is a parametrized 25% Gaussian (the
+  basis, so the fitted coefficients refer to the unsmeared truth. Known limits, stated
+  rather than hidden: the hadronic y is a parametrized 25% Gaussian (the
   ePIC study's own smearing and the ATHENA value at y ≈ 0.01, inside the 15–30% of
   [18–20]; no light-ion number exists, and at the sweet spots 25% is an absolute 50–125 MeV on
   Σ<sub>h</sub> = 0.2–0.5 GeV, plans/04 #21); u₁, u₂
@@ -984,7 +988,7 @@
   φ′-efficiency harmonics are illustrative magnitudes; radiative corrections and
   backgrounds are not included; the 7R points are centered with the injected model (as in
   money plot 7); the template assumes the linear t-shape it fits, so a different shape is
-  a model systematic to be varied. Added by the code review of 2026-08-25
+  a model systematic to be varied. Further limits established by the code review
   (docs/code_review_2026-08-25.md): the φ′ efficiency is common to both fills here — the
   ratio cancels only a common acceptance, so bunch-by-bunch alternation (or 10⁻⁴ stability of
   the cos 2φ′ harmonic between fills) is a requirement of the measurement, and the cutout's
@@ -1019,6 +1023,20 @@
     <p>[19] S. Maple (ePIC), <i>Tracking and inclusive DIS reconstruction with the ePIC detector at the EIC</i>, seminar, University of Birmingham, 11 December 2024 (slides: kinematic reconstruction methods, the Bayesian kinematic fit, smearing resolutions σ(δ<sub>h</sub>)/δ<sub>h</sub> = 25%, Δy/y per method in y bins, full ePIC simulation at Q² &gt; 100 GeV²).</p>
     <p>[20] M. Arratia, D. Britzger, O. Long, B. Nachman, <i>Reconstructing the kinematics of deep inelastic scattering with deep learning</i>, Nucl. Instrum. Meth. A 1025 (2022) 166164, arXiv:2110.05505 (Table 1: all classical methods; Fig. 5: RMS of Q², y, x versus y for the ATHENA fast simulation; Sec. 5: acceptance and noise effects on the hadronic methods at low y). Related: R. Aggarwal, A. Caldwell, <i>Kinematic fitting of neutral current events in deep inelastic ep collisions</i>, JINST 17 (2022) P09035, arXiv:2206.04897. Local copies of [9], [12]–[20] are indexed in <code>refs/README.md</code> and <code>refs/refs_dict.json</code>.</p>
   </div>
+
+  <h2>Appendix A · Modification history</h2>
+
+  <p>The main text states the current content only; this appendix records what changed and
+  when (the repository history carries the full diffs).</p>
+
+  <table>
+    <tr><th>Date</th><th>Revision</th></tr>
+    <tr><td class="mono">2026-08-24</td><td>First version: §§1–6 — what is measured, angles and frames (the covariant azimuth, the head-on frame), the inclusive and coherent chains, the audit table of the simulation and the recommendations — quantified with the new <code>polligen.reco</code> module (Figures 1–2, Schematics 1–3). Same day: §7 added — the reconstructed-level pseudo-experiments of WP3 (money plots 5R, 7R, 6R from <code>polligen.recopseudo</code>; the acceptance-weighted template basis for the cutout; the anchor's cos 2Φ coefficient 2a₂ verified from the paper's text).</td></tr>
+    <tr><td class="mono">2026-08-25</td><td>Revised against the reference copies in refs/: the ePIC Roman-Pot slot geometry and beam-effect resolution [17] (slot-like cutout as the 6R default), the ZEUS bounds on the diffractive harmonics [13,14] (u₁ = 0.05, u₂ = 0.02), the exact spin-1 harmonics at finite γ [12], the anchor's frame and convention [9]; the hadronic-y resolution set to the documented 25% [18–20] and money plots 5R/7R rerun (Table 2).</td></tr>
+    <tr><td class="mono">2026-08-25</td><td>Corrections from the code review (docs/code_review_2026-08-25.md): the electron-method δQ²/Q² of §3 (5.2% with the 3 mrad track table, 2% at 1 mrad — an unsourced placeholder) and the φ′ dilution (0.985–0.999); the ratio written with raw counts and luminosity-weighted weights; the acceptance-stability requirement (bunch-by-bunch alternation) in §3 and §7.1; the coherent pseudo-experiment described as it is (no electron side, lab β); weight σ<sub>c</sub>/n<sub>kept</sub>; the Table 2 caption; the sign-convention note of §2; the further known limits of §7.1 (K model dependence, EMCal term at all η, background-free 6R, u₁, u₂ and the 6R luminosity shares exact).</td></tr>
+    <tr><td class="mono">2026-08-25</td><td>Consistency pass: 25% central wording; Table 1 low-energy column replaced by the same-(x, Q²) values (0.049 / 0.124 / 0.054 / 0.247) with the per-energy re-selection explained; the Figure 2b fake-harmonic range corrected to −0.36…−0.45 (the 6R slot's −0.77 stated separately); efficiency 0.37–0.64, N = 1.72×10⁸, 0.64–0.70; the settled 2a₂ convention replaces the earlier caveat; the recommendations annotated with their status; [7], [8], [10], [11], [16] cited in the body; the 6R table and figure labelled background-free by assumption; the HERMES b₁/F₁ bound qualified; the growth of the O(γ²) leakage at x ≳ 0.2 stated.</td></tr>
+    <tr><td class="mono">2026-08-25</td><td>Modification history moved to this appendix; the main text restated as current content; the Schematic 2 ratio formula aligned with §3.</td></tr>
+  </table>
 
   <div class="foot">
     Conventions: head-on frame with the ion along +z and the electron along −z; θ′ is the
