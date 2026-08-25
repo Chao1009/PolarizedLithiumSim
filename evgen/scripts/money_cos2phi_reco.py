@@ -114,6 +114,13 @@ def main():
     ap.add_argument("--eff-cos2", type=float, default=0.03,
                     help="cos 2phi' harmonic of the phi' efficiency")
     ap.add_argument("--eff-cos1", type=float, default=0.02)
+    ap.add_argument("--eff-cos2-split", type=float, default=0.0,
+                    help="DIFFERENCE of the cos 2phi' efficiency harmonic "
+                         "between the m=+-1-rich and m=0-rich fills.  A "
+                         "common harmonic cancels in the spin-state ratio; "
+                         "a difference does not, and fakes an amplitude "
+                         "(e_+ - e_0)/(P_+ - P_0) (code review F1).  "
+                         "0 = common (the default of money plot 5R)")
     ap.add_argument("--rel-lumi-offset", type=float, default=1e-3,
                     help="relative-luminosity error on the +Pzz fill, "
                          "unknown to the analysis")
@@ -171,8 +178,20 @@ def main():
     cat_plus = plan.categories[0]
     pzz_list = [0.6 * args.pzz / 0.6, -2.0 * args.pzz]
 
-    def phi_eff(ph):
-        return 1.0 + args.eff_cos2 * np.cos(2 * ph) + args.eff_cos1 * np.cos(ph)
+    def _eff(e2):
+        return lambda ph: (1.0 + e2 * np.cos(2 * ph)
+                           + args.eff_cos1 * np.cos(ph))
+
+    if args.eff_cos2_split:
+        eff2 = [args.eff_cos2 + 0.5 * args.eff_cos2_split,
+                args.eff_cos2 - 0.5 * args.eff_cos2_split]
+        phi_eff = [_eff(e) for e in eff2]
+        bias = reco.fill_acceptance_bias(eff2, pzz_list, lumi_assumed)
+        print("fill-dependent phi' efficiency: cos2 harmonic %.4f / %.4f "
+              "-> predicted fake amplitude %+.3e (the spin-state ratio "
+              "cancels only a COMMON acceptance)" % (eff2[0], eff2[1], bias))
+    else:
+        phi_eff = _eff(args.eff_cos2)
 
     # --- money plot 5R -----------------------------------------------------
     fig = plt.figure(figsize=(12.5, 6.8))

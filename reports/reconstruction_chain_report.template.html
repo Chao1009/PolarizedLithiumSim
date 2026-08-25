@@ -784,7 +784,7 @@
     <tr><td>Hadronic final state and hadron-side detection</td><td>All tracks and clusters except e′, through the detector</td><td><code>hfs.HadronResponse</code> (tracker coverage and thresholds, EMCal/HCal, calorimeter noise) on <code>hfs.ToyHFS</code>; the PYTHIA 8 sample of <code>tools/pythia8</code> needs eic-shell</td><td class="status-part">done with a toy generator</td></tr>
     <tr><td>The physics azimuth</td><td>Covariant φ<sub>S</sub> from k, k′, P, S</td><td><code>reco.azimuth_wrt_lepton_plane</code>, verified against an explicit collinear-frame construction to 10⁻¹³</td><td class="status-ok">done</td></tr>
     <tr><td>Reconstructed (x, Q²) binning and migration</td><td>Reco bins, migration matrix, unfolding</td><td><code>RecoResponse.mask_reco</code> / <code>bin_summary</code>: purity, efficiency and the reco-bin amplitude per bin; the correction is an MC bin-centering factor, not an unfolding</td><td class="status-part">done, no unfolding</td></tr>
-    <tr><td>Spin-state-sorted ratio estimator</td><td>R(φ′) of m = ±1-rich vs m = 0-rich fills; fit with sin 2φ′</td><td><code>reco.spin_state_ratio</code>, <code>harmonic_ratio_fit</code> and its two-azimuth form; the efficiency is common to both fills — a fill-dependent harmonic is not modelled (§7.1)</td><td class="status-ok">done</td></tr>
+    <tr><td>Spin-state-sorted ratio estimator</td><td>R(φ′) of m = ±1-rich vs m = 0-rich fills; fit with sin 2φ′</td><td><code>reco.spin_state_ratio</code>, <code>harmonic_ratio_fit</code> and its two-azimuth form, with the fill-dependent efficiency the ratio cannot cancel (<code>fill_acceptance_bias</code>, <code>money_cos2phi_reco.py --eff-cos2-split</code>)</td><td class="status-ok">done</td></tr>
     <tr><td>Full-luminosity pseudo-data</td><td>—</td><td><code>sample.phi_histogram_pseudo</code> (truth level) and <code>RecoResponse.expected_counts</code> (reconstructed level): exact expected counts per φ′ bin, Poisson-fluctuated</td><td class="status-ok">done</td></tr>
     <tr><td>Amplitude → Δ</td><td>Kinematic conversion with measured F₂, R; unfolding</td><td><code>recopseudo.delta_from_amplitude</code>: model bin-centering factor K with migration included; F₂ from the model rather than from the same data</td><td class="status-part">partial</td></tr>
     <tr><td>Radiative corrections</td><td>Unpolarized RC on the yields; tensor RC</td><td>None (plans/07 WP4 bound planned)</td><td class="status-no">missing</td></tr>
@@ -985,11 +985,16 @@
   backgrounds are not included; the 7R points are centered with the injected model (as in
   money plot 7); the template assumes the linear t-shape it fits, so a different shape is
   a model systematic to be varied. From the code review
-  (docs/code_review_2026-08-25.md): the φ′ efficiency is common to both fills here — the
-  ratio cancels only a common acceptance, so bunch-by-bunch alternation (or 10⁻⁴ stability of
-  the cos 2φ′ harmonic between fills) is a requirement of the measurement, and the cutout's
-  fake harmonic must be stable to ≈ 1% of the vertical envelope for a 1% a<sub>t</sub>
-  systematic; K is model-dependent at the 3–11% level between the repository's Δ shapes
+  (docs/code_review_2026-08-25.md): the φ′ efficiency of Table 2 is common to both fills, and
+  the ratio cancels only a common acceptance. The fill-dependent case is now modelled rather
+  than argued — a difference δε₂ of the cos 2φ′ efficiency harmonic between the m = ±1-rich
+  and m = 0-rich samples enters Â as δε₂/(P₊ − P₀), verified against the pseudo-experiments
+  (<code>reco.fill_acceptance_bias</code>): δε₂ = 10⁻³ fakes 5.6×10⁻⁴, which is 5% of the
+  sweet-spot amplitudes but 4.6 times the one-year statistical error and 14 times the
+  ten-year one. Bunch-by-bunch alternation, or stability of the harmonic to ≈ 10⁻⁴ between
+  fills, is therefore a requirement of the measurement, and the cutout's fake harmonic must
+  be stable to ≈ 1% of the vertical envelope for a 1% a<sub>t</sub> systematic; K is
+  model-dependent at the 3–11% level between the repository's Δ shapes
   (moment_A/moment_B/toy at the four spots), larger than the 10-year statistical errors;
   the EMCal term 2%/√E ⊕ 1% is the backward specification applied at all η (the
   sweet-spot electrons are backward, the high-x bins of the amplitude panels are not); the

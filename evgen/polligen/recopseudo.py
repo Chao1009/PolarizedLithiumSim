@@ -277,21 +277,24 @@ class RecoResponse:
                         phi_eff=None, nsub=32):
         """Exact expected phi' counts per category (F, K) for the events
         in `mask` (a reco-bin mask), at integrated luminosity lumi_pb
-        [pb^-1] shared by the categories' lumi_fraction.  Optional
-        `phi_eff(phi')`: a smooth phi'-dependent efficiency (the thing
-        the ratio estimator must cancel)."""
+        [pb^-1] shared by the categories' lumi_fraction.  `phi_eff` is
+        None, one smooth eps(phi') common to every category -- which the
+        ratio estimator cancels exactly -- or a SEQUENCE of one per
+        category, the fill-dependent case it cannot (F1;
+        reco.fill_acceptance_bias gives the analytic bias)."""
         edges = np.asarray(edges, dtype=float)
         frac = (np.arange(nsub) + 0.5) / nsub
         sub = edges[:-1, None] + frac[None, :] * (edges[1:] - edges[:-1])[:, None]
-        epsi = np.ones_like(sub) if phi_eff is None else phi_eff(sub)
+        effs = reco.per_fill_acceptance(phi_eff, len(categories))
         dphi = (edges[1:] - edges[:-1]) / (2.0 * np.pi)
-        base = epsi.mean(axis=1) * dphi
-        mod = (epsi * np.cos(2.0 * sub)).mean(axis=1) * dphi
         we = (self.w * self.eff)[mask]
         dil = self.dil[mask]
         cells = self.cell[mask]
         out = np.empty((len(categories), edges.size - 1))
-        for f, cat in enumerate(categories):
+        for f, (cat, eff) in enumerate(zip(categories, effs)):
+            epsi = np.ones_like(sub) if eff is None else eff(sub)
+            base = epsi.mean(axis=1) * dphi
+            mod = (epsi * np.cos(2.0 * sub)).mean(axis=1) * dphi
             den, num = self._fill_arrays(cat)
             s_den = float((we * den[cells]).sum())
             s_num = float((we * dil * num[cells]).sum())
@@ -304,9 +307,10 @@ def measure_inclusive(resp, plan, lumi_pb, mask, rng=None, nbins=24,
                       lumi_assumed=None):
     """One reconstructed-level pseudo-measurement of a reco bin: expected
     spin-sorted phi' counts -> Poisson draw -> spin-state ratio fit.
-    `lumi_assumed`: luminosity fractions the ANALYSIS believes (default:
-    the plan's true shares; pass biased values to emulate a relative-
-    luminosity error).  Returns the fit dict plus counts and the truth
+    `phi_eff`: None, one efficiency common to every fill, or one per
+    fill (reco.per_fill_acceptance).  `lumi_assumed`: luminosity
+    fractions the ANALYSIS believes (default: the plan's true shares;
+    pass biased values to emulate a relative-luminosity error).  Returns the fit dict plus counts and the truth
     references of `bin_summary` (computed by the caller)."""
     rng = rng or np.random.default_rng(20260824)
     edges = np.linspace(0.0, 2.0 * np.pi, nbins + 1)

@@ -56,8 +56,11 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
    *Code review 2026-08-25 (docs/code_review_2026-08-25.md, F1):* the
    spin-state ratio cancels the φ′ acceptance only when both spin states
    see the same acceptance — a 10⁻³ difference of its cos 2φ′ harmonic
-   between the m = ±1-rich and m = 0-rich samples fakes half the
-   gluonometry signal ((ε₂⁺ − ε₂⁰)/(P₊ − P₀)), and a 1% change of the
+   between the m = ±1-rich and m = 0-rich samples fakes
+   (ε₂⁺ − ε₂⁰)/(P₊ − P₀) = 5.6×10⁻⁴ — half a Δ/F₁ ~ 10⁻³ signal, 5% of the
+   sweet-spot amplitudes, and 4.6 one-year statistical errors (modelled
+   since 2026-08-25 by `reco.fill_acceptance_bias` and
+   `money_cos2phi_reco.py --eff-cos2-split`; plans/08 A1).  A 1% change of the
    Roman-Pot vertical envelope between the samples biases the coherent
    a_t by 1.3%. Bunch-by-bunch alternation is therefore a requirement of
    the measurement; fill-by-fill needs 10⁻⁴ acceptance stability.

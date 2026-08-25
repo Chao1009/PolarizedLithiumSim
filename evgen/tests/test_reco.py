@@ -296,3 +296,80 @@ def test_rp_measure_matches_analytic_acceptance_and_smears_phi():
     assert np.std(dphi) == pytest.approx(p_a * sig / np.mean(m["pT"][acc]),
                                          rel=0.3)
     np.testing.assert_allclose(m["t_reco"][acc], -m["pT"][acc] ** 2)
+
+
+# --- fill-dependent phi' acceptance (code review F1) ----------------------
+
+PZZ_FLIP = (0.6, -1.2)          # m = +-1-rich / m = 0-rich pattern
+
+
+def _harmonic_eff(e2, e1=0.0):
+    return lambda phi: 1.0 + e2 * np.cos(2.0 * phi) + e1 * np.cos(phi)
+
+
+def _fit_two_fills(amp, eps2_per_fill, n_total=1e9, nbins=24):
+    """Noise-free expected counts under a per-fill efficiency, refitted."""
+    edges = np.linspace(0.0, 2.0 * np.pi, nbins + 1)
+    counts, frac = reco.expected_counts_by_fill(
+        n_total, PZZ_FLIP, amp, edges,
+        acceptance=[_harmonic_eff(e) for e in eps2_per_fill])
+    return reco.harmonic_ratio_fit(counts, frac, PZZ_FLIP, edges,
+                                   with_sin=True)
+
+
+def test_common_phi_efficiency_cancels_exactly():
+    """The estimator's whole point: a COMMON eps(phi') drops out."""
+    fit = _fit_two_fills(1e-3, (0.03, 0.03))
+    assert fit["amp"] == pytest.approx(1e-3, abs=1e-8)
+    assert fit["amp_sin"] == pytest.approx(0.0, abs=1e-8)
+
+
+def test_fill_dependent_efficiency_bias_matches_analytic():
+    """dA = sum_f l_f (P_f - Pbar) e_f / sigma_P^2; for two equal-luminosity
+    fills that is (e_+ - e_0)/(P_+ - P_0) -- the code review's F1 table."""
+    for eplus, ezero in ((0.03, 0.02), (0.03, 0.029), (0.03, 0.0299)):
+        predicted = reco.fill_acceptance_bias((eplus, ezero), PZZ_FLIP)
+        assert predicted == pytest.approx(
+            (eplus - ezero) / (PZZ_FLIP[0] - PZZ_FLIP[1]), rel=1e-12)
+        fit = _fit_two_fills(1e-3, (eplus, ezero))
+        assert fit["amp"] - 1e-3 == pytest.approx(predicted, rel=2e-3)
+    # the tabulated case: 0.03 vs 0.02 fakes 5.6x a Delta/F1 ~ 1e-3 signal
+    assert reco.fill_acceptance_bias((0.03, 0.02), PZZ_FLIP) == \
+        pytest.approx(5.5556e-3, rel=1e-4)
+
+
+def test_fill_acceptance_bias_is_zero_for_a_common_harmonic():
+    assert reco.fill_acceptance_bias((0.03, 0.03), PZZ_FLIP) == 0.0
+    assert reco.fill_acceptance_bias((0.03, 0.03, 0.03),
+                                     (0.6, -1.2, 0.0)) == pytest.approx(0.0)
+
+
+def test_fill_acceptance_bias_weights_by_luminosity():
+    """For TWO fills the bias is (e_+ - e_0)/(P_+ - P_0) at any luminosity
+    split -- the l_1 l_2 (P_1 - P_2) factors cancel between numerator and
+    sigma_P^2 -- so a lopsided run plan buys no protection.  With three
+    fills the luminosity weighting is real."""
+    lf = (0.7, 0.3)
+    edges = np.linspace(0.0, 2.0 * np.pi, 25)
+    counts, frac = reco.expected_counts_by_fill(
+        1e9, PZZ_FLIP, 1e-3, edges, lumi_fractions=lf,
+        acceptance=[_harmonic_eff(0.03), _harmonic_eff(0.02)])
+    fit = reco.harmonic_ratio_fit(counts, frac, PZZ_FLIP, edges)
+    predicted = reco.fill_acceptance_bias((0.03, 0.02), PZZ_FLIP,
+                                          lumi_fractions=lf)
+    assert predicted == pytest.approx(0.01 / 1.8, rel=1e-12)
+    assert fit["amp"] - 1e-3 == pytest.approx(predicted, rel=3e-3)
+
+    three = (0.6, -1.2, 0.0)
+    e3 = (0.03, 0.02, 0.03)
+    assert reco.fill_acceptance_bias(e3, three, (1, 1, 1)) != \
+        pytest.approx(reco.fill_acceptance_bias(e3, three, (1, 1, 4)),
+                      rel=1e-3)
+
+
+def test_per_fill_acceptance_normalizes_and_validates():
+    assert reco.per_fill_acceptance(None, 3) == [None, None, None]
+    f = _harmonic_eff(0.01)
+    assert reco.per_fill_acceptance(f, 2) == [f, f]
+    with pytest.raises(ValueError):
+        reco.per_fill_acceptance([f, f, f], 2)

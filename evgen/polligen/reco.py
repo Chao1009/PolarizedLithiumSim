@@ -21,7 +21,8 @@ Scattered-electron reconstruction
   electron_method, electron_method_resolution, smear_electron,
   hadronic_y (parametrized Sigma/Jacquet-Blondel y), mixed_method
 Spin-state-sorted estimator
-  spin_state_ratio, harmonic_ratio_fit, err_harmonic_ratio
+  spin_state_ratio, harmonic_ratio_fit, err_harmonic_ratio,
+  fill_acceptance_bias -- the one systematic the ratio cannot cancel
 Coherent recoil and Roman-Pot emulation
   recoil_fourvector, t_from_fourvectors, tag_pt_cut, rp_measure,
   rp_hole_acceptance
@@ -555,12 +556,56 @@ def err_harmonic_ratio(n_total, pzz_list, lumi_fractions=None, nbins=24):
     return np.sqrt(2.0 / np.asarray(n_total, dtype=float)) / sig / dil
 
 
+def per_fill_acceptance(acceptance, n_fills):
+    """Normalize an `acceptance` argument to a list of n_fills callables
+    (or Nones).  Accepts None, one callable common to every fill, or a
+    sequence of one callable (or None) per fill -- the fill-DEPENDENT
+    case, which is the only phi' efficiency the spin-state ratio cannot
+    cancel (docs/code_review_2026-08-25.md F1)."""
+    if acceptance is None or callable(acceptance):
+        return [acceptance] * n_fills
+    acc = list(acceptance)
+    if len(acc) != n_fills:
+        raise ValueError("acceptance sequence has %d entries for %d fills"
+                         % (len(acc), n_fills))
+    return acc
+
+
+def fill_acceptance_bias(eps2, pzz_list, lumi_fractions=None):
+    """Fake cos 2phi' amplitude from a FILL-DEPENDENT efficiency harmonic.
+
+    For yields N_fi = L_f eps_f(phi_i) sigma_i [1 + P_f T_i] with
+    eps_f = eps_0(phi)(1 + e_f cos 2phi'), the spin-state ratio inverts to
+    T_hat = T + (sum_f l_f (P_f - Pbar) e_f) / sigma_P^2 cos 2phi', i.e.
+
+        dA_hat = sum_f l_f (P_f - Pbar) e_f / sigma_P^2,
+
+    to first order in e_f (l_f = luminosity fractions).  Two equal-
+    luminosity fills give the closed form (e_+ - e_0)/(P_+ - P_0) of the
+    code review: with the m = +-1-rich / m = 0-rich pattern
+    (P_+ - P_0 = 1.8) a 1e-3 difference of the harmonic between the two
+    samples fakes 5.6e-4 -- 56% of a Delta/F1 ~ 1e-3 signal, and ~5% of
+    the sweet-spot amplitudes.  A COMMON harmonic (all e_f equal) gives
+    exactly zero: that is the cancellation the estimator rests on, and
+    the requirement it turns into is bunch-by-bunch alternation, or
+    stability of the harmonic to ~1e-4 between fills."""
+    e = np.asarray(eps2, dtype=float)
+    p = np.asarray(pzz_list, dtype=float)
+    lf = (np.full(p.size, 1.0 / p.size) if lumi_fractions is None
+          else np.asarray(lumi_fractions, dtype=float)
+          / np.sum(lumi_fractions))
+    pbar = float((lf * p).sum())
+    sig2 = float((lf * (p - pbar) ** 2).sum())
+    return float((lf * (p - pbar) * e).sum() / sig2)
+
+
 def expected_counts_by_fill(n_total, pzz_list, amp, edges, acceptance=None,
                             lumi_fractions=None, const=0.0):
     """Exact expected phi'-bin counts per fill type for pseudo-experiments:
-    N_fi = L_f eps_i (1 + P_f (const + amp cos 2phi'))  integrated over
-    the bin; `acceptance(phi)` is an arbitrary smooth efficiency
-    (default 1) -- the thing the ratio estimator must cancel."""
+    N_fi = L_f eps_f,i (1 + P_f (const + amp cos 2phi'))  integrated over
+    the bin.  `acceptance` is None, one smooth eps(phi) common to every
+    fill -- the thing the ratio estimator cancels -- or a SEQUENCE of one
+    per fill, the fill-dependent case it cannot (fill_acceptance_bias)."""
     p = np.asarray(pzz_list, dtype=float)
     f = (np.full(p.size, 1.0 / p.size) if lumi_fractions is None
          else np.asarray(lumi_fractions, dtype=float) / np.sum(lumi_fractions))
@@ -568,13 +613,15 @@ def expected_counts_by_fill(n_total, pzz_list, amp, edges, acceptance=None,
     nsub = 32
     sub = edges[:-1, None] + (np.arange(nsub)[None, :] + 0.5) / nsub \
         * (edges[1:] - edges[:-1])[:, None]
-    eps = np.ones_like(sub) if acceptance is None else acceptance(sub)
-    base = eps.mean(axis=1)
-    mod = (eps * np.cos(2.0 * sub)).mean(axis=1)
+    accs = per_fill_acceptance(acceptance, p.size)
     dphi = (edges[1:] - edges[:-1]) / (2.0 * np.pi)
     out = np.empty((p.size, edges.size - 1))
-    for k, (pf, ff) in enumerate(zip(p, f)):
-        out[k] = n_total * ff * dphi * ((1.0 + pf * const) * base + pf * amp * mod)
+    for k, (pf, ff, acc) in enumerate(zip(p, f, accs)):
+        eps = np.ones_like(sub) if acc is None else acc(sub)
+        base = eps.mean(axis=1)
+        mod = (eps * np.cos(2.0 * sub)).mean(axis=1)
+        out[k] = n_total * ff * dphi * ((1.0 + pf * const) * base
+                                        + pf * amp * mod)
     return out, f
 
 
