@@ -50,6 +50,85 @@ brings to the EIC, in support of the ANL polarized ⁶,⁷Li ion-source program
 5. **Calendar anchor**: INT program on polarized ion beams at EIC,
    March 22 – April 2, 2027 — target for Phase-1 money plots.
 
+## Development run 7 (2026-08-25): the systematics the estimator cannot cancel
+
+The reconstruction-chain note was rewritten as current content (its prose
+is 11% shorter, and §§5–6 now state today's status instead of the history
+of the code), and the gaps it left were audited and closed.  The audit
+itself is [08_simulation_chain_completion.md](08_simulation_chain_completion.md):
+six parallel passes proposed 67 gaps, an adversarial reviewer refuted 44
+against the code, and the 23 that survived are the plan.  Nine of them are
+now done; the convention items that would change a documented choice are
+left as author decisions (D1, D7, D9).
+
+- ☑ **The one systematic the spin-state ratio cannot cancel is modelled**
+  (F1).  `phi_eff` accepts one efficiency per fill and
+  `reco.fill_acceptance_bias` gives the analytic bias
+  Σᶠ lᶠ (Pᶠ − P̄) eᶠ / σₚ²; for two fills it reduces to
+  (e₊ − e₀)/(P₊ − P₀) at **any** luminosity split, so a lopsided run plan
+  buys no protection.  A 10⁻³ difference of the cos 2φ′ harmonic between
+  the samples fakes 5.6×10⁻⁴ — 5% of the sweet-spot amplitudes, but 4.6
+  one-year statistical errors.
+- ☑ **Two documented numbers were wrong and are corrected against the
+  code.**  (i) A 1% fill-to-fill change of the Roman-Pot vertical envelope
+  was estimated at 1.3% on aₜ; the template fit gives **+169%**, and 10⁻³
+  already gives +19%.  The amplification is in the fit — the slot leaves
+  12 of 24 β bins live, where the t-template is 99% anti-correlated with
+  the constant — so the requirement is bunch-by-bunch alternation or
+  ≈10⁻⁴ envelope stability, and the higher-|t| bins are the fallback
+  (+3.9%, +0.04%).  (ii) The unpolarized u₂ was described as a
+  second-order nuisance; an error in it reaches aₑ at **first** order as
+  aₜ·δu₂·⟨cos 2β⟩, and a ZEUS-1σ δu₂ moves aₑ by 20%.
+- ☑ **The coherent channel has a null test.**  sin 2α, sin 2β and
+  sin(α+β) are exactly forbidden by reflection symmetry; fitted alongside,
+  a spin-axis error gives tan 2δ in both ratios while a Roman-Pot
+  azimuthal roll gives it in β alone — the recoil null resolves a pot roll
+  to 5–8 mrad in year one.  The columns are orthogonal to the cos ones, so
+  Table 3 is reproduced digit for digit with them on.
+- ☑ **WP5 exists as a curve.**  `coherent_optics_scan.py`: tagged fraction
+  32% / 3.0% / 4×10⁻⁵ / 2×10⁻⁷ and δaₜ/aₜ = 1.6% / 5.7% / 104% / 540% at
+  a near-beam envelope of 0.10 / 0.22 / 0.45 / 0.60 GeV — **the coherent
+  measurement lives at the low- and mid-energy configurations and is dead
+  at the top energy.**  Needed importance sampling above the cut: the
+  plain sampler leaves zero accepted recoils above 0.3 GeV.
+- ☑ **The far-forward near-beam cut is angular** (S8).  0.20 GeV on a
+  4 × 137.5 GeV α is 5σ, not 10σ: the ⁶Li α tag falls to 1.7% / 1.3%
+  from the 3–9% the README quoted (which already flagged it).  ⁷Li is off
+  rigidity and untouched at 96–98%.  OMD window → ζ = 0.45–0.65 (S7).
+- ☑ **Detector nuisances, measured** rather than argued
+  (`money_cos2phi_reco.py --syst-scan`, MC noise floor 0.13–0.21%):
+  electron energy scale ±1% → 0.2–1.4% on Δ̂; hadronic-resolution
+  mismatch (generate 0.30, correct 0.25) → 0.5–1.3%; ε_eID η tilt → 0.02%;
+  the Yellow Report EMCal η table → 0.000% at spots 1–3 and 0.5% at spot 4.
+  All below the 3–11% model dependence of K.  A correction to the audit
+  that proposed this: the electron lever is 2 − y only for the Σ method —
+  the Gaussian y stand-in never sees E′ and gives exactly 1.
+- ☑ **The tensor sign has an external anchor** (G1).  The suite compared
+  code to code, so flipping the sign in both files left all 125 tests
+  green.  `asymmetries.TENSOR_LL_SIGN` is now the single constant and
+  A_zz(θ_S = 0)(1 + ε(y)R) = SIGN·(2/3)b₁/F₁ — exact, F₂-free — is pinned
+  against Cosyn Eq. (27).  Verified non-blind: flipping it fails only that
+  file.  The decision itself stays the author's (D1).
+- ☑ **Kernel hygiene**: an exact positivity guard on the φ density (G3 —
+  the accept–reject silently sampled max(W, 0)); one rank-2 geometry for
+  J = 1 and J = 3/2 (the spin-3/2 branch's rate and cos 2φ channels
+  disagreed with each other by 3; latent); coverage for the
+  spin-temperature populations, a non-default b₂, and θ_S between 0 and
+  π/2.
+- ☐ **Left for the author** (plans/08 §8.2): the b₁ sign flip (D1, now one
+  line), the ⁶Li effective-polarization convention and the double
+  dilution it produces in g₁ (D7 — the structural fix is unambiguous, the
+  *value* is plans/04 #6), and the b₁ money-plot dilution (D9).  Also
+  deliberately not unified: the high-divergence envelope, quoted at 0.41
+  GeV in `polligen.reco` and the rounded-up 0.45 in the fast sim, where
+  every published fast-sim number comes from.
+- ☐ **Still blocked externally** (plans/08 §8.3): the ePIC calorimeter
+  noise floor at Σ_h ≈ 0.2–0.5 GeV (#21, the one number the letter cannot
+  do without), the backward-disk angular resolution, PYTHIA 8 samples,
+  BeAGLE breakup shapes, a coherent diffractive model for ⁶Li.
+
+Tests: 143 evgen + 25 fastsim (from 94 + 24 at the start of run 6).
+
 ## Development run 6 addendum (2026-08-25): placeholders filled from the references in refs/
 
 - ☑ Seven papers added by the user to `refs/` (index: `refs/README.md`;
