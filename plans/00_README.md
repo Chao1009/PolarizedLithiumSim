@@ -52,9 +52,12 @@ brings to the EIC, in support of the ANL polarized ⁶,⁷Li ion-source program
 
 ## Development run 7 (2026-08-25): the systematics the estimator cannot cancel
 
-The reconstruction-chain note was rewritten as current content (its prose
-is 11% shorter, and §§5–6 now state today's status instead of the history
-of the code), and the gaps it left were audited and closed.  The audit
+The reconstruction-chain note was rewritten as current content: the
+archaeology of the code went (§5 and §6 now state today's status, the old
+§5.1 implementation recipe is gone, and the annotated recommendations are
+reduced to what is open), which cut the prose by 11%; the results below
+then put half of that back, so the note is 3% shorter and says
+considerably more.  The gaps it left were audited and closed.  The audit
 itself is [08_simulation_chain_completion.md](08_simulation_chain_completion.md):
 six parallel passes proposed 67 gaps, an adversarial reviewer refuted 44
 against the code, and the 23 that survived are the plan.  Nine of them are
