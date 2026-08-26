@@ -19,6 +19,10 @@ density of `asymmetries.py`), K = b1 + (1-y)/(x y^2) b2:
 Spin-1 (Hoodbhoy-Jaffe-Manohar NPB 312:571, exactly the master formula of
 `polli_fastsim.asymmetries`): c_m = 3 m^2 - 2 -> (1,-2,1);
 t_geo = (2/3) a_m with a_m = (1/4) c_m (3 cos^2 theta_S - 1); c_eff = c_m.
+The overall sign of the b1/b2 (tensor RATE) sector is the single constant
+`asymmetries.TENSOR_LL_SIGN`; it is opposite to Cosyn et al. Eq. (27) and
+is an open author decision (plans/08 D1).  The Delta sector does not
+depend on it.
 
 Spin-3/2 (7Li): rank-0/1 exact via (F1, F2, g1, g2); rank-2 is a SCENARIO
 slot (plans/04 #14) with normalized T_m = (3 m^2 - 15/4)/3 -> (1,-1,-1,1):
@@ -46,7 +50,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from polli_fastsim.asymmetries import depolarization_d
+from polli_fastsim.asymmetries import TENSOR_LL_SIGN, depolarization_d
 from polli_fastsim.structure import NuclearF2, ToyF2, dsigma_dx_dq2
 from polli_fastsim.polarized import ToyG1
 
@@ -213,6 +217,7 @@ class InclusiveKernel:
                 t_geo = (c_like / 6.0) * (3.0 * ct * ct - 1.0)
             else:
                 t_geo = c_like * 0.5 * (3.0 * ct * ct - 1.0)
+            t_geo = TENSOR_LL_SIGN * t_geo   # asymmetries.TENSOR_LL_SIGN
             kern = self._tensor_kernel(t, x, y)
             w_avg = w_avg + t_geo * kern / np.maximum(dphi, 1e-30)
             a_2 = (-(1.0 - y) / (y * y) * c_eff * st * st

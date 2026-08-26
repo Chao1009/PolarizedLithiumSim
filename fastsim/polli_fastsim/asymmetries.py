@@ -21,6 +21,25 @@ import numpy as np
 
 from .structure import r_sigma_lt
 
+# Sign of the tensor RATE (b1, b2) sector, and the single place it is
+# set for the whole program (polligen.xsec imports this constant).
+#
+#   +1  the program's transcription of Hoodbhoy-Jaffe-Manohar
+#       (docs/Discussions.pptx p.5), giving Azz = +(2/3) b1/F1
+#   -1  the HJM/HERMES convention as written by Cosyn, Roldan Tomei,
+#       Sosa and Zec, EPJ A 61 (2025) 83 (arXiv:2410.12764) Eq. (27),
+#       Azz = -(2/3) b1/F1
+#
+# The two differ by the sign of b1 itself, so |Azz| and the whole Delta
+# (cos 2phi) sector are unaffected; what flips is the sign of the
+# by-product kappa of the spin-state ratio, and with it the sign of any
+# O(gamma^2) b-sector subtraction built on kappa.  Settling it needs
+# Jaffe-Manohar PLB 223 (1989) 218, which is not in refs/ (code review
+# G1, recommendation 0a; plans/08 D1).  Changing this constant is the
+# whole of that decision: tests/test_tensor_convention.py pins the
+# identity it controls.
+TENSOR_LL_SIGN = +1.0
+
 
 def depolarization_d(y, x, q2):
     """Virtual-photon depolarization factor D for A_par ~= D * A1."""
@@ -43,7 +62,8 @@ def azz(b1, f1, f2, x, y, b2=None, theta_m=0.0):
     if b2 is None:
         b2 = 2.0 * x * b1
     geom = 0.5 * (3.0 * np.cos(theta_m) ** 2 - 1.0)  # =1 at theta_m=0
-    num = (2.0 / 3.0) * (b1 + (1.0 - y) / (x * y * y) * b2) * geom
+    num = (TENSOR_LL_SIGN * 2.0 / 3.0
+           * (b1 + (1.0 - y) / (x * y * y) * b2) * geom)
     return num / phi_averaged_density(f1, f2, x, y)
 
 

@@ -176,7 +176,7 @@ it to `phi_histogram_pseudo`, which bypasses `_amplitudes` and is the
 path behind the headline figures. Margins in every existing
 configuration are ≥ 0.97, so nothing existing fires.
 
-### B2 — an external anchor for the tensor sign (G1 gate) ☐
+### B2 — an external anchor for the tensor sign (G1 gate) ☑
 Every tensor assertion in the suite compares code to code: patching the
 sign in both `xsec.py` and `asymmetries.py` leaves all tests green. Add
 `TENSOR_LL_SIGN` as one module constant and one *external* test against
@@ -189,6 +189,10 @@ multiplies by [1 + 2(1−y)(1+R)/y²] double-counts R — those two brackets
 are identically 1 + εR given F₁ = F₂/(2x(1+R)) — and misses by 1.17).
 Land it green at the current value with a comment that Cosyn requires
 the opposite, so **D1 becomes a one-line change**.
+
+*Done 2026-08-25.*  Verified non-blind: with `TENSOR_LL_SIGN = -1` the
+other 125 tests still pass and only `test_tensor_convention.py` fails,
+with the decision in the assertion message.
 
 ### B3 — one rank-2 geometry for J = 1 and J = 3/2 ☐
 `_tensor_moments` returns (Q_NN, Q_NN); Cosyn Eq. (9) gives

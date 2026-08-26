@@ -447,6 +447,22 @@ document b₁ ≡ −b₁^HJM everywhere), add a test against Cosyn Eq. (27),
 and obtain JM 1989 to fix the Δ sign convention before any sign of an
 extracted Δ is quoted. Not changed in this pass.
 
+*Half done 2026-08-25 (plans/08 B2).* The sign is now the single
+constant `asymmetries.TENSOR_LL_SIGN`, imported by `xsec`, and
+`evgen/tests/test_tensor_convention.py` is the repository's first
+EXTERNAL tensor test:
+
+    A_zz(θ_S = 0) · (1 + ε(y) R) = TENSOR_LL_SIGN · (2/3) b₁/F₁,
+    ε(y) = (1−y)/(1−y+y²/2)
+
+exact at every y, F₂-free, and pinned at six (x, Q²) points.  (The
+widely-quoted form that also divides by [1+2(1−y)/y²] and multiplies by
+[1+2(1−y)(1+R)/y²] double-counts R — those brackets are identically
+1+εR — and misses by 1.17.)  Demonstrated to be non-blind: flipping the
+constant leaves the other 125 tests green and fails this one with the
+decision spelled out in the assertion message.  The decision itself
+(and the Δ sign, which needs JM 1989) is still the author's.
+
 **G2 — MEDIUM (known, now quantified): the kernel is massless — the
 O(γ²) cos 2φ and O(γ) cos φ contributions of b₁–b₄ to a transverse fill
 are absent.** From Cosyn Eqs. (10), (17d–e), (18) with T_TT = Q/2 for a
