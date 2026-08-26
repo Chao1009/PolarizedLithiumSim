@@ -123,7 +123,7 @@ configuration 2 cannot be marked on any MC curve today.
 circular acceptance exp(−B c²) while the chain uses the slot — a factor
 ≈ 2.9 on the tagged yield, which also feeds `plans/04` #20.
 
-### A5 — energy scales, wrong-MC closure, HFS beam guard ☐
+### A5 — energy scales, wrong-MC closure, HFS beam guard ☑
 - `RecoModel.e_scale` (applied to the smeared E′) and an η-slope on
   ε_eID. The **electron** scale is the bigger lever:
   d ln x_mixed/d ln E′ = 2 − y ≈ 2, twice the hadronic one. A flat
@@ -141,6 +141,20 @@ circular acceptance exp(−B c²) while the chain uses the slot — a factor
 - `HFSSample.concatenate` and `HFSResponse` must refuse to merge or
   transfer a response across beam energies.
 
+*Done 2026-08-25.*  Measured at the four sweet spots with `--syst-scan`
+(common random numbers; MC noise floor 0.13–0.21%): electron scale ±1% →
+Δ̂ shifts 0.2–1.4%; hadronic resolution mismatch (generate 0.30, correct
+0.25) → 0.5–1.3%; ε_eID η tilt 0.05/unit → 0.02% (a smooth efficiency
+shape is almost exactly null, a flat one exactly null — so the audit's
+advice to drop the flat row was right and the η row is nearly null too);
+Yellow Report EMCal table → 0.000% at spots 1–3, 0.5% at spot 4.  All
+four sit below the 3–11% model dependence of K.
+
+One correction to the audit: the electron lever is 2 − y only for the Σ
+method.  The Gaussian y stand-in smears the *true* y and never sees E′,
+so it gives exactly 1 and understates the electron energy scale by about
+two.  Both levers are pinned by tests.
+
 ### A6 — forward-folded response replaces the bin-by-bin K ☐
 `RecoResponse.fold(delta_func, mask)` = the response-weighted
 ⟨(∂A/∂Δ)·Δ(x_true, Q²_true)⟩, then either two K iterations with the
@@ -157,7 +171,7 @@ on noise-free pseudo-data oscillates to ±30% — worse than the
 feed-in bins beyond the plotted range; propagate the response MC error
 (0.5–1.2% per bin, currently unpropagated).
 
-### A7 — η-dependent calorimeter resolution (F4) ☐
+### A7 — η-dependent calorimeter resolution (F4) ☑
 `emcal_resolution(..., eta=None)` with the Yellow Report table, `eta=None`
 reproducing today. Keep the backward constant at the documented 1% ePIC
 PbWO₄ spec. Do **not** deprecate `energy="best"`: at η = −1.6 tracking

@@ -798,10 +798,10 @@
     <tr><th>Step</th><th>Experiment</th><th>Repository</th><th>Status</th></tr>
     <tr><td>Spin bookkeeping, luminosity per state, polarimetry</td><td>Bunch pattern, L<sub>f</sub>, P<sub>zz</sub> per fill with a 3% scale</td><td><code>bookkeeping.SpinCategory / RunPlan / tensor_flip_plan</code>: categories with lumi shares, relative-luminosity offsets, polarimetry smearing</td><td class="status-ok">done</td></tr>
     <tr><td>e′ four-vector, crossing angle, head-on frame</td><td>Track + cluster → k′ in the lab; head-on transformation</td><td><code>reco.electron_fourvector</code>, <code>head_on_to_lab</code>, <code>lab_to_head_on</code>, applied per event by <code>recopseudo.RecoResponse</code></td><td class="status-ok">done</td></tr>
-    <tr><td>e′ resolution</td><td>Calorimeter energy, track angles</td><td><code>reco.emcal_resolution</code>, <code>tracking_resolution</code>, <code>tracking_angular_resolution</code>, <code>smear_electron</code>. The EMCal term 2%/√E ⊕ 1% is the backward specification applied at every η; the angular table has no published source</td><td class="status-part">done, placeholder numbers</td></tr>
+    <tr><td>e′ resolution</td><td>Calorimeter energy, track angles</td><td><code>reco.emcal_resolution</code> (backward specification by default, Yellow Report table per η region with <code>emcal_eta_table</code>), <code>tracking_resolution</code>, <code>tracking_angular_resolution</code>, <code>smear_electron</code>, plus an energy-scale nuisance. The angular table still has no published source</td><td class="status-part">done, placeholder numbers</td></tr>
     <tr><td>Electron ID and efficiency</td><td>E/p, shower shape, charge-symmetric subtraction</td><td><code>reco.eps_eid(η)</code> on the ATHENA/ECCE anchors; no purity or background model</td><td class="status-part">partial</td></tr>
     <tr><td>Kinematic reconstruction (electron / JB / Σ / DA / mixed)</td><td>Mixed method at low y from the hadronic final state</td><td><code>reco.electron_method</code>, <code>mixed_method</code>; <code>hfs.hadronic_kinematics</code> for Σ, JB and DA on a generated final state, or the parametrized <code>reco.hadronic_y</code></td><td class="status-ok">done</td></tr>
-    <tr><td>Hadronic final state and hadron-side detection</td><td>All tracks and clusters except e′, through the detector</td><td><code>hfs.HadronResponse</code> (tracker coverage and thresholds, EMCal/HCal, calorimeter noise) on <code>hfs.ToyHFS</code>; the PYTHIA 8 sample of <code>tools/pythia8</code> needs eic-shell</td><td class="status-part">done with a toy generator</td></tr>
+    <tr><td>Hadronic final state and hadron-side detection</td><td>All tracks and clusters except e′, through the detector</td><td><code>hfs.HadronResponse</code> (tracker coverage and thresholds, EMCal/HCal, calorimeter noise) on <code>hfs.ToyHFS</code>, with a hadronic energy-scale nuisance and a beam-energy guard on the library; the PYTHIA 8 sample of <code>tools/pythia8</code> needs eic-shell</td><td class="status-part">done with a toy generator</td></tr>
     <tr><td>The physics azimuth</td><td>Covariant φ<sub>S</sub> from k, k′, P, S</td><td><code>reco.azimuth_wrt_lepton_plane</code>, verified against an explicit collinear-frame construction to 10⁻¹³</td><td class="status-ok">done</td></tr>
     <tr><td>Reconstructed (x, Q²) binning and migration</td><td>Reco bins, migration matrix, unfolding</td><td><code>RecoResponse.mask_reco</code> / <code>bin_summary</code>: purity, efficiency and the reco-bin amplitude per bin; the correction is an MC bin-centering factor, not an unfolding</td><td class="status-part">done, no unfolding</td></tr>
     <tr><td>Spin-state-sorted ratio estimator</td><td>R(φ′) of m = ±1-rich vs m = 0-rich fills; fit with sin 2φ′</td><td><code>reco.spin_state_ratio</code>, <code>harmonic_ratio_fit</code> and its two-azimuth form, with the fill-dependent efficiency the ratio cannot cancel (<code>fill_acceptance_bias</code>, <code>money_cos2phi_reco.py --eff-cos2-split</code>)</td><td class="status-ok">done</td></tr>
@@ -1004,7 +1004,24 @@
   φ′-efficiency harmonics are illustrative magnitudes; radiative corrections and
   backgrounds are not included; the 7R points are centered with the injected model (as in
   money plot 7); the template assumes the linear t-shape it fits, so a different shape is
-  a model systematic to be varied. From the code review
+  a model systematic to be varied.</p>
+
+  <p><b>Detector nuisances, measured.</b> Each is switched on in the response and the
+  amplitude converted with the nominal K, so the quoted number is the shift of Δ̂ it
+  produces (<code>money_cos2phi_reco.py --syst-scan</code>, common random numbers; the MC
+  noise floor of the response is 0.13–0.21% at the four spots). A 1% electron energy-scale
+  error moves Δ̂ by 0.2–1.4% — the larger of the two energy levers, since
+  d ln x/d ln E′ = 2 − y for the Σ method against −(1 − y) for the hadronic scale (the
+  Gaussian y stand-in never sees E′ and gives only 1, so it understates this systematic by
+  about two). Generating at a 30% hadronic resolution and correcting with the 25% response
+  shifts Δ̂ by 0.5–1.3%. An η slope of 0.05 per unit on ε<sub>eID</sub> gives 0.02% — the
+  estimator is a weighted mean of per-event amplitudes, so a smooth efficiency shape is
+  almost exactly null, and a flat one is exactly null. Replacing the backward-endcap
+  calorimeter specification by the Yellow Report table per η region changes nothing at spots
+  1–3 (their electrons are backward) and 0.5% at spot 4, whose η = −1.64 reaches the
+  transition region. All four sit below the 3–11% model dependence of K.</p>
+
+  <p>From the code review
   (docs/code_review_2026-08-25.md): the φ′ efficiency of Table 2 is common to both fills, and
   the ratio cancels only a common acceptance. The fill-dependent case is now modelled rather
   than argued — a difference δε₂ of the cos 2φ′ efficiency harmonic between the m = ±1-rich

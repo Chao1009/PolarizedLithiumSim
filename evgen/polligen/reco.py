@@ -268,14 +268,41 @@ def electron_method_resolution(y, theta_prime, de_over_e, dtheta,
     return dq2, dy, dx
 
 
-def emcal_resolution(e_prime, stoch=0.02, const=0.01, noise=0.0):
+# Yellow Report electromagnetic-calorimeter RESOLUTION REQUIREMENTS by
+# pseudorapidity region (stochastic term, constant term); the constant
+# term is quoted as a 1-3% band and the optimistic end is taken, as for
+# the backward crystals.  The backward endcap (PbWO4) is the ePIC
+# specification the whole chain used to apply everywhere; the barrel
+# imaging calorimeter and the forward endcap are 3-6x coarser in the
+# stochastic term (code review F4).
+EMCAL_YR_TABLE = ((-np.inf, -2.0, 0.02, 0.01),     # backward endcap, PbWO4
+                  (-2.0, -1.0, 0.07, 0.01),        # backward transition
+                  (-1.0, 1.0, 0.10, 0.01),         # barrel (10-12%)
+                  (1.0, np.inf, 0.07, 0.01))       # forward endcap
+
+
+def emcal_resolution(e_prime, stoch=0.02, const=0.01, noise=0.0, eta=None):
     """dE/E of an EM calorimeter: stoch/sqrt(E) (+) const (+) noise/E.
-    Defaults are PbWO4-class (backward ePIC EMCal specification scale,
-    eta < -2).  The barrel and forward calorimeters are coarser (Yellow
-    Report requirements 7-12%/sqrt(E) (+) 1-3%): RecoModel applies these
-    defaults at every eta, which is optimistic outside the backward endcap
-    (code review 2026-08-25, docs/code_review_2026-08-25.md F4)."""
+
+    With `eta` the stochastic and constant terms come from the Yellow
+    Report requirement table per region (EMCAL_YR_TABLE) and `stoch`,
+    `const` are ignored; without it the PbWO4-class defaults (the ePIC
+    backward-endcap specification, eta < -2) apply at every eta, which is
+    what the chain did before 2026-08-25 and is optimistic by 3-5x in the
+    stochastic term for barrel electrons (code review F4).  The
+    sweet-spot electrons are backward (eta = -2.9 to -1.6), so the
+    headline numbers are insensitive; the amplitude-vs-x panels reach the
+    barrel, where the tracker is the better measurement and
+    RecoModel(energy="best") selects it."""
     e = np.maximum(np.asarray(e_prime, dtype=float), 1e-9)
+    if eta is not None:
+        eta = np.asarray(eta, dtype=float)
+        stoch = np.full(eta.shape, EMCAL_YR_TABLE[0][2])
+        const = np.full(eta.shape, EMCAL_YR_TABLE[0][3])
+        for lo, hi, sv, cv in EMCAL_YR_TABLE:
+            m = (eta >= lo) & (eta < hi)
+            stoch = np.where(m, sv, stoch)
+            const = np.where(m, cv, const)
     return np.sqrt((stoch / np.sqrt(e)) ** 2 + const ** 2 + (noise / e) ** 2)
 
 

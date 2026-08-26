@@ -31,6 +31,7 @@ Usage:  python3 scripts/money_cos2phi_reco.py [--y-method electron]
 """
 
 import argparse
+from dataclasses import replace
 import pathlib
 import sys
 
@@ -124,6 +125,32 @@ def main():
     ap.add_argument("--rel-lumi-offset", type=float, default=1e-3,
                     help="relative-luminosity error on the +Pzz fill, "
                          "unknown to the analysis")
+    ap.add_argument("--e-scale", type=float, default=1.0,
+                    help="electron energy-scale calibration error unknown "
+                         "to the analysis.  The bigger of the two energy "
+                         "levers: d ln x / d ln E' = 2 - y with the Sigma "
+                         "method (only 1 with the Gaussian y stand-in, "
+                         "which never sees E')")
+    ap.add_argument("--hfs-scale", type=float, default=1.0,
+                    help="hadronic energy-scale calibration error "
+                         "(--y-source hfs only): d ln x / d ln scale "
+                         "= -(1 - y)")
+    ap.add_argument("--eid-tilt", type=float, default=0.0,
+                    help="linear eta slope on eps_eID.  A FLAT eps_eID "
+                         "error is identically null in the ratio; only a "
+                         "shape moves a number")
+    ap.add_argument("--emcal-eta-table", action="store_true",
+                    help="Yellow Report EMCal resolution per eta region "
+                         "instead of the backward-endcap specification "
+                         "everywhere (code review F4).  The sweet-spot "
+                         "electrons are backward, so the headline numbers "
+                         "do not move; the amplitude-vs-x panels reach the "
+                         "barrel, where --energy best picks the tracker")
+    ap.add_argument("--syst-scan", action="store_true",
+                    help="after the money plots, rebuild the response with "
+                         "each nuisance varied and print the Delta shift "
+                         "per sweet spot (common random numbers, so the "
+                         "shifts are not seed noise)")
     ap.add_argument("--seed", type=int, default=20260824)
     ap.add_argument("--outdir", default=".")
     args = ap.parse_args()
@@ -149,7 +176,9 @@ def main():
                                q2_range=(0.7, 2e3))
     rmodel = rp.RecoModel(energy=args.energy, y_method=args.y_method,
                           y_source=args.y_source, hadronic_method=args.hfs_method,
-                          y_had_res=args.y_had_res,
+                          y_had_res=args.y_had_res, e_scale=args.e_scale,
+                          eid_tilt=args.eid_tilt,
+                          emcal_eta_table=args.emcal_eta_table,
                           q2_min=analysis.q2_min, y_min=analysis.y_min,
                           y_max=analysis.y_max, w2_min=analysis.w2_min,
                           eta_min=analysis.eta_min, eta_max=analysis.eta_max,
@@ -166,7 +195,8 @@ def main():
             smp = hfs.toy_library_sample(sampler, args.hfs_library_events, rng)
             src = "TOY string fragmentation (%d events)" % smp.n_events
         lib = hfs.HFSLibrary(smp, hresp, nx=48, nq2=36, rng=rng)
-        hfs_resp = hfs.HFSResponse(lib, method=args.hfs_method)
+        hfs_resp = hfs.HFSResponse(lib, method=args.hfs_method,
+                                   scale=args.hfs_scale)
         print("HFS library: %s; %s method; %s | coverage %s"
               % (src, args.hfs_method.upper(), hresp.describe(), lib.coverage()))
     resp = rp.RecoResponse(sampler, rmodel, n_mc_per_cell=args.n_mc_per_cell,
@@ -424,6 +454,47 @@ def main():
     print("wrote", out)
     for line in summary7:
         print(line)
+
+    # --- systematics scan --------------------------------------------------
+    if args.syst_scan:
+        print("\nDetector systematics: Delta shift per sweet spot "
+              "(A_hat is fitted on data generated with the nuisance ON and "
+              "converted with the NOMINAL K, so the shift is "
+              "a_reco(alt)/a_reco(nominal) - 1).  Common random numbers.")
+        edges = [superbin_edges(proj, i, j) for _, _, i, j in spots]
+        nominal = [resp.bin_summary(*e, cat_plus)["a_reco_bin"] for e in edges]
+        variations = (
+            ("electron scale +1%", dict(e_scale=1.01)),
+            ("electron scale -1%", dict(e_scale=0.99)),
+            ("eps_eID eta tilt +0.05", dict(eid_tilt=0.05)),
+            ("EMCal: YR eta table", dict(emcal_eta_table=True)),
+            ("hadronic y res 0.30 (correct with %.2f)" % args.y_had_res,
+             dict(y_had_res=0.30)),
+        )
+        # MC noise floor from three independent response seeds
+        floor = []
+        for seed in (args.seed + 101, args.seed + 202, args.seed + 303):
+            alt = rp.RecoResponse(sampler, rmodel,
+                                  n_mc_per_cell=args.n_mc_per_cell,
+                                  rng=np.random.default_rng(seed),
+                                  hfs=hfs_resp)
+            floor.append([alt.bin_summary(*e, cat_plus)["a_reco_bin"]
+                          for e in edges])
+        floor = np.std(np.array(floor) / np.array(nominal), axis=0)
+        print("  %-42s %s" % ("MC noise floor (3 seeds)",
+                              "  ".join("%+7.3f%%" % (100 * f)
+                                        for f in floor)))
+        for label, kw in variations:
+            alt_model = replace(rmodel, **kw)
+            alt = rp.RecoResponse(sampler, alt_model,
+                                  n_mc_per_cell=args.n_mc_per_cell,
+                                  rng=np.random.default_rng(args.seed),
+                                  hfs=hfs_resp)
+            shifts = [alt.bin_summary(*e, cat_plus)["a_reco_bin"] / a0 - 1.0
+                      for e, a0 in zip(edges, nominal)]
+            print("  %-42s %s" % (label,
+                                  "  ".join("%+7.3f%%" % (100 * v)
+                                            for v in shifts)))
 
 
 if __name__ == "__main__":

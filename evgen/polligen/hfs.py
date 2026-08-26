@@ -103,14 +103,36 @@ class HFSSample:
 
     @classmethod
     def concatenate(cls, samples):
+        """Merge samples taken at the SAME beam energies.  The documented
+        use is the e+p / e+n pair of tools/pythia8 (different targets, same
+        beams), so differing `meta` is fine and is kept under "merged";
+        differing beams are not, and used to be silently replaced by the
+        first sample's (code review / plans/08 A5).
+
+        NOTE: HFSLibrary ignores `weight`, so a merged p+n sample mixes the
+        two targets by event COUNT -- correct for Z = N = 3 only if the two
+        runs were generated with the same number of events."""
         s0 = samples[0]
+        for k, s in enumerate(samples[1:], start=1):
+            if (abs(s.e_energy - s0.e_energy) > 1e-6 * max(s0.e_energy, 1.0)
+                    or abs(s.p_per_nucleon - s0.p_per_nucleon)
+                    > 1e-6 * max(s0.p_per_nucleon, 1.0)):
+                raise ValueError(
+                    "HFS sample %d has beams %g x %g GeV against %g x %g for "
+                    "sample 0: a hadronic response cannot be transferred "
+                    "across beam energies"
+                    % (k, s.e_energy, s.p_per_nucleon, s0.e_energy,
+                       s0.p_per_nucleon))
         offs = [s0.offsets]
         for s in samples[1:]:
             offs.append(s.offsets[1:] + offs[-1][-1])
         cat = lambda k: np.concatenate([getattr(s, k) for s in samples])
+        meta = dict(s0.meta)
+        if len(samples) > 1:
+            meta["merged"] = [s.meta for s in samples]
         return cls(np.concatenate(offs), cat("pid"), cat("charge"),
                    cat("p4"), cat("x"), cat("q2"), cat("y"), cat("kp"),
-                   cat("weight"), s0.e_energy, s0.p_per_nucleon, s0.meta)
+                   cat("weight"), s0.e_energy, s0.p_per_nucleon, meta)
 
 
 # --- exact sums and kinematic methods -----------------------------------------
@@ -588,11 +610,18 @@ class HFSResponse:
     """Front end used by recopseudo: hadronic y (and x) of a pseudo-event
     from the library transfer plus per-event noise."""
 
-    def __init__(self, library, method="sigma"):
+    def __init__(self, library, method="sigma", scale=1.0):
+        """`scale`: a post-calibration multiplier on the MEASURED hadronic
+        sums, i.e. a hadronic energy-scale error unknown to the analysis.
+        It belongs here and not in HadronResponse, whose parameters are
+        re-used (with the noise switched off) to build the library's
+        captured fraction f_sigma -- a scale there would be baked into f
+        and applied twice."""
         if method not in ("sigma", "jb", "da"):
             raise ValueError("method must be 'sigma', 'jb' or 'da'")
         self.library = library
         self.method = method
+        self.scale = float(scale)
         self.noise_sigma = library.response.noise_sigma
 
     def hadronic(self, x, q2, y_true, e_prime_reco, theta_e_reco, e_energy, s,
@@ -614,11 +643,27 @@ class HFSResponse:
             sig = sig + self.noise_sigma * rng.standard_normal(n)
             ptx = ptx + self.noise_sigma * rng.standard_normal(n)
             pty = pty + self.noise_sigma * rng.standard_normal(n)
+        if self.scale != 1.0:            # calibration error, noise included
+            sig, ptx, pty = self.scale * sig, self.scale * ptx, self.scale * pty
         out = hadronic_kinematics(sig, ptx, pty, e_prime_reco, theta_e_reco,
                                   e_energy, s)
         out["f_sigma"] = f
         out["sigma"] = sig
         return out
+
+    def check_beams(self, e_energy, p_per_nucleon, rtol=1e-6):
+        """Refuse to use a library generated at other beam energies.  This
+        is the coupling point every call path goes through, so it catches
+        the mistake wherever it is made."""
+        smp = self.library.sample
+        if (abs(smp.e_energy - e_energy) > rtol * max(e_energy, 1.0)
+                or abs(smp.p_per_nucleon - p_per_nucleon)
+                > rtol * max(p_per_nucleon, 1.0)):
+            raise ValueError(
+                "HFS library was generated at %g x %g GeV but the analysis "
+                "runs at %g x %g GeV: the captured Sigma fraction is not "
+                "transferable across beam energies"
+                % (smp.e_energy, smp.p_per_nucleon, e_energy, p_per_nucleon))
 
     def y_hadronic(self, x, q2, y_true, e_prime_reco, theta_e_reco, e_energy, s,
                    rng, floor=1e-4):

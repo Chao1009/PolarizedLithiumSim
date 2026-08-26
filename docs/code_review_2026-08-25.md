@@ -208,7 +208,13 @@ stochastic term; there tracking (0.05%·p ⊕ 0.5%) is the better
 measurement, which `energy="best"` selects. *Action:* make the
 calorimeter term η-dependent per the Yellow Report table and use "best"
 by default (recommended; not changed in this pass because it changes
-published figures).
+published figures). *Done 2026-08-25 (plans/08 A7):*
+`emcal_resolution(..., eta=)` carries the Yellow Report table and
+`RecoModel.emcal_eta_table` switches it on, default off so nothing
+published moves. Measured with `--syst-scan`: the table changes Δ̂ by
+0.000% at spots 1–3 (backward electrons) and 0.5% at spot 4
+(η = −1.64, the transition region), against an MC noise floor of
+0.13–0.21%.
 
 **F5 — MEDIUM (method): the 7R migration correction is model-dependent
 at the 3–11% level and the closure is by construction.** The factor

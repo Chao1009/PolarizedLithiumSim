@@ -129,3 +129,127 @@ def test_sample_round_trip(tmp_path, toy_sample):
     assert np.allclose(back.p4, smp.p4) and back.meta.get("generator") == "ToyHFS"
     cat = hfs.HFSSample.concatenate([smp, back])
     assert cat.n_events == 2 * smp.n_events and cat.offsets[-1] == 2 * smp.offsets[-1]
+
+
+# --- energy-scale nuisances and the beam guard (plans/08 A5) ----------------
+
+def _library(cfg, smp, noise=0.05):
+    hr = hfs.HadronResponse(noise_sigma=noise)
+    return hfs.HFSLibrary(smp, hr, nx=24, nq2=18,
+                          rng=np.random.default_rng(5))
+
+
+def test_hadronic_scale_is_applied_after_the_noise(toy_sample):
+    """The calibration multiplier belongs to HFSResponse, not to
+    HadronResponse: the library's captured fraction f_sigma is built with
+    the response's own parameters (noise off), so a scale there would be
+    baked into f and applied twice."""
+    cfg, smp = toy_sample
+    lib = _library(cfg, smp)
+    x, q2 = smp.x[:200], smp.q2[:200]
+    s_nn = 4.0 * cfg.electron_energy * cfg.ion_momentum_per_nucleon
+    y = np.clip(q2 / (s_nn * x), 1e-3, 0.9)
+    e_p = np.full(x.size, 9.0)
+    th = np.full(x.size, 3.0)
+    args = (x, q2, y, e_p, th, cfg.electron_energy, s_nn)
+    a = hfs.HFSResponse(lib).hadronic(*args, np.random.default_rng(1))
+    b = hfs.HFSResponse(lib, scale=1.05).hadronic(*args,
+                                                  np.random.default_rng(1))
+    np.testing.assert_allclose(b["sigma"], 1.05 * a["sigma"], rtol=1e-12)
+    np.testing.assert_allclose(a["f_sigma"], b["f_sigma"], rtol=1e-12)
+    assert hfs.HFSResponse(lib, scale=1.0).scale == 1.0
+
+
+def test_concatenate_refuses_to_merge_across_beam_energies(toy_sample):
+    cfg, smp = toy_sample
+    other = hfs.HFSSample(smp.offsets, smp.pid, smp.charge, smp.p4, smp.x,
+                          smp.q2, smp.y, smp.kp, smp.weight,
+                          smp.e_energy * 1.8, smp.p_per_nucleon,
+                          {"target": "n"})
+    with pytest.raises(ValueError, match="beam energies"):
+        hfs.HFSSample.concatenate([smp, other])
+    same = hfs.HFSSample(smp.offsets, smp.pid, smp.charge, smp.p4, smp.x,
+                         smp.q2, smp.y, smp.kp, smp.weight, smp.e_energy,
+                         smp.p_per_nucleon, {"target": "n"})
+    merged = hfs.HFSSample.concatenate([smp, same])
+    assert merged.n_events == 2 * smp.n_events
+    assert len(merged.meta["merged"]) == 2          # p+n merge is allowed
+
+
+def test_reco_response_refuses_a_library_from_other_beams(toy_sample):
+    """The coupling point, so the mistake is caught on any call path."""
+    cfg, smp = toy_sample
+    lib = _library(cfg, smp)
+    resp = hfs.HFSResponse(lib)
+    resp.check_beams(cfg.electron_energy, cfg.ion_momentum_per_nucleon)
+    with pytest.raises(ValueError, match="not transferable"):
+        resp.check_beams(cfg.electron_energy, 137.5)
+    other_cfg = beams.default_configs("6Li")[2]
+    kern = InclusiveKernel(beams.LI6, b1_func=toy_b1)
+    scen = rp.generator_scenario(fom.Scenario())
+    sampler = InclusiveSampler(kern, other_cfg, scen, nx=8, nq2=6,
+                               q2_range=(0.7, 2e3))
+    with pytest.raises(ValueError, match="not transferable"):
+        rp.RecoResponse(sampler, rp.RecoModel(y_source="hfs"),
+                        n_mc_per_cell=5, rng=np.random.default_rng(1),
+                        hfs=resp)
+
+
+def test_energy_scale_levers_of_the_sigma_method(toy_sample):
+    """d ln x / d ln E' = 2 - y and d ln x / d ln (hadronic scale) =
+    -(1 - y): the ELECTRON scale is the bigger lever, about twice the
+    hadronic one."""
+    cfg, smp = toy_sample
+    lib = _library(cfg, smp)
+    kern = InclusiveKernel(beams.LI6, b1_func=toy_b1)
+    scen = fom.Scenario()
+    gen = rp.generator_scenario(scen)
+
+    def build(e_scale=1.0, h_scale=1.0):
+        sampler = InclusiveSampler(kern, cfg, gen, nx=20, nq2=15,
+                                   q2_range=(0.7, 2e3))
+        model = rp.RecoModel(q2_min=scen.q2_min, y_min=scen.y_min,
+                             y_max=scen.y_max, w2_min=scen.w2_min,
+                             eta_min=scen.eta_min, eta_max=scen.eta_max,
+                             e_prime_min=scen.e_prime_min, y_source="hfs",
+                             e_scale=e_scale)
+        return rp.RecoResponse(sampler, model, n_mc_per_cell=60,
+                               rng=np.random.default_rng(7),
+                               hfs=hfs.HFSResponse(lib, scale=h_scale))
+
+    base = build()
+    for kw, expected in ((dict(e_scale=1.01), lambda y: 2.0 - y),
+                         (dict(h_scale=1.01), lambda y: -(1.0 - y))):
+        alt = build(**kw)
+        ok = (np.isfinite(base.x_reco) & np.isfinite(alt.x_reco)
+              & (base.x_reco > 0) & (alt.x_reco > 0))
+        lever = np.median(np.log(alt.x_reco[ok] / base.x_reco[ok])
+                          / np.log(1.01))
+        assert lever == pytest.approx(expected(np.median(base.y[ok])),
+                                      abs=0.05)
+
+
+def test_parametrized_hadronic_y_understates_the_electron_lever(toy_sample):
+    """A limitation of the Gaussian stand-in worth stating: it smears the
+    TRUE y and never sees E', so the electron energy scale moves x only
+    through Q2 (lever 1) instead of 2 - y."""
+    cfg, _ = toy_sample
+    kern = InclusiveKernel(beams.LI6, b1_func=toy_b1)
+    scen = fom.Scenario()
+    gen = rp.generator_scenario(scen)
+
+    def build(e_scale=1.0):
+        sampler = InclusiveSampler(kern, cfg, gen, nx=20, nq2=15,
+                                   q2_range=(0.7, 2e3))
+        model = rp.RecoModel(q2_min=scen.q2_min, y_min=scen.y_min,
+                             y_max=scen.y_max, w2_min=scen.w2_min,
+                             eta_min=scen.eta_min, eta_max=scen.eta_max,
+                             e_prime_min=scen.e_prime_min, e_scale=e_scale)
+        return rp.RecoResponse(sampler, model, n_mc_per_cell=60,
+                               rng=np.random.default_rng(7))
+
+    base, alt = build(), build(1.01)
+    ok = (np.isfinite(base.x_reco) & np.isfinite(alt.x_reco)
+          & (base.x_reco > 0) & (alt.x_reco > 0))
+    lever = np.median(np.log(alt.x_reco[ok] / base.x_reco[ok]) / np.log(1.01))
+    assert lever == pytest.approx(1.0, abs=1e-6)

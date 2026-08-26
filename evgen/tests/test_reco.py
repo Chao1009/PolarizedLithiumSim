@@ -373,3 +373,45 @@ def test_per_fill_acceptance_normalizes_and_validates():
     assert reco.per_fill_acceptance(f, 2) == [f, f]
     with pytest.raises(ValueError):
         reco.per_fill_acceptance([f, f, f], 2)
+
+
+# --- eta-dependent calorimeter resolution (code review F4) ------------------
+
+def test_emcal_eta_table_matches_the_yellow_report_regions():
+    """Without `eta` the backward-endcap (PbWO4) specification applies
+    everywhere -- the behaviour the chain had before 2026-08-25 and the
+    default, so nothing published moves."""
+    for e in (1.0, 10.0):
+        assert reco.emcal_resolution(e) == reco.emcal_resolution(e, eta=-3.0)
+    # backward endcap unchanged, barrel and transition coarser
+    assert reco.emcal_resolution(10.0, eta=-2.5) == pytest.approx(0.0118,
+                                                                 abs=1e-4)
+    assert reco.emcal_resolution(10.0, eta=-1.6) / \
+        reco.emcal_resolution(10.0, eta=-3.0) == pytest.approx(2.06, rel=0.05)
+    assert reco.emcal_resolution(10.0, eta=0.0) / \
+        reco.emcal_resolution(10.0, eta=-3.0) == pytest.approx(2.81, rel=0.05)
+    # the ratio is energy-dependent: quoting "x3" without an energy is wrong
+    assert reco.emcal_resolution(1.0, eta=0.0) / \
+        reco.emcal_resolution(1.0, eta=-3.0) > 4.0
+    # vectorized over eta
+    out = reco.emcal_resolution(np.full(4, 10.0),
+                                eta=np.array([-3.0, -1.6, 0.0, 2.0]))
+    assert out.shape == (4,) and np.all(np.diff(out[:3]) > 0)
+
+
+def test_best_energy_switches_to_the_tracker_in_the_barrel():
+    """With the Yellow Report table on, min(cal, trk) IS the eta/E switch
+    recommendation 4 endorses: crystals backward, tracker in the barrel."""
+    for eta, expect_cal in ((-3.0, True), (-1.6, False), (0.0, False)):
+        cal = reco.emcal_resolution(10.0, eta=eta)
+        trk = reco.tracking_resolution(10.0, eta)
+        assert bool(cal < trk) is expect_cal
+
+
+def test_sweet_spot_electrons_are_insensitive_to_the_table():
+    """The four sweet spots sit at eta = -2.9 to -1.6 with E' ~ 10 GeV;
+    three of them are in the backward endcap, so the headline numbers do
+    not move (code review F4)."""
+    for eta in (-2.93, -2.92, -2.42):
+        assert reco.emcal_resolution(9.9, eta=eta) == pytest.approx(
+            reco.emcal_resolution(9.9), rel=1e-12)

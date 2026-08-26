@@ -54,6 +54,11 @@ class RecoModel:
     energy: str = "emcal"          # "emcal" | "tracking" | "best"
     emcal_stoch: float = 0.02
     emcal_const: float = 0.01
+    emcal_eta_table: bool = False  # True: Yellow Report requirements per
+    #   eta region (reco.EMCAL_YR_TABLE) instead of the backward-endcap
+    #   specification everywhere (code review F4).  With energy="best"
+    #   the tracker then takes over in the barrel, which is what an
+    #   experiment does.
     y_method: str = "mixed"        # "mixed" (Q2_e, y_had) | "electron"
     y_source: str = "param"        # "param": reco.hadronic_y Gaussian stand-in
     #   | "hfs": hadronic final state through hfs.HFSResponse (library of
@@ -64,6 +69,14 @@ class RecoModel:
     #   the ATHENA Fig. 22 value at y ~ 0.01 (-> ~0.10 at y ~ 0.1); see
     #   reco.hadronic_y for the sources (y_source = "param" only)
     beam_e_spread: float = 1.0e-3
+    e_scale: float = 1.0           # multiplicative CALIBRATION error on the
+    #   measured E', unknown to the analysis.  The bigger of the two energy
+    #   levers: with x = Q2_e/(s y_Sigma) and dln y_Sigma/dln E' = -(1-y),
+    #   dln x/dln E' = 2 - y ~ 2, twice the hadronic one.
+    eid_tilt: float = 0.0          # linear eta slope on eps_eID, normalized
+    #   at eta = 0: eps -> eps (1 + eid_tilt * eta).  A FLAT eps_eID error is
+    #   identically null (it cancels in every ratio the analysis forms);
+    #   only an eta shape moves a number.
     eid: bool = True
     xing: float = reco.XING_IP6
     phi_s: float = np.pi / 2.0     # vertical alignment axis
@@ -77,7 +90,9 @@ class RecoModel:
     e_prime_min: float = 0.5
 
     def energy_resolution(self, e_prime, eta):
-        cal = reco.emcal_resolution(e_prime, self.emcal_stoch, self.emcal_const)
+        cal = reco.emcal_resolution(
+            e_prime, self.emcal_stoch, self.emcal_const,
+            eta=(eta if self.emcal_eta_table else None))
         if self.energy == "emcal":
             return cal
         trk = reco.tracking_resolution(e_prime, eta)
@@ -108,6 +123,9 @@ class RecoResponse:
         the hadronic y of every pseudo-event then comes from a generator
         event of the same (x, Q2) cell passed through the hadron-side
         detector response, instead of the Gaussian stand-in."""
+        if hfs is not None:
+            hfs.check_beams(sampler.config.electron_energy,
+                            sampler.config.ion_momentum_per_nucleon)
         self.sampler = sampler
         self.model = model or RecoModel()
         self.n_mc_per_cell = n_mc_per_cell
@@ -150,7 +168,7 @@ class RecoResponse:
         eta_lab = -np.log(np.tan(np.minimum(th_lab, np.pi - 1e-9) / 2.0))
         de = m.energy_resolution(e_lab, eta_lab)
         sig_ang = reco.tracking_angular_resolution(eta_lab)
-        e_m = e_lab * (1.0 + de * rng.standard_normal(n))
+        e_m = m.e_scale * e_lab * (1.0 + de * rng.standard_normal(n))
         th_m = np.clip(th_lab + sig_ang * rng.standard_normal(n), 1e-9,
                        np.pi - 1e-9)
         # transverse direction resolution -> azimuth resolution sig/sin th'
@@ -196,7 +214,10 @@ class RecoResponse:
                & (eta_r <= m.eta_max) & (e_m >= m.e_prime_min))
         eff = sel.astype(float)
         if m.eid:
-            eff = eff * reco.eps_eid(eta_r)
+            eps = reco.eps_eid(eta_r)
+            if m.eid_tilt:
+                eps = np.clip(eps * (1.0 + m.eid_tilt * eta_r), 0.0, 1.0)
+            eff = eff * eps
 
         # 4. azimuth dilution --------------------------------------------
         phip_true = reco.azimuth_wrt_lepton_plane(k, kp, p_ion, s_vec)
