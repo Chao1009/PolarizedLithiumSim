@@ -463,7 +463,13 @@ list it in the plans/07 systematics.
 1 + w_avg > 0, not |a₁| + |a₂| ≤ 1 + w_avg; for unphysical amplitudes it
 silently samples max(W, 0) (reviewer: Δ = 3F₁ gives 2⟨cos 2φ′⟩ = −1.117
 vs a₂ = −1.232). Harmless at physical 10⁻³–10⁻² amplitudes; add the
-guard.
+guard. *Done 2026-08-25 (plans/08 B1):* `InclusiveSampler._density_min`
+computes the EXACT minimum over φ of 1 + A cos φ + B cos 2φ (the vertex
+of the quadratic in cos φ, not the envelope 1 + |A| + |B|), and
+`_amplitudes` raises with the offending cell.  `phi_histogram_pseudo`
+carries its own guard: it bypasses `_amplitudes` and is the path behind
+the headline figures.  Every repository scenario keeps a margin > 0.9,
+so nothing existing fires.
 
 **G4 — LOW:** the single-fill estimators Â = a₂/P_zz are biased by the
 transverse-fill tensor rate shift when b₁ ≠ 0 (Â/A = 1.0015 at

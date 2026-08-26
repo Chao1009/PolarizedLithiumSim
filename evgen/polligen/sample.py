@@ -66,6 +66,47 @@ class InclusiveSampler:
 
     # --- per-(category, m) amplitude tables --------------------------------
 
+    @staticmethod
+    def _density_min(a1n, a2n):
+        """Minimum over phi of W/(1 + w_avg) = 1 + A cos phi + B cos 2phi.
+
+        With c = cos phi in [-1, 1] this is the quadratic
+        f(c) = 2B c^2 + A c + (1 - B), so the minimum is at the vertex
+        c* = -A/(4B) when B > 0 and |c*| <= 1, and at an endpoint
+        otherwise -- exact, where the accept-reject envelope
+        1 + |A| + |B| is only a bound."""
+        a, b = np.asarray(a1n, dtype=float), np.asarray(a2n, dtype=float)
+        ends = 1.0 - np.abs(a) + b                    # min(f(+1), f(-1))
+        with np.errstate(divide="ignore", invalid="ignore"):
+            cstar = np.where(b > 0, -a / (4.0 * b), np.inf)
+        vertex = (1.0 - b) - a * a / np.where(b > 0, 8.0 * b, 1.0)
+        return np.where((b > 0) & (np.abs(cstar) <= 1.0), vertex, ends)
+
+    def _check_positive(self, w_avg, a1, a2, label):
+        """Raise if the phi density goes negative anywhere on the grid.
+
+        The accept-reject of `_sample_state` draws u in [0, bound) and
+        accepts on u < density, so a negative density is silently sampled
+        as max(W, 0): the modulation comes out diluted AND the (x, Q2)
+        mixture is skewed, because the cell weights assume the per-cell
+        phi integral is 2 pi (1 + w_avg)."""
+        den = 1.0 + w_avg
+        margin = self._density_min(a1 / den, a2 / den)
+        bad = margin < 0.0
+        if np.any(bad):
+            k = int(np.argmin(margin))
+            raise ValueError(
+                "negative phi density for %s: %d of %d cells, worst "
+                "min(W)/(1+w_avg) = %.4f at x = %.4g, Q2 = %.4g "
+                "(a1/den = %.3f, a2/den = %.3f).  The sampler would "
+                "silently draw max(W, 0), diluting the modulation and "
+                "skewing the (x, Q2) mixture; reduce the scenario "
+                "amplitude." % (label, int(bad.sum()), margin.size,
+                                float(margin[k]), float(self.x_cells[k]),
+                                float(self.q2_cells[k]), float(a1[k] / den[k]),
+                                float(a2[k] / den[k])))
+        return float(np.min(margin))
+
     def _state(self, category, m):
         return EventSpinState(lam_e=category.lam_e, pe=category.pe,
                               j=category.j, m=m, theta_s=category.theta_s,
@@ -81,6 +122,8 @@ class InclusiveSampler:
             if np.any(1.0 + w_avg <= 0.0):
                 raise ValueError("negative phi-averaged density for %s m=%g"
                                  % (category.name, m))
+            self._check_positive(w_avg, a1, a2,
+                                 "%s m=%g" % (category.name, m))
             self._amp_cache[key] = (w_avg, a1, a2)
         return self._amp_cache[key]
 
@@ -283,8 +326,16 @@ def phi_histogram_pseudo(n_expected, a2, nbins=36, rng=None, a1=0.0,
     projections cost 36 Poisson draws instead of 1e8 rows.
 
     Returns (counts, edges) ready for estimators.cos2phi_fit_binned.
+
+    Raises if 1 + a1 cos phi' + a2 cos 2phi' goes negative anywhere: this
+    path bypasses the sampler's own guard and would otherwise hand
+    negative bin means to the estimator.
     """
     rng = rng or np.random.default_rng(20260713)
+    margin = float(InclusiveSampler._density_min(a1, a2))
+    if margin < 0.0:
+        raise ValueError("negative phi' density: min(1 + %.4g cos phi' + "
+                         "%.4g cos 2phi') = %.4f" % (a1, a2, margin))
     edges = np.linspace(0.0, 2.0 * np.pi, nbins + 1)
     lo, hi = edges[:-1], edges[1:]
     mu = (n_expected / (2.0 * np.pi)) * (

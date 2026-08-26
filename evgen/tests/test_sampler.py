@@ -9,6 +9,7 @@ import pytest
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 
 from polligen import bookkeeping as bk  # noqa: E402
+from polligen import sample  # noqa: E402
 from polligen.sample import InclusiveSampler  # noqa: E402
 from polligen.xsec import InclusiveKernel  # noqa: E402
 
@@ -138,3 +139,55 @@ def test_sampled_events_respect_acceptance(sampler):
     sc = sampler.scenario
     assert ev["y"].max() <= sc.y_max + 1e-12
     assert ev["y"].min() >= sc.y_min - 1e-12
+
+
+# --- positivity of the phi density (code review G3) -------------------------
+
+def test_density_min_is_exact():
+    """The guard uses the EXACT minimum over phi, not the accept-reject
+    envelope 1 + |A| + |B|; check it against a fine scan."""
+    rng = np.random.default_rng(3)
+    a = rng.uniform(-2.0, 2.0, 300)
+    b = rng.uniform(-2.0, 2.0, 300)
+    phi = np.linspace(0.0, 2.0 * np.pi, 8001)
+    brute = np.array([np.min(1.0 + ai * np.cos(phi) + bi * np.cos(2.0 * phi))
+                      for ai, bi in zip(a, b)])
+    exact = InclusiveSampler._density_min(a, b)
+    np.testing.assert_allclose(exact, brute, atol=1e-6)
+
+
+def test_sampler_refuses_a_negative_phi_density():
+    """An oversized Delta makes 1 + a2 cos 2phi' dip below zero; the
+    accept-reject would silently sample max(W, 0), diluting the
+    modulation and skewing the (x, Q2) mixture."""
+    cfg = beams.default_configs("6Li")[1]
+    scen = fom.Scenario()
+    big = InclusiveKernel(beams.LI6, delta_func=lambda x, q2, f1: 3.0 * f1)
+    sampler = InclusiveSampler(big, cfg, scen, nx=12, nq2=9)
+    plan = bk.transverse_tensor_plan(0.6)
+    with pytest.raises(ValueError, match="negative phi density"):
+        sampler.sigma_tot_pb(plan.categories[0])
+
+
+def test_production_scenarios_keep_a_healthy_margin():
+    """Nothing in the repository's own scenarios comes near the bound."""
+    cfg = beams.default_configs("6Li")[1]
+    scen = fom.Scenario()
+    kern = InclusiveKernel(beams.LI6, b1_func=toy_b1,
+                           delta_func=lambda x, q2, f1: -1e-2 * f1)
+    sampler = InclusiveSampler(kern, cfg, scen, nx=20, nq2=15)
+    cat = bk.transverse_tensor_plan(0.6).categories[0]
+    w, a1, a2 = sampler._amplitudes(cat, 1.0)
+    margin = sampler._check_positive(w, a1, a2, "test")
+    assert margin > 0.9
+
+
+def test_phi_histogram_pseudo_refuses_negative_bin_means():
+    """This path bypasses the sampler's guard and feeds the estimator
+    directly, so it needs its own."""
+    counts, _ = sample.phi_histogram_pseudo(1e6, 0.5, poisson=False)
+    assert np.all(counts > 0)
+    with pytest.raises(ValueError, match="negative phi' density"):
+        sample.phi_histogram_pseudo(1e6, 1.5, poisson=False)
+    with pytest.raises(ValueError, match="negative phi' density"):
+        sample.phi_histogram_pseudo(1e6, 0.2, a1=1.5, poisson=False)
