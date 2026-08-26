@@ -122,3 +122,71 @@ def test_delta_sector_does_not_depend_on_the_convention():
     np.testing.assert_allclose(a2, expected, rtol=1e-12)
     assert float(a2) > 0.0            # Delta < 0 with c_m = +1 -> a2 > 0
     assert "TENSOR_LL_SIGN" not in asym.a_cos2phi.__doc__.upper()
+
+
+# --- one rank-2 geometry for both spins (plans/08 B3) ----------------------
+
+def _q_nn(j, m):
+    return (3.0 * m * m - j * (j + 1.0)) / 3.0
+
+
+def test_rank2_moments_are_one_formula_for_both_spins():
+    """Cosyn Eq. (9): t_ij = (Q_NN/2)(3 n_i n_j - d_ij) for any J, so
+    T_LL = Q_NN P_2 and T_TT = (3/2) Q_NN sin^2.  The kernel returns
+    (Q_NN, 3 Q_NN) and builds both channels from it."""
+    for ion, j, ms in ((beams.LI6, 1.0, (1.0, 0.0, -1.0)),
+                       (beams.LI7, 1.5, (1.5, 0.5, -0.5, -1.5))):
+        kern = InclusiveKernel(ion)
+        for m in ms:
+            q, c = kern._tensor_moments(m)
+            assert q == pytest.approx(_q_nn(j, m), rel=1e-12)
+            assert c == pytest.approx(3.0 * q, rel=1e-12)
+    # spin 1/2 carries no rank-2 alignment
+    assert InclusiveKernel(beams.PROTON)._tensor_moments(0.5) == (0.0, 0.0)
+
+
+def test_spin1_geometry_is_unchanged_by_the_unification():
+    """The J = 1 branch must reproduce the Hoodbhoy-Jaffe-Manohar
+    transcription digit for digit: Q_NN = c_m/3 and 3 Q_NN = c_m."""
+    kern = InclusiveKernel(beams.LI6, b1_func=toy_b1)
+    for m in (1.0, 0.0, -1.0):
+        c_m = 3.0 * m * m - 2.0
+        q, c = kern._tensor_moments(m)
+        assert q == pytest.approx(c_m / 3.0, rel=1e-13)
+        assert c == pytest.approx(c_m, rel=1e-13)
+    x, q2 = 0.056, 1.14
+    xa, qa = np.array([x]), np.array([q2])
+    t = kern.tables(xa, qa)
+    state = EventSpinState(lam_e=0, pe=0.0, j=1.0, m=1.0, theta_s=0.0)
+    w_avg, _, _ = kern.amplitudes(t, xa, qa, S, state)
+    expected = 0.5 * asym.azz(t["b1"], t["f1"], t["f2"], x,
+                              q2 / (S * x), b2=t["b2"])
+    np.testing.assert_allclose(w_avg, expected, rtol=1e-13)
+
+
+def test_spin32_rate_and_cos2phi_channels_are_now_consistent():
+    """CHARACTERIZATION, not a physics assertion: the spin-3/2 rank-2
+    normalization is plans/04 #14 and this records the adopted one.  What
+    the test does pin is INTERNAL consistency -- before 2026-08-25 the
+    J = 3/2 branch returned (Q_NN, Q_NN), so its rate and cos 2phi
+    channels disagreed with each other by 3 while J = 1 did not."""
+    def ratio(ion, j):
+        kern = InclusiveKernel(
+            ion, b1_32_func=lambda x, q2, f1: 0.05 * f1,
+            delta_32_func=lambda x, q2, f1: -1e-2 * f1,
+            b1_func=lambda x, q2, f1: 0.05 * f1,
+            delta_func=lambda x, q2, f1: -1e-2 * f1)
+        x, q2 = 0.056, 1.14
+        xa, qa = np.array([x]), np.array([q2])
+        t = kern.tables(xa, qa)
+        m = j                                     # the stretched state
+        long_ = kern.amplitudes(t, xa, qa, S,
+                                EventSpinState(0, 0.0, j, m, theta_s=0.0))[0]
+        trans = kern.amplitudes(t, xa, qa, S,
+                                EventSpinState(0, 0.0, j, m,
+                                               theta_s=np.pi / 2))[2]
+        return float(trans) / float(long_)
+
+    r1, r32 = ratio(beams.LI6, 1.0), ratio(beams.LI7, 1.5)
+    # the ratio is Q_NN-free by construction, so it must be spin-independent
+    assert r32 == pytest.approx(r1, rel=1e-10)

@@ -117,3 +117,39 @@ def test_unphysical_populations_raise():
         spin.rho_from_populations(1.0, (0.7, 0.6, -0.3))
     with pytest.raises(ValueError):
         spin.spin32_populations(1.2, 0.0, 0.0)
+
+
+# --- paths with no coverage until 2026-08-25 (plans/08 B4) -----------------
+
+def test_maxent_populations_obey_the_spin_temperature_relation():
+    """p_m ~ exp(beta m) with <J_z>/J = pz.  For spin 1 the implied
+    tensor moment is P_zz = 2 - sqrt(4 - 3 pz^2), which is what
+    bookkeeping.helicity_flip_plan hands to the money scripts as
+    `pzz_true` -- and which nothing constrained."""
+    for pz in (0.2, 0.5, 0.7, 0.9):
+        pops = spin.populations_maxent(1.0, pz)
+        assert sum(pops) == pytest.approx(1.0, abs=1e-12)
+        assert all(p >= 0.0 for p in pops)
+        ms = spin.m_values(1.0)
+        assert float(np.dot(ms, pops)) == pytest.approx(pz, abs=1e-10)
+        pzz = float(np.dot(3.0 * ms ** 2 - 2.0, pops))
+        assert pzz == pytest.approx(2.0 - np.sqrt(4.0 - 3.0 * pz * pz),
+                                    abs=1e-12)
+    # spin temperature is a one-parameter family: the ratio is geometric
+    p = spin.populations_maxent(1.0, 0.6)
+    assert p[0] * p[2] == pytest.approx(p[1] ** 2, rel=1e-10)
+    with pytest.raises(ValueError):
+        spin.populations_maxent(1.0, 1.0)
+
+
+def test_maxent_populations_for_spin_three_halves():
+    for pz in (0.3, 0.8):
+        pops = spin.populations_maxent(1.5, pz)
+        ms = spin.m_values(1.5)
+        assert sum(pops) == pytest.approx(1.0, abs=1e-12)
+        assert all(p >= 0.0 for p in pops)
+        assert float(np.dot(ms, pops)) / 1.5 == pytest.approx(pz, abs=1e-10)
+        # geometric, so consecutive ratios are equal
+        r = [pops[i + 1] / pops[i] for i in range(3)]
+        assert r[0] == pytest.approx(r[1], rel=1e-9)
+        assert r[1] == pytest.approx(r[2], rel=1e-9)

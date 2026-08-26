@@ -209,3 +209,52 @@ def test_identities_on_grid_backends(setup6):
         (sigma[1.0] + sigma[-1.0] - 2 * sigma[0.0])
         / (sigma[1.0] + sigma[-1.0] + sigma[0.0]),
         azz(t["b1"], t["f1"], t["f2"], x, y), rtol=1e-12)
+
+
+# --- paths with no coverage until 2026-08-25 (plans/08 B4) -----------------
+
+def test_b2_override_is_used_and_is_not_the_default():
+    """`b2_func` has never been exercised: every test and script leaves it
+    None, so the kernel silently uses b2 = 2x b1."""
+    cfg = beams.default_configs("6Li")[1]
+    s = cfg.sqrt_s_per_nucleon ** 2
+    x = np.array([0.02, 0.056, 0.14])
+    q2 = np.array([1.14, 1.14, 3.13])
+    b1f = lambda x, q2, f1: 0.05 * f1                       # noqa: E731
+    b2f = lambda x, q2, f1: 5.0 * x * 0.05 * f1             # noqa: E731
+    default = InclusiveKernel(beams.LI6, b1_func=b1f)
+    override = InclusiveKernel(beams.LI6, b1_func=b1f, b2_func=b2f)
+    td, to = default.tables(x, q2), override.tables(x, q2)
+    np.testing.assert_allclose(td["b2"], 2.0 * x * td["b1"], rtol=1e-12)
+    np.testing.assert_allclose(to["b2"], 5.0 * x * to["b1"], rtol=1e-12)
+    assert not np.allclose(td["b2"], to["b2"])
+    state = EventSpinState(lam_e=0, pe=0.0, j=1.0, m=1.0, theta_s=0.0)
+    y = q2 / (s * x)
+    wo, _, _ = override.amplitudes(to, x, q2, s, state)
+    np.testing.assert_allclose(
+        wo, 0.5 * azz(to["b1"], to["f1"], to["f2"], x, y, b2=to["b2"]),
+        rtol=1e-12)
+    wd, _, _ = default.amplitudes(td, x, q2, s, state)
+    assert not np.allclose(wd, wo)
+
+
+def test_tensor_rate_at_an_intermediate_axis_angle():
+    """theta_S is only ever 0 or pi/2 in the suite; the P_2(cos theta_S)
+    geometry between them is untested."""
+    cfg = beams.default_configs("6Li")[1]
+    s = cfg.sqrt_s_per_nucleon ** 2
+    x, q2 = np.array([0.056]), np.array([1.14])
+    y = q2 / (s * x)
+    kern = InclusiveKernel(beams.LI6, b1_func=lambda x, q2, f1: 0.05 * f1)
+    t = kern.tables(x, q2)
+    for th in (0.0, 0.4, 0.7, np.arccos(1.0 / np.sqrt(3.0)), np.pi / 2):
+        state = EventSpinState(lam_e=0, pe=0.0, j=1.0, m=1.0, theta_s=th)
+        w, _, _ = kern.amplitudes(t, x, q2, s, state)
+        np.testing.assert_allclose(
+            w, 0.5 * azz(t["b1"], t["f1"], t["f2"], x, y, b2=t["b2"],
+                         theta_m=th), rtol=1e-12)
+    # the magic angle kills the rate shift exactly
+    magic = EventSpinState(lam_e=0, pe=0.0, j=1.0, m=1.0,
+                           theta_s=np.arccos(1.0 / np.sqrt(3.0)))
+    w, _, _ = kern.amplitudes(t, x, q2, s, magic)
+    assert abs(float(w)) < 1e-15

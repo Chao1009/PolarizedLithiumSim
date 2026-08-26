@@ -25,8 +25,9 @@ is an open author decision (plans/08 D1).  The Delta sector does not
 depend on it.
 
 Spin-3/2 (7Li): rank-0/1 exact via (F1, F2, g1, g2); rank-2 is a SCENARIO
-slot (plans/04 #14) with normalized T_m = (3 m^2 - 15/4)/3 -> (1,-1,-1,1):
-t_geo = T_m P2(cos theta_S), c_eff = T_m; both default to zero SFs.
+slot (plans/04 #14) sharing the SAME geometry as spin 1 --
+Q_NN = [3m^2 - J(J+1)]/3 -> (1,-1,-1,1) x 1 for J = 3/2, t_geo = Q_NN
+P2(cos theta_S), c_eff = 3 Q_NN (Cosyn Eq. 9); both default to zero SFs.
 Rank-3 dropped (plans/05 truncation).
 
 Vector-sector y-factors follow the fastsim approximation set:
@@ -183,15 +184,36 @@ class InclusiveKernel:
         return d * amp
 
     def _tensor_moments(self, m):
-        """(t_geo prefactor c-like, c_eff) for a pure state m."""
+        """Rank-2 alignment of a pure state m, in ONE form for every spin.
+
+        Cosyn et al. (arXiv:2410.12764) Eq. (9) writes the alignment
+        tensor of any spin-J state as t_ij = (Q_NN/2)(3 n_i n_j - d_ij)
+        with the single scalar
+
+            Q_NN(m) = [3 m^2 - J(J+1)] / 3,
+
+        so the longitudinal-longitudinal and transverse-transverse
+        projections are T_LL = Q_NN P_2(cos Theta) and
+        T_TT = (3/2) Q_NN sin^2 Theta.  Returning (Q_NN, 3 Q_NN)
+        therefore gives ONE geometry for both spins:
+
+            t_geo = Q_NN P_2(cos theta_S)     (the b1/b2 rate shift)
+            c_eff = 3 Q_NN                    (the cos 2phi coefficient)
+
+        For J = 1, Q_NN = c_m/3 with c_m = 3m^2 - 2, so this reproduces
+        the Hoodbhoy-Jaffe-Manohar transcription exactly, digit for digit.
+        For J = 3/2 it CHANGES the cos 2phi channel by a factor 3: the
+        previous code returned (Q_NN, Q_NN), i.e. its rate and cos 2phi
+        channels were inconsistent with each other by that factor.  The
+        7Li rank-2 structure functions default to None, so nothing
+        published moves; the overall rank-2 normalization convention for
+        spin 3/2 is plans/04 #14 and this is the adopted one.
+        """
         j = self.ion.spin
-        if abs(j - 1.0) < 1e-9:
-            c_m = 3.0 * m * m - 2.0
-            return c_m, c_m
-        if abs(j - 1.5) < 1e-9:
-            t_m = (3.0 * m * m - j * (j + 1)) / 3.0
-            return t_m, t_m
-        return 0.0, 0.0
+        if j < 1.0 - 1e-9:
+            return 0.0, 0.0
+        q_nn = (3.0 * m * m - j * (j + 1.0)) / 3.0
+        return q_nn, 3.0 * q_nn
 
     # --- modulation amplitudes -------------------------------------------
 
@@ -211,13 +233,11 @@ class InclusiveKernel:
         w_avg = np.zeros(np.broadcast(x, q2).shape)
         a_2 = np.zeros_like(w_avg)
         if j >= 1.0 - 1e-9:
-            c_like, c_eff = self._tensor_moments(state.m)
-            if abs(j - 1.0) < 1e-9:
-                # HJM: (2/3) a_m K / D_phi, a_m = (1/4) c_m (3 cos^2 - 1)
-                t_geo = (c_like / 6.0) * (3.0 * ct * ct - 1.0)
-            else:
-                t_geo = c_like * 0.5 * (3.0 * ct * ct - 1.0)
-            t_geo = TENSOR_LL_SIGN * t_geo   # asymmetries.TENSOR_LL_SIGN
+            q_nn, c_eff = self._tensor_moments(state.m)
+            # T_LL = Q_NN P_2(cos theta_S), one line for every spin; for
+            # J = 1 this is the HJM (2/3) a_m with a_m = (1/4) c_m
+            # (3 cos^2 - 1), digit for digit
+            t_geo = TENSOR_LL_SIGN * q_nn * 0.5 * (3.0 * ct * ct - 1.0)
             kern = self._tensor_kernel(t, x, y)
             w_avg = w_avg + t_geo * kern / np.maximum(dphi, 1e-30)
             a_2 = (-(1.0 - y) / (y * y) * c_eff * st * st

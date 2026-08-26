@@ -217,7 +217,7 @@ the opposite, so **D1 becomes a one-line change**.
 other 125 tests still pass and only `test_tensor_convention.py` fails,
 with the decision in the assertion message.
 
-### B3 — one rank-2 geometry for J = 1 and J = 3/2 ☐
+### B3 — one rank-2 geometry for J = 1 and J = 3/2 ☑
 `_tensor_moments` returns (Q_NN, Q_NN); Cosyn Eq. (9) gives
 T_LL = Q_NN P₂(cos Θ) and T_TT = (3/2) Q_NN sin²Θ, so the cos 2φ channel
 wants 3 Q_NN. Spin-1 already satisfies this; the spin-3/2 branch is off
@@ -228,10 +228,17 @@ operators, not on one branch against the other. For J = 3/2 write a
 *characterization* test citing `plans/04` #14: asserting cross-J equality
 would freeze a convention the documents declare open.
 
-### B4 — pin the untested paths ☐
+### B4 — pin the untested paths ◐
 `populations_maxent` (spin-temperature populations), `b2_func` ≠ 2xb₁,
 the θ_S ≠ π/2 thirds identity, and `helicity_flip_plan(...).pzz_true` —
 the quantity the money scripts divide by — have no test.
+
+*Done 2026-08-25* for the first three: the spin-temperature populations
+are pinned for both spins against P_zz = 2 − √(4 − 3p_z²) and the
+geometric-ratio property; a `b2_func` override is pinned against `azz`
+with an explicit "not the default" guard; and the tensor rate is checked
+across θ_S including the magic angle, where it vanishes exactly.  The
+spin-3/2 rank-2 sector is a characterization test (plans/04 #14).
 
 ### C1 — far forward: angular near-beam cut, OMD window, nucleus mass ◐
 `route_charged` already receives θ, so the 10σ envelope becomes one line

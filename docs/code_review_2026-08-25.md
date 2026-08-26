@@ -716,6 +716,11 @@ spectator κ values and boost; far-forward RP/B0/ZDC windows; the
    resolve the ⁶Li effective-polarization convention.
 9. **Positivity guard in the φ sampler (G3)** and an external-convention
    test for the tensor sector (the identity tests cannot see G1).
+   *Both done 2026-08-25* (plans/08 B1, B2), together with one rank-2
+   geometry for J = 1 and J = 3/2 (B3: the spin-3/2 branch's rate and
+   cos 2φ channels disagreed with each other by 3; latent, since the ⁷Li
+   rank-2 slots default to None) and coverage for the spin-temperature
+   populations, a non-default b₂, and θ_S between 0 and π/2 (B4).
 
 ## 9. What this pass changed (documentation and consistency only)
 

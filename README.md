@@ -36,7 +36,7 @@ on polarized ion beams at the EIC, March 22 – April 2, 2027.
 # fast simulation (25 tests; PDF-grid tests need the `parton` package)
 cd fastsim && python -m pytest tests/ -q
 
-# event generator (136 tests)
+# event generator (143 tests)
 cd evgen && python -m pytest tests/ -q
 
 # money plots (outputs land next to the scripts' working directory)
