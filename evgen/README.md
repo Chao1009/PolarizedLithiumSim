@@ -11,7 +11,7 @@ next. Imports `../fastsim/polli_fastsim` — nothing there is duplicated.
 
 ```bash
 cd evgen
-python3 -m pytest tests/ -q            # 101 tests (grid tests auto-skip)
+python3 -m pytest tests/ -q            # 136 tests (grid tests auto-skip)
 python3 scripts/closure_fom.py --ion 6Li --events 200000 --trials 200
 python3 scripts/closure_fom.py --ion 7Li --events 200000 --trials 200
 python3 scripts/money_tagged_azz.py --events 400000       # money plot 4
@@ -23,6 +23,7 @@ python3 scripts/phase_space_bins.py       # (x,Q2) rate maps + binning
 python3 scripts/reco_chain_figures.py     # reconstruction-chain figures
 python3 scripts/money_cos2phi_reco.py          # money plots 5R + 7R (reco level)
 python3 scripts/money_cos2phi_coherent_reco.py # money plot 6R (reco level)
+python3 scripts/coherent_optics_scan.py   # WP5: the coherent tag vs the near-beam envelope
 python3 ../reports/build_report.py --pdf  # assemble reports/ pages
 #   -> cos2phi_money_plots_report.html/pdf (projection report)
 #   -> polarized_li_primer.html/pdf (educational physics primer)

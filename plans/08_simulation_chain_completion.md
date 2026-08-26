@@ -108,7 +108,7 @@ The honest systematic is the in-situ one: fit (u₁, u₂) from the
 spin-averaged counts of the same data and propagate; ZEUS is then the
 prior it is.
 
-### A4 — WP5: the optics scan ☐
+### A4 — WP5: the optics scan ☑
 *New:* `evgen/scripts/coherent_optics_scan.py`.
 
 Take acceptance and N_tag **analytically** from `reco.rp_hole_acceptance`
@@ -122,6 +122,15 @@ configuration 2 cannot be marked on any MC curve today.
 *Fixes an inconsistency:* `reco_chain_figures.py` panel (c) plots the
 circular acceptance exp(−B c²) while the chain uses the slot — a factor
 ≈ 2.9 on the tagged yield, which also feeds `plans/04` #20.
+
+*Done 2026-08-25* — panel (a) of the new script plots the circular,
+square and slot curves together so the difference is visible rather than
+implicit.  Measured (slot, B = 50): tagged fraction
+32% / 3.0% / 4×10⁻⁵ / 2×10⁻⁷ and δa_t/a_t = 1.6% / 5.7% / 104% / 540%
+at 0.10 / 0.22 / 0.45 / 0.60 GeV.  `t_floor` must stay well below the
+cut: it is a hard lower bound on the TRUE |t|, so with divergence
+smearing it biases the acceptance downward if pushed too close (the
+script uses 0.25 cut²).
 
 ### A5 — energy scales, wrong-MC closure, HFS beam guard ☑
 - `RecoModel.e_scale` (applied to the smeared E′) and an η-slope on

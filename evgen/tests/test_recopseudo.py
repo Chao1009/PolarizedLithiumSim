@@ -435,3 +435,48 @@ def test_basis_2d_sin_columns_are_orthogonal_to_the_cos_ones():
     for i, k1 in enumerate(keys):
         for k2 in keys[i + 1:]:
             assert abs(float(np.dot(b[k1], b[k2]))) < 1e-10
+
+
+# --- importance sampling above the near-beam envelope (plans/08 A4) --------
+
+def test_t_floor_reproduces_the_acceptance_and_reaches_tight_envelopes():
+    """The recoil spectrum is exponential, so sampling from |t_floor|
+    upwards has a CONSTANT likelihood ratio exp(-B t_floor): the estimate
+    is unchanged and the accepted sample grows.  Without it a tight
+    envelope is not simulable at all -- the 0.60 GeV cut of the
+    top-energy configuration leaves zero accepted recoils."""
+    sc = coh.CoherentScenario(slope_b=50.0)
+    kw = dict(shape="ellipse", n_mc=200000, rng=np.random.default_rng(3))
+    plain = rp.CoherentResponse(sc, CONFIG, reco.SIGMA_THETA_HA, **kw)
+    lifted = rp.CoherentResponse(sc, CONFIG, reco.SIGMA_THETA_HA,
+                                 t_floor=0.25 * plain.pt_cut ** 2, **kw)
+    assert lifted.acceptance == pytest.approx(plain.acceptance, rel=0.05)
+    assert lifted.t_true.size > 1.5 * plain.t_true.size
+    assert lifted._t_weight < 1.0 and plain._t_weight == 1.0
+    # the analytic value for the circular cut, within the smearing effect
+    analytic = float(sc.tag_acceptance_angular(
+        reco.SIGMA_THETA_HA, CONFIG.ion_momentum_per_nucleon))
+    assert 0.8 < lifted.acceptance / analytic < 1.5
+
+    top = beams.default_configs("6Li")[2]          # 0.60 GeV envelope
+    dead = rp.CoherentResponse(sc, top, reco.SIGMA_THETA_HA, **kw)
+    assert dead.t_true.size == 0
+    alive = rp.CoherentResponse(sc, top, reco.SIGMA_THETA_HA,
+                                t_floor=0.30, **kw)
+    assert alive.t_true.size > 1000
+    assert 0.0 < alive.acceptance < 1e-6
+
+
+def test_t_floor_weights_leave_the_fit_unbiased():
+    """The per-event weight is uniform, so nothing downstream of the
+    sampler needs to know about it."""
+    sc = coh.CoherentScenario(amp=0.01, eps_b0=-0.08)
+    plan = bk.tensor_flip_plan(0.6)
+    a_t = lambda t: sc.cos2phi_coefficient_deformation(t, 1.0)  # noqa: E731
+    cr = rp.CoherentResponse(sc, CONFIG, reco.SIGMA_THETA_HA,
+                             cut_scale_xy=(2.5, 1.0), n_mc=200000,
+                             rng=np.random.default_rng(11), t_floor=0.012)
+    fit = rp.measure_coherent(cr, 8e7, plan, 0.05, 0.08, a_e=0.010,
+                              a_t_func=a_t, u1=0.05, u2=0.02, poisson=False)
+    assert fit["a_t"] == pytest.approx(fit["truth"]["a_t"], rel=1e-4)
+    assert fit["a_e"] == pytest.approx(0.010, rel=1e-4)

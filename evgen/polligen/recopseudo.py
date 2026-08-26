@@ -366,19 +366,35 @@ class CoherentResponse:
     def __init__(self, scenario, config, sigma_theta, aspect=1.0,
                  shape="rectangle", n_mc=400000, x_pom_range=(1e-3, 1e-2),
                  t_max=0.5, phi_s=np.pi / 2.0, n_sigma=10.0, rng=None,
-                 cut_scale_xy=(1.0, 1.0)):
+                 cut_scale_xy=(1.0, 1.0), t_floor=0.0):
         """`aspect` = sigma_theta_y / sigma_theta_x (beam divergence
         anisotropy; HERA's proton beam had 45 vs 100 MeV horizontal vs
         vertical pT spread at the IP, ZEUS NPB 816:1); `cut_scale_xy`
         scales the cutout half-widths (n_sigma sigma_x, n_sigma sigma_y):
         the ePIC pots surround a horizontal slot, cut_scale_xy = (2.5, 1)
-        (see reco.rp_measure)."""
+        (see reco.rp_measure).
+
+        `t_floor` [GeV^2] importance-samples the recoil above |t| = t_floor
+        instead of from |t| = 0.  The spectrum is exponential, so a shifted
+        exponential has a CONSTANT likelihood ratio exp(-B t_floor): the
+        only change is the per-event weight, and a tight envelope stops
+        being unsimulable.  At the 0.60 GeV envelope of the top-energy
+        configuration the plain sampler leaves ZERO accepted recoils in
+        6e5 draws (exp(-B pT^2) = 1.5e-8), which is why the WP5 error
+        curve could not be produced."""
         rng = rng or np.random.default_rng(20260824)
         self.scenario, self.config = scenario, config
         self.sigma_theta, self.aspect, self.shape = sigma_theta, aspect, shape
         self.n_sigma, self.phi_s = n_sigma, phi_s
         _k, p_ion = reco.beam_fourvectors(config)
-        t = -scenario.sample_t(n_mc, rng, t_max=t_max)
+        t_floor = float(t_floor)
+        if t_floor > 0.0:
+            t = -(t_floor + rng.exponential(1.0 / scenario.slope_b,
+                                            size=n_mc))
+        else:
+            t = -scenario.sample_t(n_mc, rng, t_max=t_max)
+        self.t_floor = t_floor
+        self._t_weight = float(np.exp(-scenario.slope_b * t_floor))
         lo, hi = np.log10(x_pom_range[0]), np.log10(x_pom_range[1])
         x_pom = 10 ** rng.uniform(lo, hi, size=n_mc)
         t_min = reco.mdot(p_ion, p_ion) * x_pom ** 2 / (1.0 - x_pom)
@@ -416,13 +432,15 @@ class CoherentResponse:
             acc = (thx / cx) ** 2 + (thy / cy) ** 2 > 1.0
         p_beam = self.config.ion.A * self.config.ion_momentum_per_nucleon
         self.cut_pt_xy = (p_beam * cx, p_beam * cy)
-        self.acceptance = float(acc.sum()) / n_mc
+        self.acceptance = float(acc.sum()) * self._t_weight / n_mc
         self.t_true = -self._t[acc]
         self.t_reco = -m["t_reco"][acc]
         self.beta_true = np.mod(self._phi_t[acc] - self.phi_s, 2.0 * np.pi)
         self.beta_reco = np.mod(m["phi_t"][acc] - self.phi_s, 2.0 * np.pi)
         self.x_pom = self._x_pom[acc]
-        self.w = np.full(self.t_true.size, 1.0 / n_mc)   # per produced recoil
+        # per produced recoil; the importance-sampling likelihood ratio
+        # is constant for a shifted exponential
+        self.w = np.full(self.t_true.size, self._t_weight / n_mc)
         return self
 
     def with_cut(self, cut_scale_xy):

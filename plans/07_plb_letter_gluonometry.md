@@ -239,6 +239,19 @@ efficiency explicitly.
 - Effort: 3–5 days.
 
 ### WP5 — Coherent channel presentation
+**◐ 2026-08-25: the scan exists** — `evgen/scripts/coherent_optics_scan.py`
+(plans/08 A4) gives all four panels: analytic acceptance vs the envelope
+over B = 40–60 for the slot / square / circular cutouts with the three
+beam configurations marked; tagged yield with exp(−B t_min) (×0.85) and
+the 0.73 rate weighting folded in, against the IR-8 published band; the
+fitted δa_t and δa_e from the full response (importance-sampled above the
+cut — the plain sampler leaves *zero* accepted recoils above 0.3 GeV);
+and acceptance vs beam momentum. Numbers: tagged fraction
+32% / 3.0% / 4×10⁻⁵ / 2×10⁻⁷ and δa_t/a_t = 1.6% / 5.7% / 104% / 540% at
+an envelope of 0.10 / 0.22 / 0.45 / 0.60 GeV. **The coherent measurement
+lives at the low- and mid-energy configurations and is dead at the top
+energy.** Remaining: fold the curve into the letter figure and quote the
+cutout geometry as the assumption it is (#20).
 - ☐ Replace two-point optics with curves vs pT_cut (0.1–0.7 GeV):
   acceptance, N_tag, best-bin δA; mark 0.20 (documented top-rigidity scale,
   ³He precedent) and 0.45 (our derivation) on the curves; state that Li

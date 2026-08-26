@@ -838,10 +838,15 @@
     The one number the analysis cannot produce for itself is the calorimeter noise and
     threshold floor at Σ<sub>h</sub> ≈ 0.2–0.5 GeV, which is what decides the y ≈ 0.01 bins
     (plans/04 #21); the chain that turns it into a δy/y exists (§3).</li>
-    <li><b>The coherent optics.</b> The angular cut is in place, but the acceptance, yield
-    and δa<sub>t</sub> curves versus σ<sub>θ</sub> and p<sub>u</sub> are plans/07 WP5, and
-    the Roman-Pot cutout dimensions for the light-ion optics remain an explicit assumption
-    (plans/04 #20).</li>
+    <li><b>The coherent optics.</b> The scan exists
+    (<code>evgen/scripts/coherent_optics_scan.py</code>): at the slot cutout and B = 50 GeV⁻²
+    the tagged fraction is 32% / 3.0% / 4×10⁻⁵ / 2×10⁻⁷ for a near-beam envelope of
+    0.10 / 0.22 / 0.45 / 0.60 GeV, and the one-year error on the deformation coefficient is
+    1.6% / 5.7% / 104% / 540% of it — so the coherent measurement lives at the low- and
+    mid-energy configurations and is dead at the top energy, which is the quantitative form
+    of the statement the letter needs. What remains is the cutout geometry itself, still an
+    explicit assumption (plans/04 #20), and the IR-8 alternative, whose ⁶Li efficiency is
+    our interpolation of the published d / ³He / ⁴He / ⁷Li values.</li>
     <li><b>Everything downstream of the response.</b> Radiative corrections (WP4); an
     event-level α + d breakup background with the two-component |t| fit (plans/06);
     x<sub>P</sub> from the diffractive mass; an unfolding in place of the model bin-centering
