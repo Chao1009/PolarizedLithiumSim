@@ -596,9 +596,12 @@ and omits the 0.87 (`delta_models.py:39–50` acknowledges the mismatch):
 the b₁ signal-to-error ratio is ×3 inconsistent with the Δ convention.
 
 **S7 — LOW (reference):** `farforward.py:27` OMD window R ∈ [0.40, 0.60]
-against Jentsch–Tu–Weiss Table I ξ = 0.45–0.65 (`refs/2108.08314.pdf`,
-verified); RP 0.6–0.95, B0 5.5–20 mrad, ZDC 4 mrad agree. Affects only
-R ≈ 0.5 fragments.
+against Jentsch–Tu–Weiss Table I ζ = 0.45–0.65 (`refs/2108.08314.pdf`,
+verified; the paper's symbol is ζ, Eq. 58); RP 0.6–0.95, B0 5.5–20 mrad,
+ZDC 4 mrad agree. Affects only R ≈ 0.5 fragments. *Done 2026-08-25
+(plans/08 C1):* window corrected to [0.45, 0.65). The ⁷Li spectator
+proton (R = 3/7 = 0.4286) now falls below the low edge — optics-limited,
+not "lost by construction".
 
 **S8 — MEDIUM (realism):** the fast-sim α-tag applies the 0.20 GeV
 *proton* p_T threshold (`farforward.py:37,59`) to a 4 × 137.5 GeV α; the
@@ -607,6 +610,14 @@ high-divergence) for the α — the same scaling the reconstruction report
 applied to the coherent ⁶Li. Reviewer's re-run: α-tag acceptance
 3.2/6.3/8.9% (β = 0.2/0.3/0.4 GeV) → 0.7/1.7/2.7% with 0.40 GeV, so the
 README's "3–9%" is ≈ 3× optimistic; no σ_θ exists in the fast-sim.
+*Done 2026-08-25 (plans/08 C1):* `Optics` now carries `sigma_theta` and
+`route_charged` cuts on the angle, which is exact per fragment and needs
+no extra argument at any of the eight call sites; `pt_cut_near_beam`
+remains as the 275 GeV proton reference and `pt_cut_for(p)` gives the
+threshold at any momentum. Measured: ⁶Li α-tag 1.7% (high-acceptance) /
+1.3% (high-divergence) at 137.5 GeV/u; ⁷Li α-tag unchanged at 96–98%
+(off rigidity, no near-beam cut). `coherent.tag_acceptance_sampled` now
+closes on `tag_acceptance_angular` instead of the constant cut.
 
 **S9 — documented:** spectator routing uses the true fragment identity
 and momentum; all Z/A = ½ fragments share the beam rigidity; no Z-ID or

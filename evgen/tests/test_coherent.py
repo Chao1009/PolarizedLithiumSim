@@ -46,14 +46,36 @@ def test_sample_t_matches_slope_and_acceptance():
 
 
 def test_tag_acceptance_sampled_through_router():
+    """Since 2026-08-25 the router's near-beam cut is ANGULAR, so the
+    sampled acceptance must reproduce `tag_acceptance_angular` at the
+    configuration's beam momentum -- not the constant 0.20 GeV proton
+    number, which for 6Li at 50 GeV/u is 0.218 GeV and 1.45x smaller
+    acceptance (code review S8)."""
     sc = coh.CoherentScenario(slope_b=50.0)
     p_u = beams.default_configs("6Li")[1].ion_momentum_per_nucleon
     acc = coh.tag_acceptance_sampled(sc, HIGH_ACCEPTANCE, p_u, n=200000,
                                      rng=np.random.default_rng(2))
-    assert acc == pytest.approx(sc.tag_acceptance(0.20), rel=0.03)
+    assert acc == pytest.approx(
+        float(sc.tag_acceptance_angular(HIGH_ACCEPTANCE.sigma_theta, p_u)),
+        rel=0.03)
+    assert acc < sc.tag_acceptance(0.20)
     acc_hd = coh.tag_acceptance_sampled(sc, HIGH_DIVERGENCE, p_u, n=200000,
                                         rng=np.random.default_rng(3))
-    assert acc_hd < 1e-3  # exp(-50 * 0.45^2) ~ 4e-5
+    assert acc_hd < 1e-4
+
+
+def test_angular_cut_scales_with_the_beam_momentum():
+    """The whole point of S8: the same optics gives a very different tag
+    acceptance at the three beam energies, because the envelope is an
+    angle and the recoil momentum is A p_u."""
+    sc = coh.CoherentScenario(slope_b=50.0)
+    sig = HIGH_ACCEPTANCE.sigma_theta
+    accs = [float(sc.tag_acceptance_angular(sig, p_u))
+            for p_u in (20.5, 50.0, 137.5)]
+    assert accs[0] == pytest.approx(0.67, abs=0.02)
+    assert accs[1] == pytest.approx(0.093, abs=0.005)
+    assert accs[2] < 1e-7
+    assert accs[0] > accs[1] > accs[2]
 
 
 def test_a2_deformation_scaling():

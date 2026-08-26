@@ -40,6 +40,7 @@ the package; whole-nucleus four-momenta where a mass matters.
 
 import numpy as np
 
+from polli_fastsim.farforward import HIGH_ACCEPTANCE, HIGH_DIVERGENCE
 from polli_fastsim.kinematics import scattered_electron
 from polli_fastsim.spectator import M_U
 
@@ -48,11 +49,16 @@ XING_IP8 = 35.0e-3   # rad, IP8
 
 # 10-sigma near-beam cut expressed as an ANGULAR cut: the documented
 # Roman-Pot pT cuts for 275 GeV protons (0.20 GeV high-acceptance,
-# ~0.41-0.45 GeV high-divergence; plans/06 SS6.5) divided by 10 x 275 GeV.
-# The Li beam divergence is undocumented (plans/04 #11): these are the
-# proton-derived placeholders that `tag_pt_cut` scales to any beam.
-SIGMA_THETA_HA = 0.20 / (10.0 * 275.0)   # 73 microrad
-SIGMA_THETA_HD = 0.41 / (10.0 * 275.0)   # 149 microrad
+# 0.41 GeV high-divergence derived from the YR divergence tables;
+# plans/06 SS6.5) divided by 10 x 275 GeV.  The Li beam divergence is
+# undocumented (plans/04 #11): these are the proton-derived placeholders
+# that `tag_pt_cut` scales to any beam, and the same envelope the
+# fast-sim router applies (farforward.Optics.sigma_theta).  NOTE: the
+# high-divergence value is quoted at the 0.41 GeV end of the 0.41-0.45
+# band here and at the rounded-up 0.45 end in the fast sim, which is
+# where every published fast-sim number comes from; see farforward.py.
+SIGMA_THETA_HA = HIGH_ACCEPTANCE.sigma_theta      #  73 microrad, = 0.20 GeV
+SIGMA_THETA_HD = 0.41 / (10.0 * 275.0)            # 149 microrad, = 0.41 GeV
 
 
 # --- Minkowski helpers -----------------------------------------------------

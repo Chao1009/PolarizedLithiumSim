@@ -37,7 +37,7 @@ are §8.3.
 
 ## 8.1 Ordered work
 
-### A1 — per-fill acceptance and assumed luminosity ☐
+### A1 — per-fill acceptance and assumed luminosity ☑
 *Files:* `polligen/reco.py` (`spin_state_ratio` neighbourhood,
 `expected_counts_by_fill`), `polligen/recopseudo.py`
 (`RecoResponse.expected_counts`, `measure_inclusive`, `CoherentResponse`,
@@ -74,7 +74,7 @@ four places.
 inclusive bias reproduced to a few %; monotone, near-linear coherent
 bias versus the envelope perturbation.
 
-### A2 — sin-harmonic columns: the azimuthal-alignment null test ☐
+### A2 — sin-harmonic columns: the azimuthal-alignment null test ☑
 *Files:* `reco.basis_2d`, `reco.harmonic_ratio_fit_2d`,
 `recopseudo.CoherentResponse.expected_counts_2d` / `basis_means`.
 
@@ -95,7 +95,7 @@ tan δ) on the three ratios; a Roman-Pot azimuthal **roll** gives
 (0, tan 2δ_t, tan δ_t). Frame it in the report as the pot-roll null —
 the inclusive fit calibrates φ_S about an order of magnitude better.
 
-### A3 — u₁, u₂ as a fit argument ☐
+### A3 — u₁, u₂ as a fit argument ☑
 `measure_coherent` passes the same `u1, u2` to the generator and to the
 fit. Add `u_coeffs_assumed`; the fit side already takes an independent
 value. Quote the band from **u₂**, not u₁: the leakage into a_e is
@@ -166,7 +166,7 @@ recommendation 4 endorses — make it the default. No published bin moves;
 the higher-value neighbour is the *angular* placeholder table (F3),
 which dominates δQ²/Q² at every sweet spot and is D6.
 
-### B1 — φ-sampler positivity guard (G3) ☐
+### B1 — φ-sampler positivity guard (G3) ☑
 `InclusiveSampler._amplitudes` guards only 1 + w_avg ≤ 0, so wherever the
 φ density dips negative the accept–reject silently samples max(W, 0) and
 `weights_for` does not clip at all. Guard at that chokepoint with the
@@ -206,7 +206,7 @@ would freeze a convention the documents declare open.
 the θ_S ≠ π/2 thirds identity, and `helicity_flip_plan(...).pzz_true` —
 the quantity the money scripts divide by — have no test.
 
-### C1 — far forward: angular near-beam cut, OMD window, nucleus mass ☐
+### C1 — far forward: angular near-beam cut, OMD window, nucleus mass ◐
 `route_charged` already receives θ, so the 10σ envelope becomes one line
 plus an `Optics` field — better than threading (A_frag, p_u) through
 eight call sites, and exact per event. 0.20 GeV on a 4 × 137.5 GeV α is
@@ -215,6 +215,18 @@ README already quotes from the code review. OMD window → (0.45, 0.65)
 per Jentsch–Tu–Weiss Table I (the symbol there is ζ, not ξ). Add a
 physical `NUCLEUS_MASS` table beside `MASSES`; A·M_U shifts the rigidity
 ratio and the off-rigidity tail.
+
+*Done 2026-08-25* except the nucleus mass. Measured: ⁶Li α-tag 1.7% /
+1.3% (high-acceptance / high-divergence) at 137.5 GeV/u, 13.3% at
+50 GeV/u; ⁷Li α-tag unchanged at 96–98%. One discrepancy is left
+deliberately: the high-divergence envelope has no documented spec —
+plans/06 §6.5 derives ≈ 0.41 GeV at 275 GeV and the fast sim has always
+quoted the rounded-up 0.45, which is where every published fast-sim
+number and the money-plot report come from, while `polligen.reco` quotes
+0.41. Both are now cross-referenced in the source; unifying them changes
+the published coherent high-divergence acceptance by 5× (4×10⁻⁵ →
+2.2×10⁻⁴) and is a documentation decision for the author, not a code
+one.
 
 ### C2 — R₁₉₉₈ (S1) and one R hook ☐
 Θ must multiply only the 0.0485/ln(Q²/0.04) term; the present form

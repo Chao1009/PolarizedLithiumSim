@@ -130,7 +130,8 @@ uncharted — flag to theory colleagues).
 *2026-06-12: the cluster-IA seed (item 3 cross-check + item 4 routing) is
 implemented (`polli_fastsim/spectator.py`, `farforward.py`,
 `scripts/tagging_acceptance.py`): ⁷Li α-tag 96–99% into RP; ⁶Li α-tag
-3–9% at IP6 (tail-dominated, the quantitative beam-blindness statement);
+3–9% at IP6 (tail-dominated, the quantitative beam-blindness statement;
+1.7% since the near-beam cut became angular, 2026-08-25 — plans/08 C1);
 ⁷Li t-tag ~0. BeAGLE itself (items 1–2, evaporation backgrounds, purity)
 still todo — access is the long pole.*
 

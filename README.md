@@ -61,7 +61,7 @@ python scripts/money_tagged_azz.py --events 400000    # tagged tensor asymmetry
   the 1-/10-year programs; modulation amplitude anchored on the
   polarized-deuteron CGC calculation (sign flip vs d predicted).
 - **Tagging inverts between isotopes at IP6**: ⁷Li α-tag works
-  (96–99% to the Roman Pots); ⁶Li α-tag is beam-blind (3–9% with the constant 0.20 GeV proton cut; ≈ 1–3% once the 10σ envelope is scaled to the α momentum — code review 2026-08-25);
+  (96–99% to the Roman Pots); ⁶Li α-tag is beam-blind — 1.7% with the high-acceptance optics, 1.3% with high-divergence, since the 10σ envelope is an *angle* and scales with the α momentum (2026-08-25; it read 3–9% while the 0.20 GeV proton cut was applied verbatim);
   tritons need IR-8.
 - **First systematics numbers**: relative-luminosity bias formulas
   (removed exactly by lumi-corrected estimators); the α+d breakup

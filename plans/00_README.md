@@ -270,7 +270,8 @@ brings to the EIC, in support of the ANL polarized ⁶,⁷Li ion-source program
 - ☑ Fast-sim re-evaluated end-to-end on this machine: 15/15 tests pass
   (grid tests included after installing `parton` + CT18NLO/NNPDFpol11
   grids); all scripts rerun and reproduce the README headline numbers
-  (⁷Li α-tag 96–99%, ⁶Li 3–9%/HA optics, gluonometry L_5σ = 15–22 fb⁻¹/u
+  (⁷Li α-tag 96–99%, ⁶Li 3–9%/HA optics — 1.7% since the angular cut of
+  2026-08-25, gluonometry L_5σ = 15–22 fb⁻¹/u
   toy, δΔR ≈ 3.5% at x = 0.3); toy-vs-CT18 F2 within ±37% as documented.
   Findings (kept as report, not yet fixed): two inert test assertions
   (`test_smoke.py:17`, `test_spectator.py:68`); FOMs implicitly give each
