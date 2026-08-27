@@ -168,10 +168,11 @@ automatically.
 
 ```bash
 cd evgen   && python3 -m pytest tests/ -q     # 206 passed, ~35 s
-cd fastsim && python3 -m pytest tests/ -q     # 56 passed, ~3 s
+cd fastsim && python3 -m pytest tests/ -q     # 57 passed, ~3 s
+python3 tools/consistency_check.py --verbose  # 17 checks, whole repository
 ```
 
-262 tests, all of which run without the PDF grids except the two in
+263 tests, all of which run without the PDF grids except the two in
 `fastsim/tests/test_grids.py`, which skip.  These are not smoke tests:
 they pin physics identities against independent constructions — the
 spin-1 cross section against an explicit density-matrix trace, the
@@ -264,7 +265,7 @@ python3 scripts/_check_reco_mask_invariants.py     # S1–S6, exit 0
 
 ### 3.4 The whole dated line
 
-`fastsim/scripts/money_delta_2026MMDD.py` are the dated production
+`fastsim/`scripts/money_delta_<date>.py`` are the dated production
 scripts, each frozen against the note of the same date in
 `fastsim/notes/`.  **All seven run** (verified 2026-08-26); together they
 are about two minutes:
