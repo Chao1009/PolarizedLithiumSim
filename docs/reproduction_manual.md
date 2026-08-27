@@ -167,12 +167,12 @@ automatically.
 ## 2 · The five-minute check: the test suites
 
 ```bash
-cd evgen   && python3 -m pytest tests/ -q     # 206 passed, ~35 s
+cd evgen   && python3 -m pytest tests/ -q     # 209 passed, ~35 s
 cd fastsim && python3 -m pytest tests/ -q     # 57 passed, ~3 s
 python3 tools/consistency_check.py --verbose  # 20 checks, whole repository
 ```
 
-263 tests, all of which run without the PDF grids except the two in
+266 tests, all of which run without the PDF grids except the two in
 `fastsim/tests/test_grids.py`, which skip.  These are not smoke tests:
 they pin physics identities against independent constructions — the
 spin-1 cross section against an explicit density-matrix trace, the

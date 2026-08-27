@@ -376,17 +376,21 @@
     <tr><td>8</td><td><b>Polarization-preservation scheme for ⁶Li</b>, which cannot use Siberian snakes</td><td>assume it works at the EPIOS source targets</td><td>C-AD / EPIOS</td></tr>
     <tr><td>9</td><td><b>No EIC document specifies a TENSOR-polarization scale uncertainty</b>, for any species. The 1% requirement is vector-only.</td><td>P_zz is taken as known; every tensor amplitude scales with it</td><td>ANL source + BNL polarimetry</td></tr>
     <tr><td>10</td><td><b>Relative luminosity BETWEEN FILLS of different P_zz is unspecified.</b> The R &lt; 10⁻⁴ requirement is on bunch-by-bunch relative luminosity <i>within</i> a fill.</td><td>the spin-sorted ratio estimator assumes it is controlled; an error enters through P̄ as a bin-independent offset</td><td>EIC project / ePIC luminosity</td></tr>
-    <tr><td>11</td><td><b>EICrecon has no light-ion far-forward configuration.</b> <code>MatrixTransferStatic</code> selects its transfer matrix by matching the <i>beam proton</i> PDG code; a lithium beam matches nothing.</td><td>this repository does its own transport; nothing reconstructs a lithium recoil in the official chain</td><td>ePIC FF WG / EICrecon</td></tr>
+    <tr><td>11</td><td><b>EICrecon has no light-ion far-forward configuration</b> — <code>MatrixTransferStatic</code> selects its transfer matrix by matching the <i>beam proton</i> PDG code, so a lithium beam matches nothing.</td><td><b>Expected, and not a gap in the specification.</b> Lithium is not in the official programme yet; putting it there is what this development is for. This repository does its own transport meanwhile, and the deliverable is a beamline configuration and a transfer matrix that EICrecon can adopt.</td><td><b>this programme</b></td></tr>
     <tr><td>12</td><td><b>Roman-Pot commissioning is deferred past year 1 and conditional</b> — the far-forward subsystems "will only be operated once the beam conditions are fully under control".</td><td>projections assume the pots exist from the start</td><td>ePIC</td></tr>
     <tr><td>13</td><td><b>A 9 GeV electron beam is the early-science baseline</b>, and no ESR lattice, emittance, β* or polarization table exists for it.</td><td>only 5, 10 and 18 GeV are modelled</td><td>C-AD</td></tr>
   </table>
 
   <div class="callout warm">
     <b>The honest summary.</b> The electron and proton beams are specified in detail and this
-    programme uses them as such — though items 9 to 13 above are the reminder that "specified"
-    covers the machine and not this measurement: nobody has written down a tensor-polarization
-    scale uncertainty, a between-fill relative luminosity, or a far-forward reconstruction that
-    knows what lithium is. The <i>ion</i> beam is specified for gold and, thinly, for ³He;
+    programme uses them as such. But the list above separates into three kinds, and they call for
+    different responses. Items 1–8 and 12–13 are <b>machine and detector inputs</b> — someone else's
+    to supply, and the programme's job is to ask precisely. Items 9 and 10 — the
+    tensor-polarization scale and the between-fill relative luminosity — are <b>ours to specify</b>,
+    because they are properties of a measurement nobody has designed yet; §7 states them as this
+    programme's own assumptions rather than leaving them blank. Item 11 is neither: lithium is
+    absent from the official reconstruction chain because it is absent from the official
+    programme, and <b>supplying it is the point of this development</b>. The <i>ion</i> beam is specified for gold and, thinly, for ³He;
     for lithium essentially nothing exists beyond a top energy and a G factor, and §4 is a
     derivation, not a citation. The detector is specified where it matters most for us — the
     far-forward geometry is in a file we can read — and least where the central reconstruction

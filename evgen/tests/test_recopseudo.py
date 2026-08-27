@@ -870,3 +870,75 @@ def test_shape_fit_error_is_the_delta_chi2_band(response):
     band = 0.5 * (np.max(hi, axis=0) - np.min(lo, axis=0)) / np.abs(fit["k"])
     assert len(lo) > 20
     np.testing.assert_allclose(fit["k_fit_rel"], band, rtol=0.25, atol=1e-4)
+
+
+# --- the two systematics this programme specifies for itself (report 3 §7) ---
+
+def test_pzz_scale_error_is_exactly_quadratic_in_the_estimator():
+    """delta P_zz / P_zz is OURS to specify -- no EIC document gives a tensor
+    polarimetry uncertainty for any species.  What the estimator does with it
+    is fixed: the amplitude is extracted as T ~ R / sigma_P^2 and sigma_P^2 is
+    quadratic in P_zz, so a scale error d propagates as (1+d)^2 - 1 = 2d + d^2
+    -- a pure NORMALISATION on Delta, identical in every bin, so it moves no
+    shape claim."""
+    plan = bk.tensor_flip_plan(0.6)
+    pzz = [float(c.moments()[1]) for c in plan.categories]
+    frac = [c.lumi_fraction for c in plan.categories]
+
+    def sigma_p2(p, lum):
+        lum = np.asarray(lum, float) / np.sum(lum)
+        pbar = float((lum * np.asarray(p, float)).sum())
+        return float((lum * (np.asarray(p, float) - pbar) ** 2).sum())
+
+    base = sigma_p2(pzz, frac)
+    assert base == pytest.approx(0.81, rel=1e-9)          # 0.25 * 1.8^2
+    for d in (0.02, 0.05, 0.10):
+        scaled = sigma_p2([p * (1.0 + d) for p in pzz], frac)
+        assert scaled / base == pytest.approx((1.0 + d) ** 2, rel=1e-12)
+
+
+def test_the_flip_plan_luminosity_split_is_optimal():
+    """sigma_P^2 = f(1-f)(P1-P2)^2 for two states, so an equal split maximises
+    it and the plan is already there.  Worth pinning: an unequal split would
+    cost statistical precision for nothing."""
+    plan = bk.tensor_flip_plan(0.6)
+    pzz = [float(c.moments()[1]) for c in plan.categories]
+    assert plan.categories[0].lumi_fraction == pytest.approx(0.5)
+
+    def sigma_p2(f):
+        lum = np.array([f, 1.0 - f])
+        pbar = float((lum * np.asarray(pzz)).sum())
+        return float((lum * (np.asarray(pzz) - pbar) ** 2).sum())
+
+    best = max(np.linspace(0.05, 0.95, 91), key=sigma_p2)
+    assert best == pytest.approx(0.5, abs=0.02)
+    # and the closed form
+    assert sigma_p2(0.5) == pytest.approx(0.25 * (pzz[0] - pzz[1]) ** 2)
+
+
+def test_relative_luminosity_error_is_benign_by_comparison():
+    """The other quantity this programme specifies for itself.  The estimator
+    docstring says a relative-luminosity error enters only through Pbar, and
+    the coherent pseudo-experiment measures the induced bias on the amplitude
+    as ~1.4 x delta -- so even a per-cent luminosity error costs ~1.4%, two
+    orders below what a 5% P_zz scale error costs (10.3%)."""
+    sc = coh.CoherentScenario(amp=0.01, eps_b0=-0.08)
+    cfg = beams.default_configs("6Li")[0]
+    kw = dict(shape="rectangle", n_mc=200000, cut_scale_xy=(1.0, 1.0))
+    cr = rp.CoherentResponse(sc, cfg, reco.sigma_theta_tagging(cfg),
+                             rng=np.random.default_rng(11), **kw)
+    plan = bk.tensor_flip_plan(0.6)
+
+    def a_e(offset):
+        fit = rp.measure_coherent(
+            cr, 1e9, plan, 0.05, 0.12, a_e=0.01,
+            a_t_func=lambda t: sc.cos2phi_coefficient_deformation(t, 1.0),
+            poisson=False,
+            lumi_assumed=[0.5 * (1.0 + offset), 0.5 * (1.0 - offset)])
+        return fit["a_e"]
+
+    base = a_e(0.0)
+    for d in (1e-4, 1e-3):
+        assert abs(a_e(d) / base - 1.0) < 5e-3        # negligible
+    big = abs(a_e(5e-2) / base - 1.0)
+    assert 0.01 < big < 0.20                          # ~1.4 x delta, not blow-up
