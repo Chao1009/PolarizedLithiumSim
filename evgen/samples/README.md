@@ -21,8 +21,8 @@ i.e. `--config 0/1/2` of the consuming scripts.
 | `pythia8_e18_p137.5_dis.npz` | 2 top, 18 × 137.5 | 1 000 000 | 11 762 519 | 0.8367 | 301 | 426 MB |
 | `pythia8_e18_n137.5_dis.npz` | 2 top, 18 × 137.5 | 1 000 000 | 12 477 453 | 0.7448 | 302 | 448 MB |
 
-Total 2.7 GB, 12 minutes of wall time with three jobs in parallel on eight
-cores.  The mid configuration is doubled because it is the one money plots
+**8 000 000 events, 72.9 M final-state particles, 2.7 GB**, in 12 minutes
+of wall time with three jobs in parallel on eight cores.  The mid configuration is doubled because it is the one money plots
 5R/7R are published at; the low configuration is what the reconstruction
 note lists as not yet run for the x ≈ 0.1 bins, and the top configuration
 is where the coherent channel dies and the inclusive one does not.

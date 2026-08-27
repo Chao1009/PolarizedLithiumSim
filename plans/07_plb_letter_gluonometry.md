@@ -227,7 +227,7 @@ efficiency explicitly.
   honours it only for `Q2Min ≥ pTHatMinDiverge²` and that defaults to 1 GeV,
   so the 0.7–1.0 GeV² band — 31% of the sample, and the band the loosened
   generator window exists for — was missing until `pTHatMinDiverge = 0.5`.
-- ☑ Samples generated (2026-08-26): 12 M events, p and n at 5 × 20.5,
+- ☑ Samples generated (2026-08-26): 8 M events, p and n at 5 × 20.5,
   10 × 50 and 18 × 137.5, 2.7 GB, manifest in `evgen/samples/README.md`.
 - Results **with PYTHIA** (the toy's, kept for contrast, in brackets):
   captured Σ fraction 0.90 (tracks 0.51 [0.60], EMCal 0.28 [0.30], neutral

@@ -65,7 +65,7 @@ been keeping the July production un-runnable.  The remaining tail of
 handed to an adversarial reviewer, then repaired.  Both suites are green
 at **48 fastsim + 183 evgen**, from 25 + 143.
 
-- ☑ **The hadronic final state is PYTHIA 8, not a toy** (D4).  12 M
+- ☑ **The hadronic final state is PYTHIA 8, not a toy** (D4).  8 M
   events over the three beam configurations, 2.7 GB, twelve minutes of
   wall time (`tools/pythia8`, manifest in `evgen/samples/README.md`).
   Building it found a defect in the settings this repository had

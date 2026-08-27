@@ -227,7 +227,7 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
     i.e. the 25% default is the noise floor acting on Σ_h ≈ 0.2 GeV. *Needed
     now:* the PYTHIA sample (one eic-shell command) and the ePIC calorimeter
     noise/threshold floor at Σ_h ≈ 0.2–0.5 GeV.
-    *2026-08-26 (the PYTHIA sample exists):* 12 M events over the three beam
+    *2026-08-26 (the PYTHIA sample exists):* 8 M events over the three beam
     configurations, generated natively (`tools/pythia8`). Σ-method
     δy/y = **0.32 / 0.22 / 0.28 / 0.11** at the sweet spots with the 50 MeV
     floor — the toy was optimistic by 0.04–0.05 absolute at every one,

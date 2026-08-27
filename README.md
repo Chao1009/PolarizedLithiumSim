@@ -70,7 +70,7 @@ python scripts/money_tagged_azz.py --events 400000    # tagged tensor asymmetry
 - **Tagging inverts between isotopes at IP6**: ⁷Li α-tag works
   (96–99% to the Roman Pots); ⁶Li α-tag is beam-blind — 1.85% with the high-acceptance optics, 1.51% with high-divergence, since the 10σ envelope is an *angle* and scales with the α momentum (2026-08-25; it read 3–9% while the 0.20 GeV proton cut was applied verbatim, and 1.7/1.3% until the beam mass became the physical nuclear one on 2026-08-26);
   tritons need IR-8.
-- **The hadronic final state is PYTHIA 8, not a toy** (2026-08-26): 12 M
+- **The hadronic final state is PYTHIA 8, not a toy** (2026-08-26): 8 M
   events over the three beam configurations, generated natively
   (`tools/pythia8`).  Σ-method δy/y at the four sweet spots is
   0.32 / 0.22 / 0.28 / 0.11 at the mid configuration — the toy was

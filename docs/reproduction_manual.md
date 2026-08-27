@@ -401,7 +401,7 @@ python3 tools/pythia8/gen_dis_hfs.py --target n --n-events 2000000 \
 
 9 000–13 000 events/s, 330 MB and 110 s per million events at 10 × 50.
 The standing production is six files (p and n at each of the three
-configurations, 12 M events, 2.7 GB); `evgen/samples/README.md` is the
+configurations, 8 M events, 2.7 GB); `evgen/samples/README.md` is the
 manifest with each file's cross section and seed, and the whole set takes
 twelve minutes with three jobs in parallel on eight cores.
 
@@ -674,7 +674,7 @@ The long poles are elsewhere:
 |---|---|
 | build PYTHIA 8 (§1.4) | 2.5 min |
 | install the four PDF grids (§1.3) | minutes, network-bound |
-| generate the 12 M-event PYTHIA production (§5.1) | 12 min, 3 jobs in parallel |
+| generate the 8 M-event PYTHIA production (§5.1) | 12 min, 3 jobs in parallel |
 | stream 20 k BeAGLE e+d events (§5.2) | 2 min |
 | one npsim far-forward scan, 84 events (§5.3) | 70 s geometry + ~1 s/event |
 | build the three reports with PDFs (§6) | 90 s |

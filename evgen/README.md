@@ -177,7 +177,7 @@ double-angle / mixed methods, `HadronResponse` (tracker |η| ≤ 3.5, p_T > 0.2 
 Yellow-Report resolutions, 50 MeV noise), `ToyHFS` (string-fragmentation
 stand-in, exact four-momentum closure, π⁰ → γγ) and `HFSLibrary`/`HFSResponse`
 ((x, Q²) library transferring a generator's response onto the pseudo-events).
-The production sample is **PYTHIA 8, and it now exists**: 12 M events over the
+The production sample is **PYTHIA 8, and it now exists**: 8 M events over the
 three beam configurations (`tools/pythia8/gen_dis_hfs.py` builds natively —
 no container — and `evgen/samples/README.md` is the manifest).  Without a
 sample both scripts fall back to the toy and label it.

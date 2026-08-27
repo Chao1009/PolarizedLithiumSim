@@ -114,7 +114,7 @@ Language: numpy-vectorized Python, same style/test discipline as
 **natively** — the bindings do NOT ship in the eic-shell container (it has
 the C++ library and headers only); PYTHIA 8.311 builds its own against the
 analysis interpreter in two and a half minutes (2026-08-26,
-`tools/pythia8/README.md`), which is how the standing 12 M-event HFS
+`tools/pythia8/README.md`), which is how the standing 8 M-event HFS
 production was made and what removes the fifo/LHE hand-off from step 5.D. C++ port only if an official
 campaign demands it.
 
@@ -224,7 +224,7 @@ HepMC3; status-4 beams so `abconv` accepts it; 10-digit fragment PDG;
 spin labels as named attributes — no HepMC3 convention exists for ion spin
 states, so define one and propose it to the ePIC MC group, new plans/04
 #17), tier T2 PYTHIA attachment — natively, and the HFS half of it is
-already done and in production use (`polligen/hfs.py` on the 12 M-event
+already done and in production use (`polligen/hfs.py` on the 8 M-event
 sample of `tools/pythia8`); what T2 still owes is the attachment to the
 *tagged* final state, not the generator. 100-event
 abconv → npsim → EICrecon smoke per plans/03 step 2.1.4 (⁶Li can proxy the
