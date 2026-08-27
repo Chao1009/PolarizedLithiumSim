@@ -1,0 +1,936 @@
+Far-Forward Detectors and
+Physics with ePIC @ the EIC
+Alex Jentsch, on behalf of the ePIC Collaboration
+30th International Workshop on Deep-Inelastic
+Scattering and Related Subjects
+
+March 27th-31st, 2023
+Michigan State University
+East Lansing, Michigan
+
+What is meant by Far-Forward?
+hadronic calorimeters
+MAPS tracker
+
+solenoid coils
+
+MPG trackers
+
+e/m calorimeters
+
+Full ePIC overview: See talk by R. Millner WG6; Tuesday @ 9am
+
+ToF, DIRC, RICH detectors
+
+2
+
+What is meant by Far-Forward?
+hadronic calorimeters
+MAPS tracker
+
+e/m calorimeters
+
+solenoid coils
+
+MPG trackers
+
+Full ePIC overview: See talk by R. Millner WG6; Tuesday @ 9am
+
+ToF, DIRC, RICH detectors
+
+Scattered (detected) electron
+
+Scattered (detected) particles
+
+𝜃
+Electron beam
+
+Proton/nucleus beam
+
+3
+
+What is meant by Far-Forward?
+Overall detector requirements:
+hadronic calorimeters
+MAPS tracker
+
+e/m calorimeters
+
+solenoid coils
+
+MPG trackers
+
+ToF, DIRC, RICH detectors
+
+•
+
+Large rapidity (-4 < h < 4) coverage; and far beyond in
+far-forward/far-backward detector regions
+• Rapidity is related to the polar angle → 0 < h < 4
+equates to 2.1° < 𝜃 < 90°
+𝜂 = −𝑙𝑛 𝑡𝑎𝑛 𝜃/2
+
+Scattered (detected) electron
+
+pseudorapidity
+
+Scattered (detected) particles
+
+𝜃
+Electron beam
+
+Proton/nucleus beam
+
+4
+
+What is meant by Far-Forward?
+Overall detector requirements:
+hadronic calorimeters
+MAPS tracker
+
+e/m calorimeters
+
+solenoid coils
+
+MPG trackers
+
+•
+
+ToF, DIRC, RICH detectors
+
+Large rapidity (-4 < h < 4) coverage; and far beyond in
+far-forward/far-backward detector regions
+• Rapidity is related to the polar angle → 0 < h < 4
+equates to 2.1° < 𝜃 < 90°
+𝜂 = −𝑙𝑛 𝑡𝑎𝑛 𝜃/2
+
+Scattered (detected) electron
+
+pseudorapidity
+
+Scattered (detected) particles
+
+𝜃
+
+Far-forward here means 𝜽 < 2.1∘
+(~37 mrad)
+
+𝜽 < 2.1∘
+Electron beam
+
+5
+
+What is meant by Far-Forward?
+Overall detector requirements:
+hadronic calorimeters
+MAPS tracker
+
+e/m calorimeters
+
+solenoid coils
+
+MPG trackers
+
+•
+
+ToF, DIRC, RICH detectors
+
+Large rapidity (-4 < h < 4) coverage; and far beyond in
+far-forward/far-backward detector regions
+• Rapidity is related to the polar angle → 0 < h < 4
+equates to 2.1° < 𝜃 < 90°
+𝜂 = −𝑙𝑛 𝑡𝑎𝑛 𝜃/2
+
+Scattered (detected) electron
+
+pseudorapidity
+B0 S
+il
+
+icon
+
+Trac
+ker
+a
+
+nd
+
+Pre
+sh
+
+owe
+r
+
+Scattered (detected) particles
+Zer
+o
+
+𝜃
+
+Rom
+
+-De
+g
+
+ree
+C
+
+an P
+ots
+
+alor
+ime
+ter
+
+𝜽 < 2.1∘
+Electron beam
+
+B0p
+f co
+
+mb
+in
+
+Foc
+u
+ed f
+
+unc
+
+tion
+
+ma
+gn
+
+et
+
+sing
+
+Qu a
+
+dru
+
+pole
+
+s
+
+OffMo
+me
+ntu
+m
+
+Det
+ecto
+
+rs
+
+Need detectors here!!
+
+6
+
+EIC Physics in the
+Far-Forward Region
+
+(some) Far-Forward Processes at the EIC
+e+p DVCS
+
+e+d exclusive J/Psi with p/n
+tagging
+
+spectator tagging in light
+nuclei
+
+coherent/incoherent
+J/𝜓 production in e+A
+J/Ψ
+
+Sullivan process
+Quasi-elastic electron
+scattering
+
+u-channel backward exclusive
+electroproduction
+
+…and MANY more!
+8
+
+(some) Far-Forward Physics at the EIC
+e+p DVCS
+
+al
+t
+i
+rb m;
+o
+:
+u
+pin ment
+s
+ton r mo
+o
+r
+P ula
+ang ging
+ima
+
+e+d exclusive J/Psi with p/n
+tagging
+
+spectator tagging in light
+nuclei
+
+ge
+n
+a
+rt-R tions
+o
+h
+S rela
+Cor
+
+ron C
+t
+u
+ne , EM
+e
+Fre cture .
+stru ct, etc
+effe
+
+Sullivan process
+
+ors
+t
+c
+fa
+m
+r
+fo cture
+K
+𝜋/ stru
+and tions
+c
+fun
+
+Quasi-elastic electron
+scattering
+
+ge
+n
+a
+t-R ions
+r
+o
+Sh relat
+Cor
+
+[1] Z. Tu, A. Jentsch, et al., Physics Letters B, (2020)
+[2] I. Friscic, D. Nguyen, J. R. Pybus, A. Jentsch, et al.,
+Phys. Lett. B, Volume 823, 136726 (2021)
+[3] W. Chang, E.C. Aschenauer, M. D. Baker, A. Jentsch,
+J.H. Lee, Z. Tu, Z. Yin, and L.Zheng, Phys. Rev. D 104,
+114030 (2021)
+[4] A. Jentsch, Z. Tu, and C. Weiss, Phys. Rev. C 104,
+065205, (2021) (Editor’s Suggestion)
+
+coherent/incoherent
+J/𝜓 production in e+A
+
+S
+
+on
+i
+t
+a
+r
+u
+at
+
+J/Ψ
+
+u-channel backward exclusive
+electroproduction
+
+gle tion
+n
+a
+rd- toriza
+a
+kw r fac
+c
+a
+B nea
+coli
+
+…and MANY more!
+9
+
+(some) Far-Forward Physics at the EIC
+e+d exclusive J/Psi with p/n
+tagging
+
+e+p DVCS
+
+al
+t
+i
+rb m;
+o
+:
+u
+pin ment
+s
+ton r mo
+o
+r
+P ula
+ang ging
+ima
+
+e+He3 spectator tagging
+
+coherent/incoherent
+J/𝜓 production in e+A
+
+ØPhysics channels requireantagging
+of charged hadrons (protons,
+onpions)
+ge
+i
+t
+a
+r
+rt-R tions
+o
+u
+h
+S rela
+or neutral particles (neutrons,
+photons)
+at
+very-forward
+rapidities
+at
+S
+r
+Co
+(𝜼 > 𝟒. 𝟓).
+Meson structure: final states require tailored detector subsystems.
+ØDifferent
+u-channel backward exclusive
+Ø ep→ 𝜋 →e’ n X
+Quasi-elastic
+electron
+electroproduction
+nΛscollision
+o
+tron and
+i
+Ø Λ e→p𝜋
+→ n𝜋
+ØVarious
+systems
+(e.g.
+e+p,
+e+d,
+e+Au)
+provide
+unique
+t
+u
+c
+n
+scattering
+N
+u
+F
+e
+Fre cture ct
+ru
+Effe
+Stchallenges.
+C
+ge
+M
+n
+E
+a
+&
+t-R ions
+r
+o
+h
+t
+ØIntegration of EIC Sfar-forward
+detectors uniquely challenging due to
+ela
+r
+r
+o
+C
+presence of machine components, space constraint, apertures, etc.
+−
+
+pin
+S
+ron
+t
+u
+Ne cture
+Stru
+
+0
+
+J/Ψ
+
+[1] Z. Tu, A. Jentsch, et al., Physics Letters B, (2020)
+[2] I. Friscic, D. Nguyen, J. R. Pybus, A. Jentsch, et al.,
+Phys. Lett. B, Volume 823, 136726 (2021)
+[3] W. Chang, E.C. Aschenauer, M. D. Baker, A. Jentsch,
+J.H. Lee, Z. Tu, Z. Yin, and L.Zheng, Phys. Rev. D 104,
+114030 (2021)
+[4] A. Jentsch, Z. Tu, and C. Weiss, Phys. Rev. C 104,
+065205, (2021) (Editor’s Suggestion)
+
+…and MANY more!
+10
+
+The
+
+Far-Forward Detectors
+
+Zero-Degree Calorimeter
+
+B0
+Preshower
+B0Silicon
+SiliconTracker
+Trackerand
+and
+EMCAL
+
+Roman Pots
+
+B1apf
+
+PbW04
+EMCAL
+
+Off-Momentum Detectors
+Focusing Quadrupoles
+
+B0pf combined function magnet
+
+Detector
+
+Acceptance
+
+Zero-Degree Calorimeter (ZDC)
+
+𝜽 < 5.5 mrad (𝜂 > 6)
+
+Roman Pots (2 stations)
+
+0.0* < 𝜽 < 5.0 mrad (𝜂 > 6)
+
+Off-Momentum Detectors (2 stations)
+
+0.0 < 𝜽 < 5.0 mrad (𝜂 > 6)
+
+B0 Detector
+
+5.5 < 𝜽 < 20.0 mrad (4.6 < 𝜂 < 5.9) 11
+
+B0 Tracking and EMCAL Detectors PbWO EMCAL
+4
+
+(behind tracker)
+
+Tracking planes
+Ø Technology choices:
+Ø Tracking: IT3 or ITS2 MAPS (3 layers)
++ AC-LGADs (1 layer; in middle)
+Ø PbWO4 EMCAL or silicon preshower,
+depending on available space in final
+B0pf magnet design (pending).
+
+Electron quad
+(Q0EF)
+
+Hadron beam pipe
+ePIC DD4HEP Simulation
+
+Ø Status
+ü Used to reconstruct charged particles and photons.
+ü Acceptance: 5.5 < 𝜃 < 20.0 mrad
+ü Focus now is on readout, new tracking software, and
+engineering support structure.
+ü Stand-alone simulations have demonstrated tracking
+resolution.
+• https://indico.bnl.gov/event/17905/
+• https://indico.bnl.gov/event/17622/
+12
+
+B0 Tracking and EMCAL Detectors
+Electrons
+
+Space for detectors
+
+Hadrons
+Credit: Ron Lassiter and Karim Hamdi
+
+This is the opening where the
+detector planes will be inserted
+
+13
+
+B0 Tracking and EMCAL Detectors
+PbWO4 EMCAL
+(behind tracker)
+
+Ø Status
+ü Basic acceptances and resolutions studied.
+ü Work needed on backgrounds,
+engineering/integration, and readout scheme.
+ü Detailed Studies by Michael Pitt (Ben Gurien).
+• https://indico.bnl.gov/event/18001/
+
+14
+
+Roman “Pots” @ the EIC
+25.6 cm
+
+12.8 cm
+
+• Technology
+Ø 500um, pixilated AC-LGAD sensor provides both fine
+pixilation.
+Ø “Potless” design concept with thin RF foils
+surrounding detector components.
+
+Station 2
+
+Layer 1
+
+Layer 2
+
+Layer 1
+
+Station 1
+
+Layer 2
+
+2m
+
+DD4HEP Simulation
+
+Ø Status
+ü Acceptance: 0.0* < 𝜃 < 5.0 mrad (lower
+bound depends on optics).
+ü Detector directly in-vacuum a challenge for
+both detector and beam → impedance
+studies underway.
+ü Approved generic R&D to develop moreadaptive reconstruction code!
+ML + Roman Pots: See talk by D. Ruth WG6; Tuesday @ 2pm
+
+15
+
+Off-Momentum Detectors
+ZDC
+
+DD4HEP Simulation
+
+Ø Status
+ü Acceptance: 0.0 < 𝜃 < 5.0 mrad
+ü Same technology as for the
+Roman Pots.
+ü Even more-challenging
+reconstruction with offmomentum particles → extreme
+orbit path in the magnets.
+
+Off-momentum detectors implemented as
+horizontal ”Roman Pots” style sensors.
+
+Roman Pots
+OMD
+
+Proton
+trajectories
+
+Protons
+123.75 < E < 151.25 GeV
+(45% < xL < 55%)
+0 < 𝜽 < 5 mrad
+
+GEANT4 simulation.
+16
+
+Roman Pots and Off-Momentum Detectors
+Initial step file
+inspired by STAR
+
+Updated model in NX with
+different beamtube size
+
+Credit: Ron Lassiter
+
+17
+
+Roman Pots and Off-Momentum Detectors
+Initial step file
+inspired by STAR
+
+Updated model in NX with
+different beamtube size
+
+Credit: Ron Lassiter
+
+18
+
+Summary of Detector Performance (Trackers)
+Zero-Degree Calorimeter
+
+T
+
+Dp
+Transverse Momentum Resolution, p T
+
+B0 Silicon Tracker and EMCAL
+B0 Silicon Tracker and Preshower
+
+0.05
+
+Roman Pots
+
+Detector Resolution Only
+B0 Detector, p = 100 GeV/c
+B0 Detector, p = 41 GeV/c
+Roman Pots, p = 275 GeV/c
+Roman Pots, p = 100 GeV/c
+OMD, x L ~ 0.5
+
+0.045
+0.04
+0.035
+
+Off-Momentum Detectors
+Focusing Quadrupoles
+
+B0pf combined function magnet
+
+• Includes realistic considerations for
+pixel sizes and materials
+• Work needed on support
+structure.
+• Roman Pots/OMDs suffer from
+additional smearing due to
+improper transfer matrix
+reconstruction.
+
+0.03
+0.025
+0.02
+0.015
+0.01
+0.005
+0
+0
+
+0.2
+
+0.4
+
+0.6
+
+0.8
+
+1
+
+1.2
+
+1.4
+
+1.6
+
+1.8
+
+2
+
+ML + Roman Pots: See talk by D. Ruth
+WG6; Tuesday @ 2pm
+
+Transverse Momentum, p [GeV/c]
+T
+
+19
+
+Summary of Detector Performance (Trackers)
+Zero-Degree Calorimeter
+
+T
+
+Dp
+Transverse Momentum Resolution, p T
+
+B0 Silicon Tracker and EMCAL
+B0 Silicon Tracker and Preshower
+
+0.16
+Detector + beam effects
+B0 Detector, p = 100 GeV/c
+B0 Detector, p = 41 GeV/c
+Roman Pots, p = 275 GeV/c
+Roman Pots, p = 100 GeV/c
+OMD, x ~ 0.5
+
+0.14
+0.12
+
+Roman Pots
+
+Detector Resolution Only
+B0 Detector, p = 100 GeV/c
+B0 Detector, p = 41 GeV/c
+Roman Pots, p = 275 GeV/c
+Roman Pots, p = 100 GeV/c
+OMD, x L ~ 0.5
+
+L
+
+Off-Momentum Detectors
+Focusing Quadrupoles
+
+B0pf combined function magnet
+
+0.1
+
+• All beam effects included!
+• Angular divergence.
+• Crossing angle.
+• Crab rotation/vertex smearing.
+
+0.08
+0.06
+0.04
+
+Beam effects the dominant
+source of momentum
+smearing!
+
+0.02
+0
+0
+
+0.2
+
+0.4
+
+0.6
+
+0.8
+
+1
+
+1.2
+
+1.4
+
+1.6
+
+1.8
+
+2
+
+Transverse Momentum, p [GeV/c]
+T
+
+20
+
+Zero-Degree Calorimeter
+Ø
+
+64 Layers
+
+60 cm x 60 cm x 168 cm
+
+Si Tracker
+
+30 Lead/Scintillator
+planes
+
+12 W/Si
+planes
+
+7 cm
+PbWO4 Crystal
+Layer
+
+Status
+ü 30 m from IR
+ü Detect spectator neutrons (HCAL) &
+photons (EMCAL)
+ü Acceptance: +4.5 mrad, -5.5mrad (aperture
+limits)
+ü Position resolution ~1.3mm at 40 GeV
+ü Meets requirements from Yellow Report.
+ü Lots of work to do on shower
+reconstruction with imaging layers.
+
+photon
+
+22 Pb/Si
+planes
+
+neutron
+21
+
+Zero-Degree Calorimeter
+
+22
+
+Zero-Degree Calorimeter
+Photon energy resolution
+
+Neutron energy resolution
+
+Physics
+requirement
+
+Physics
+requirement
+
+Performance
+
+• Meets basic physics
+requirements from the
+Yellow Report.
+• Optimization work
+needed on imaging
+system.
+
+Performance
+
+Credit to Shima Shimizu (JSPS/RIKEN)
+23
+
+Summary and Takeaways
+• Far-forward physics characterized by exclusive+diffractive final states.
+• Lots to unpack! – proton spin, neutron structure, saturation, partonic imaging,
+meson structure, etc.
+
+• There is lots of interest in the EIC community in studying this physics via
+these final states!
+• Exciting time to get involved à Need the detectors and software to do any physics!
+
+Email me if you have any questions: ajentsch@bnl.gov
+
+Want to get involved?? Join our meetings and learn how!
+Meeting time: Tuesdays @ 9am EDT (bi-weekly, or weekly, as needed)
+Indico: https://indico.bnl.gov/category/407/
+Wiki: https://wiki.bnl.gov/eic-project-detector/index.php?title=Collaboration
+Email-list: eic-projdet-FarForw-l@lists.bnl.gov
+Subscribe to mailing list through: https://lists.bnl.gov/mailman/listinfo/eic-projdet-farforw-l
+
+24
+
+

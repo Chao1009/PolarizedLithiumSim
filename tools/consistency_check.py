@@ -15,7 +15,8 @@ It checks five kinds of agreement:
   SOURCES      published values the code carries, against the tables they
                come from (Yellow Report 10.1 / 10.2).
   DRIFT        stale values that a correction should have removed --
-               principally the pre-2026-08-27 rigidity-scaled 6Li energies.
+               principally the pre-2026-08-27 rigidity-scaled 6Li
+               energies and the 2x-pessimistic P_zz propagation.
   ARTEFACTS    that every figure a report embeds exists, is newer than the
                script that makes it, and is registered in build_report.py;
                that every sample matches a configuration energy; that the
@@ -227,6 +228,55 @@ def _():
                 bad.append("%s: ...%s..."
                            % (pathlib.Path(f).name,
                               txt[max(0, m.start() - 45):m.start() + 45]
+                              .replace("\n", " ")))
+    return bad
+
+
+@check("drift: no report claims the P_zz scale propagates quadratically")
+def _():
+    """Commit f05d026 published (1+d)^2 - 1 = 4.0/10.3/21.0% at
+    d = 2/5/10%.  The propagation is 1:1 (2.0/5.0/10.0%) -- the estimator's
+    weights are built from the ASSUMED polarizations, so one power of the
+    scale cancels between R and sigma_P^2.  Pinned by
+    test_pzz_scale_error_propagates_one_to_one_not_quadratically.  This
+    check stops the 2x-pessimistic table coming back."""
+    bad, allow = [], re.compile(
+        r"corrected|Corrected|wrong|too pessimistic|reach|row below|"
+        r"was corrected|earlier version")
+    stale = re.compile(r"10\.3\s*(/|%)|21\.0\s*%|4\.0\s*/\s*10\.3")
+    for f in glob.glob(str(ROOT / "reports/*.template.html")) + \
+             glob.glob(str(ROOT / "plans/*.md")) + \
+             glob.glob(str(ROOT / "docs/*.md")):
+        txt = pathlib.Path(f).read_text(errors="ignore")
+        for m in stale.finditer(txt):
+            near = txt[max(0, m.start() - 400):m.start() + 400]
+            if "P_zz" in near or "Pzz" in near or "P<sub>zz" in near:
+                if not allow.search(near):
+                    bad.append("%s: ...%s..."
+                               % (pathlib.Path(f).name,
+                                  txt[max(0, m.start() - 60):m.start() + 60]
+                                  .replace("\n", " ")))
+    return bad
+
+
+@check("drift: the relative-luminosity coefficient is quoted with its convention")
+def _():
+    """The bias is -[(P1+P2)/(P1-P2)] x delta_ratio = 1/3 for the flip
+    plan's (+0.6, -1.2).  The scripts' --rel-lumi-offset d is a RATIO error
+    of ~2d, so that convention shows ~2/3.  An unqualified 1.4 was the old
+    published number and was simply wrong."""
+    bad = []
+    stale = re.compile(r"1\.4\s*(x|\u00d7)\s*(\u03b4|delta)")
+    for f in glob.glob(str(ROOT / "reports/*.template.html")) + \
+             glob.glob(str(ROOT / "plans/*.md")):
+        txt = pathlib.Path(f).read_text(errors="ignore")
+        for m in stale.finditer(txt):
+            near = txt[max(0, m.start() - 400):m.start() + 400]
+            if not re.search(r"corrected|Corrected|wrong|row below|"
+                             r"not the|was published|conflated", near):
+                bad.append("%s: ...%s..."
+                           % (pathlib.Path(f).name,
+                              txt[max(0, m.start() - 60):m.start() + 60]
                               .replace("\n", " ")))
     return bad
 

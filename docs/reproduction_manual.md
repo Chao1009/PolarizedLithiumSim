@@ -252,7 +252,13 @@ which R produced it.
 
 Expected (§7 has the table): `L_5σ` at Δ/F₁ = 10⁻³ goes from
 135.3 / 131.3 / 274.6 fb⁻¹/u (frozen) to **67.5 / 65.8 / 155.1**
-(published R) for LOW / MID / TOP.
+(published R) for LOW / MID / TOP.  **Caveat (2026-08-27):** this
+script carries its own `ALL_CONFIGS` at 27.5 / 50 / 137.5 GeV/u, the
+pre-correction rigidity-scaled energies, so only its TOP row is at a
+machine configuration; the low and mid rows reproduce the dated notes
+and are not current results (plans/10).  The current-energy toy reach
+is `scripts/money_delta.py`: L_5σ(Δ/F₁ = 10⁻³, P_zz = 0.8) = 16.7 /
+16.3 / 21.8 fb⁻¹/u at 5 × 40.8 / 10 × 99.5 / 18 × 137.5.
 
 The six dated notes in `fastsim/notes/` carry a banner recording this;
 their numbers are still exactly reproducible with the default.
@@ -601,24 +607,27 @@ trust anything downstream of it.
 | ⁷Li α-tag, β = 0.30 | same | 0.979 / 0.966 |
 | A_bag triple (frozen R) | `scripts/money_delta_20260729.py --emit-a-bag-reference` | −0.317767 / −0.310041 / −0.296750 |
 | A_bag triple (published R) | `… --r-model r1998 --emit-a-bag-reference` | −0.237040 / −0.235825 / −0.234926 |
-| L₅σ (frozen R) | `scripts/money_delta_realistic.py --configs low,mid,top` | 135.31 / 131.26 / 274.64 fb⁻¹/u |
-| L₅σ (published R) | `… --r-model r1998 --configs low,mid,top` | 67.51 / 65.80 / 155.12 fb⁻¹/u |
+| L₅σ (frozen R) | `scripts/money_delta_realistic.py --configs low,mid,top` | 135.31 / 131.26 / 274.64 fb⁻¹/u (script-internal pre-2026-08-27 configs at 27.5 / 50 / 137.5 GeV/u, superseded by plans/10; only TOP is a machine configuration) |
+| L₅σ (published R) | `… --r-model r1998 --configs low,mid,top` | 67.51 / 65.80 / 155.12 fb⁻¹/u (same caveat) |
+| L₅σ toy, current energies | `scripts/money_delta.py` | 16.7 / 16.3 / 21.8 fb⁻¹/u at Δ/F₁ = 10⁻³, P_zz = 0.8 |
 
 ### Event generator
 
 | what | command (from `evgen/`) | expected |
 |---|---|---|
-| 5R sweet-spot purity, 25% stand-in | `scripts/money_cos2phi_reco.py` | 0.65 / 0.64 / 0.66 / 0.68 (D = 0.91 / 0.99 / 0.91 / 0.97) |
+| 5R sweet spots (x, Q²) | `scripts/money_cos2phi.py` | (0.028, 1.14), (0.011, 1.14), (0.071, 3.13), (0.141, 14.3); A = 7.4 / 4.4 / 9.5 / 9.5 ×10⁻³, δA = 1.7 / 1.4 / 2.8 / 4.5 ×10⁻⁴ (1 yr) |
+| 5R sweet-spot purity, 25% stand-in | `scripts/money_cos2phi_reco.py` | 0.66 / 0.63 / 0.69 / 0.69 (D = 0.92 / 0.99 / 0.90 / 0.96); δÂ = 1.2 / 0.9 / 1.6 / 3.0 ×10⁻⁴ |
 | 5R sweet-spot purity, PYTHIA HFS | `… --y-source hfs --hfs-sample …` | 0.43 / 0.54 / 0.47 / 0.69 |
 | 5R amplitude dilution D, PYTHIA HFS | same | 0.79 / 0.85 / 0.82 / 0.95 |
-| Σ-method δy/y, PYTHIA, mid config | `scripts/hfs_resolution.py --config 1 --sample …` | 0.55 / 0.28 / 0.50 / 0.15 |
-| … low config | `--config 0` | 0.28 / 0.21 / 0.24 / 0.11 |
-| … top config | `--config 2` | 0.74 / 0.34 / 0.69 / 0.18 |
-| unfolding model dependence | `scripts/money_cos2phi_reco.py --unfold-scan` | bin-by-bin (−5.0, +8.5, −9.3, +6.3)% → folded (−0.9, −1.2, −0.2, +0.3)% |
+| Σ-method δy/y, PYTHIA, mid config (its own sweet spots) | `scripts/hfs_resolution.py --config 1 --sample …` | 0.32 / 0.22 / 0.29 / 0.15 |
+| … low config | `--config 0` | 0.38 / 0.23 / 0.24 / 0.11 |
+| … top config | `--config 2` | 0.23 / 0.19 / 0.21 / 0.18 |
+| unfolding model dependence (moment_B prior) | `scripts/money_cos2phi_reco.py --unfold-scan` | bin-by-bin (−4.1, +8.0, −5.5, +4.9)% → folded (−1.5, −1.8, −0.3, +0.5)% |
 | coherent tagged fraction | `scripts/coherent_optics_scan.py` | 32% / 3.0% / 4×10⁻⁵ / 2×10⁻⁷ at 0.10 / 0.22 / 0.45 / 0.60 GeV |
-| near-beam gain, coherent | `scripts/nearbeam_aperture_scan.py` | silicon → 10σ: 1.41×10⁻² → 3.71×10⁻¹ (×26), 5.12×10⁻⁵ → 2.91×10⁻² (×569), 1.94×10⁻¹⁷ → 1.97×10⁻⁹ (dead either way) |
-| near-beam gain, α tag | same | 0.103 → 0.550, 0.024 → 0.137, 0.0012 → 0.0054 |
-| near-beam gain, through the chain | `scripts/nearbeam_reach_gain.py` | 5 × 41: acc 1.43×10⁻² → 3.62×10⁻¹, 2 → 3 \|t\| bins; 10 × 100: 1.02×10⁻⁴ → 3.25×10⁻², 2 → 4 bins and δa_t 1.45 → 0.0069 |
+| near-beam gain, coherent | `scripts/nearbeam_aperture_scan.py` | silicon → 0.727 mrad: 9.8×10⁻⁷ → 7.5×10⁻² (5 × 41), 7.7×10⁻¹⁶ → 1.4×10⁻⁵ (10 × 100), 1.9×10⁻¹⁷ → 2.0×10⁻⁹ (18 × 275) |
+| near-beam gain, α tag | same | 0.012 → 0.21, 0.0016 → 0.019, 0.0012 → 0.0054 |
+| near-beam gain, through the chain | `scripts/nearbeam_reach_gain.py` | 5 × 41: acc 3.3×10⁻⁶ → 7.8×10⁻², 0 → 4 \|t\| bins (a_t ± 0.003–0.02); 10 × 100: 0 → 9.2×10⁻⁵, 0 → 1 bin |
+| 6R at the low configuration with a 0.727 mrad approach | `scripts/money_cos2phi_coherent_reco.py --config 0 --rp-aperture measured --cut-scale-x 1.0 --near-beam-mrad 0.727` | acc 0.078, N_tag 3.35×10⁶, ⟨cos 2β⟩ = −0.71, three \|t\| bins; a_t 0.1165 ± 0.0034 / 0.174 ± 0.004 / 0.262 ± 0.008 |
 | hot-spot Z-ID thresholds | `scripts/nearbeam_sensor_budget.py` | r_s = 134 / 268 / 402 nm for p,d / α / ⁶Li; at w = 1 µm, I_th/I_c = 0.73 / 0.46 / 0.20 |
 | Z-ID fake rate, 4 planes at 95% eff | `scripts/nearbeam_zid_power.py` | 2.3×10⁻⁵ (8-bit LLR) / 3.1×10⁻⁵ (one bit) / 2.7×10⁻³ (truncated mean) / 5.3×10⁻² (plain sum); 50% fill cannot reach 95% |
 

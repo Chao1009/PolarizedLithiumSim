@@ -71,10 +71,7 @@ sum-rule-constrained ansatz of the merged money_delta suite,
 ∫xΔdx = −0.012·α_s, with the ⁶Li per-nucleon dilution 1/3;
 `moment_B`/`toy` one flag away). Full-luminosity statistics via
 per-φ-bin Poisson draws (`sample.phi_histogram_pseudo` — exact for
-binned estimators). At P_zz = 0.6 (mid energy) the moment-constrained
-amplitudes are (0.7–1.2)×10⁻² at the sweet spots (table-α_s, the
-money_delta production convention) with per-bin δA ≈ (1.5–4.5)×10⁻⁴
-already in year 1 (10 fb⁻¹/u) — the
+binned estimators). At P_zz = 0.6 (mid energy, e10 × ⁶Li 99.5 GeV/u) the moment-constrained amplitudes are (0.44–0.95)×10⁻² at the sweet spots x = 0.011–0.14 (table-α_s, the money_delta production convention) with per-bin δA ≈ (1.4–4.5)×10⁻⁴ already in year 1 (10 fb⁻¹/u) — the
 measurement discriminates interpretation A vs B, not just zero.
 
 `money_delta_extraction.py` (money plot 7): the same pseudo-
@@ -90,15 +87,11 @@ inclusive DIS and the RP-tagged coherent channel, with every bin of
 the detailed plots overlaid: the four sweet-spot φ′ super-bins
 (plot 5), the three Q² slices with their merged x-bin pairs (the
 Δ-extraction points of plots 5/7, exact money-plot selection), and
-the tagged-count-maximal super-bin of plot 6(d). 98% of the tagged
-sample sits at x < 0.03 (median 3.5×10⁻³).
+the tagged-count-maximal super-bin of plot 6(d). The tagged sample is concentrated at x < 0.03.
 
 `money_cos2phi_coherent.py`: the coherent channel e⁶Li → e′X ⁶Li(g.s.)
 with the intact recoil tagged in the Roman-Pot near-beam pT tail
-(R = 1.000 exactly — beam-blind below the pT cut): acceptance
-exp(−B pT_cut²) = 13.5% [9–20%] with high-acceptance optics vs 4×10⁻⁵
-with high-divergence; ~10⁸ tagged events at 100 fb⁻¹/u (scenario
-f₀ = 0.04), best-bin δA ≈ 6×10⁻⁴ (5σ floor at a 0.3% modulation).
+(R = 1.000 exactly — beam-blind below the pT cut): acceptance exp(−B pT_cut²) = 13.5% [9–20%] for a 0.20 GeV near-beam envelope vs 4×10⁻⁵ at 0.45 GeV; with the Yellow Report divergences and the measured pot aperture no published IP6 optics delivers either (plans/10; Report 1 §6.1). For the 0.20 GeV envelope: 1.7×10⁷ / 1.7×10⁸ tagged events at 10 / 100 fb⁻¹/u (scenario f₀ = 0.04), best-bin δA ≈ 1.8×10⁻³ / 0.6×10⁻³ (5σ floors at 0.9% / 0.3% modulations).
 The modulation is anchored (plans/06 §6.4b): a t-linear deformation
 term scaled from the polarized-deuteron CGC calculation (PLB
 858:139053, digitized in `coherent.MANTYSAARI_A2_DEUTERON`) giving
@@ -157,20 +150,10 @@ mixed method 25%, ε(φ′) harmonic + 10⁻³ rel-lumi offset on):
 
 - 5R (25% hadronic y — the ePIC kinematic-fit study's smearing and the
   ATHENA Fig. 22 value at y ≈ 0.01, `refs/README.md`): sweet spots 1–4 in
-  reco bins: purity 0.64–0.68, efficiency 0.37–0.64, D = 0.91–0.99;
-  Â unbiased vs the reco-bin truth; δÂ = 1.2 / 1.0 / 1.8 / 3.0 ×10⁻⁴
-  (1 yr) — 0.65–0.70 of money plot 5's single-fill errors (the m = 0-rich
+  reco bins (x = 0.028 / 0.011 / 0.071 / 0.141): purity 0.63–0.69, efficiency 0.38–0.66, D = 0.90–0.99; Â within ≈ 2σ of the reco-bin truth; δÂ = 1.2 / 0.9 / 1.6 / 3.0 ×10⁻⁴ (1 yr) — 0.59–0.69 of money plot 5's single-fill errors (the m = 0-rich
   fill gain beats the efficiency loss);
-- 7R: best bins δΔ = 1.0×10⁻³ (Q² = 1.14) and 0.5×10⁻³ (3.13 GeV²) in
-  year 1, purities ≈ 0.55;
-- 6R: angular envelope (0.22 GeV at 50 GeV/u) + slot-like cutout
-  (|p_x| < 0.55, |p_y| < 0.22 GeV — the ePIC sensor planes surround a
-  horizontal slot, Jentsch DIS 2023) → N_tag = 2.7×10⁶ (1 yr); the cutout
-  fakes ⟨cos 2β⟩ = +0.77; the template fit recovers a_t(t_ref) =
-  0.117 ± 0.007 (inj. 0.119) … 0.331 ± 0.018 (0.343) and a_e = 0.0101 ±
-  0.0013 (inj. 0.010) in year 1 — the slot concentrates the recoils where
-  cos 2β hardly varies, costing ~3× in the deformation-term error relative
-  to a square cutout (a_e untouched). u₁ = 0.05, u₂ = 0.02 sit at the ZEUS
+- 7R: best bins δΔ = 2.4×10⁻³ (Q² = 1.14) and 1.2×10⁻³ (3.13 GeV²) in year 1, purities 0.54–0.57;
+- 6R (re-derived 2026-08-27): with the measured pot aperture and any published divergence no recoil survives the binned |t| window at any configuration, so 6R runs at the low configuration, e5 × ⁶Li 40.8 GeV/u, with the measured vertical aperture (3.0 mrad) and a 0.73 mrad horizontal near-beam approach (`--config 0 --rp-aperture measured --cut-scale-x 1.0 --near-beam-mrad 0.727`) → acceptance 7.8%, N_tag = 3.4×10⁶ (1 yr); the aperture fakes ⟨cos 2β⟩ = −0.71; the template fit recovers a_t(t_ref) = 0.1165 ± 0.0034 (inj. 0.119), 0.174 ± 0.004 (0.180), 0.262 ± 0.008 (0.258) in the three surviving |t| bins, while a_e in the lowest bin comes out 0.0151 ± 0.0014 here and 0.0102 ± 0.0014 in `nearbeam_reach_gain.py` against 0.010 injected — a residual template bias at this aperture of the order of the one-year error. u₁ = 0.05, u₂ = 0.02 sit at the ZEUS
   LPS 1σ bounds (NPB 816:1); see `refs/README.md` for the sources.
   **Convention (verified in the paper's Eq. 9):** arXiv:2408.13213 expands
   1 + 2Σ a_n cos nΦ with Φ the vector-meson (recoil) azimuth relative to
@@ -194,30 +177,19 @@ no container — and `evgen/samples/README.md` is the manifest).  Without a
 sample both scripts fall back to the toy and label it.
 
 ```bash
-python3 scripts/hfs_resolution.py --config 1     --sample samples/pythia8_e10_p50_dis.npz samples/pythia8_e10_n50_dis.npz --outdir .
+python3 scripts/hfs_resolution.py --config 1     --sample samples/pythia8_e10_p99.5_dis.npz samples/pythia8_e10_n99.5_dis.npz --outdir .
 python3 scripts/money_cos2phi_reco.py --y-source hfs --hfs-sample <the same pair> --outdir .
 ```
 
-**Measured with PYTHIA (2026-08-26), Σ method, 50 MeV calorimeter noise, at the
-four money-plot-5 sweet spots:**
+**Measured with PYTHIA (2026-08-27, γ-matched energies), Σ method, 50 MeV calorimeter noise, at the four money-plot-5 sweet spots — which each configuration selects for itself (`hfs_resolution.py` takes them from the same selection as `money_cos2phi.py`):**
 
-| configuration | x = 0.056, Q² = 1.14 | 0.022, 1.14 | 0.141, 3.13 | 0.141, 14.3 |
+| configuration | spot 1 (x, Q²) → δy/y | spot 2 | spot 3 | spot 4 |
 |---|---|---|---|---|
-| low, 5 × 40.8 | 0.28 | 0.21 | 0.24 | 0.11 |
-| **mid, 10 × 50** | **0.32** | **0.22** | **0.28** | **0.11** |
-| top, 18 × 137.5 | 0.74 | 0.34 | 0.69 | 0.18 |
+| low, 5 × 40.8 | (0.089, 1.14) → 0.38 | (0.035, 1.14) → 0.23 | (0.141, 3.13) → 0.24 | (0.141, 14.3) → 0.11 |
+| **mid, 10 × 99.5** | (0.028, 1.14) → **0.32** | (0.011, 1.14) → **0.22** | (0.071, 3.13) → **0.29** | (0.141, 14.3) → **0.15** |
+| top, 18 × 137.5 | (0.014, 1.46) → 0.23 | (0.0056, 1.46) → 0.19 | (0.028, 3.13) → 0.21 | (0.141, 14.3) → 0.18 |
 
-Three things the toy could not say.  (i) The 25% stand-in is right in
-magnitude at the mid configuration but the toy was **optimistic by 0.04–0.05
-absolute at every spot** (it gave 0.28 / 0.17 / 0.24 / 0.07).  (ii) The
-resolution degrades monotonically with beam energy, because the sweet spots
-move to lower y as s grows — at the top configuration the hadronic method is
-0.34–0.74 and the electron method 0.2–5.4, so **the low-energy configuration
-is where the x ≈ 0.05–0.14 bins are measurable**, which is the open item the
-reconstruction note lists.  (iii) The noise floor is the whole story below
-y ≈ 0.02: in the lowest y bin (y = 0.005) the Σ resolution runs 0.20 → 0.32 →
-0.54 → 1.01 for 0 → 25 → 50 → 100 MeV, and at y = 0.0125 it runs 0.18 → 0.21 →
-0.27 → 0.44, so plans/04 #21 (the ePIC noise and threshold floor at
+Three things the toy could not say.  (i) The 25% stand-in is right in magnitude at the mid configuration but the toy was **optimistic everywhere** (at the pre-correction spots by 0.04–0.05 absolute).  (ii) The electron method alone gives 0.46–1.18 at the mid spots and the sweet spots move to lower y as s grows, so **the low-energy configuration is where the x ≈ 0.14 bins are best measured** (0.24 and 0.11).  (iii) The noise floor is the whole story below y ≈ 0.02: in the lowest y bin (y = 0.005) the Σ resolution runs 0.22 → 0.33 → 0.54 → 1.01 for 0 → 25 → 50 → 100 MeV at the mid configuration, and at y = 0.0125 it runs 0.19 → 0.21 → 0.28 → 0.44, so plans/04 #21 (the ePIC noise and threshold floor at
 Σ_h ≈ 0.2–0.5 GeV) sets it, exactly as the note says.
 
 ## Step-5.A validation gates (plans/05 §5.4) — all passing

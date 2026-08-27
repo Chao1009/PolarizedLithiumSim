@@ -61,7 +61,11 @@ yes | python3 -m parton install EPPS21nlo_CT18Anlo_Li6   # money_delta_20260729
   p_T threshold to the α; the 10σ envelope is angular, i.e. 0.40 GeV for
   a 4 × 137.5 GeV α, which gives ≈ 0.7–2.7%.
 - **Gluonometry**: 5σ on Δ/F₁ = 10⁻³ (Sather–Schmidt scale) at
-  **~66–155 fb⁻¹/u** (LOW/MID/TOP = 67.5 / 65.8 / 155.1 fb⁻¹/u) with
+  **~66–155 fb⁻¹/u** (LOW/MID/TOP = 67.5 / 65.8 / 155.1 fb⁻¹/u; caveat
+  2026-08-27 — `money_delta_realistic.py` carries its own pre-correction
+  27.5 / 50 GeV/u low and mid configurations, so only the TOP number is
+  at a machine configuration; `money_delta.py` at the γ-matched energies
+  gives 16.7 / 16.3 / 21.8 fb⁻¹/u for the toy at P_zz = 0.8) with
   CT18 grid inputs, the 2-of-6-diluted P_zz = 0.267 and the published
   R₁₉₉₈ — inside the 1–100 fb⁻¹/u plausible-program band at 5 × 27.5 and
   10 × 50, above it at 18 × 137.5.

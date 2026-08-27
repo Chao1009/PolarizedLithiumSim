@@ -53,6 +53,106 @@ brings to the EIC, in support of the ANL polarized ⁶,⁷Li ion-source program
 5. **Calendar anchor**: INT program on polarized ion beams at EIC,
    March 22 – April 2, 2027 — target for Phase-1 money plots.
 
+## Development run 10 (2026-08-27): the P_zz propagation was 2x wrong, and T1 gets a value
+
+Report 2's §8 listed the two specifications that are ours to set but left
+one of them without a number and got both of their propagations wrong.
+Both are now measured rather than argued, and pinned.
+
+- ☑ **A P_zz scale error propagates 1:1, not quadratically.**  Commit
+  `f05d026` published (1+d)² − 1 = **4.0 / 10.3 / 21.0%** at
+  δP_zz/P_zz = 2 / 5 / 10%.  The correct costs are **2.0 / 5.0 / 10.0%**.
+  The estimator's weights wᶠ = Pᶠ − P̄ are built from the *assumed*
+  polarizations, so the ratio R carries one power of the assumed scale
+  while σₚ² carries two, and one cancels: **Â/A = P_zz(true)/P_zz(assumed)
+  exactly** — measured 1.020000 / 1.050000 / 1.100000 / 1.300000 at
+  d = 2 / 5 / 10 / 30%, on both aₑ and aₜ.  The quadratic is real but
+  belongs to *reach*: δA ∝ 1/σₚ, so luminosity at fixed δA goes as 1/P_zz².
+  The test that was meant to pin this checked only that σₚ² ∝ (1+d)² —
+  true, irrelevant, and it never ran the estimator on rescaled data.
+- ☑ **The relative-luminosity coefficient is 1/3 per unit ratio error**,
+  not the ≈1.4 × δ that was published.  It is the analytic
+  −(P₁+P₂)/(P₁−P₂), exactly 1/3 for the flip plan's (+0.6, −1.2), and
+  measured 0.333 out to δ = 10⁻².  The old number conflated two
+  conventions: the scripts' `--rel-lumi-offset d` sets the assumed shares
+  to [0.5(1±d)] against equal truth, which is a *ratio* error of ≈2d, so
+  that convention reads ≈2/3.  Both tests now run the estimator, and both
+  conventions are named where the number is quoted.
+- ☑ **T1 has a value: δP_zz/P_zz ≤ 5%** (new §8.4).  No EIC document
+  states one and **nothing exists for ⁶Li at all** — EPIOS's proposed Li–Li
+  CNI polarimeter is explicitly vector, and it puts tensor polarimetry on
+  Lamb-shift or BRP-type source-level devices.  So the target is set from
+  precedent, with stored beams separated from targets: **2.1%** (JINR
+  Nuclotron, absolutely calibrated on ¹²C(d,α)¹⁰B* at 0°) and **≈4%**
+  (COSY/ANKE, excluding the EDDA absolute scale) on stored deuterons;
+  **3.0%** on the HERMES storage cell, the best tensor number in the
+  literature, whose systematic is the *cell* — a mechanism a stored beam
+  does not have; 4.9% (NIKHEF), 8.0% (VEPP-3), 4.7–9.7% (UVa solid) and
+  8.0% (the JLab b₁ budget) elsewhere.  5% is the working value, 3% the
+  optimistic case two experiments have reached, 8–10% the conservative one.
+- ☑ **Relative luminosity ≤ 10⁻³ on the ratio**, costing 0.03%.  It is not
+  a leading systematic at any plausible value, and bunch-by-bunch tensor
+  alternation — what makes RHIC's 10⁻⁴ achievable for helicity — removes
+  it.  That is a design choice to state early, not a number to measure late.
+- ☑ **Two new DRIFT checks** (22 total) refuse the 2×-pessimistic table and
+  an unqualified 1.4 anywhere in `reports/`, `plans/` or `docs/`.  266
+  tests and 22 checks pass.
+
+The consequence for what the programme claims is unchanged and worth
+repeating: a P_zz scale error multiplies every bin identically, so **every
+shape claim is immune to it** — the x and Q² dependence, the sign, the
+ratio between sweet spots, and the discrimination between the two Δ ansätze
+all survive a wrong P_zz scale untouched.  It moves only the absolute
+magnitude of Δ.
+
+## Development run 9 (2026-08-27): Reports 0 and 1 rewritten as papers
+
+The two circulate-able physics reports were rewritten to a publishable
+state — abstract, author line, one logical thread, references numbered
+in citation order, no repeated facts — and every number in them restated
+from the current scripts at the γ-matched energies (plans/10).  Doing so
+found that the report text had only been search-replaced when the
+energies changed: the figures were regenerated at 99.5 GeV/u on the
+morning of 2026-08-27 but the prose still carried the 50 GeV/u numbers.
+
+- ☑ **Report 0** (`polarized_li_primer`): the physics case as a paper —
+  atom → nucleus → ion; polarization → collider; formalism → observables →
+  a single requirements-and-reach table.  Reach numbers from
+  `tagging_acceptance.py`, `money_b1.py`, `money_polemc.py`,
+  `money_delta.py` at the current energies.
+- ☑ **Report 1** (`cos2phi_money_plots_report`): the projections as a
+  paper.  Sweet spots now x = 0.011–0.14 (were 0.02–0.14), amplitudes
+  (0.44–0.95)×10⁻² against δA = (1.4–4.5)×10⁻⁴ (21–44σ), xΔ to 2–9%;
+  reconstructed δÂ = (0.9–3.0)×10⁻⁴ with purities 0.43–0.69 on the PYTHIA
+  final state.  The coherent channel is presented as the far-forward
+  requirement it is: with the Yellow Report divergences and the measured
+  aperture no published IP6 optics tags the recoil (Table 2 of the
+  paper), the figures stand for a 0.20 GeV envelope (1.7×10⁷ tagged in
+  year 1), and the analysis closure is shown at a 0.73 mrad approach at
+  5 × 41 (`nearbeam_reach_gain.py`).  The R statement corrected: every
+  projection uses the toy R; R1998 sits behind the hook and would move
+  Δ/F₁ by +17.8 / +18.5 / +7.6 / −4.4% at the current spots.
+- ☑ **`hfs_resolution.py` selected the sweet spots from a constant** at
+  the pre-correction energies; it now takes them per configuration from
+  the money-plot-5 selection.  Σ-method δy/y at the mid spots is
+  0.32 / 0.22 / 0.29 / 0.15 (low 0.38 / 0.23 / 0.24 / 0.11, top
+  0.23 / 0.19 / 0.21 / 0.18, each at its own spots).
+- ☑ **Report 2 patched, not rewritten**: Table 2 (5R) and the text on the
+  current spots; money plot 6R re-derived at the low configuration with a
+  0.727 mrad near-beam approach (acceptance 7.8%, N_tag 3.4×10⁶, three
+  |t| bins, a_t recovered to ±0.003–0.008; a_e carries a residual
+  template bias of the order of the one-year error at this aperture —
+  0.0151 ± 0.0014 and 0.0102 ± 0.0014 in two pseudo-experiments against
+  0.010), since with the measured aperture nothing survives at any
+  configuration.  README, evgen/README, the reproduction manual §7 and
+  fastsim/README carry the same numbers; `money_delta_realistic.py`
+  still runs its own superseded (pre-2026-08-27, rigidity-scaled)
+  27.5 / 50 / 137.5 GeV/u configurations and is flagged as such rather
+  than changed.
+- ☐ Left: Report 2 as prose is still the 2026-08-24 analysis note with
+  patched numbers, not a paper; the coherent a_e template bias at a
+  strongly anisotropic aperture is unexplained.
+
 ## Development run 8 (2026-08-26): the generators arrive, and the aperture is measured
 
 The work moved to the Linux box, and three of the things the plans had

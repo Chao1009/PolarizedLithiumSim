@@ -58,6 +58,15 @@ current values from the 2026-08-17 report shown as the baseline:
 | coherent best-bin δA, 1 yr / 10 yr | 1.9×10⁻³ / 6×10⁻⁴ (5σ floors 1.0%/0.3%) |
 | deformation-anchored ⟨a₂⟩ at P_zz = 0.6 | 0.036 [0.018–0.059], sign flip vs d |
 
+**Superseded 2026-08-27.** The baseline above was computed at the
+rigidity-scaled energies. Report 1 as rewritten on 2026-08-27 carries the
+current values at e10 × ⁶Li 99.5 GeV/u: sweet spots x = 0.011–0.14,
+amplitudes (0.44–0.95)×10⁻² vs δA = (1.4–4.5)×10⁻⁴ (21–44σ), δΔ 2–9%
+relative in the best bins, N_tag = 1.7×10⁷ / 1.7×10⁸ for a 0.20 GeV
+envelope with best-bin δA = 1.8×10⁻³ / 0.6×10⁻³ — and the finding that no
+published IP6 optics delivers that envelope (plans/10), which turns claim 3
+into the letter's far-forward requirement.
+
 ## 7.2 Venue
 
 - **Primary: Physics Letters B.** Precedents for exactly this genre:

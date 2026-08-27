@@ -874,27 +874,52 @@ def test_shape_fit_error_is_the_delta_chi2_band(response):
 
 # --- the two systematics this programme specifies for itself (report 3 §7) ---
 
-def test_pzz_scale_error_is_exactly_quadratic_in_the_estimator():
-    """delta P_zz / P_zz is OURS to specify -- no EIC document gives a tensor
-    polarimetry uncertainty for any species.  What the estimator does with it
-    is fixed: the amplitude is extracted as T ~ R / sigma_P^2 and sigma_P^2 is
-    quadratic in P_zz, so a scale error d propagates as (1+d)^2 - 1 = 2d + d^2
-    -- a pure NORMALISATION on Delta, identical in every bin, so it moves no
-    shape claim."""
+def test_pzz_scale_error_propagates_one_to_one_not_quadratically():
+    """CORRECTED 2026-08-27.  An earlier version of this test asserted only
+    that sigma_P^2 scales as (1+d)^2 and concluded the amplitude did too.
+    That is true of sigma_P^2 and IRRELEVANT to the amplitude, because it
+    never ran the estimator on rescaled data.
+
+    The estimator's weights w_f = P_f - Pbar are built from the ASSUMED
+    polarizations, so the ratio R carries one power of the assumed scale
+    while sigma_P^2 carries two.  One power cancels:
+
+        A_hat / A = P_zz(true) / P_zz(assumed),  EXACTLY.
+
+    So delta P_zz / P_zz costs the SAME fraction on the amplitude, not
+    twice it.  The quadratic is real but belongs to REACH rather than bias:
+    delta_A ~ 1/sigma_P, so the luminosity needed at fixed delta_A goes as
+    1/P_zz^2."""
+    sc = coh.CoherentScenario(amp=0.01, eps_b0=-0.08)
+    cfg = beams.default_configs("6Li")[0]
+    cr = rp.CoherentResponse(sc, cfg, reco.sigma_theta_tagging(cfg),
+                             shape="rectangle", n_mc=120000,
+                             cut_scale_xy=(1.0, 1.0),
+                             rng=np.random.default_rng(11))
     plan = bk.tensor_flip_plan(0.6)
     pzz = [float(c.moments()[1]) for c in plan.categories]
     frac = [c.lumi_fraction for c in plan.categories]
+    a_t = lambda t: sc.cos2phi_coefficient_deformation(t, 1.0)   # noqa: E731
+    ae = np.linspace(0.0, 2.0 * np.pi, 13)
+    be = np.linspace(0.0, 2.0 * np.pi, 25)
 
-    def sigma_p2(p, lum):
-        lum = np.asarray(lum, float) / np.sum(lum)
-        pbar = float((lum * np.asarray(p, float)).sum())
-        return float((lum * (np.asarray(p, float) - pbar) ** 2).sum())
+    def fit(pzz_true):
+        mu = np.concatenate(
+            [cr.expected_counts_2d(1e9, [pf], [lf], 0.05, 0.12, ae, be,
+                                   0.01, a_t, a_m=0.0, u1=0.05, u2=0.02)
+             for pf, lf in zip(pzz_true, frac)], axis=0)
+        f = reco.harmonic_ratio_fit_2d(mu, list(frac), list(pzz), ae, be,
+                                       u_coeffs=(0.05, 0.02),
+                                       beta_means=cr.basis_means(0.05, 0.12, be),
+                                       with_sin=False)
+        return f["a_e"], f["a_t"]
 
-    base = sigma_p2(pzz, frac)
-    assert base == pytest.approx(0.81, rel=1e-9)          # 0.25 * 1.8^2
-    for d in (0.02, 0.05, 0.10):
-        scaled = sigma_p2([p * (1.0 + d) for p in pzz], frac)
-        assert scaled / base == pytest.approx((1.0 + d) ** 2, rel=1e-12)
+    base_e, base_t = fit(pzz)
+    assert base_e == pytest.approx(0.01, rel=1e-6)      # closes with no error
+    for d in (0.02, 0.05, 0.10, 0.30):
+        e, t = fit([p * (1.0 + d) for p in pzz])
+        assert e / base_e == pytest.approx(1.0 + d, rel=1e-6)
+        assert t / base_t == pytest.approx(1.0 + d, rel=1e-6)
 
 
 def test_the_flip_plan_luminosity_split_is_optimal():
@@ -916,29 +941,53 @@ def test_the_flip_plan_luminosity_split_is_optimal():
     assert sigma_p2(0.5) == pytest.approx(0.25 * (pzz[0] - pzz[1]) ** 2)
 
 
-def test_relative_luminosity_error_is_benign_by_comparison():
-    """The other quantity this programme specifies for itself.  The estimator
-    docstring says a relative-luminosity error enters only through Pbar, and
-    the coherent pseudo-experiment measures the induced bias on the amplitude
-    as ~1.4 x delta -- so even a per-cent luminosity error costs ~1.4%, two
-    orders below what a 5% P_zz scale error costs (10.3%)."""
+def test_relative_luminosity_bias_is_one_third_per_unit_ratio_error():
+    """CORRECTED 2026-08-27.  An earlier version quoted "~1.4 x delta" and
+    asserted only a loose 0.01-0.20 band, which was too wide to notice that
+    the number was wrong and which conflated two conventions.
+
+    To first order the bias is
+
+        dA/A = -[(P1 + P2) / (P1 - P2)] x delta_ratio
+
+    where delta_ratio is the fractional error on L1/L2.  For the flip plan's
+    (+0.6, -1.2) that coefficient is exactly 1/3.
+
+    MIND THE CONVENTION.  The scripts' --rel-lumi-offset d sets the ASSUMED
+    shares to [0.5(1+d), 0.5(1-d)] against equal truth, which is a RATIO
+    error of 2d/(1-d^2) ~ 2d -- so the apparent coefficient in that
+    convention is ~2/3, not 1/3.  Quote which one you mean."""
     sc = coh.CoherentScenario(amp=0.01, eps_b0=-0.08)
     cfg = beams.default_configs("6Li")[0]
-    kw = dict(shape="rectangle", n_mc=200000, cut_scale_xy=(1.0, 1.0))
     cr = rp.CoherentResponse(sc, cfg, reco.sigma_theta_tagging(cfg),
-                             rng=np.random.default_rng(11), **kw)
+                             shape="rectangle", n_mc=120000,
+                             cut_scale_xy=(1.0, 1.0),
+                             rng=np.random.default_rng(11))
     plan = bk.tensor_flip_plan(0.6)
+    pzz = [float(c.moments()[1]) for c in plan.categories]
+    a_t = lambda t: sc.cos2phi_coefficient_deformation(t, 1.0)   # noqa: E731
+    ae = np.linspace(0.0, 2.0 * np.pi, 13)
+    be = np.linspace(0.0, 2.0 * np.pi, 25)
 
-    def a_e(offset):
-        fit = rp.measure_coherent(
-            cr, 1e9, plan, 0.05, 0.12, a_e=0.01,
-            a_t_func=lambda t: sc.cos2phi_coefficient_deformation(t, 1.0),
-            poisson=False,
-            lumi_assumed=[0.5 * (1.0 + offset), 0.5 * (1.0 - offset)])
-        return fit["a_e"]
+    def fit(lum_assumed):
+        mu = np.concatenate(
+            [cr.expected_counts_2d(1e9, [pf], [0.5], 0.05, 0.12, ae, be,
+                                   0.01, a_t, a_m=0.0, u1=0.05, u2=0.02)
+             for pf in pzz], axis=0)
+        f = reco.harmonic_ratio_fit_2d(mu, list(lum_assumed), list(pzz),
+                                       ae, be, u_coeffs=(0.05, 0.02),
+                                       beta_means=cr.basis_means(0.05, 0.12, be),
+                                       with_sin=False)
+        return f["a_t"]
 
-    base = a_e(0.0)
-    for d in (1e-4, 1e-3):
-        assert abs(a_e(d) / base - 1.0) < 5e-3        # negligible
-    big = abs(a_e(5e-2) / base - 1.0)
-    assert 0.01 < big < 0.20                          # ~1.4 x delta, not blow-up
+    analytic = -(pzz[0] + pzz[1]) / (pzz[0] - pzz[1])
+    assert analytic == pytest.approx(1.0 / 3.0, rel=1e-9)
+
+    base = fit([0.5, 0.5])
+    for d in (1e-3, 1e-2):
+        t = fit([0.5 * (1.0 + d), 0.5 * (1.0 - d)])
+        ratio_err = (1.0 + d) / (1.0 - d) - 1.0
+        assert (t / base - 1.0) / ratio_err == pytest.approx(analytic, rel=0.05)
+    # and in absolute terms it is small: a per-cent ratio error costs ~0.3%
+    t = fit([0.5 * 1.005, 0.5 * 0.995])
+    assert abs(t / base - 1.0) < 0.005

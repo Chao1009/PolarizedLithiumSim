@@ -42,7 +42,11 @@ from polligen.xsec import InclusiveKernel  # noqa: E402
 from polli_fastsim import beams, fom  # noqa: E402
 from polli_fastsim.polarized import toy_b1  # noqa: E402
 
-SPOTS = ((0.0562, 1.14), (0.0224, 1.14), (0.141, 3.13), (0.141, 14.3))
+# The four sweet spots of money plot 5 are selected per configuration in
+# main() with the same function money_cos2phi.py uses, so panel (c) follows
+# the spots when the beam menu moves.  (They were a constant at the
+# pre-2026-08-27 energies -- (0.0562, 1.14), (0.0224, 1.14), (0.141, 3.13),
+# (0.141, 14.3) -- which no longer matched the plotted spots.)
 C = ("#0072B2", "#D55E00", "#009E73", "#CC79A7", "#56B4E9")
 
 
@@ -76,6 +80,10 @@ def main():
     rng = np.random.default_rng(args.seed)
     config = beams.default_configs("6Li")[args.config]
     analysis = fom.Scenario(lumi_fb_per_nucleon=10.0, pol_ion_tensor=0.6)
+    from reco_chain_figures import sweet_spots as _sweet_spots  # noqa: E402
+    SPOTS = tuple((float(xs), float(qs))
+                  for xs, qs, _i, _j in _sweet_spots(args.config)[4])
+    print("sweet spots at %s: %s" % (config.label(), SPOTS))
     kern = InclusiveKernel(beams.LI6, b1_func=toy_b1)
     sampler = InclusiveSampler(kern, config, rp.generator_scenario(analysis),
                                nx=60, nq2=45, q2_range=(0.7, 2e3))

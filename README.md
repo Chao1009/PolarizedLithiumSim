@@ -56,27 +56,15 @@ python scripts/money_tagged_azz.py --events 400000    # tagged tensor asymmetry
 ## Headline results so far
 
 - **Gluonometry**: with the sum-rule-constrained Δ model
-  (`delta_models`, moment_A, table-α_s) the sweet-spot cos 2φ
-  amplitudes are (0.7–1.2)×10⁻² against per-bin δA = (1.5–4.5)×10⁻⁴
-  already at the 1-year program (10 fb⁻¹/u), across Q² = 1.1–14 GeV²
-  at x ≈ 0.02–0.14 — the measurement resolves the interpretation-A-vs-B
-  ansatz spread, not just a null.
+  (`delta_models`, moment_A, table-α_s) the sweet-spot cos 2φ amplitudes are (0.44–0.95)×10⁻² against per-bin δA = (1.4–4.5)×10⁻⁴ already at the 1-year program (10 fb⁻¹/u), across Q² = 1.1–14 GeV² at x = 0.011–0.14 (e10 × ⁶Li 99.5 GeV/u, 2026-08-27) — the measurement resolves the interpretation-A-vs-B ansatz spread, not just a null.
 - **Coherent intact-⁶Li tag**: the recoil is exactly beam-blind
-  (A/Z = 2) — 13.5% acceptance via the Roman-Pot pT tail with
-  high-acceptance optics, 4×10⁻⁵ with high-divergence: the coherent
-  program fixes the optics choice. 1.1×10⁷ / 1.1×10⁸ tagged events in
-  the 1-/10-year programs; modulation amplitude anchored on the
-  polarized-deuteron CGC calculation (sign flip vs d predicted).
+  (A/Z = 2), so the only handle is its angle against the 10σ envelope and the pot aperture. With the Yellow Report divergences and the measured ePIC aperture the tag does not survive at IP6 at any configuration (5×10⁻⁷ / 8×10⁻²⁶ / 4×10⁻¹³, plans/10); it needs a tagging optics (β* ×14.5 at 5 × 41, acceptance 1/e) with pots that follow, or the IR-8 secondary focus. For a 0.20 GeV near-beam envelope (13.5%): 1.7×10⁷ / 1.7×10⁸ tagged events in the 1-/10-year programs; modulation amplitude anchored on the polarized-deuteron CGC calculation (sign flip vs d predicted).
 - **Tagging inverts between isotopes at IP6**: ⁷Li α-tag works
   (96–99% to the Roman Pots); ⁶Li α-tag is beam-blind — 1.85% with the high-acceptance optics, 1.51% with high-divergence, since the 10σ envelope is an *angle* and scales with the α momentum (2026-08-25; it read 3–9% while the 0.20 GeV proton cut was applied verbatim, and 1.7/1.3% until the beam mass became the physical nuclear one on 2026-08-26);
   tritons need IR-8.
 - **The hadronic final state is PYTHIA 8, not a toy** (2026-08-26): 8 M
   events over the three beam configurations, generated natively
-  (`tools/pythia8`).  Σ-method δy/y at the four sweet spots is
-  0.32 / 0.22 / 0.28 / 0.11 at the mid configuration — the toy was
-  optimistic by 0.04–0.05 absolute at every one — and it degrades
-  monotonically with beam energy (0.21–0.10 low, 0.74–0.18 top), so the
-  x ≈ 0.1 bins belong to the **low-energy** configuration.
+  (`tools/pythia8`).  Σ-method δy/y at the four sweet spots is 0.32 / 0.22 / 0.29 / 0.15 at the mid configuration (2026-08-27, corrected spots) — the toy was optimistic everywhere — and each configuration's own spots resolve to 0.38–0.11 (low) and 0.23–0.18 (top), so the x ≈ 0.14 bins belong to the **low-energy** configuration.
 - **The Roman-Pot aperture for an intact ⁶Li is measured, and it is
   horizontal** (2026-08-26): npsim cannot shoot a nucleus, so
   `tools/fullsim/ion_gun_hepmc.py` feeds one through the ePIC geometry as
