@@ -215,6 +215,20 @@ at the low-energy configuration, and the acceptance-induced fake cos 2φ_t
 templates (report §7, `reco.basis_2d`).  The magnitude is what the
 template absorbs; the sign is what a mis-specified template gets wrong.
 
+**Carried through the coherent chain.**  `reco.RP_APERTURE_MEASURED` is
+the table above, `rp_measure(cut_theta_xy=…)` takes the larger of the
+envelope and the aperture per axis (they are separate constraints), and
+`money_cos2phi_coherent_reco.py --rp-aperture measured` runs 6R on it.
+At the **low** configuration the measurement survives: acceptance
+37.7% → 1.42%, N_tag 8.3×10⁶ → 3.1×10⁵, the acceptance-induced
+⟨cos 2β⟩ **+0.426 → −0.772** — the sign flip, in the chain rather than in
+a formula — two of the four |t| bins instead of four, δa_t worse by
+6–34×, and a_e still recovered (0.0073 ± 0.0045 and 0.0091 ± 0.0045
+against an injected 0.0100).  At **mid** and **top** the aperture leaves
+no accepted recoil in the binned |t| window at all.  The coherent
+programme is therefore a low-energy programme for a second and stronger
+reason than the angular envelope already gave.
+
 **Caveats before this is quoted as a correction.** One event per scan
 point, 30° azimuthal steps, no beam divergence or vertex spread, and the
 `jug_xl-nightly` geometry is `epic-main` at git 5a7dd057 (≈ September

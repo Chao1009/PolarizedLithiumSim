@@ -90,6 +90,13 @@ def main():
                     help="cutout half-height in y in units of 10 sigma_y")
     ap.add_argument("--shape", default="rectangle",
                     choices=("rectangle", "ellipse"))
+    ap.add_argument("--rp-aperture", default="none",
+                    choices=("none", "measured"),
+                    help="add the pots' GEOMETRIC aperture, measured in "
+                         "the ePIC geometry (reco.RP_APERTURE_MEASURED, "
+                         "tools/fullsim), as a floor under the envelope "
+                         "cutout.  'none' is the envelope alone, which is "
+                         "every number published before 2026-08-26")
     ap.add_argument("--envelope-split", type=float, default=0.0,
                     help="RELATIVE difference of the Roman-Pot vertical "
                          "half-height between the m=+-1-rich and m=0-rich "
@@ -139,11 +146,19 @@ def main():
         config, scenario, sc, optics_list=(HIGH_ACCEPTANCE,),
         sigma_theta_list=(args.sigma_theta,))
     n_produced = float(n_coh.sum())          # coherent recoils, 1 yr
+    aperture = (reco.rp_aperture_for(config.ion_momentum_per_nucleon)
+                if args.rp_aperture == "measured" else None)
+    if args.rp_aperture == "measured" and aperture is None:
+        raise SystemExit("no measured aperture for %g GeV/u: it is tabulated "
+                         "per optics at 20.5, 50 and 137.5 (reco."
+                         "RP_APERTURE_MEASURED)"
+                         % config.ion_momentum_per_nucleon)
     cresp = rp.CoherentResponse(sc, config, args.sigma_theta,
                                 aspect=args.aspect, shape=args.shape,
                                 n_mc=args.n_mc, rng=rng,
                                 cut_scale_xy=(args.cut_scale_x,
-                                              args.cut_scale_y))
+                                              args.cut_scale_y),
+                                cut_theta_xy=aperture)
     n_tag = n_produced * cresp.acceptance
     plan = bk.tensor_flip_plan(args.pzz)
     pzz_list = [args.pzz, -2.0 * args.pzz]
@@ -195,17 +210,48 @@ def main():
         return a_t_func(t) * np.cos(2.0 * d_t)
 
     t_edges = [0.05, 0.08, 0.12, 0.17, 0.25]
-    fits1, fits10 = [], []
+    fits1, fits10, kept_edges = [], [], []
     for tlo, thi in zip(t_edges[:-1], t_edges[1:]):
-        fits1.append(rp.measure_coherent(
-            cresp, n_produced, plan, tlo, thi, amp_c, a_t_rot, a_m=args.a_m,
-            u1=args.u1, u2=args.u2, rng=rng, responses=responses,
-            u_coeffs_assumed=u_assumed, lumi_assumed=lumi_assumed, **kw_sin))
-        fits10.append(rp.measure_coherent(
-            cresp, n_produced * lumi_ratio, plan, tlo, thi, amp_c, a_t_rot,
-            a_m=args.a_m, u1=args.u1, u2=args.u2, rng=rng,
-            responses=responses, u_coeffs_assumed=u_assumed,
-            lumi_assumed=lumi_assumed, **kw_sin))
+        # A cutout tight enough to empty part of the circle leaves the
+        # harmonic templates linearly dependent in that t bin.  That is a
+        # statement about the acceptance, so report it and carry on with
+        # the bins that survive rather than losing the whole figure --
+        # which is what happens under --rp-aperture measured.
+        try:
+            f1 = rp.measure_coherent(
+                cresp, n_produced, plan, tlo, thi, amp_c, a_t_rot,
+                a_m=args.a_m, u1=args.u1, u2=args.u2, rng=rng,
+                responses=responses, u_coeffs_assumed=u_assumed,
+                lumi_assumed=lumi_assumed, **kw_sin)
+            f10 = rp.measure_coherent(
+                cresp, n_produced * lumi_ratio, plan, tlo, thi, amp_c,
+                a_t_rot, a_m=args.a_m, u1=args.u1, u2=args.u2, rng=rng,
+                responses=responses, u_coeffs_assumed=u_assumed,
+                lumi_assumed=lumi_assumed, **kw_sin)
+        except np.linalg.LinAlgError as exc:
+            n_acc = int(((cresp.t_reco >= tlo)
+                         & (cresp.t_reco < thi)).sum())
+            print("t in [%.2f,%.2f): DROPPED -- %d accepted response "
+                  "recoils, and %s" % (tlo, thi, n_acc, exc))
+            continue
+        fits1.append(f1)
+        fits10.append(f10)
+        kept_edges.append((tlo, thi))
+    if not fits1:
+        window = ("the cutout leaves NO accepted recoil at all"
+                  if cresp.t_reco.size == 0 else
+                  "the cutout leaves |t| = %.3f to %.3f GeV^2, outside the "
+                  "%.2f-%.2f window binned here"
+                  % (float(cresp.t_reco.min()), float(cresp.t_reco.max()),
+                     t_edges[0], t_edges[-1]))
+        raise SystemExit(
+            "no t bin survived: with this acceptance the two-azimuth "
+            "harmonic fit cannot be done as specified -- %s.  Loosen the "
+            "cutout, re-bin |t| inside the window it leaves, or "
+            "importance-sample above it with CoherentResponse(t_floor=...), "
+            "which is what the WP5 optics scan does for exactly this "
+            "reason." % window)
+    t_edges = [e[0] for e in kept_edges] + [kept_edges[-1][1]]
 
     fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(11.8, 8.6))
     f0 = fits1[0]

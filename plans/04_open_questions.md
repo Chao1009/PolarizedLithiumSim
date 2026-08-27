@@ -194,7 +194,20 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
     wrong way — and the fake ⟨cos 2β⟩ about the vertical spin axis is
     therefore large and **negative**, not positive. The tagged fraction
     falls with it (B = 50 GeV⁻²): 1.4×10⁻² against 0.82 at 20.5 GeV/u,
-    5×10⁻⁵ against 0.40 at 50. *Caveats:* one event per scan point, 30° azimuthal steps,
+    5×10⁻⁵ against 0.40 at 50.
+    *2026-08-26 (the chain, run on it — `money_cos2phi_coherent_reco.py
+    --rp-aperture measured`):* at the LOW configuration the measurement
+    survives. Acceptance 37.7% → 1.42%, N_tag 8.3×10⁶ → 3.1×10⁵, the
+    acceptance-induced ⟨cos 2β⟩ **+0.426 → −0.772**, two of the four |t|
+    bins instead of four (the cutout leaves |t| = 0.061–0.273 GeV², and
+    the higher bins no longer separate the seven harmonic columns), and
+    δa_t 0.0014 → 0.0482 and 0.0026 → 0.0150 in the two survivors — a
+    factor 6–34. a_e is still recovered: 0.0073 ± 0.0045 and
+    0.0091 ± 0.0045 against an injected 0.0100. At MID and TOP the
+    aperture leaves no accepted recoil in the binned window at all.
+    **So the coherent programme is a low-energy programme**, which is what
+    the angular envelope already implied, but for a second and stronger
+    reason. *Caveats:* one event per scan point, 30° azimuthal steps,
     no beam envelope, and a September-2024 `epic-main`. *Action:* repeat
     on the current release with beam effects, and put the aspect ratio to
     the FF WG as a question with a number attached.

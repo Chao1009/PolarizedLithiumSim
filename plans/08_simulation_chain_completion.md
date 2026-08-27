@@ -397,10 +397,23 @@ index, and the numbers are in `plans/00` run 8.
    gun — DD4hep has no generic-ion particle type — so the scan feeds one
    through as HepMC (`tools/fullsim/ion_gun_hepmc.py`).  It inverts the
    assumed cutout aspect and therefore the SIGN of the acceptance-induced
-   ⟨cos 2β⟩.  **New work this creates:** re-derive the coherent
-   acceptance and the 6R templates with `cut_scale_xy ≈ (1, 2.3)`, and
-   re-run `coherent_optics_scan.py` against the measured edge rather than
-   the 10σ envelope.
+   ⟨cos 2β⟩.  **Carried through the chain the same day**
+   (`reco.RP_APERTURE_MEASURED`, `rp_measure(cut_theta_xy=…)`,
+   `money_cos2phi_coherent_reco.py --rp-aperture measured`): the envelope
+   and the aperture are separate constraints and the cutout is the larger
+   of the two per axis.  At the LOW configuration the measurement
+   survives — acceptance 37.7% → 1.42%, fake ⟨cos 2β⟩ +0.426 → −0.772,
+   two |t| bins instead of four, δa_t worse by 6–34× and a_e still
+   recovered — and at MID and TOP the aperture leaves nothing in the
+   binned window.  Two defects surfaced on the way: a cutout tight enough
+   to empty part of the circle made `harmonic_ratio_fit_2d` raise a bare
+   "Singular matrix" (it now names the cause and how many bins carry
+   weight), and one dead |t| bin aborted the whole figure (it is now
+   reported and skipped).  **What is left:** a harmonic basis that works
+   under a strongly anisotropic acceptance — fewer columns, wider bins,
+   or |t| re-binned inside the window the cutout leaves — and the WP5
+   optics scan re-run against the measured edge rather than the 10σ
+   envelope.
 5. **The e+d control calibrates the cluster tail** — and says no β in
    the two-parameter Hulthén reproduces BeAGLE's shape (plans/02 step
    1.5.3).  Since the ⁶Li α tag is entirely a p_T-tail measurement, its

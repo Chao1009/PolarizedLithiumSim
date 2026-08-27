@@ -743,13 +743,17 @@ class CoherentResponse:
     def __init__(self, scenario, config, sigma_theta, aspect=1.0,
                  shape="rectangle", n_mc=400000, x_pom_range=(1e-3, 1e-2),
                  t_max=0.5, phi_s=np.pi / 2.0, n_sigma=10.0, rng=None,
-                 cut_scale_xy=(1.0, 1.0), t_floor=0.0):
+                 cut_scale_xy=(1.0, 1.0), t_floor=0.0,
+                 cut_theta_xy=None):
         """`aspect` = sigma_theta_y / sigma_theta_x (beam divergence
         anisotropy; HERA's proton beam had 45 vs 100 MeV horizontal vs
         vertical pT spread at the IP, ZEUS NPB 816:1); `cut_scale_xy`
         scales the cutout half-widths (n_sigma sigma_x, n_sigma sigma_y):
         the ePIC pots surround a horizontal slot, cut_scale_xy = (2.5, 1)
-        (see reco.rp_measure).
+        (see reco.rp_measure).  `cut_theta_xy` adds the pots' measured
+        GEOMETRIC aperture in absolute angle and takes the larger of the
+        two per axis (reco.RP_APERTURE_MEASURED); it dominates the
+        envelope at every configuration and inverts its aspect.
 
         `t_floor` [GeV^2] importance-samples the recoil above |t| = t_floor
         instead of from |t| = 0.  The spectrum is exponential, so a shifted
@@ -791,6 +795,8 @@ class CoherentResponse:
         self.n_produced_mc = n_mc
         self.pt_cut = reco.tag_pt_cut(sigma_theta, config.ion_momentum_per_nucleon,
                                       a_beam=config.ion.A, n_sigma=n_sigma)
+        self.cut_theta_xy = (None if cut_theta_xy is None
+                             else tuple(float(v) for v in cut_theta_xy))
         self._apply_cut(cut_scale_xy)
 
     def _apply_cut(self, cut_scale_xy):
@@ -802,6 +808,9 @@ class CoherentResponse:
         sx, sy = self.sigma_theta, self.sigma_theta * self.aspect
         cx = self.n_sigma * sx * self.cut_scale_xy[0]
         cy = self.n_sigma * sy * self.cut_scale_xy[1]
+        if self.cut_theta_xy is not None:
+            cx = max(cx, self.cut_theta_xy[0])
+            cy = max(cy, self.cut_theta_xy[1])
         thx, thy = m["theta_x"], m["theta_y"]
         if self.shape == "rectangle":
             acc = (np.abs(thx) > cx) | (np.abs(thy) > cy)

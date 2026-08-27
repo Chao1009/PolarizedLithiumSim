@@ -587,8 +587,25 @@ def harmonic_ratio_fit_2d(counts, lumis, pzz, alpha_edges, beta_edges,
     cols = ["e", "t", "m"] + (["e_s", "t_s", "m_s"] if with_sin else [])
     design = np.vstack([np.ones(ka * kb)] + [basis[c] for c in cols]).T
     wgt = 1.0 / np.sqrt(np.maximum(var_t, 1e-300))
-    coef, *_ = np.linalg.lstsq(design * wgt[:, None], t * wgt, rcond=None)
-    cov = np.linalg.inv((design * wgt[:, None]).T @ (design * wgt[:, None]))
+    # A cutout tight enough to empty whole regions of (alpha, beta) leaves
+    # the template columns linearly dependent, and np.linalg.inv then
+    # raises a bare "Singular matrix" that says nothing about why.  Name
+    # the cause instead: it is a statement about the acceptance, not a
+    # numerical accident.  (Hit for real when the measured Roman-Pot
+    # aperture was put under the mid-energy configuration, where it leaves
+    # 2.7e-3 of the recoils.)
+    a = design * wgt[:, None]
+    live = int(np.count_nonzero(np.isfinite(var_t) & (var_t > 0.0)))
+    if np.linalg.matrix_rank(a) < a.shape[1]:
+        raise np.linalg.LinAlgError(
+            "the %d-column harmonic design is rank-deficient: %d of %d "
+            "(alpha, beta) bins carry weight, and the cutout has emptied "
+            "enough of the circle that %s can no longer be separated. "
+            "Loosen the cutout, widen the bins, or drop columns "
+            "(with_sin=False)."
+            % (a.shape[1], live, ka * kb, "/".join(cols)))
+    coef, *_ = np.linalg.lstsq(a, t * wgt, rcond=None)
+    cov = np.linalg.inv(a.T @ a)
     err = np.sqrt(np.diag(cov))
     out = {"const": coef[0], "cov": cov, "sigma_p2": sig2, "pbar": pbar}
     for i, c in enumerate(cols, start=1):
@@ -720,9 +737,45 @@ def tag_pt_cut(sigma_theta, p_per_nucleon, a_beam=6, n_sigma=10.0):
                                                         dtype=float)
 
 
+# Geometric aperture of the ePIC Roman Pots for a track at beam rigidity,
+# measured by shooting an intact 6Li through the epic-main geometry and
+# reading where the hits start (tools/fullsim/README.md, 2026-08-26).
+# Half-widths in ANGLE at the IP, per optics configuration; the pots are
+# positioned per ring, so the aperture is not one number.
+#
+# It is not the beam envelope and does not scale with it: the beamline
+# images an IP angle onto the pot plane with a horizontal lever of
+# R12 = 30.6 m against a vertical few metres, so what clears the pots'
+# horizontal slot is theta_x, and the boundary is a property of the
+# optics and the mechanics.  The envelope and the aperture are separate
+# constraints and a track must clear BOTH; `rp_measure` takes the larger
+# per axis.
+#
+# Caveats, unchanged from the measurement: one event per scan point, 30
+# degree azimuthal steps, no beam envelope in the scan, and a
+# September-2024 epic-main whose pot stations have already moved once.
+RP_APERTURE_MEASURED = {
+    "5x41": (2.0e-3, 3.0e-3),
+    "10x100": (1.35e-3, 3.0e-3),
+    "18x275": (1.03e-3, 2.3e-3),
+}
+
+
+def rp_aperture_for(p_per_nucleon, table=None):
+    """The measured aperture of the optics whose reference rigidity a 6Li
+    at `p_per_nucleon` sits at (20.5 -> 5x41, 50 -> 10x100, 137.5 ->
+    18x275).  Returns None off those three points rather than
+    interpolating: the pot positions are set per ring, not by a formula."""
+    table = table or RP_APERTURE_MEASURED
+    for pu, key in ((20.5, "5x41"), (50.0, "10x100"), (137.5, "18x275")):
+        if abs(float(p_per_nucleon) - pu) < 1e-6 * pu:
+            return table[key]
+    return None
+
+
 def rp_measure(Pprime, P, sigma_theta_xy, n_sigma=10.0, rng=None,
                shape="rectangle", sigma_pos_over_l=0.0,
-               cut_scale_xy=(1.0, 1.0)):
+               cut_scale_xy=(1.0, 1.0), cut_theta_xy=None):
     """Emulated Roman-Pot measurement of an intact recoil at R ~ 1.
 
     The pots see the transverse displacement of the track from the beam
@@ -741,6 +794,16 @@ def rp_measure(Pprime, P, sigma_theta_xy, n_sigma=10.0, rng=None,
     around a horizontal SLOT (wide in x for the beam's momentum spread
     and dispersion, tight in y at the beam size; refs/README.md), i.e. a
     rectangle with c_x >> c_y: cut_scale_xy = (2.5, 1.0) emulates it.
+
+    `cut_theta_xy` adds the pots' own GEOMETRIC aperture as absolute
+    half-widths in angle (rad), and the cutout becomes the larger of the
+    two per axis: a track has to clear the beam envelope AND the
+    mechanics.  `RP_APERTURE_MEASURED` is that aperture, measured in the
+    ePIC geometry, and it dominates the envelope at every configuration
+    -- and inverts its aspect, because it is theta_x that clears the
+    slot.  None keeps the envelope alone, which is what every number
+    published before 2026-08-26 used.
+
     Returns dict with theta_x/y, pT, phi_t, t_reco = -pT^2 (x_L set to 1),
     the acceptance mask and the cut half-widths in GeV.
     """
@@ -752,6 +815,9 @@ def rp_measure(Pprime, P, sigma_theta_xy, n_sigma=10.0, rng=None,
     thy = Pp[..., 2] / Pp[..., 3]
     sx, sy = sigma_theta_xy
     cx, cy = n_sigma * sx * cut_scale_xy[0], n_sigma * sy * cut_scale_xy[1]
+    if cut_theta_xy is not None:
+        cx = max(cx, float(cut_theta_xy[0]))
+        cy = max(cy, float(cut_theta_xy[1]))
     n = thx.shape
     s_eff_x = np.hypot(sx, sigma_pos_over_l)
     s_eff_y = np.hypot(sy, sigma_pos_over_l)
