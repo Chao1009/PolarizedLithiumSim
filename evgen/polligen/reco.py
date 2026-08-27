@@ -329,10 +329,41 @@ def electron_method_resolution(y, theta_prime, de_over_e, dtheta,
 # specification the whole chain used to apply everywhere; the barrel
 # imaging calorimeter and the forward endcap are 3-6x coarser in the
 # stochastic term (code review F4).
+#: EM calorimeter (stochastic, constant) per eta region.  Fact-checked
+#: 2026-08-27 against Yellow Report Table 3.1, Fig. 8.3 and Table 8.20:
+#:   eta < -2.0   2%/sqrt(E) (+) 1%   -- correct, and matches the PbWO4
+#:                                       crystal expectation
+#:   -2.0..-1.0   7%/sqrt(E)          -- stochastic exact (Fig. 8.3);
+#:                                       CONSTANT 2x OPTIMISTIC vs T3.1 (2%)
+#:   -1.0..1.0    10%/sqrt(E)         -- the OPTIMISTIC CORNER of the YR's
+#:                                       (10-12)%/sqrt(E) (+) (1-3)% band,
+#:                                       and equal to the ePIC BIC
+#:                                       requirement's stochastic term;
+#:                                       CONSTANT 2-3x OPTIMISTIC vs both
+#:   eta > 1.0    7%/sqrt(E)          -- MIS-SOURCED.  7%/sqrt(E) belongs to
+#:                                       -2.0 < eta < -1.0 only; neither YR
+#:                                       table gives it for the forward
+#:                                       endcap.  Optimistic by ~1.5x
+#:                                       stochastic and 2x constant.
+#: Also absent: the YR's 1-2%/E NOISE term, which at 1 GeV is 2% -- as large
+#: as the whole backward resolution quoted here.
+#:
+#: WHY IT SURVIVES ANYWAY.  Every sweet spot this programme publishes puts
+#: the scattered electron BACKWARD (eta = -2.9 to -1.6), where the table is
+#: right to within 20%, and `RecoModel(energy="best")` hands those events to
+#: the tracker in any case.  The forward row is latent, not active.
 EMCAL_YR_TABLE = ((-np.inf, -2.0, 0.02, 0.01),     # backward endcap, PbWO4
                   (-2.0, -1.0, 0.07, 0.01),        # backward transition
-                  (-1.0, 1.0, 0.10, 0.01),         # barrel (10-12%)
-                  (1.0, np.inf, 0.07, 0.01))       # forward endcap
+                  (-1.0, 1.0, 0.10, 0.01),         # barrel, optimistic corner
+                  (1.0, np.inf, 0.07, 0.01))       # forward endcap, mis-sourced
+
+#: Beyond this the ePIC tracker and calorimeters do not reach (-4.0 < eta <
+#: 3.7 in the current design; the Yellow Report calls |eta| > 4.0 "not
+#: accessible" and 3.5-4.0 "reduced performance").  The tables above extend
+#: to +-inf, which is latent rather than active here -- nothing in this
+#: programme scatters an electron past |eta| = 3.5 -- but a consumer that
+#: does should clip on this.
+ETA_ACCEPTANCE_MAX = 3.5
 
 
 def emcal_resolution(e_prime, stoch=0.02, const=0.01, noise=0.0, eta=None):
@@ -361,11 +392,29 @@ def emcal_resolution(e_prime, stoch=0.02, const=0.01, noise=0.0, eta=None):
 
 
 def tracking_resolution(e_prime, eta, a=None, b=None):
-    """dp/p = sqrt((a p)^2 + b^2) with the eta-piecewise ePIC-like table of
-    fastsim/scripts/money_delta_20260729.py (tracking only).  PLACEHOLDER:
-    that table has no published source ("provided in parent communication"
-    per its docstring); replace by the ePIC full-simulation values when
-    available (code review 2026-08-25)."""
+    """dp/p = sqrt((a p)^2 + b^2), eta-piecewise.
+
+    CORRECTED 2026-08-27: this table is NOT a placeholder.  It is the Yellow
+    Report tracking REQUIREMENT -- Fig. 8.3 / Table 11.2 (arXiv:2103.05419
+    pp. 261, 437) -- which ATHENA Table 4 also quotes as "Requirements".  The
+    barrel row (a, b) = (0.0005, 0.005) and the 1.0 < eta < 2.5 row
+    (0.0005, 0.010) match it exactly; the endcap constant terms are padded
+    (0.030 against 0.020 backward, 0.025 against 0.020 forward), i.e.
+    conservative.  An earlier docstring called the whole table unsourced.
+
+    Three cautions, none of which change the headline numbers:
+      * it is a REQUIREMENT, not an achievement, so agreement with it is not
+        validation -- comparing this table to the requirement compares a
+        number to itself.  ePIC full simulation reaches 0.45-0.6% at
+        p = 1 GeV/c depending on eta slice, so the barrel smearing is
+        realistic to about +-20%.
+      * the parameterisation is in TOTAL momentum p, not pT.  The consuming
+        code passes p (money_delta_20260729.py sets p_true = e_prime_true),
+        which is right; quoting the same numbers "at pT = 1 GeV/c" is not.
+      * the table extends past |eta| = 3.5, where the tracker ends
+        (-4.0 < eta < 3.7 in the current design and "not accessible" above
+        4.0 in the YR).  Nothing in this programme scatters an electron
+        there, so it is latent rather than active."""
     eta = np.asarray(eta, dtype=float)
     p = np.asarray(e_prime, dtype=float)
     if a is None or b is None:
@@ -384,12 +433,27 @@ def tracking_resolution(e_prime, eta, a=None, b=None):
 
 def tracking_angular_resolution(eta):
     """Track direction resolution sigma_theta [rad] (also the transverse
-    direction resolution used for phi), eta-piecewise table of
-    fastsim/scripts/money_delta_20260729.py: 5/3/2/1/2/3/5 mrad.
-    PLACEHOLDER without a published source; it sets the electron-method
-    Q2 resolution at the low-y sweet spots (cot(theta'/2) dtheta' = 5%
-    at theta' = 0.1 rad for 3 mrad, 2% for 1 mrad -- code review
-    2026-08-25, F3)."""
+    direction resolution used for phi), eta-piecewise: 5/3/2/1/2/3/5 mrad.
+
+    A genuine PLACEHOLDER -- no angular-resolution requirement exists in
+    either Yellow Report table (Fig. 8.3's only angular entry is the low-Q2
+    tagger's dtheta/theta < 1.5%).  It sets the electron-method Q2
+    resolution at the low-y sweet spots (cot(theta'/2) dtheta' = 5% at
+    theta' = 0.1 rad for 3 mrad).
+
+    DO NOT replace it with the 0.1 mrad seen in some ePIC talks
+    (2026-08-27).  That number is a toy smearing input, superseded three
+    slides later in the same talk by an ePIC full-simulation
+    sigma_theta = 72/pT (+) 2.8 mrad, which at DIS pT is 15-137 mrad --
+    comparable to or worse than this placeholder.  More importantly,
+    `smear_electron` carries NO separate beam-divergence term on theta'
+    (beam_e_spread enters only dy/y), so this table is currently the
+    model's only stand-in for the irreducible IP divergence floor, which
+    the Yellow Report puts at 81-211 microrad h/v depending on energy and
+    optics and states "cannot be corrected on an event-by-event basis".
+    Replacing 3 mrad with 0.1 mrad would DELETE that floor rather than
+    improve on it.  The honest bracket is between the divergence floor
+    (0.08-0.21 mrad) and this table, a factor <~ 3, not 20-30."""
     eta = np.asarray(eta, dtype=float)
     out = np.full_like(eta, 1.0e-3)
     for lo, hi, val in ((-np.inf, -3.5, 5.0e-3), (-3.5, -2.5, 3.0e-3),
@@ -400,11 +464,31 @@ def tracking_angular_resolution(eta):
 
 
 def eps_eid(eta):
-    """Electron-ID efficiency eps_eID(eta), linearly interpolated between
-    the ATHENA (JINST 17 (2022) P10019, Table 5) / ECCE (NIM A 1055 (2023)
-    168464, Sec. 3.5.2) anchors used by fastsim/scripts/
-    money_delta_20260729.py; zero outside |eta| > 3.5.  No official ePIC
-    curve exists (pCDR v1)."""
+    """Electron-ID efficiency eps_eID(eta); zero outside |eta| > 3.5.
+
+    Re-documented 2026-08-27.  This is a CONSTRUCTED eta profile, not a
+    published curve, and it is anchored at exactly one point.  No ePIC
+    electron-ID efficiency curve exists in any ePIC document.
+
+    The two proposal-era sources disagree with each other in the barrel by
+    about 25 points:
+      * ATHENA, JINST 17 (2022) P10019, Table 5 (printed p. 20) gives ONE
+        number -- 95% electron efficiency at >99.8% pion rejection for the
+        BARREL ECal, at all p >= 0.1 GeV/c, with NO eta dependence, and from
+        a standalone calorimeter simulation with no material in front and no
+        magnetic field.
+      * ECCE, NIM A 1055 (2023) 168464 Sec. 3.5.2 IS eta-resolved: EEMC
+        (-3.4 < eta < -1.5) ~95%, BEMC (-1.72 < eta < 1.31) ~70%, FEMC
+        (1.3 < eta < 3.5) ~90-95%.
+    This curve's 0.95 at eta = -2.0 is ECCE's EEMC value; its barrel 0.90
+    matches neither source, and its forward tail (0.85/0.80/0.70) runs
+    OPPOSITE to ECCE's FEMC.
+
+    IT ALMOST CERTAINLY DOES NOT MATTER.  The tensor observable is a
+    spin-state RATIO (reco.spin_state_ratio), so an eta-dependent but
+    fill-independent efficiency cancels exactly, bin by bin; eps_eID should
+    enter the statistical error and nothing else.  Check that before
+    spending effort on the curve."""
     eta = np.asarray(eta, dtype=float)
     eta_pts = np.array([-3.5, -3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0, 3.5])
     eps_pts = np.array([0.85, 0.92, 0.95, 0.93, 0.90, 0.90, 0.85, 0.80, 0.70])

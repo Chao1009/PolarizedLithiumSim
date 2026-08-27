@@ -3,12 +3,24 @@
 Windows fetch-verified 2026-06-12 (YR detector matrix; arXiv:2108.08314
 Table I; arXiv:2409.02811; details in plans/03 step 2.2):
 
-  Roman Pots   z = 26/28 m   theta < 5 mrad   R in [0.60, 0.95]
+  Roman Pots   z = 32.55/34.25 m  theta < 5 mrad  R in [0.60, 0.95]
                near-beam (|R-1| < 0.05): only theta > n_sigma sigma_theta
-  OMD          z = 22.5/24.5 m  theta < 5 mrad  R in [0.45, 0.65], no cut
+  OMD          z = 25.50/27.00 m  theta < 5 mrad  R in [0.45, 0.65], no cut
   B0           5.5 < theta < 20 mrad, any charged
   ZDC          theta < 4 mrad, neutrals
   no coverage  R > ~1.05 (bends less than beam), or 5-5.5 mrad gap
+
+The z positions above are read from the CURRENT eic/epic main branch
+(2026-08-27): roman_pots_eRD24_design.xml gives 32547.3 / 34245.5 mm and
+offM_tracker.xml positions its four layers at 25500 / 25520 / 27000 /
+27020 mm, i.e. two stations of two layers.  The 26/28 and 22.5/24.5 m this
+docstring carried until then are the 2021 Yellow Report values, which the
+YR, the ePIC wiki and several papers still quote -- the geometry moved and
+the documents did not.  Note also that offM_tracker.xml DEFINES a constant
+ForwardOffMTracker_zpos = B1APF_CenterPosition + B1APF_Length/2 + 10 cm =
+22.16 m which its own <position> elements do not use; do not read it as the
+station position.  Only the ANGULAR windows below enter the routing, so the
+positions are documentation -- but they were wrong.
 
 The near-beam cut is ANGULAR, not a momentum cut.  A fragment at beam
 rigidity follows the beam's own optics, so what separates it from the

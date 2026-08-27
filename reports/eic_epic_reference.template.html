@@ -324,19 +324,41 @@
 
   <table>
     <tr><th>quantity</th><th>value</th><th>source</th><th>status</th></tr>
-    <tr><td>EMCal σ_E/E, backward (η < −2)</td><td class="mono">2%/√E ⊕ 1%</td><td>YR requirement table</td><td><b>requirement</b></td></tr>
-    <tr><td>… backward transition (−2 < η < −1)</td><td class="mono">7%/√E ⊕ 1%</td><td>YR</td><td>requirement</td></tr>
-    <tr><td>… barrel (|η| < 1)</td><td class="mono">10%/√E ⊕ 1%</td><td>YR</td><td>requirement</td></tr>
-    <tr><td>… forward (η > 1)</td><td class="mono">7%/√E ⊕ 1%</td><td>YR</td><td>requirement</td></tr>
-    <tr><td>tracking σ_p/p</td><td class="mono">√((a p)² + b²), a, b η-piecewise</td><td>—</td><td><span class="status-no">PLACEHOLDER — no published source</span></td></tr>
-    <tr><td>tracking σ_θ</td><td class="mono">5/3/2/1/2/3/5 mrad by η</td><td>—</td><td><span class="status-no">PLACEHOLDER</span></td></tr>
-    <tr><td>electron ID efficiency</td><td class="mono">0.70–0.95 by η</td><td>ATHENA JINST 17 P10019 Table 5; ECCE NIM A 1055 168464</td><td><span class="status-part">proposal-era, not ePIC</span></td></tr>
+    <tr><td>EMCal σ_E/E, backward (η < −2)</td><td class="mono">2%/√E ⊕ 1%</td><td>YR Fig. 8.3; matches the PbWO₄ crystal expectation</td><td><span class="status-ok">requirement, correctly sourced</span></td></tr>
+    <tr><td>… backward transition (−2 < η < −1)</td><td class="mono">7%/√E ⊕ 1%</td><td>YR Fig. 8.3</td><td><span class="status-part">stochastic exact; constant 2× optimistic vs YR Table 3.1</span></td></tr>
+    <tr><td>… barrel (|η| < 1)</td><td class="mono">10%/√E ⊕ 1%</td><td>YR Table 8.20 band, (10–12)%/√E ⊕ (1–3)%</td><td><span class="status-part">optimistic corner; constant 2–3× optimistic vs the ePIC BIC requirement</span></td></tr>
+    <tr><td>… forward (η > 1)</td><td class="mono">7%/√E ⊕ 1%</td><td>—</td><td><span class="status-no">MIS-SOURCED — 7%/√E belongs to −2 < η < −1 only</span></td></tr>
+    <tr><td>… noise term</td><td class="mono">absent</td><td>YR Table 3.1 has 1–2%/E</td><td><span class="status-no">missing; 2% at 1 GeV</span></td></tr>
+    <tr><td>tracking σ_p/p</td><td class="mono">√((a p)² + b²), a, b η-piecewise</td><td><b>YR Fig. 8.3 / Table 11.2</b>; ATHENA Table 4 quotes the same as "Requirements"</td><td><span class="status-ok">requirement</span> — barrel and forward exact, endcap constants padded</td></tr>
+    <tr><td>tracking σ_θ</td><td class="mono">5/3/2/1/2/3/5 mrad by η</td><td>—</td><td><span class="status-no">PLACEHOLDER — no angular requirement in either YR table</span></td></tr>
+    <tr><td>electron ID efficiency</td><td class="mono">0.70–0.95 by η</td><td>constructed between ATHENA JINST 17 P10019 T5 and ECCE NIM A 1055 168464 §3.5.2</td><td><span class="status-part">anchored at one point only; the sources differ by ≈25 points in the barrel</span></td></tr>
   </table>
-  <p style="font-size:8pt;color:var(--ink-2);margin-top:-2pt">Table 5 — the calorimeter rows are
-  Yellow Report <i>requirements</i>, which is what this programme uses and what it should say it
-  uses. The tracking rows are stand-ins with no published source, flagged as such in
-  <code>polligen/reco.py</code>'s own docstrings, and the electron-ID curve is interpolated
-  between ATHENA and ECCE anchors because no official ePIC curve exists.</p>
+  <p style="font-size:8pt;color:var(--ink-2);margin-top:-2pt">Table 5 — fact-checked 2026-08-27.
+  <b>An earlier version of this table called the tracking resolution a placeholder with no published
+  source. That was wrong</b>: it is the Yellow Report requirement, matched exactly in the barrel and
+  forward rows and padded conservatively in the endcaps. What follows is a caution rather than a
+  reassurance — <i>agreement with a requirement is not validation</i>, since the table <i>is</i> the
+  requirement. ePIC full simulation reaches 0.45–0.6% at p = 1 GeV/c, so the barrel smearing is
+  realistic to about ±20%.</p>
+
+  <div class="callout warm">
+    <b>Where the stand-ins actually bite, and where they do not.</b> Every sweet spot this
+    programme publishes puts the scattered electron <b>backward</b> (η = −2.9 to −1.6), where the
+    calorimeter table is right to within 20% and where <code>RecoModel(energy="best")</code> hands
+    the event to the tracker anyway. The mis-sourced forward row is latent, not active.
+    <br><br>
+    The electron-ID curve almost certainly does not matter at all: the tensor observable is a
+    <b>spin-state ratio</b>, and the estimator's own derivation shows that any efficiency common to
+    all fills <i>cancels bin by bin</i>. ε_eID should enter the statistical error and nothing else.
+    <br><br>
+    The angular resolution is the one to watch, and the fix is not what it looks like. The 0.1 mrad
+    that appears in some ePIC talks is a toy smearing input, superseded three slides later in the
+    same talk by a full-simulation σ_θ = 72/p_T ⊕ 2.8 mrad — which at DIS p_T is <i>worse</i> than
+    the 3 mrad placeholder. And <code>smear_electron</code> carries no separate beam-divergence term
+    on θ′, so the placeholder is the model's only stand-in for the irreducible IP divergence floor
+    (81–211 μrad, which the YR says "cannot be corrected on an event-by-event basis"). Replacing
+    3 mrad with 0.1 mrad would <i>delete</i> that floor. The honest bracket is a factor ≲ 3.
+  </div>
 
   <h2>6 · What this programme assumes that the specification does not give it</h2>
 
@@ -352,11 +374,19 @@
     <tr><td>6</td><td><b>ePIC tracking resolution and electron-ID</b> — no published curves</td><td>η-piecewise stand-ins, flagged in the code and in Table 5</td><td>ePIC</td></tr>
     <tr><td>7</td><td><b>Radiation environment at the Roman Pots</b> — no published fluence or dose</td><td>not modelled</td><td>ePIC FF WG</td></tr>
     <tr><td>8</td><td><b>Polarization-preservation scheme for ⁶Li</b>, which cannot use Siberian snakes</td><td>assume it works at the EPIOS source targets</td><td>C-AD / EPIOS</td></tr>
+    <tr><td>9</td><td><b>No EIC document specifies a TENSOR-polarization scale uncertainty</b>, for any species. The 1% requirement is vector-only.</td><td>P_zz is taken as known; every tensor amplitude scales with it</td><td>ANL source + BNL polarimetry</td></tr>
+    <tr><td>10</td><td><b>Relative luminosity BETWEEN FILLS of different P_zz is unspecified.</b> The R &lt; 10⁻⁴ requirement is on bunch-by-bunch relative luminosity <i>within</i> a fill.</td><td>the spin-sorted ratio estimator assumes it is controlled; an error enters through P̄ as a bin-independent offset</td><td>EIC project / ePIC luminosity</td></tr>
+    <tr><td>11</td><td><b>EICrecon has no light-ion far-forward configuration.</b> <code>MatrixTransferStatic</code> selects its transfer matrix by matching the <i>beam proton</i> PDG code; a lithium beam matches nothing.</td><td>this repository does its own transport; nothing reconstructs a lithium recoil in the official chain</td><td>ePIC FF WG / EICrecon</td></tr>
+    <tr><td>12</td><td><b>Roman-Pot commissioning is deferred past year 1 and conditional</b> — the far-forward subsystems "will only be operated once the beam conditions are fully under control".</td><td>projections assume the pots exist from the start</td><td>ePIC</td></tr>
+    <tr><td>13</td><td><b>A 9 GeV electron beam is the early-science baseline</b>, and no ESR lattice, emittance, β* or polarization table exists for it.</td><td>only 5, 10 and 18 GeV are modelled</td><td>C-AD</td></tr>
   </table>
 
   <div class="callout warm">
     <b>The honest summary.</b> The electron and proton beams are specified in detail and this
-    programme uses them as such. The <i>ion</i> beam is specified for gold and, thinly, for ³He;
+    programme uses them as such — though items 9 to 13 above are the reminder that "specified"
+    covers the machine and not this measurement: nobody has written down a tensor-polarization
+    scale uncertainty, a between-fill relative luminosity, or a far-forward reconstruction that
+    knows what lithium is. The <i>ion</i> beam is specified for gold and, thinly, for ³He;
     for lithium essentially nothing exists beyond a top energy and a G factor, and §4 is a
     derivation, not a citation. The detector is specified where it matters most for us — the
     far-forward geometry is in a file we can read — and least where the central reconstruction
@@ -380,6 +410,7 @@
 
   <table>
     <tr><th>Date</th><th>Revision</th></tr>
+    <tr><td class="mono">2026-08-27 (later)</td><td>§1 gains the synchronisation mechanism verbatim from EPIOS — the ±20 mm radial shift covering 118 &lt; γ &lt; 293 and the "Blue" arc bypass at γ = 43.5 — together with the conflict that the Yellow Report's 100 GeV proton (γ = 106.6) falls in neither window. §3 gains the finding that store cooling is <i>not</i> in the baseline. §5 Table 5 is fact-checked against the Yellow Report and the correction runs against this note's own earlier claim: <b>the tracking resolution is not a placeholder, it is the YR requirement</b>, which makes agreement with it a tautology rather than a validation. The calorimeter forward row is mis-sourced, its constant terms are 2–3× optimistic, and its noise term is missing. §6 gains five further unknowns, of which three bear directly on this measurement rather than on the machine.</td></tr>
     <tr><td class="mono">2026-08-27</td><td>First version. Written after the γ-matching correction (plans/10) made it clear that the programme had been carrying an accelerator assumption — that ion energies scale with rigidity — that no document supports and that the published gold and ³He menus refute. The beam sections are the corrected picture; the detector sections separate requirement from placeholder; §6 is the list of what we are assuming on the machine's and the detector's behalf.</td></tr>
   </table>
 
