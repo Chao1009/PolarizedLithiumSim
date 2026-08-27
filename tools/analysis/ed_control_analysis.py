@@ -9,7 +9,11 @@ computed RELATIVE to that axis, which is also what the far-forward optics
 see.
 
 Outputs: pT and xL spectra overlaid with the deuteron Hulthen model,
-far-forward routing fractions (BeAGLE vs model), summary text.
+far-forward routing fractions (BeAGLE vs model), summary text; with
+--beta-scan, the calibration of the Hulthen short-range scale beta against
+the BeAGLE spectator peak, which is the point of the control (plans/02
+step 1.5.3: the high-k tail is the dominant model uncertainty and this is
+the only external handle on it we can run without FLUKA).
 """
 
 import argparse
@@ -69,6 +73,53 @@ def spectator_protons(raw, kinds, pdg=2212, beam_a_over_z=2.0):
     return map(np.asarray, (pt, xl, rr, th))
 
 
+BETA_SCAN_DEFAULT = (0.20, 0.26, 0.30, 0.40, 0.50, 0.60, 0.80, 1.00, 1.50)
+
+
+def beta_scan(pt, xl, channel, pn_model, args, n_model=400000):
+    """Calibrate the Hulthen short-range scale on the BeAGLE spectator peak.
+
+    beta is the one free parameter of the momentum density
+    (`spectator.momentum_density`) and it is what sets the far-forward p_T
+    tail -- the whole of the 6Li alpha tag lives above the near-beam
+    envelope, so an error in the tail is an error in the tagging
+    acceptance.  The metric is a chi2-like shape distance
+    sum (h_B - h_M)^2 / (h_B + h_M) over 24 bins of p_T in [0, 0.6] GeV,
+    both histograms normalized, both restricted to the x_L window so that
+    target fragmentation is not counted as a spectator.
+    """
+    betas = tuple(args.beta_scan) or BETA_SCAN_DEFAULT
+    lo, hi = args.xl_window
+    sel = (xl >= lo) & (xl < hi)
+    ptb = pt[sel]
+    edges = np.linspace(0.0, 0.6, 25)
+    cuts = (0.1, 0.2, 0.3, 0.45)
+    hb, _ = np.histogram(ptb, bins=edges)
+    hb = hb / max(hb.sum(), 1)
+    out = ["", f"beta scan on the spectator peak x_L in [{lo:g}, {hi:g}): "
+               f"{ptb.size} BeAGLE events",
+           "  beta    shape-chi2   " + "  ".join(f"P(pT>{c:4.2f})"
+                                                 for c in cuts),
+           "  BeAGLE        --     " + "  ".join(f"{np.mean(ptb > c):11.4f}"
+                                                 for c in cuts)]
+    best = None
+    for beta in betas:
+        kin = sp.spectator_lab_kinematics(channel, pn_model, n_model,
+                                          beta=beta)
+        m = (kin["xL"] >= lo) & (kin["xL"] < hi)
+        q = kin["pT"][m]
+        hm, _ = np.histogram(q, bins=edges)
+        hm = hm / max(hm.sum(), 1)
+        d = float(np.sum((hb - hm) ** 2 / np.maximum(hb + hm, 1e-9)))
+        out.append(f"  {beta:4.2f}    {d:9.5f}     "
+                   + "  ".join(f"{np.mean(q > c):11.4f}" for c in cuts))
+        if best is None or d < best[1]:
+            best = (beta, d)
+    out.append(f"  best beta on this metric: {best[0]:g} "
+               f"(shape-chi2 {best[1]:.5f})")
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("csv")
@@ -77,6 +128,14 @@ def main():
                     help="Hulthen short-range scale for the model overlay")
     ap.add_argument("--spectator", default="p", choices=["p", "n"])
     ap.add_argument("--beam", default="d", choices=["d", "He3"])
+    ap.add_argument("--beta-scan", type=float, nargs="*", default=None,
+                    metavar="BETA",
+                    help="calibrate beta against the BeAGLE spectator peak; "
+                         "bare flag uses 0.20-1.50")
+    ap.add_argument("--xl-window", type=float, nargs=2, default=(0.9, 1.1),
+                    metavar=("LO", "HI"),
+                    help="x_L window isolating the spectator peak for the "
+                         "beta scan (the routing table above is unaffected)")
     args = ap.parse_args()
     outdir = pathlib.Path(args.outdir)
     outdir.mkdir(parents=True, exist_ok=True)
@@ -159,6 +218,9 @@ def main():
         fm = float(np.mean(kin["pT"] > cut))
         lines.append(f"P(pT > {cut:4.2f}) BeAGLE={fb:6.4f}  model={fm:6.4f}"
                      f"  ratio={fb/max(fm,1e-9):5.2f}")
+    if args.beta_scan is not None:
+        lines += beta_scan(pt, xl, channel, pn_model, args)
+
     text = "\n".join(lines)
     (outdir / f"ed_control_summary_{args.beam}_{args.spectator}.txt"
      ).write_text(text + "\n")
