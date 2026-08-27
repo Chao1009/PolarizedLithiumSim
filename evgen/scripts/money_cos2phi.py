@@ -45,6 +45,7 @@ from polligen.sample import InclusiveSampler, phi_histogram_pseudo  # noqa: E402
 from polligen.xsec import InclusiveKernel  # noqa: E402
 
 from polli_fastsim import beams, delta_models as dm, fom  # noqa: E402
+PRETTY = {"moment_A": "moment-constrained $\\Delta$", "moment_B": "no-$F_1$ variant", "toy": "flat toy"}  # figure labels
 from polli_fastsim.asymmetries import a_cos2phi  # noqa: E402
 from polli_fastsim.kinematics import kinematic_mask, y_from_xq2  # noqa: E402
 from polli_fastsim.polarized import toy_b1  # noqa: E402
@@ -221,7 +222,7 @@ def main():
             xy=(0.5, 1.02), xycoords="axes fraction", ha="center",
             fontsize=7.5)
         if k == 0:
-            ax.annotate("injected (%s)" % args.delta_model,
+            ax.annotate("injected (%s)" % PRETTY.get(args.delta_model, args.delta_model),
                         xy=(0.03, 0.93), xycoords="axes fraction",
                         color=C_TRUTH, fontsize=7)
             ax.annotate("binned fit", xy=(0.03, 0.84),
@@ -272,14 +273,14 @@ def main():
     f1 = kern.nf2.f1a(xg, q2g) / kern.ion.A
     y = y_from_xq2(xg, q2g, sampler.s)
     curves = [(delta_func, C_TRUTH, "-",
-               "%s (injected)" % args.delta_model)]
+               "%s (injected)" % PRETTY.get(args.delta_model, args.delta_model))]
     if args.delta_model != "moment_B":
         alt = dm.make("moment_B", variant=args.variant,
                       dilution=args.dilution)
-        curves.append((alt, C_ALT, "-", "moment_B (conservative)"))
+        curves.append((alt, C_ALT, "-", "no-$F_1$ variant (conservative)"))
     if args.delta_model != "toy":
         curves.append((dm.make("toy", scale=1e-3), "0.45", "--",
-                       r"toy, $\Delta/F_1=10^{-3}$"))
+                       r"flat toy, $\Delta/F_1=10^{-3}$"))
     for dfunc, color, ls, lab in curves:
         amp = a_cos2phi(dfunc(xg, q2g, f1), f1, f2, xg, y)
         ax.plot(xg[ok], 1e3 * amp[ok], ls, color=color, lw=1.5, label=lab)
@@ -295,9 +296,12 @@ def main():
     fig.suptitle(
         r"Nuclear gluonometry, transversely tensor-polarized $^6$Li, "
         r"%s, $P_{zz}=%.2f$""\n"
-        r"$\Delta$: %s;  $\phi'$ at 1 yr (%g fb$^{-1}$/u), amplitudes "
-        "1 & 10 yr — stat. only; bkg & tensor RC unquantified (plans/06)"
-        % (config.label(), plan.pzz_true, model.info(), args.lumi_1yr),
+        r"$\Delta$: %s;  $\phi'$ pseudo-data at 1 yr (%g fb$^{-1}$/u); "
+        "statistical errors only, no backgrounds or tensor radiative corrections"
+        % (config.label(), plan.pzz_true,
+           PRETTY.get(args.delta_model, args.delta_model)
+           + (" (bag moment, dilution 1/3)" if args.delta_model == "moment_A" else ""),
+           args.lumi_1yr),
         fontsize=10)
     fig.subplots_adjust(top=0.86, bottom=0.09, left=0.06, right=0.985)
     outdir = pathlib.Path(args.outdir)

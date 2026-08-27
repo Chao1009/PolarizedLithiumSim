@@ -379,6 +379,29 @@ against the near-beam envelope, for the circular, square and slot
 cutouts.  Compare its answer with the *measured* ePIC aperture of §5.3 —
 they disagree, and that disagreement is an open item (plans/04 #20).
 
+### 4.5b The tagging optics, priced (Report 1 §6.1)
+
+```bash
+python3 scripts/tagging_optics.py --outdir .
+```
+
+Per configuration, the tagged fraction and the luminosity against
+r = β*_x/β*_x,HA with the horizontal plane de-squeezed alone and the
+vertical held at high acceptance (σ_θ ∝ 1/√β*, L ∝ 1/√r; dispersion at
+the pots added; parallel-to-point transport assumed), with the pots
+following the 10σ envelope or fixed at the measured aperture, the optimum
+of their product, and the tagged events, best-bin 5σ floor and shape-term
+significance per year at the 10 fb⁻¹/u placeholder.  Expected: optimum
+r_h = 49.7 / 175.6 / 89.3 at 5 × 40.8 / 10 × 99.5 / 18 × 137.5 with
+ε = 0.422 / 0.322 / 0.332 and L/L_HA = 1/7.1 / 1/13.3 / 1/9.5,
+N_tag/yr = 2.6×10⁶ / 3.0×10⁶ / 6.1×10⁶ (2.3 / 5.6 / 3.9× below the 0.20 GeV
+reference at 10 fb⁻¹/u), best-super-bin 5σ floors of 1.7 / 2.1 / 1.6% per
+unit P_zz, the shape term in the optics' own window 0.031–0.035 per unit
+P_zz = 9.3 / 8.3 / 10.7σ per year, 2.8 / 4.4 / 2.6 years to 5σ on a 1%
+exotic-glue term, and IR-8's ≈ 20% worth 3.3 / 8.2 / 5.7× the optimum at
+equal luminosity; both planes de-squeezed gives a fifth of the yield at
+1/24–1/70; with the pots fixed nothing is recovered at any β*.
+
 ### 4.6 The near-beam study (plans/09)
 
 ```bash
@@ -627,6 +650,7 @@ trust anything downstream of it.
 | near-beam gain, coherent | `scripts/nearbeam_aperture_scan.py` | silicon → 0.727 mrad: 9.8×10⁻⁷ → 7.5×10⁻² (5 × 41), 7.7×10⁻¹⁶ → 1.4×10⁻⁵ (10 × 100), 1.9×10⁻¹⁷ → 2.0×10⁻⁹ (18 × 275) |
 | near-beam gain, α tag | same | 0.012 → 0.21, 0.0016 → 0.019, 0.0012 → 0.0054 |
 | near-beam gain, through the chain | `scripts/nearbeam_reach_gain.py` | 5 × 41: acc 3.3×10⁻⁶ → 7.8×10⁻², 0 → 4 \|t\| bins (a_t ± 0.003–0.02); 10 × 100: 0 → 9.2×10⁻⁵, 0 → 1 bin |
+| tagging optics, priced | `scripts/tagging_optics.py` | horizontal-only optimum β*_x/β*_x,HA = 49.7 / 175.6 / 89.3, ε = 0.422 / 0.322 / 0.332, L/L_HA = 1/7.1 / 1/13.3 / 1/9.5, N_tag/yr = 2.6×10⁶ / 3.0×10⁶ / 6.1×10⁶, 5σ floor/yr = 1.7 / 2.1 / 1.6% per unit P_zz, shape term 9.3 / 8.3 / 10.7σ/yr |
 | 6R at the low configuration with a 0.727 mrad approach | `scripts/money_cos2phi_coherent_reco.py --config 0 --rp-aperture measured --cut-scale-x 1.0 --near-beam-mrad 0.727` | acc 0.078, N_tag 3.35×10⁶, ⟨cos 2β⟩ = −0.71, three \|t\| bins; a_t 0.1165 ± 0.0034 / 0.174 ± 0.004 / 0.262 ± 0.008 |
 | hot-spot Z-ID thresholds | `scripts/nearbeam_sensor_budget.py` | r_s = 134 / 268 / 402 nm for p,d / α / ⁶Li; at w = 1 µm, I_th/I_c = 0.73 / 0.46 / 0.20 |
 | Z-ID fake rate, 4 planes at 95% eff | `scripts/nearbeam_zid_power.py` | 2.3×10⁻⁵ (8-bit LLR) / 3.1×10⁻⁵ (one bit) / 2.7×10⁻³ (truncated mean) / 5.3×10⁻² (plain sum); 50% fill cannot reach 95% |
@@ -710,6 +734,7 @@ about eleven minutes.
 | `fastsim/diag_sig2_grid` | 1 | `evgen/tagged_polarimetry_7li` | 3 |
 | `fastsim/coverage_and_stat_maps` | 7 | `evgen/coherent_optics_scan` | 3 |
 | `evgen/nearbeam_aperture_scan` | 3 | `evgen/nearbeam_reach_gain` | 2 |
+| `evgen/tagging_optics` | 3 | | |
 | `evgen/nearbeam_sensor_budget` | 1 | `evgen/nearbeam_zid_power` | 48 |
 | `fastsim/_check_reco_mask_invariants` | <1 | `evgen/reco_chain_figures` | 13 |
 | `fastsim/money_delta_realistic` | 36 | `evgen/money_cos2phi_reco` | 4 |

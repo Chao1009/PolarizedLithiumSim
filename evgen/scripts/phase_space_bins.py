@@ -203,7 +203,7 @@ def main():
     draw_map(axa, proj, proj.n_events,
              "inclusive DIS events / bin (1 yr)", fig)
     draw_map(axb, proj_c, n_tag,
-             "RP-tagged coherent events / bin (1 yr)", fig)
+             "tagged coherent events / bin (1 yr)", fig)
     for ax in (axa, axb):
         draw_guides(ax, sampler.s, scenario)
 
@@ -232,12 +232,12 @@ def main():
     axa.annotate(r"$N_{\rm DIS}=%s$ (1 yr)" % sci(proj.n_events.sum()),
                  xy=(0.045, 0.615), xycoords="axes fraction", fontsize=8,
                  zorder=7, path_effects=HALO)
-    axa.set_title("inclusive DIS  (money plots 5/7)", fontsize=9.5)
+    axa.set_title("inclusive DIS", fontsize=9.5)
     axa.legend(handles=[
         Line2D([], [], color=C_BIN, lw=1.5,
-               label=r"$\phi'$ super-bins 1–4 (plot 5)"),
+               label=r"$\phi'$ super-bins 1–4"),
         Line2D([], [], color=C_COMB, lw=0.7,
-               label=r"$\Delta$-extraction $x$ bins (plots 5/7)"),
+               label=r"$\Delta$-extraction $x$ bins"),
         Line2D([], [], color="0.55", lw=0.8, ls="--",
                label=r"$y$ / $W^2$ cut boundaries"),
     ], loc="upper left", fontsize=6.5, framealpha=0.92,
@@ -245,7 +245,7 @@ def main():
 
     # (b) tagged super-bin + coherence scale
     cased_rect(axb, txlo, txhi, tq2lo, tq2hi)
-    axb.annotate(r"$\phi'$ bin (plot 6d)",
+    axb.annotate(r"$\phi'$ bin of the tagged sample",
                  xy=(np.sqrt(txlo * txhi), tq2hi * 1.25), fontsize=7,
                  color=C_BIN, ha="center", va="bottom", zorder=7,
                  path_effects=HALO)
@@ -256,13 +256,12 @@ def main():
                  path_effects=HALO)
     axb.annotate(
         (r"$N_{\rm tag}=%s$ (1 yr)" "\n"
-         r"acc $= %.1f$%% (HA optics), $f_0=%.2f$")
+         r"near-beam tag $p_T>0.20$ GeV: acc $= %.1f$%%, $f_0=%.2f$")
         % (sci(n_tag.sum()), 100 * sc.tag_acceptance(
             HIGH_ACCEPTANCE.pt_cut_near_beam), sc.f0),
         xy=(0.985, 0.035), xycoords="axes fraction", fontsize=8,
         ha="right", zorder=7, path_effects=HALO)
-    axb.set_title(r"RP-tagged coherent, $e\,^6$Li$\to e'X\,^6$Li(g.s.)"
-                  "  (money plot 6)", fontsize=9.5)
+    axb.set_title(r"tagged coherent, $e\,^6$Li$\to e'X\,^6$Li(g.s.)", fontsize=9.5)
 
     fig.suptitle(
         r"$(x, Q^2)$ phase space and analysis binning — %s, 1-year EIC "

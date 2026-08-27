@@ -116,14 +116,15 @@ def main():
         ax1.axvline(cut2, color=color, ls="--", lw=1.2)
         ax1.annotate(
             "%s\n$p_T>%.2f$ GeV\nacc = %.3g\n[%.2g, %.2g]"
-            % (optics.name, optics.pt_cut_near_beam, acc, *band),
+            % ({"high-acceptance": "near-beam envelope", "high-divergence": "wide envelope"}.get(optics.name, optics.name),
+               optics.pt_cut_near_beam, acc, *band),
             xy=(cut2, 2e-3), xytext=(4, 6), textcoords="offset points",
             fontsize=7, color=color, va="bottom")
     ax1.set_yscale("log")
     ax1.set_ylim(1e-3, 80)
     ax1.set_xlabel(r"$|t| \simeq p_T^2$  [GeV$^2$]")
     ax1.set_ylabel(r"$(1/\sigma)\, d\sigma_{\rm coh}/d|t|$  [GeV$^{-2}$]")
-    ax1.set_title("intact-recoil $t$ spectrum vs RP $p_T$ cut", fontsize=9)
+    ax1.set_title("intact-recoil $t$ spectrum vs near-beam $p_T$ cut", fontsize=9)
     ax1.legend(fontsize=7, loc="upper right")
     ax1.tick_params(labelsize=8)
 
@@ -172,9 +173,9 @@ def main():
     ax3.plot(xc[ok], y_coh[ok], "--", color=C_ALT, lw=1.4,
              label="coherent, produced (1 yr)")
     ax3.plot(xc[ok], np.maximum(y_tag[ok], 1e-1), "-", color=C_TRUTH,
-             lw=1.8, label="RP-tagged, 1 yr")
+             lw=1.8, label="tagged, 1 yr")
     ax3.plot(xc[ok], np.maximum(lumi_ratio * y_tag[ok], 1e-1), "-.",
-             color="black", lw=1.2, label="RP-tagged, 10 yr")
+             color="black", lw=1.2, label="tagged, 10 yr")
     for f0 in (0.02, 0.08):
         sc_b = coh.CoherentScenario(f0=f0)
         _, nb, tb = coh.project_coherent(
@@ -245,8 +246,8 @@ def main():
         r"Coherent $e\,^6$Li$\,\to\,e'X\,^6$Li(g.s.), transversely "
         r"tensor-polarized, %s, $P_{zz}=%.2f$"
         "\n(scenario rates; modulation anchored on the polarized-$d$ "
-        "CGC calculation, PLB 858:139053 -- plans/06 SS6.4b; statistical "
-        "only, backgrounds/purity and tensor RC unquantified)"
+        "CGC calculation, PLB 858:139053; statistical errors only, backgrounds, "
+        "purity and tensor radiative corrections not included)"
         % (config.label(), args.pzz), fontsize=10)
     fig.tight_layout(rect=(0, 0, 1, 0.93))
     outdir = pathlib.Path(args.outdir)

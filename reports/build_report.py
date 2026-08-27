@@ -43,6 +43,7 @@ MONEY_FIGS = {
     "__M5__": "evgen/money_cos2phi_6Li.png",
     "__M7__": "evgen/money_delta_extracted_6Li.png",
     "__M6__": "evgen/money_cos2phi_coherent_6Li.png",
+    "__TO__": "evgen/tagging_optics_6Li.png",
 }
 
 EIC_FIGS = {

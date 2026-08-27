@@ -28,6 +28,7 @@ python3 scripts/reco_chain_figures.py     # reconstruction-chain figures
 python3 scripts/money_cos2phi_reco.py          # money plots 5R + 7R (reco level)
 python3 scripts/money_cos2phi_coherent_reco.py # money plot 6R (reco level)
 python3 scripts/coherent_optics_scan.py   # WP5: the coherent tag vs the near-beam envelope
+python3 scripts/tagging_optics.py         # report 1 §6.1: a lithium tagging optics at IP6, priced in luminosity
 python3 scripts/eic_beam_figures.py       # report 3: the ion energy menu and the divergence
 python3 scripts/nearbeam_aperture_scan.py # plans/09: what every near-beam aperture is worth
 python3 scripts/nearbeam_reach_gain.py    # plans/09: the coherent chain at both apertures

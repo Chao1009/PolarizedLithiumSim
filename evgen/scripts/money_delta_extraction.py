@@ -48,6 +48,7 @@ from polligen.sample import InclusiveSampler  # noqa: E402
 from polligen.xsec import InclusiveKernel  # noqa: E402
 
 from polli_fastsim import beams, delta_models as dm, fom  # noqa: E402
+PRETTY = {"moment_A": "moment-constrained $\\Delta$", "moment_B": "no-$F_1$ variant", "toy": "flat toy"}  # figure labels
 from polli_fastsim.kinematics import kinematic_mask  # noqa: E402
 from polli_fastsim.polarized import toy_b1  # noqa: E402
 
@@ -95,8 +96,8 @@ def main():
                    dilution=args.dilution)
            if args.delta_model != "moment_B" else
            dm.make("toy", scale=args.scale))
-    alt_label = ("moment_B (conservative)"
-                 if args.delta_model != "moment_B" else "toy")
+    alt_label = ("no-$F_1$ variant (conservative)"
+                 if args.delta_model != "moment_B" else "flat toy")
 
     fig, axes = plt.subplots(1, len(q2_slices), figsize=(12.6, 4.5),
                              sharey=True)
@@ -148,7 +149,7 @@ def main():
         f1g = kern.nf2.f1a(xg, q2g) / kern.ion.A
         ax.plot(xg[ok], 1e3 * (xg * np.asarray(model(xg, q2g, f1g)))[ok],
                 "-", color=C_TRUTH, lw=1.6,
-                label="%s (injected)" % args.delta_model)
+                label="%s (injected)" % PRETTY.get(args.delta_model, args.delta_model))
         ax.plot(xg[ok], 1e3 * (xg * np.asarray(alt(xg, q2g, f1g)))[ok],
                 "-", color=C_ALT, lw=1.4, label=alt_label)
         ax.set_xscale("log")
@@ -172,8 +173,8 @@ def main():
         r"Extracted double-helicity-flip $\Delta(x,Q^2)$ of $^6$Li, %s, "
         r"$P_{zz}=%.2f$""\n"
         r"$\hat\Delta = -\hat A\, y^2 D_\phi/(1-y)$ per bin "
-        "(model bin-centering; dilution 1/3 incl.; stat. only, bkg & "
-        "tensor RC unquantified); area = S-S moment "
+        "(model bin-centering; dilution 1/3 included; statistical errors only, "
+        "backgrounds and tensor radiative corrections not included); area = bag moment "
         r"$-0.012\,\alpha_s/3$"
         % (config.label(), plan.pzz_true), fontsize=10)
     fig.tight_layout(rect=(0, 0, 1, 0.90))

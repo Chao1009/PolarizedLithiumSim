@@ -165,21 +165,16 @@
     inclusive deep inelastic scattering, where only the scattered electron is detected, and in
     coherent diffraction with the ⁶Li recoiling intact. With the leading-order bag-model moment of
     Sather and Schmidt ported to ⁶Li as a labelled scenario, the inclusive cos 2φ amplitudes at the
-    four most sensitive (x, Q²) bins, x = 0.011–0.14 and Q² = 1.1–14 GeV², are (0.44–0.95)×10⁻² at
-    P<sub>zz</sub> = 0.6, against statistical errors of (1.4–4.5)×10⁻⁴ in one EIC year
-    (10 fb⁻¹ per nucleon): a 21–44σ measurement per bin whose x dependence discriminates between
+    four most sensitive (x, Q²) bins, x = 0.011–0.14 and Q² = 1.1–14 GeV², are (0.44–0.95)×10⁻² at P<sub>zz</sub> = 0.6, against single-state truth-level statistical errors of (1.4–4.5)×10⁻⁴ in one EIC year (10 fb⁻¹ per nucleon): a 21–44σ measurement per bin whose x dependence discriminates between
     moment-constrained interpretations, and an extraction of xΔ(x,Q²) itself to 2–9% in the best
     bins. At the reconstructed level, with the spin-state-sorted ratio of m = ±1-rich and
-    m = 0-rich bunches and a hadronic-method y from a PYTHIA 8 final state, the errors are
-    (0.9–3.0)×10⁻⁴ and the amplitude is unbiased. The coherent channel carries the same
+    m = 0-rich bunches and a hadronic-method y from a PYTHIA 8 final state, the errors are (0.9–3.0)×10⁻⁴ and the fit closes on the response-folded truth. The coherent channel carries the same
     modulation with two separable mechanisms — a nuclear-shape term anchored on the
     polarized-deuteron colour-glass calculation, predicted to flip sign for ⁶Li, and a flat
     exotic-glue term — and ⁶Li's anomalously small quadrupole moment makes it a null test. Its
     intact recoil keeps the beam rigidity and, with the Yellow Report's beam divergences, cannot be
     tagged at IP6 with any published optics; the channel defines a far-forward requirement — a
-    dedicated tagging optics or the second interaction region's secondary focus — and for a tag with
-    a 0.20 GeV near-beam envelope one year yields 1.7×10⁷ events and a 5σ sensitivity to a 0.9%
-    modulation.
+    dedicated tagging optics or the second interaction region's secondary focus — and for a reference tag with a 0.20 GeV near-beam envelope at the high-acceptance luminosity — which no IP6 optics provides — one year would yield 1.7×10⁷ events and a 5σ sensitivity to an amplitude of 0.9% per unit P<sub>zz</sub>, against a shape term of 6% and an exotic-glue term of 0.3–1% on the same footing. A tagging optics at IP6 — the horizontal β* raised 50–180× with the pots following the envelope, the vertical plane untouched — recovers a 32–42% tag at 1/7–1/13 of the luminosity: 2.6–6.1×10⁶ tagged events per year, an 8–11σ measurement of the shape term per year and 5σ on a 1% exotic-glue term in 3–4 years, 3–8× below what a second interaction region's secondary focus would deliver at the same luminosity.
   </div>
 
   <h2>1 · Introduction</h2>
@@ -199,8 +194,7 @@
 
   <p>This paper presents the first numerical projection of a Δ measurement for any target. Two
   channels are considered. In inclusive DIS on a transversely tensor-polarized ⁶Li beam the
-  scattered electron's azimuth about the alignment axis acquires a cos 2φ modulation proportional to
-  Δ; only the electron is detected. In coherent diffraction, e ⁶Li → e′ X ⁶Li(g.s.), the nucleus
+  scattered electron's azimuth about the alignment axis acquires a cos 2φ modulation proportional to Δ. In coherent diffraction, e ⁶Li → e′ X ⁶Li(g.s.), the nucleus
   stays in its ground state and the modulation of the tagged yield mixes the gluonic term with a
   nuclear-shape term that the polarized-deuteron calculation of Mäntysaari et al. [10] predicts —
   and ⁶Li, with a quadrupole moment fifty times smaller than ⁷Li's, separates the two. Section 2
@@ -219,7 +213,7 @@
 
   <p>with φ the azimuth of the lepton plane about the virtual photon, measured from the transverse
   projection of the spin axis. Averaged over a fill, c<sub>m</sub> becomes the tensor polarization
-  P<sub>zz</sub> = p₊ + p₋ − 2p₀. The b₁, b₂ terms are written in the programme's transcription;
+  P<sub>zz</sub> = p₊ + p₋ − 2p₀. We write the b₁, b₂ terms with the sign of [2] as transcribed in the companion physics case [9];
   in the Hoodbhoy–Jaffe–Manohar convention as applied by HERMES and by Cosyn et al. [11] they
   carry the opposite sign, which affects only the sign of A<sub>zz</sub> relative to b₁ and the
   constant term of the spin-state ratio of §3.3, nothing in the Δ sector. At leading order Δ is
@@ -233,11 +227,7 @@
 
   <p class="eq"><img class="tex" data-tex="A^{\cos 2\phi} = -\frac{1-y}{y^2}\,\frac{\Delta}{D_\phi},\qquad D_\phi = F_1 + \frac{1-y}{x y^2}\,F_2,\qquad \hat{\Delta} = -\hat{A}\,\frac{y^2 D_\phi}{1-y}"></p>
 
-  <p>Three properties of this relation shape the analysis. First, at the low y of the sensitive
-  region, F₂ = 2x(1 + R)F₁ reduces it to Δ/F₁ = −2(1 + R)Â: F₂ cancels exactly (to 2×10⁻¹⁶ in the
-  simulation, checked with two independent levers), and R = σ<sub>L</sub>/σ<sub>T</sub> is the one
-  structure-function input that reaches the physics result. Second, the amplitude is exactly linear
-  in Δ, so the detector response acts on it as a linear operator, which §5.3 exploits. Third, the
+  <p>Three properties of this relation shape the analysis. First, with F₂ = 2x(1 + R)F₁ the inversion becomes Δ/F₁ = −Â[2(1 + R) + y²/(1 − y)], so at the y ≲ 0.03 of the sensitive region F₂ cancels and R = σ<sub>L</sub>/σ<sub>T</sub> is the only structure-function input that reaches Δ/F₁. Second, the amplitude is exactly linear in Δ (§5.3). Third, the
   target-mass corrections are small: at the four bins of §3.4, γ² = 4M²x²/Q² ≤ 0.006, so the
   approximation set of the simulation — A<sub>∥</sub> = D·g₁/F₁ with the γ²-suppressed term dropped,
   g₂ = g₂<sup>WW</sup>, no target-mass terms — is adequate. One finite-γ effect is physical rather
@@ -282,17 +272,7 @@
 
   <h3>3.2 · Generator and structure functions</h3>
 
-  <p>No public generator produces polarized e+A events for A &gt; 1 — BeAGLE is unpolarized,
-  DJANGOH and PEPSI are nucleon-level and longitudinal-only — so the programme's generator,
-  <code>polligen</code>, implements only the missing component, the spin-density matrix ⊗
-  structure-function master formula with spin-correlated sampling, and takes the rest from existing
-  tools: the hadronic final state from a PYTHIA 8 production of 8 M events over the three beam
-  configurations. Its validation gates are bin-wise identity with the analytic asymmetry formulas at
-  relative tolerance 10⁻¹², pseudo-experiment spreads that close on every analytic error map, and
-  unbiased cos 2φ recovery under φ-acceptance holes. Because drawing each φ-bin count from a
-  Poisson distribution with the exact expected yield is statistically identical to event-level
-  sampling, a full-luminosity pseudo-experiment costs 24 Poisson draws; event-level sampling is what
-  the closure tests use.</p>
+  <p>No public generator produces polarized e+A events for A &gt; 1: BeAGLE is unpolarized, DJANGOH and PEPSI are nucleon-level and longitudinal-only. The generator used here, polligen, implements the missing component — the spin-density matrix ⊗ structure-function master formula with spin-correlated sampling — and takes the hadronic final state from a PYTHIA 8 production of 8 M events over the three beam configurations. It is validated against the analytic asymmetry formulas and by pseudo-experiments, including unbiased cos 2φ recovery under φ-acceptance holes; a full-luminosity pseudo-experiment draws each φ-bin count from a Poisson distribution with the exact expected yield, which is statistically identical to event-level sampling.</p>
 
   <p>Structure functions are toy parameterizations with PDF-grid backends (CT18NLO, EPPS21,
   NNPDFpol11) behind one interface, so rates hold to a factor ≈ 1.5 (the toy F₂ is within ±37% of
@@ -314,16 +294,11 @@
   harmonics of the electron azimuth because the ePIC axis is the electron beam.</p>
 
   <p>The measurement itself cannot use a single state: the fit then also measures the detector's own
-  cos 2φ′ acceptance harmonic divided by P<sub>zz</sub>, and a 3% harmonic aligned with the vertical
-  spin axis fakes four times the signal. The estimator is therefore the spin-state-sorted ratio of
+  cos 2φ′ acceptance harmonic divided by P<sub>zz</sub>, and a 3% harmonic aligned with the vertical spin axis fakes an amplitude of 0.05, five to eleven times the signal. The estimator is therefore the spin-state-sorted ratio of
   m = ±1-rich (P<sub>zz</sub> = +0.6) and m = 0-rich (−1.2) bunches. It cancels any acceptance common
-  to both states bin by bin, turns relative-luminosity errors into a constant, and gives
-  δÂ = 2√(2/N)/(P₊ − P₀) = 0.67× the single-state error at equal source purity — provided the states
-  alternate bunch by bunch. What the ratio cannot cancel is a difference of acceptance between the
-  states: for two fills the bias is (ε₂⁺ − ε₂⁰)/(P₊ − P₀) at any luminosity split, so a 10⁻³
+  to both states bin by bin, turns relative-luminosity errors into a constant, and gives, with N the total of both states, δÂ = 2√(2/N)/(P₊ − P₀) = 0.67× the single-state error if the m = 0-rich fill reaches |P<sub>zz</sub>| = 1.2. The cancellation of the acceptance, however, holds only for an acceptance common to both states: for two fills the bias is (ε₂⁺ − ε₂⁰)/(P₊ − P₀) at any luminosity split, so a 10⁻³
   difference of the cos 2φ′ harmonic fakes 5.6×10⁻⁴, 6–13% of the projected amplitudes and 2–6
-  one-year statistical errors. Bunch-by-bunch alternation, or 10⁻⁴ stability of the harmonic between
-  fills, is thus a requirement of the measurement rather than a refinement.</p>
+  one-year statistical errors. Bunch-by-bunch alternation, or 10⁻⁴ stability of the harmonic between fills, is thus a requirement of the measurement rather than a refinement; with it, a relative-luminosity error between the states enters only as a constant.</p>
 
   <h3>3.4 · Acceptance and binning</h3>
 
@@ -331,8 +306,7 @@
   0.01 ≤ y ≤ 0.95 and W² ≥ 10 GeV², which accept 5.2×10⁹ events in one year (Figure 1). The four
   displayed (x, Q²) super-bins are selected by statistical significance within Q² bands — an
   unconstrained ranking concentrates at the lowest Q², whereas the Q² lever arm provides the
-  consistency check against power-suppressed contributions — and each merges 3×3 cells of the
-  40×30 analysis grid. They sit at (x, Q²) = (0.028, 1.14), (0.011, 1.14), (0.071, 3.13) and
+  consistency check against power-suppressed contributions — and each merges 3×3 cells of the 40×30 analysis grid (3×2 for the two Q² = 1.14 GeV² bins, clipped at the grid's Q² = 1 GeV² edge). They sit at (x, Q²) = (0.028, 1.14), (0.011, 1.14), (0.071, 3.13) and
   (0.141, 14.3 GeV²), i.e. at y = 0.010, 0.026, 0.011 and 0.026: the amplitude grows as (1 − y)/y²,
   so the sensitivity lives at the lowest y the detector can reconstruct, which is what makes the
   kinematic reconstruction of §5.2 the central detector question.</p>
@@ -344,16 +318,12 @@
     where ≥ 1; dashed: y and W² cut boundaries. <b>Left, inclusive DIS</b>: boxes 1–4 are the φ′
     super-bins of Figure 2; grey combs are the three Q² slices (Q² × [1/1.6, 1.6]) whose merged x-bin
     pairs give the data points of the amplitude-versus-x panel and of the Δ extraction (Figures 2
-    and 3), retained where N ≥ 10³ and δA ≤ 8×10⁻³. <b>Right, tagged coherent channel</b>: the
-    same map times f<sub>coh</sub>(x) and a 13.5% tag acceptance (§6.1), N<sub>tag</sub> = 1.7×10⁷ in
-    one year, almost entirely at x &lt; 0.03; the box is the super-bin of Figure 4(d).</figcaption>
+    and 3), retained where N ≥ 10³ and δA ≤ 8×10⁻³. <b>Right, tagged coherent channel</b>: the same map times f<sub>coh</sub>(x) and the tag acceptance of §6.2, almost entirely at x &lt; 0.03; the box is the super-bin of Figure 5(d).</figcaption>
   </figure>
 
   <h2>4 · The Δ model</h2>
 
-  <p>All Δ models reside in one registry (<code>polli_fastsim/delta_models.py</code>). The
-  production default, <code>moment_A</code>, is an ansatz normalized to the bag moment applied to the
-  per-nucleon Δ of ⁶Li:</p>
+  <p>The default model, A, is an ansatz normalized to the bag moment applied to the per-nucleon Δ of ⁶Li:</p>
 
   <p class="eq"><img class="tex" data-tex="\Delta_{\mathrm{A}}(x,Q^2) = \frac{1}{3}\,A\;\alpha_s(Q^2)\,F_1(x,Q^2)\;\frac{x^{a}(1-x)^{b}}{N_{\mathrm{peak}}},\qquad \int_0^1 x\,\Delta(x,\langle Q^2\rangle)\,dx = -0.012\;\alpha_s \;\Rightarrow\; A = -0.292"></p>
 
@@ -362,12 +332,7 @@
   counted; the cluster picture would give ≈ 0.81 instead, an upside of ×2.4 that is not taken.
   The constraint is imposed at the rate-weighted ⟨Q²⟩ = 4.47 GeV² of the accepted phase space, and
   because F₁ evolves the realized moment varies by a few per cent across the plotted Q² slices;
-  α<sub>s</sub> comes from the CT18NLO table. <code>moment_B</code> imposes the same constraint
-  without the F₁ factor and yields amplitudes a factor 2–8 lower; the A-versus-B spread is the
-  dominant ansatz systematic, and both curves appear on every plot. Porting a single-hadron bag
-  moment to a per-nucleon nuclear structure function has no precedent, so normalization and
-  x dependence are both scenario choices, bracketed by <code>moment_B</code> from below and possible
-  nuclear enhancement from above.</p>
+  α<sub>s</sub> comes from the CT18NLO table. Model B imposes the same constraint without the F₁ factor and yields amplitudes a factor 3–56 lower at the four bins (20–56 in the Q² = 1.14 GeV² bins, 3–8 at the higher Q²); the A-versus-B spread is the dominant ansatz systematic, and both curves appear on every plot. Porting a single-hadron bag moment to a per-nucleon nuclear structure function has no precedent, so normalization and x dependence are both scenario choices, bracketed by model B from below and possible nuclear enhancement from above.</p>
 
   <h2>5 · Inclusive projections</h2>
 
@@ -376,27 +341,21 @@
   <p>Figure 2 shows the φ′ pseudo-data in the four super-bins with one-year statistics and the
   extracted amplitude versus x along the Q² = 1.14 GeV² slice. The injected amplitudes are
   7.4, 4.4, 9.5 and 9.5 ×10⁻³ against one-year errors of 1.7, 1.4, 2.8 and 4.5 ×10⁻⁴ — 44, 31, 34
-  and 21σ — and ten-year errors of 0.55, 0.45, 0.87 and 1.4 ×10⁻⁴; the fitted values agree with
-  the injected ones within the errors. Under the moment constraint the measurement is not a null
-  test: the <code>moment_A</code>-versus-<code>moment_B</code> spread is resolved by the x
-  dependence of the amplitude, and even a flat Δ/F₁ = 10⁻³ scenario remains a ≥ 3σ effect per bin
-  at P<sub>zz</sub> = 0.3. At ten-year precision the statistical errors sit below the polarimetry
+  and 21σ — and ten-year errors of 0.55, 0.45, 0.87 and 1.4 ×10⁻⁴; the fitted values agree with the injected ones within 1.5 standard errors. Under the moment constraint the measurement is not a null test: the model-A-versus-B spread is resolved by the x dependence of the amplitude, and a flat amplitude of 3×10⁻³ per unit P<sub>zz</sub> would remain a 3–11σ effect per bin even at P<sub>zz</sub> = 0.3. At ten-year precision the statistical errors sit below the polarimetry
   scale systematic (3% of an amplitude of 10⁻² is 3×10⁻⁴), so the ten-year measurement is
   systematics-limited.</p>
 
   <figure>
     <div class="panel"><img src="data:image/png;base64,__M5__" alt="Money plot 5: inclusive gluonometry pseudo-data and amplitude versus x"></div>
     <figcaption><b>Figure 2</b> — inclusive gluonometry at e(10 GeV) × ⁶Li(99.5 GeV/u),
-    P<sub>zz</sub> = 0.60, <code>moment_A</code> with dilution 1/3. Left 2×2: φ′ pseudo-data with
+    P<sub>zz</sub> = 0.60, model A with dilution 1/3. Left 2×2: φ′ pseudo-data with
     one-year statistical errors in the four super-bins (Q² = 1.1 → 14 GeV², x = 0.011–0.14);
     injected curve (blue), binned fit (vermillion); annotations give δA for both programmes. Right:
-    extracted amplitude versus x with one-year (open) and ten-year (filled) errors against the
-    <code>moment_A</code>, <code>moment_B</code> and flat-10⁻³ curves. Only the scattered electron
-    is detected.</figcaption>
+    extracted amplitude versus x with one-year (open) and ten-year (filled) errors against the model A, model B and flat-10⁻³ curves.</figcaption>
   </figure>
 
   <p>Figure 3 unfolds the same pseudo-measurements to the structure function, xΔ(x,Q²) per nucleon
-  at the three sweet-spot Q² slices, with independent one- and ten-year draws and the model
+  at the three Q² slices of Figure 1, with independent one- and ten-year draws and the model
   bin-centering factor K = Δ<sub>model</sub>(x<sub>c</sub>, Q²<sub>c</sub>)/A<sub>model, bin</sub>;
   the area under each curve is the ported bag moment (÷3 dilution). The best bins reach
   Δ = −0.135 ± 0.003 at (x, Q²) = (0.02, 1.14), −0.070 ± 0.002 at (0.05, 3.13) and
@@ -405,15 +364,13 @@
   <figure>
     <div class="panel"><img src="data:image/png;base64,__M7__" alt="Money plot 7: extracted x Delta structure function at three Q2 slices"></div>
     <figcaption><b>Figure 3</b> — the extracted Δ(x,Q²): the amplitudes of Figure 2 unfolded to
-    xΔ per nucleon at the three sweet-spot Q² slices (model bin-centering, δΔ = δA·|∂Δ/∂A|), with
-    independent one-year (open) and ten-year (filled) pseudo-measurements against the
-    <code>moment_A</code> and <code>moment_B</code> curves.</figcaption>
+    xΔ per nucleon at the three highest-significance Q² slices (model bin-centering, δΔ = δA·|∂Δ/∂A|), with
+    independent one-year (open) and ten-year (filled) pseudo-measurements against the model A and model B curves.</figcaption>
   </figure>
 
   <h3>5.2 · Reconstructed level</h3>
 
-  <p>Three of the four super-bins sit at y ≈ 0.01, where the electron method alone gives
-  δy/y = 0.5–1.2 and the bin is not reconstructible; x must come from a hadronic-method y. The
+  <p>Two of the four super-bins sit at y ≈ 0.01, where the electron method alone gives δy/y ≈ 1.1–1.2 and the bin is not reconstructible, and the other two at y ≈ 0.026, where it gives 0.46; x must come from a hadronic-method y. The
   reconstructed-level pseudo-experiments of the companion note [16] pass every event through the
   lab frame, EMCal energy and track-angle smearing, the head-on transformation, the electron-method
   Q², a hadronic y, the mixed-method x, the analysis cuts on reconstructed quantities, an
@@ -434,22 +391,10 @@
   </table>
   <p class="tabcap"><b>Table 1</b> — the four super-bins at the reconstructed level (mid configuration, spin-state ratio of the +0.6 / −1.2 fills). Purity: fraction of the reconstructed bin's rate that originates in the true bin; efficiency: fraction of the true-bin rate reconstructed in the bin after electron identification; D: rate-weighted, φ′-diluted amplitude of the events in the reconstructed bin over that of the true bin; δy/y: 68% half-width of the Σ-method resolution at the spot. The statistical errors are the same for both hadronic-y models to within 3%.</p>
 
-  <p>Three conclusions follow. The fit is unbiased at the reconstructed level: every Â agrees with
-  its reconstructed-bin truth within about two standard errors while the acceptance harmonic and the
-  luminosity offset are on, and the sin 2φ′ coefficients are consistent with zero. The errors are
+  <p>Three conclusions follow. The fit closes on the response-folded truth within the precision of the test: the eight pulls against the reconstructed-bin truth lie within 2.2 standard errors while the acceptance harmonic and the luminosity offset are on, and the sin 2φ′ coefficients are consistent with zero. The errors are
   0.59–0.69 of the single-state truth-level values, because the 1.5× gain of the m = 0-rich fill
   outweighs the reconstruction efficiency of 0.38–0.66 — presuming the source delivers m = 0-rich
-  bunches at |P<sub>zz</sub>| = 1.2 with the same purity as the ±1 fill at 0.6. And the real
-  final state costs purity rather than statistics: PYTHIA puts 0.11 of the hadronic E − p<sub>z</sub>
-  sum into neutral hadrons, which belong to the HCal, so the purities fall to 0.43–0.69 and the
-  reconstructed amplitude sits 7–23% below the true-bin value rather than 1–10%, and more of the
-  answer passes through the bin-centering factor. The resolution degrades with beam energy because
-  the sweet spots move to lower y as s grows, and the noise floor decides it below y ≈ 0.02 — the
-  Σ-method δy/y at y = 0.005 runs 0.22 → 0.33 → 0.54 → 1.01 for 0 → 25 → 50 → 100 MeV of
-  calorimeter noise on a hadronic E − p<sub>z</sub> sum of 0.2–0.5 GeV, a regime no published ePIC
-  study covers. The x ≈ 0.14 bins are best measured at the low-energy configuration, where their
-  δy/y is 0.24 and 0.11. Unfolded to Δ, the best reconstructed bins reach δΔ = 2.4×10⁻³ at
-  Q² = 1.14 GeV² and 1.2×10⁻³ at 3.13 GeV² in one year, with purities ≈ 0.55.</p>
+  bunches at |P<sub>zz</sub>| = 1.2 with the same purity as the ±1 fill at 0.6. And the real final state costs purity rather than statistics: PYTHIA puts a larger share of the hadronic E − p<sub>z</sub> sum into neutral hadrons than the stand-in assumed, and those belong to the HCal, so the purities fall to 0.43–0.69 and the reconstructed-bin amplitude sits 5–21% below the true-bin value rather than 1–10%, and more of the answer passes through the bin-centering factor. The noise floor decides the resolution below y ≈ 0.02 — at the mid configuration the Σ-method δy/y at y = 0.005 runs 0.22 → 0.33 → 0.54 → 1.01 for 0 → 25 → 50 → 100 MeV of calorimeter noise on a hadronic E − p<sub>z</sub> sum of 0.2–0.5 GeV, a regime no published ePIC study covers. Each configuration selects its own four bins: at 5 × 40.8 and 18 × 137.5 they resolve to 0.38 / 0.23 / 0.24 / 0.11 and 0.23 / 0.19 / 0.21 / 0.18, so the low-x bins improve with beam energy (the hadronic E − p<sub>z</sub> = 2E<sub>e</sub>y grows with it) while the (0.141, 14.3 GeV²) bin degrades, 0.11 → 0.15 → 0.18, and is best measured at the low configuration. Unfolded to Δ, the best reconstructed bins reach δΔ = 2.4 (2.9) ×10⁻³ at Q² = 1.14 GeV² and 1.2 (1.3) ×10⁻³ at 3.13 GeV² in one year with the stand-in (PYTHIA) y, at purities 0.56–0.57 (0.39–0.41).</p>
 
   <h3>5.3 · Bin centering</h3>
 
@@ -458,10 +403,8 @@
   linear operator and a Δ(x) shape fitted through it per Q² slice on a bounded grid. Correcting the
   same pseudo-data with either of two deliberately wrong priors, the model dependence of K at the
   four super-bins falls from (−4.1, +8.0, −5.5, +4.9)% to (−1.5, −1.8, −0.3, +0.5)% with the
-  <code>moment_B</code> prior and from (+8.6, +2.5, +7.3, +3.2)% to (+4.6, +3.0, +1.8, −0.9)% with the
-  flat toy, and over the plotted bins of Figure 3 from up to 29% to ≤ 6%. The Δ error bar then
-  carries four terms — statistics, the shape fit, the response Monte Carlo (0.1–1% per bin) and the
-  spread over priors the shape family cannot absorb — of which the last dominates.</p>
+  model B prior and from (+8.6, +2.5, +7.3, +3.2)% to (+4.6, +3.0, +1.8, −0.9)% with the
+  flat toy, and over the plotted bins of Figure 3 from up to 29% to ≤ 6%. The Δ error bar then carries four terms — statistics, the shape fit, the response Monte Carlo (0.15–1.5% per bin) and the spread over priors the shape family cannot absorb (1–8%) — of which the prior spread dominates in the best-measured bins, where the one-year statistics are ≲ 4%, and statistics elsewhere.</p>
 
   <h2>6 · The coherent channel</h2>
 
@@ -471,9 +414,7 @@
   the diffractive momentum loss x<sub>P</sub> &lt; 0.01 changes it by less than 1% — and emerges at
   θ = p<sub>T</sub>/p ≲ 1 mrad, inside the beam. Of the far-forward system at IP6 — the B0
   spectrometer, the off-momentum detectors, the Roman Pots and the zero-degree calorimeter, with the
-  acceptance windows of Refs. [18–20] — only the pots can see such a recoil, and only where it clears
-  both the 10σ beam envelope and the pots' own aperture. Both are constraints on the <i>angle</i> at
-  the interaction point, so with an exponential t distribution the tagged fraction is</p>
+  acceptance windows of Refs. [18–20] — only the pots can see such a recoil, and only where it clears both the 10σ beam envelope and the pots' own aperture. Both are constraints on the <i>angle</i> at the interaction point, so with an exponential t distribution of slope B (≈ 50 GeV⁻², §6.2) the tagged fraction is</p>
 
   <p class="eq"><img class="tex" data-tex="\varepsilon_{\mathrm{tag}} = \exp\!\left(-B\,p_{T,\mathrm{cut}}^2\right),\qquad p_{T,\mathrm{cut}} = \theta_{\mathrm{cut}}\,A\,p_u,\qquad \theta_{\mathrm{cut}} = \max\!\left(10\,\sigma_\theta,\ \theta_{\mathrm{aperture}}\right)"></p>
 
@@ -483,9 +424,7 @@
   equal normalized emittance, and pays a factor √2 only where it is rigidity-capped, i.e. at the top
   configuration [13] — and the pots' aperture for an intact ⁶Li, measured by tracking one through the
   ePIC far-forward geometry: the boundary is |θ<sub>x</sub>| ≳ 2.0 / 1.35 / 1.03 mrad in the
-  5 × 41 / 10 × 100 / 18 × 275 optics against |θ<sub>y</sub>| ≳ 1.8–3 mrad, because the transport
-  images an interaction-point angle onto the pot plane with a horizontal lever R₁₂ ≈ 30.6 m against
-  a vertical few metres [16].</p>
+  5 × 41 / 10 × 100 / 18 × 275 optics against |θ<sub>y</sub>| ≳ 2.3–3.0 mrad, because the transport images an interaction-point angle onto the pot plane with a horizontal lever R₁₂ ≈ 30.6 m against a vertical few metres [16]; the scan was made at the proton rigidity of each optics and is applied in angle to the γ-matched beam, which assumes the far-forward magnets scale with the stored rigidity.</p>
 
   <table>
     <tr><th>⁶Li configuration</th><th>p<sub>ion</sub></th><th>σ<sub>θ</sub> h/v, high acceptance [µrad]</th><th>ε<sub>tag</sub>, 10σ envelope</th><th>pot aperture |θ<sub>x</sub>|</th><th>ε<sub>tag</sub>, aperture</th><th>tagging optics: σ<sub>θ</sub>, β* factor</th></tr>
@@ -493,26 +432,27 @@
     <tr><td class="mono">10 × 99.5</td><td class="mono">597 GeV</td><td class="mono">180 / 180</td><td class="mono">8×10⁻²⁶</td><td class="mono">1.35 mrad</td><td class="mono">8×10⁻¹⁶</td><td class="mono">24 µrad, ×58</td></tr>
     <tr><td class="mono">18 × 137.5</td><td class="mono">825 GeV</td><td class="mono">92 / 92</td><td class="mono">4×10⁻¹³</td><td class="mono">1.03 mrad</td><td class="mono">2×10⁻¹⁷</td><td class="mono">17 µrad, ×29</td></tr>
   </table>
-  <p class="tabcap"><b>Table 2</b> — the coherent tag at IP6 with published inputs. Divergences: Yellow Report Table 10.1 with the γ-matched species step [13]; at 41 GeV the high-acceptance and high-divergence optics are identical, the only configuration where the Yellow Report offers no separate high-acceptance option. Aperture: the September-2024 <code>epic-main</code> geometry, one event per scan point, no beam envelope; the pot layout has since changed (16 mm modules, per-energy insertions) and must be re-measured. Tagging optics: the divergence that puts the 10σ envelope at p<sub>T</sub> = 1/√B = 0.14 GeV, where L × ε<sub>tag</sub> is maximal and ε<sub>tag</sub> = 1/e, and the β* increase over the high-acceptance optics it implies.</p>
+  <p class="tabcap"><b>Table 2</b> — the coherent tag at IP6 with published inputs. Divergences: Yellow Report Table 10.1 with the γ-matched species step [13]; at 41 GeV the high-acceptance and high-divergence optics are identical, the only configuration where the Yellow Report offers no separate high-acceptance option. Aperture: the rectangular |θ<sub>x</sub>| / |θ<sub>y</sub>| cutout integrated over the two-dimensional Gaussian, not the circular exp(−B p<sub>T</sub>²) of the displayed formula; September-2024 ePIC geometry, one event per scan point, no beam envelope; the pot layout has since changed (16 mm modules, per-energy insertions) and must be re-measured. Tagging optics: the divergence that puts the 10σ envelope at p<sub>T</sub> = 1/√B = 0.14 GeV, where L × ε<sub>tag</sub> is maximal and ε<sub>tag</sub> = 1/e, and the β* increase over the high-acceptance optics it implies; Figure 4 prices the planar-pot version.</p>
 
   <p>The conclusion is unambiguous: with any published optics the coherent intact-⁶Li channel does
   not exist at IP6, at any energy. It exists under two conditions. A <i>tagging optics</i>, with β*
   raised until the envelope sits at p<sub>T</sub> = 1/√B, where luminosity times acceptance is
-  maximal, gives ε<sub>tag</sub> = 1/e at every configuration; the smallest ask is at 5 × 41, β* from
-  0.9 to 13 m, well inside the forward-physics optics demonstrated at the LHC — but the pots must
-  then approach to 0.58 mrad where the silicon now sits at 2 mrad, so the two levers are
-  multiplicative and the second is the near-beam question of Report 4 [21]. Alternatively, the
-  <i>secondary focus</i> of the second interaction region (σ ≈ 0.15 × 0.1 mm at ~45 m) lets pots at
-  z = 44.0/45.5 m reach p<sub>T</sub> ≈ 0, with published intact-recoil efficiencies of 47% (d),
-  32% (³He), 29% (⁴He) and 17.8% (⁷Li) at top energy, rising steeply at lower energies [22]; no ⁶Li
-  case is published and our interpolation is ≈ 20%. Either option delivers a tag of order 10–40%,
-  and the projections below are made for a near-beam envelope of 0.20 GeV — ε<sub>tag</sub> = 13.5%
-  (9–20% for B ∈ 40–60 GeV⁻²) — as the physics case for providing it. Even so, one degeneracy
-  remains: a Roman-Pot hit measures A/Z, and an intact ⁶Li, an α and a d at the same velocity share
+  maximal, gives ε<sub>tag</sub> = 1/e at every configuration; the 1/e column of Table 2 is the circular-isotropic derivation, and priced for planar pots below the optimum is a horizontal-only de-squeeze, β*<sub>x</sub> ≈ 50× / 180× / 90× (≈ 45 m at 5 × 41 for a high-acceptance β*<sub>x</sub> of 0.9 m), within the range of the forward-physics optics demonstrated at the LHC — but the pots must then approach horizontally to 0.33, 0.17 and 0.12 mrad where the silicon now sits at 2.0 / 1.35 / 1.03, so the two levers are multiplicative and the second is the near-beam question of Report 4 [21]. Alternatively, the <i>secondary focus</i> of the second interaction region lets pots at z = 44.0/45.5 m reach p<sub>T</sub> ≈ 0, with published intact-recoil efficiencies of 47% (d),
+  32% (³He), 29% (⁴He) and 17.8% (⁷Li) at top energy, rising steeply at lower energies [22]; no ⁶Li case is published and our interpolation is ≈ 20%.</p>
+
+  <p><b>Pricing the tagging optics.</b> The β* lever is a machine lattice setting, not a far-forward one — it is exactly what separates the Yellow Report's high-acceptance optics from its high-divergence optics — and it is paid for in luminosity: σ<sub>θ</sub> ∝ 1/√β* while L ∝ 1/β* per plane, which the Yellow Report's own optics pairs reproduce to 5% (10.0 against 3.14×10³³ cm⁻²s⁻¹ at 275 GeV for a divergence ratio 119/65) [13]. Because a recoil escapes through the horizontal gap between the pots or through the vertical one, only the plane it escapes through needs the tagging β*: Figure 4 therefore de-squeezes the horizontal plane alone, holds the vertical at its high-acceptance value and pays L/L<sub>HA</sub> = 1/√r rather than 1/r, with the envelope treated as the planar pots see it — a rectangle 10σ<sub>h</sub> × 10σ<sub>v</sub> in angle, the dispersion at the pots (D ≈ 0.3 m with the Yellow Report Δp/p) added to the horizontal side — for pots either following the envelope or fixed at the aperture measured today. With the pots fixed, the acceptance stays below 10⁻⁶ at any β*: the far-forward side must move with the optics. With the pots following, the yield peaks at r = β*<sub>x</sub>/β*<sub>x,HA</sub> = 50, 180 and 90 at the three configurations, where ε = 0.42, 0.32 and 0.33, the horizontal envelope sits at 0.33, 0.17 and 0.12 mrad (0.08–0.10 GeV) and the luminosity at 1/7, 1/13 and 1/9.5 of the high-acceptance value; de-squeezing both planes, the naive reading of Table 2, would cost 1/24–1/70 for a fifth of the yield. Taking the placeholder of §3.1, 10 fb⁻¹/u per year, as the high-acceptance luminosity, the tagging optics yields 2.6×10⁶, 3.0×10⁶ and 6.1×10⁶ tagged events per year — 2.3×, 5.6× and 3.9× below the 0.20 GeV reference tag at that luminosity — and the best super-bin of §6.2 reaches 5σ floors of 1.7%, 2.1% and 1.6% per unit P<sub>zz</sub> per year. In the optics' own window, ⟨|t|⟩ = 0.031–0.035 GeV², the shape term of §6.3 is 3.1–3.5% per unit P<sub>zz</sub> — a 9σ, 8σ and 11σ measurement per year — and a 1% exotic-glue term reaches 5σ in 2.8, 4.4 and 2.6 years. The top configuration is the most productive at equal luminosity, with four times the coherent events of 5 × 41. If the second interaction region delivered the same luminosity as the high-acceptance optics, its secondary focus at our interpolated ≈ 20% would still be worth 3×, 8× and 6× the IP6 optimum in yield (Figure 4, dash-dotted line); the factor scales with L<sub>IR8</sub>/L<sub>HA</sub>, which is not published, and the published efficiencies rise toward lower energies [22]. Two assumptions carry these numbers and are stated as such: the electron β* must be raised in step to keep the spot sizes matched, and the far-forward transport of the de-squeezed lattice must remain parallel-to-point at the pots (R₁₁σ* ≪ R₁₂σ<sub>θ</sub>, as in TOTEM's high-β* optics) for the envelope to be 10R₁₂σ<sub>θ</sub> at all — true of the present lattice at the Yellow Report optics, and the first thing to establish for a de-squeezed one.</p>
+
+  <figure>
+    <div class="panel"><img src="data:image/png;base64,__TO__" alt="A lithium tagging optics at IP6 priced: tagged fraction, luminosity and their product versus beta-star over beta-star of the high-acceptance optics, per configuration"></div>
+    <figcaption><b>Figure 4</b> — a lithium tagging optics at IP6, priced. Per ⁶Li configuration, against r = β*<sub>x</sub>/β*<sub>x,HA</sub> with the vertical plane held at high acceptance: the tagged fraction ε for pots following the 10σ envelope (dashed); the luminosity L/L<sub>HA</sub> = 1/√r (grey); their product, the tagged yield relative to the high-acceptance luminosity (thick), with the optimum marked and the yield, best-bin 5σ floor and shape-term significance per year annotated; and the yield if both planes were de-squeezed by r (thin). The envelope is a rectangle 10σ<sub>h</sub> × 10σ<sub>v</sub> in angle with the dispersive term added horizontally, which is why the optimum sits far above the circular 1/e point of Table 2; B = 50 GeV⁻². With the pots fixed at the aperture measured in the ePIC geometry ε stays below 10⁻⁶ at every r and is stated in each panel rather than drawn. The dash-dotted line is the IR-8 secondary focus at our interpolated ≈ 20%, drawn as if the second IR delivered the high-acceptance luminosity; HA and HD mark the Yellow Report optics.</figcaption>
+  </figure>
+
+  <p><b>The reference tag of the projections.</b> Figures 1 and 5 and §6.2 are drawn for a near-beam envelope of 0.20 GeV — ε<sub>tag</sub> = 13.5% (9–20% for B ∈ 40–60 GeV⁻²), the documented limit of coherent ³He tagging at IP6 [22] — at the high-acceptance luminosity, which no IP6 optics provides: conservative in the tagged fraction against the 32–42% of the tagging optics and the ≈ 20% of IR-8, but 2.3×, 5.6× and 3.9× above what the tagging optics yields at the three configurations. They stand as the physics case for a tag, not as an IP6 projection.</p>
+
+  <p><b>The configuration we propose.</b> A lithium tagging optics at 18 × 137.5 GeV/u with the horizontal β* raised ≈ 90× over the high-acceptance setting, the vertical plane untouched, and the Roman Pots inserted horizontally to ≈ 0.12 mrad (≈ 4 mm at the pot plane if the present lever of 30.6 m survived the de-squeeze; the de-squeezed transfer matrix is one of the inputs requested below) — or, at the lowest energy, 5 × 40.8 GeV/u with β*<sub>x</sub> ≈ 50× (≈ 45 m for a high-acceptance β*<sub>x</sub> of 0.9 m) and pots at 0.33 mrad — run as a separate running configuration, as the Yellow Report foresees its high-acceptance optics, for a share of the year with which the yields above scale (Table 4, row 8), while the inclusive measurement takes the high-divergence optics. It is a change to the interaction-region lattice, on the electron side as well, and to the pot insertion; whether a horizontal de-squeeze of that size is compatible with the crab cavities and keeps the far-forward transport parallel-to-point is part of what is asked. From the machine it needs the lithium divergence and the high-acceptance β* per configuration and the far-forward transfer matrix at the pot planes for the de-squeezed lattice; from the detector, the pot approach and the charge identification below; and its cost — a factor 7–13 in luminosity for the duration of the store — is the number to weigh against a second interaction region. Whichever provides the tag, one degeneracy remains: a Roman-Pot hit measures A/Z, and an intact ⁶Li, an α and a d at the same velocity share
   trajectory and timing. The second-detector design answers it with a Z²-scaling Cherenkov counter
   behind the pots [19]; for IP6 no charge-discrimination study exists, though the AC-LGAD readout
-  digitizes an 8-bit charge over four planes and the α + d pair separates by hit topology [21]
-  (open item #19 of the programme).</p>
+  digitizes an 8-bit charge over four planes and the α + d pair separates by hit topology [21].</p>
 
   <h3>6.2 · Rate model</h3>
 
@@ -527,9 +467,7 @@
   the matter radius (the charge radius gives ≈ 57 [25]; gluonic distributions may be wider [26]),
   valid below the form-factor minimum at |t| ≈ 0.31 GeV² [27,28]. One year produces 1.2×10⁸
   coherent events, of which the 0.20 GeV tag keeps 1.7×10⁷ (1.7×10⁸ in ten years); the best
-  super-bin, x ∈ [0.0013, 0.0025], Q² ∈ [1, 1.7] GeV², holds 1.75×10⁶ and gives
-  δA = 1.8×10⁻³ (one year) and 0.6×10⁻³ (ten years), i.e. 5σ floors at modulations of 0.9% and
-  0.3%.</p>
+  super-bin, x ∈ [0.0013, 0.0025], Q² ∈ [1, 1.7] GeV², holds 1.75×10⁶ and gives δÂ = 1.8×10⁻³ (one year) and 0.6×10⁻³ (ten years) on the amplitude per unit P<sub>zz</sub>, i.e. 5σ floors at 0.9% and 0.3%; at P<sub>zz</sub> = 0.6 the visible modulations are 0.6× these.</p>
 
   <h3>6.3 · The modulation and its two mechanisms</h3>
 
@@ -545,18 +483,13 @@
 
   <p>Two conventions matter. The anchor's Eq. (9) expands d²σ/dΦd|t| ∝ 1 + 2Σ<sub>n</sub>a<sub>n</sub>e<sup>inΦ</sup>
   with Φ the azimuth of the recoil relative to the polarization axis in the γ*d frame, so the
-  cos 2Φ coefficient is 2a₂: the ⟨a₂⟩ quoted here and injected in Figure 4(d) understates the
-  deformation modulation by a factor two (0.072 rather than 0.036 at P<sub>zz</sub> = 0.6), and the
-  coherent numbers of this paper are conservative by ×2. And the modulation is one of the
+  cos 2Φ coefficient is 2a₂: the ⟨a₂⟩ quoted here — 0.036 at P<sub>zz</sub> = 0.6, i.e. 0.060 per unit P<sub>zz</sub>, the footing of the 5σ floors — and injected in Figure 5(d) understates the deformation modulation by a factor two, and the coherent numbers of this paper are conservative by ×2. And the modulation is one of the
   <i>recoil</i> azimuth φ<sub>t</sub> − φ<sub>S</sub>, not of the electron azimuth used as the axis
-  of Figure 4(d); the reconstructed-level analysis fits both azimuths [16].</p>
+  of Figure 5(d); the reconstructed-level analysis fits both azimuths [16].</p>
 
   <p>ε<sub>B0</sub> ≡ ΔB₀/B is scaled from the deuteron value of 0.21 by two indicators that
   disagree: the relative quadrupole deformation Q/⟨r²⟩ of ⁶Li (0.012) is about one fifth of the
-  deuteron's (0.063) and opposite in sign, while the α–d asymptotic D/S ratio is disputed — a
-  transfer measurement gives η = +0.0003(9), consistent with zero [31], against older sub-Coulomb
-  analyses favouring η ≈ −0.01. We adopt ε<sub>B0</sub> ∈ −(0.04–0.13) with default −0.08, leaving
-  near-zero deformation open; the 5σ floors cover its detection or exclusion. The band's width is
+  deuteron's (0.063) and opposite in sign, while the α–d asymptotic D/S ratio is disputed — a transfer measurement gives η = +0.0003(9), consistent with zero, older sub-Coulomb analyses favour η ≈ −0.01, and the ab initio no-core shell model with continuum gives −0.027, the deuteron's own 0.0256 in magnitude [31]. We adopt ε<sub>B0</sub> ∈ −(0.04–0.13) with default −0.08, leaving near-zero deformation open; the D/S indicator alone would allow up to the deuteron's −0.21, and the 5σ floors cover detection or exclusion anywhere in that range. The band's width is
   genuine theoretical uncertainty: even exact few-body calculations miss the ⁶Li quadrupole
   cancellation by a factor ≈ 3 [32], and the gluonic deformation need not share the cancellation of
   the charge sector. The sign flip relative to the deuteron is a testable prediction (Q(⁶Li) &lt; 0),
@@ -564,16 +497,12 @@
   T₂₀ = −(0.1–0.3) [33] and HERMES A<sub>zz</sub>(d) ≈ −1% at x ≈ 0.01 [34], the latter attributed
   to coherent double scattering [35–37]. The flat gluon-transversity term is separately bounded at
   3×10⁻³–10⁻² (at P<sub>zz</sub> = 1) from the bare lattice φ transversity [6] divided by the ~10×
-  NPLQCD deuteron suppression [7], with the maximal Drell–Yan scenario [5] as the ceiling. The
-  equal-rate population average behind ⟨a₂⟩ carries a one-sided ×0.73 rate-weighting systematic,
-  inside the ε<sub>B0</sub> band.</p>
+  NPLQCD deuteron suppression [7], with the maximal Drell–Yan scenario [5] as the ceiling. ⟨a₂⟩ averages the m-state populations with equal weights; weighting them by their m-dependent rates lowers it by up to 27%, a one-sided shift inside the ε<sub>B0</sub> band.</p>
 
   <p>The two mechanisms separate by shape: deformation is linear in t, sign-flipped relative to the
   deuteron and expected to weaken toward small x<sub>P</sub> (JIMWLK evolution washes it out [30]),
   while exotic glue is flat in t and persists at small x, where it connects to the elliptic-gluon
-  programme [38]. In a two-component fit a₂(t) = c<sub>def</sub>·|t| + a<sub>g</sub> per
-  x<sub>P</sub> bin, both components exceed the statistical floor by ≥ 5σ at 100 fb⁻¹/u for the
-  0.20 GeV tag. Incoherent breakup is m-state-blind in this mechanism [10]: it dilutes the modulation
+  programme [38]. In a two-component fit a₂(t) = c<sub>def</sub>·|t| + a<sub>g</sub> per x<sub>P</sub> bin, the ten-year floor of 0.3% per unit P<sub>zz</sub> lies at or below the flat term's band and an order of magnitude below the deformation term, so both components are expected to be resolved for the 0.20 GeV tag. Incoherent breakup is m-state-blind in this mechanism [10]: it dilutes the modulation
   but cannot mimic it. And deformation-driven modulations, the polarized-deuteron imaging signal, are
   bounded on ⁶Li by its quadrupole moment, Q = −0.0806(6) fm² ≈ Q(⁷Li)/50 [39]: a sizable flat-in-t
   cos 2φ on ⁶Li cannot be a shape effect, and the mechanisms entangled for the deuteron separate in
@@ -581,24 +510,15 @@
 
   <figure>
     <div class="panel"><img src="data:image/png;base64,__M6__" alt="Money plot 6: the coherent channel"></div>
-    <figcaption><b>Figure 4</b> — the coherent channel e ⁶Li → e′ X ⁶Li(g.s.) at
+    <figcaption><b>Figure 5</b> — the coherent channel e ⁶Li → e′ X ⁶Li(g.s.) at
     e(10 GeV) × ⁶Li(99.5 GeV/u), P<sub>zz</sub> = 0.60, for a 0.20 GeV near-beam envelope. (a) Recoil t spectrum with the slope band and the 0.20 and 0.45 GeV cuts (13.5% and 4×10⁻⁵); the panel's optics labels are the proton optics the two cuts were first derived from, neither of which is an available ⁶Li optics (§6.1). (b) Digitized
-    deuteron a₂ per m state [10] against the scaled ⁶Li ensemble band (sign flip predicted), with the
-    tagged window and the form-factor-zero exclusion. (c) Tagged yield versus x for both programmes
-    with the f₀ band. (d) φ′ pseudo-data (one-year statistics) at the anchored ⟨a₂⟩ = 0.036 with the
-    flat gluon-transversity scenario (grey); extraction Â ± 1.8×10⁻³ (one year), ± 0.6×10⁻³ (ten
-    years).</figcaption>
+    deuteron a₂ per m state [10] against the scaled ⁶Li ensemble band (sign flip predicted), with the tagged window and the form-factor-zero exclusion. (c) Tagged yield versus x for both programmes with the f₀ band. (d) φ′ pseudo-data (one-year statistics) at ⟨a₂⟩ = 0.036 with the flat gluon-transversity scenario (grey); extraction Â ± 1.8×10⁻³ (one year), ± 0.6×10⁻³ (ten years) per unit P<sub>zz</sub>.</figcaption>
   </figure>
 
   <p>That the analysis closes once a tag exists has been demonstrated with the reconstructed-level
   chain [16]: the recoil is transported to the pots with divergence smearing and an aperture, the
   spin-state ratio is formed in the two azimuths and fitted with an acceptance-weighted template
-  basis in which the pot geometry's own ⟨cos 2β⟩ cancels, and reflection-forbidden sin terms serve
-  as null columns that resolve a pot roll to 5–8 mrad. For a 0.73 mrad approach at the 5 × 41
-  configuration — acceptance 7.8%, 1.4×10⁶ tagged events in the lowest of four |t| bins in one
-  year — the fit recovers the deformation coefficient a<sub>t</sub> = 0.115 ± 0.003, 0.181 ± 0.004
-  and 0.260 ± 0.009 against 0.119, 0.179 and 0.257 injected in the three bins that carry the
-  statistics, and the flat term to ± 0.0014 in the lowest bin, where two independent
+  basis in which the pot geometry's own ⟨cos 2β⟩ cancels, and reflection-forbidden sin terms serve as null columns. For a 0.73 mrad horizontal approach at the 5 × 41 configuration, the recoil smeared with a 73 µrad divergence (the approach being its 10σ envelope, close to the tagging-optics case of Table 2) — acceptance 7.8%, 1.4×10⁶ tagged events in the lowest of four |t| bins in one year — the fit recovers the deformation coefficient a<sub>t</sub> = 0.115 ± 0.003, 0.181 ± 0.004 and 0.260 ± 0.009 against 0.119, 0.179 and 0.257 injected in the three bins that carry the statistics (the fourth, with 10⁴ events, returns 0.41 ± 0.02 against 0.354), resolves a pot roll to 6–10 mrad through the null columns, and recovers the flat term to ± 0.0014 in the lowest bin, where two independent
   pseudo-experiments return 0.0102 and 0.0151 against 0.010 injected — a residual bias of the
   template basis at this strongly anisotropic aperture, of the order of the one-year error, that
   a ten-year measurement would have to remove.</p>
@@ -633,7 +553,7 @@
       <td>Non-colliding bunches, ~30 ps timing, vertex association; standard DIS e′ identification plus (e′, recoil) kinematic consistency</td>
     </tr>
   </table>
-  <p class="tabcap"><b>Table 3</b> — backgrounds to the coherent tag, ranked; the full budget is in the programme's plan documents. The α + d channel is the one that decides the purity.</p>
+  <p class="tabcap"><b>Table 3</b> — backgrounds to the coherent tag, ranked. The α + d channel is the one that decides the purity.</p>
 
   <h2>7 · Systematics and assumptions</h2>
 
@@ -642,29 +562,23 @@
   calculated; the unpolarized QED tail is calculable and doubles as calibration. The detector
   nuisances have been measured rather than argued, holding the response fixed and varying one thing
   with common random numbers: a ±1% electron energy scale moves Δ̂ by 0.3–0.9% at the four bins, a
-  hadronic-resolution mismatch (0.30 generated, 0.25 corrected) by 0.5–1.4%, an η tilt of the
-  electron-identification efficiency by ≤ 0.03% and the Yellow Report's η-dependent calorimeter
-  table by ≤ 0.1%, all above the 0.05–0.34% Monte Carlo floor and below the bin-centering model
-  dependence of §5.3. In interpretation, a ΔΔ-isobar admixture can mimic Δ at leading twist [12] and
+  hadronic-resolution mismatch (0.30 generated, 0.25 corrected) by 0.5–1.4%, both above the 0.05–0.34% Monte Carlo floor and below the bin-centering model dependence of §5.3, while an η tilt of the electron-identification efficiency (≤ 0.03%) and the Yellow Report's η-dependent calorimeter table (≤ 0.1%) are unresolved at that floor. In interpretation, a ΔΔ-isobar admixture can mimic Δ at leading twist [12] and
   conventional double scattering generates the low-x b₁ [35–37]; the Q² lever arm and the ⁶Li/d
   comparison discriminate against both. For the coherent channel, an error in the unpolarized
   cos 2(α − β) harmonic u₂ reaches the flat term at first order through a<sub>t</sub> δu₂ ⟨cos 2β⟩ —
-  a ZEUS-1σ δu₂ [43] moves a<sub>e</sub> by 20% — and a fill-to-fill change of the pot envelope is
-  amplified by the aperture's anisotropy: with the slot-shaped cutout of the earlier study a 10⁻³
-  change biased a<sub>t</sub> by 19%, so the pots' envelope must be stable to 10⁻⁴ between the spin
-  states, or the states must alternate bunch by bunch. Table 4 lists the assumptions and what a wrong
+  a ZEUS-1σ δu₂ [43] moved a<sub>e</sub> by 20% in the earlier slot-cutout study — and a fill-to-fill change of the pot envelope is amplified by the aperture's anisotropy: in that study a 10⁻³ change biased a<sub>t</sub> by 19%. Both numbers come from a superseded geometry and are indicative; the mechanism carries over, so the pots' envelope must be stable to 10⁻⁴ between the spin states, or the states must alternate bunch by bunch. Table 4 lists the assumptions and what a wrong
   one costs.</p>
 
   <table>
     <tr><th>#</th><th>Assumption</th><th>Impact if wrong</th></tr>
-    <tr><td>1</td><td>A near-beam tag for the intact recoil exists — a tagging optics with pots that follow, or IR-8 (§6.1); the projections take a 0.20 GeV envelope</td><td>No tag, no coherent channel; the inclusive measurement is unaffected. The pot aperture is conditioned on a superseded geometry and must be re-measured</td></tr>
+    <tr><td>1</td><td>A near-beam tag for the intact recoil exists — a tagging optics with pots that follow, or IR-8 (§6.1); the projections take a 0.20 GeV envelope at the high-acceptance luminosity, which no IP6 optics provides; the tagging-optics optimum (a 0.08–0.10 GeV horizontal envelope at 1/7–1/13 of the luminosity) yields 2–6× fewer events (§6.1)</td><td>No tag, no coherent channel; the inclusive measurement is unaffected</td></tr>
     <tr><td>2</td><td>Coherent fraction f₀ = 0.04 [×2/÷2], in Bjorken x (§6.2); no diffractive model for a light nucleus exists</td><td>Yields scale linearly; δA as 1/√f₀</td></tr>
-    <tr><td>3</td><td>Bag moment ported to per-nucleon ⁶Li with dilution 1/3; x shape ours (§4)</td><td>Overall Δ scale; the literature brackets both directions [7,8]; the cluster dilution 0.81 is a ×2.4 upside</td></tr>
-    <tr><td>4</td><td>ε<sub>B0</sub> scaled from the deuteron by two indicators disagreeing by ×3 (§6.3)</td><td>Deformation amplitude anywhere in the band, which every plot carries; the sign flip is robust</td></tr>
+    <tr><td>3</td><td>Bag moment ported to per-nucleon ⁶Li with dilution 1/3; x shape ours (§4)</td><td>Overall Δ scale; the literature brackets both directions [7,8]</td></tr>
+    <tr><td>4</td><td>ε<sub>B0</sub> scaled from the deuteron by two indicators disagreeing by ×3 (§6.3)</td><td>Deformation amplitude anywhere in the band, which every plot carries</td></tr>
     <tr><td>5</td><td>No event-by-event Z identification in the pots; purity from the |t|-shape fit (§6.4)</td><td>Z identification would improve purity; an incoherent slope model that is off grows the fit systematic</td></tr>
     <tr><td>6</td><td>Linear a₂(t) for |t| &lt; 0.2 GeV² only; the form-factor zero at 0.31 GeV² is excluded, not modelled</td><td>The upper tagged window carries unmodelled structure</td></tr>
-    <tr><td>7</td><td>Toy structure functions with grid backends and a placeholder R; no target-mass terms; g₂ = g₂<sup>WW</sup> (§3.2)</td><td>Rates to ×1.5; shapes are scenarios; the published R moves Δ/F₁ by −4 to +19%, its fit-form spread by 0.5–6%</td></tr>
-    <tr><td>8</td><td>All luminosity in transverse-tensor fills at P<sub>zz</sub> = 0.6, the m = 0-rich fill at −1.2 with equal purity, alternating bunch by bunch (§3.3)</td><td>N scales with the run-plan share and the amplitude with P<sub>zz</sub>; without alternation a 10⁻³ acceptance difference fakes 2–6 one-year errors</td></tr>
+    <tr><td>7</td><td>Toy structure functions with grid backends and a placeholder R; no target-mass terms; g₂ = g₂<sup>WW</sup> (§3.2)</td><td>Rates to ×1.5; shapes are scenarios; the R shift of §3.2 applies to every Δ</td></tr>
+    <tr><td>8</td><td>All luminosity in transverse-tensor fills at P<sub>zz</sub> = 0.6, the m = 0-rich fill at −1.2 with equal purity, alternating bunch by bunch (§3.3)</td><td>N scales with the run-plan share and the amplitude with P<sub>zz</sub>; without alternation the bias of §3.3</td></tr>
     <tr><td>9</td><td>Impulse approximation; no final-state interactions; tensor radiative corrections unknown</td><td>FSI distorts the recoil spectrum at larger |t|; RC unquantified</td></tr>
     <tr><td>10</td><td>A calorimeter noise floor of 50 MeV on the hadronic E − p<sub>z</sub> sum (§5.2)</td><td>The purities of Table 1 degrade in proportion; at 100 MeV the y ≈ 0.01 bins are lost at the mid configuration</td></tr>
   </table>
@@ -672,28 +586,9 @@
 
   <h2>8 · Summary and outlook</h2>
 
-  <p>A transversely tensor-polarized ⁶Li beam at the EIC measures the double-helicity-flip structure
-  function Δ(x,Q²) — never measured for any target — in inclusive DIS with the scattered electron
-  alone, at 21–44σ per (x, Q²) bin in one year under the moment-constrained scenario and at ≥ 3σ
-  per bin for a flat 10⁻³ amplitude even at P<sub>zz</sub> = 0.3, discriminating between
-  interpretations of the bag moment by the x dependence and extracting xΔ(x,Q²) to 2–9% in the best
-  bins. The result survives reconstruction: with the spin-state ratio of m = ±1-rich and m = 0-rich
-  bunches and a hadronic-method y from a PYTHIA 8 final state, the errors are (0.9–3.0)×10⁻⁴ and
-  the amplitude unbiased, the price being bin purities of 0.43–0.69 that the calorimeter noise floor
-  at a hadronic E − p<sub>z</sub> of 0.2–0.5 GeV controls. The measurement makes three demands on the
-  machine that are specific and answerable: tensor polarization delivered as alternating m = ±1-rich
-  and m = 0-rich bunches, transverse at the interaction point; relative luminosity between the spin
-  states controlled to 10⁻⁴, or the alternation that makes it a constant; and a tensor polarimetry
-  scale at the few-per-cent level.</p>
+  <p>A transversely tensor-polarized ⁶Li beam at the EIC measures Δ(x,Q²) in inclusive DIS at 21–44σ per (x, Q²) bin in one year under the moment-constrained scenario, and at 3–11σ per bin for a flat amplitude of 3×10⁻³ per unit P<sub>zz</sub> even at P<sub>zz</sub> = 0.3, discriminating between interpretations of the bag moment by the x dependence and extracting xΔ(x,Q²) to 2–9% in the best bins. The result survives reconstruction with the spin-state ratio and a hadronic-method y, at the price of bin purities that the calorimeter noise floor controls. The measurement makes three demands on the machine that are specific and answerable: tensor polarization delivered as alternating m = ±1-rich and m = 0-rich bunches, transverse at the interaction point; a cos 2φ′ acceptance and a pot envelope stable to 10⁻⁴ between the spin states, or the bunch-by-bunch alternation that makes any relative-luminosity error a constant; and a tensor polarimetry scale at the few-per-cent level.</p>
 
-  <p>The coherent channel carries the same physics with a null test the deuteron cannot offer, and a
-  predicted sign flip of the shape term. It is also a requirement rather than a projection: with the
-  Yellow Report's beam divergences and the measured pot aperture, the intact ⁶Li cannot be tagged at
-  IP6 with any published optics, at any energy. What recovers it is a tagging optics with the
-  envelope at p<sub>T</sub> = 1/√B — a β* increase of 15× at 5 × 41 GeV, with pots that approach to
-  0.6 mrad — or the secondary focus of the second interaction region; either delivers a tag of
-  10–40%, for which one year yields 1.7×10⁷ events and a 5σ sensitivity to a 0.9% modulation,
-  against a deformation-anchored 3.6% and a gluonic term of 0.3–1%. The highest-leverage inputs from
+  <p>The coherent channel carries the same physics with a null test the deuteron cannot offer. It is also a requirement rather than a projection: the intact ⁶Li cannot be tagged at IP6 with any published optics, at any energy, and what recovers it is the tagging optics of Figure 4 or the secondary focus of the second interaction region. The tagging optics we propose (§6.1) — 18 × 137.5 GeV/u with the horizontal β* raised ≈ 90× and pots at 0.12 mrad, or 5 × 40.8 GeV/u at ≈ 50× and 0.33 mrad, the vertical plane untouched, as a separate running configuration — recovers a 33–42% tag at 1/9.5–1/7 of the luminosity: a 9–11σ measurement per year of the shape term with its predicted sign flip against the deuteron, and 5σ on a 1% exotic-glue term in three years; a second interaction region's secondary focus would deliver 3–6× more at the same luminosity. The highest-leverage inputs from
   outside the programme are, on the machine side, a light-ion optics with β* chosen for tagging and a
   charge-identification study of the pot readout; on the theory side, a rerun of the IP-Glasma
   polarized-deuteron setup with an α–d cluster density, which would replace both ε<sub>B0</sub>
@@ -732,7 +627,7 @@
     <p>[28] G. C. Li, I. Sick, R. R. Whitney, M. R. Yearian, Nucl. Phys. A 162 (1971) 583.</p>
     <p>[29] H. Mäntysaari, H. Roch, B. Schenke, C. Shen, W. Zhao, Phys. Rev. D 114 (2026) 014068, arXiv:2605.00454.</p>
     <p>[30] H. Mäntysaari, P. Singh, Eur. Phys. J. C 85 (2025) 1449, arXiv:2411.14934.</p>
-    <p>[31] K. D. Veal, C. R. Brune, W. H. Geist et al., Phys. Rev. C 60 (1999) 064003.</p>
+    <p>[31] K. D. Veal, C. R. Brune, W. H. Geist et al., Phys. Rev. C 60 (1999) 064003 (transfer measurement); G. Hupin, S. Quaglioni, P. Navrátil, Phys. Rev. Lett. 114 (2015) 212502 (NCSMC).</p>
     <p>[32] R. B. Wiringa, R. Schiavilla, Phys. Rev. Lett. 81 (1998) 4317, nucl-th/9807037.</p>
     <p>[33] M. Bouwhuis et al. (NIKHEF), Phys. Rev. Lett. 82 (1999) 3755; D. Abbott et al. (JLab t20), Phys. Rev. Lett. 84 (2000) 5053; D. M. Nikolenko et al. (VEPP-3), Phys. Rev. Lett. 90 (2003) 072501.</p>
     <p>[34] A. Airapetian et al. (HERMES), Phys. Rev. Lett. 95 (2005) 242001, hep-ex/0506018.</p>
@@ -757,7 +652,7 @@
     <tr><td class="mono">2026-08-24</td><td>The anchored coefficient's convention (2a₂); the reconstruction-chain report created as the reconstructed-level companion.</td></tr>
     <tr><td class="mono">2026-08-25</td><td>The spin-state-sorted ratio as the estimator of the measurement; the near-beam cut stated as angular; the b₁, b₂ sign convention; the inversion corrected; the O(γ²) b₁ leakage; far-forward parameters updated.</td></tr>
     <tr><td class="mono">2026-08-26</td><td>Development run 8: the PYTHIA 8 hadronic final state; the Roman-Pot aperture measured in the ePIC geometry; the published R1998 fit behind an r_func hook; the forward-folded bin-centering alternative.</td></tr>
-    <tr><td class="mono">2026-08-27</td><td>Rewritten as a paper on the γ-matched beam energies (⁶Li at 40.8 / 99.5 / 137.5 GeV/u, plans/10). All numbers restated from the current scripts: sweet spots at x = 0.011–0.14, amplitudes (0.44–0.95)×10⁻² against δA = (1.4–4.5)×10⁻⁴, the reconstructed-level Table 1, the R-model shifts (+18, +19, +8, −4%), the bin-centering scan, 1.2×10⁸ coherent events and 1.7×10⁷ tagged for the 0.20 GeV envelope. The coherent channel restated against the Yellow Report divergences and the measured pot aperture (Table 2): it does not survive at IP6 with any published optics, and the figures are presented for a tagging optics or IR-8 rather than as an IP6 projection; the pre-2026-08-27 6R and measured-aperture results, computed at the superseded rigidity-scaled energies (2.7×10⁶ tagged at 50 GeV/u; the low-energy survival at 20.5 GeV/u), are withdrawn and replaced by the analysis closure at a 0.73 mrad approach. Assumptions condensed to Table 4; references numbered in citation order.</td></tr>
+    <tr><td class="mono">2026-08-27</td><td>Rewritten as a paper on the γ-matched beam energies (⁶Li at 40.8 / 99.5 / 137.5 GeV/u, plans/10). All numbers restated from the current scripts: sweet spots at x = 0.011–0.14, amplitudes (0.44–0.95)×10⁻² against δA = (1.4–4.5)×10⁻⁴, the reconstructed-level Table 1, the R-model shifts (+18, +19, +8, −4%), the bin-centering scan, 1.2×10⁸ coherent events and 1.7×10⁷ tagged for the 0.20 GeV envelope. The coherent channel restated against the Yellow Report divergences and the measured pot aperture (Table 2): it does not survive at IP6 with any published optics, and the figures are presented for a tagging optics or IR-8 rather than as an IP6 projection; the pre-2026-08-27 6R and measured-aperture results, computed at the superseded rigidity-scaled energies (2.7×10⁶ tagged at 50 GeV/u; the low-energy survival at 20.5 GeV/u), are withdrawn and replaced by the analysis closure at a 0.73 mrad approach. Assumptions condensed to Table 4; references numbered in citation order. Later the same day: the tagging optics priced (Figure 4, <code>tagging_optics.py</code>) — luminosity ∝ 1/β* per plane against the tagged fraction, a horizontal-only de-squeeze with the vertical plane untouched, dispersion at the pots and the parallel-to-point transport assumption stated, the pots following or fixed — and the IP6 lithium tagging configuration proposed in §6.1 with its cost.</td></tr>
   </table>
 
   <div class="foot">
@@ -765,7 +660,7 @@
     <code>evgen/scripts/money_cos2phi.py</code>, <code>money_cos2phi_coherent.py</code>,
     <code>money_delta_extraction.py</code>, <code>phase_space_bins.py</code>; reconstructed level
     <code>money_cos2phi_reco.py</code> (with <code>--y-source hfs</code>, <code>--unfold-scan</code>,
-    <code>--syst-scan</code>), <code>hfs_resolution.py</code>, <code>coherent_optics_scan.py</code>,
+    <code>--syst-scan</code>), <code>hfs_resolution.py</code>, <code>coherent_optics_scan.py</code>, <code>tagging_optics.py</code>,
     <code>nearbeam_aperture_scan.py</code>, <code>nearbeam_reach_gain.py</code>; models in
     <code>polli_fastsim/delta_models.py</code> and <code>evgen/polligen/coherent.py</code>; assembled
     by <code>reports/build_report.py</code>. Every command is in docs/reproduction_manual.md. All

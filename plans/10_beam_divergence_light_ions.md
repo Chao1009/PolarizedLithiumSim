@@ -160,6 +160,18 @@ the beam in the final-focus quadrupoles (β = 14.9 m at the first quad against
 28.7 m today), so the IR aperture is not the constraint; matching and
 chromaticity would be.
 
+**Priced (2026-08-27, `evgen/scripts/tagging_optics.py`, Report 1 §6.1):**
+with the envelope as planar pots see it (a rectangle 10σ_h × 10σ_v) only
+the horizontal plane needs the de-squeeze, and the optimum of ε × L sits
+at β*_x/β*_x,HA = 50 / 180 / 90 with the vertical plane at high acceptance
+(L/L_HA = 1/7 / 1/13 / 1/9.5, ε = 0.32–0.42) rather than at the
+circular-isotropic 14.5 / 57.7 / 28.6 above: 2.6×10⁶ / 3.0×10⁶ / 6.1×10⁶
+tagged events per year at the 10 fb⁻¹/u placeholder — still 3–8× below
+what IR-8's secondary focus (≈ 20%, our interpolation) would give at the
+same luminosity.  Two assumptions stated there: the electron β* raised in
+step, and a parallel-to-point far-forward transport for the de-squeezed
+lattice (R₁₁σ* ≪ R₁₂σ_θ at the pots), which is the first thing to ask C-AD.
+
 **But the detector must follow.** At β\* = 13 m the 10σ envelope is 0.58
 mrad while the silicon aperture at 5 × 41 is ≈2–3 mrad, so the geometry
 pins the acceptance and the whole β\* gain is wasted. The two levers are

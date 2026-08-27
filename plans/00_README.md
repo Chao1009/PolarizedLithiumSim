@@ -149,6 +149,27 @@ morning of 2026-08-27 but the prose still carried the 50 GeV/u numbers.
   still runs its own superseded (pre-2026-08-27, rigidity-scaled)
   27.5 / 50 / 137.5 GeV/u configurations and is flagged as such rather
   than changed.
+- ☑ **The tagging optics is priced** (`evgen/scripts/tagging_optics.py`,  Report 1 Figure 4, same day, at the user's request).  σ_θ ∝ 1/√β* but
+  L ∝ 1/β* per plane, and a recoil escapes through the horizontal pot gap
+  OR the vertical one, so only the horizontal β* needs de-squeezing (the
+  adversarial review's point): the yield ε × L peaks at
+  β*_x/β*_x,HA = 50 / 180 / 90 with the vertical plane at high acceptance
+  (planar pots, rectangle envelope 10σ_h × 10σ_v with dispersion at the
+  pots), ε = 0.42 / 0.32 / 0.33, L/L_HA = 1/7 / 1/13 / 1/9.5, horizontal
+  envelope 0.33 / 0.17 / 0.12 mrad: 2.6×10⁶ / 3.0×10⁶ / 6.1×10⁶ tagged
+  events per year at the 10 fb⁻¹/u placeholder, 2–6× below the 0.20 GeV
+  reference; the shape term in the optics' own window (3.1–3.5% per unit
+  P_zz) is a 9 / 8 / 11σ/yr measurement and a 1% exotic-glue term reaches
+  5σ in 2.8 / 4.4 / 2.6 years.  De-squeezing both planes (the naive
+  reading) gives a fifth of that at 1/24–1/70; with the pots fixed at the
+  measured aperture nothing is recovered at any β*.  IR-8's secondary
+  focus (≈ 20%, our interpolation) is still worth 3 / 8 / 6× the IP6
+  optimum if the second IR delivers the same luminosity.  Assumptions
+  stated in the paper: the electron β* raised in step; a parallel-to-point
+  far-forward transport for the de-squeezed lattice.  The proposed IP6
+  configuration (18 × 137.5, β*_x × 90, pots at 0.12 mrad; or 5 × 40.8,
+  × 50, 0.33 mrad; a separate running configuration) is stated in Report 1
+  §6.1 with that cost.
 - ☐ Left: Report 2 as prose is still the 2026-08-24 analysis note with
   patched numbers, not a paper; the coherent a_e template bias at a
   strongly anisotropic aperture is unexplained.
