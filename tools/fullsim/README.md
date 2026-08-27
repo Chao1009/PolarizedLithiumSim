@@ -93,6 +93,25 @@ logic*, not final acceptances (plans/03 step 2.2 proper).
 
 ## The intact-⁶Li far-forward scan (2026-08-26) — the pot aperture, measured
 
+> **⚠ The geometry these numbers were measured in has been superseded.**
+> Reading the current `main` of `eic/epic` directly (2026-08-26): modules
+> went 32 × 32 mm → **16 × 16 mm**; the single energy-independent
+> insertion became **per-energy 10σ offsets** in `compact/fields/beamline_*.xml`
+> ("These are the ten-sigma cuts for the Roman pots, translated to the
+> physical layout we currently have. They are not perfectly ten-sigma for
+> reasons of physical geometry."); and the 1 mm aluminium RF shields in
+> `roman_pots_eRD24_design.xml` are **commented out** ("we don't know if
+> we will even need it — it depends on the beam impedence + RF heating,
+> etc. Oct. 2025"). The old 32 mm block gives 32 mm / 30.6 m = 1.046 mrad
+> against the 1.03 mrad measured below — agreement to 1.5%, which is the
+> check that this scan and the file reading confirm each other. The
+> current 16 mm block implies roughly half that, *below* the 0.727 mrad
+> 10σ envelope; at 5 × 41 the per-energy insertion moves the other way
+> (29.6 mm inner edge). **Re-run this scan in the current container
+> before quoting any of the numbers below** — plans/09 B1, priority. What
+> a closer approach is *worth* does not depend on it:
+> `evgen/scripts/nearbeam_aperture_scan.py` prices every aperture.
+
 The coherent channel's whole acceptance rests on one assumption: where the
 Roman Pots stop seeing a nucleus at beam rigidity (plans/04 #20).  It is
 now measured rather than assumed.

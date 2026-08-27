@@ -1,907 +1,1135 @@
 {
-  "_about": "Reference dictionary of the PolarizedLithiumSim program: the paper copies committed in refs/ (PDFs tracked in git since 2026-08-25; the EIC Yellow Report as four parts) and the few references without a free copy. Each entry: identifiers, title, where the local file is (';'-separated list for multi-part files; null = no free copy), the important content with equation/figure/page pointers, and where the reference is used in the repository. Search it with `python refs/find_ref.py <keyword>`; `--check` lists the local-copy status, `--fetch` re-downloads missing arXiv PDFs. Facts marked (repo-verified) were checked against the primary source during the dated fact-check passes recorded in plans/01 section 6, plans/06 section 6.5 and the reconstruction-chain report.",
-  "_updated": "2026-08-26",
-  "entries": {
-    "cosyn2025-tensor-polarization-options": {
-      "file": "refs/2410.12764v1.pdf",
-      "arxiv": "2410.12764",
-      "journal": "Eur. Phys. J. A 61 (2025) 83",
-      "title": "Polarization options in inclusive DIS off tensor polarized deuteron",
-      "authors": [
-        "W. Cosyn",
-        "B. Roldan Tomei",
-        "A. Sosa",
-        "A. Zec"
-      ],
-      "year": 2025,
-      "keywords": [
-        "spin-1",
-        "tensor polarization",
-        "b1",
-        "b2",
-        "b3",
-        "b4",
-        "inclusive DIS",
-        "target mass",
-        "gamma",
-        "polarization axis",
-        "along q",
-        "JLab b1 experiment",
-        "epsilon"
-      ],
-      "key_content": [
-        "Eq. (10): exact spin-1 inclusive cross section for UNPOLARIZED electrons: dsigma/dxdQ2 = pi y^2 alpha^2/(Q^4(1-eps)) [F_UU,T + eps F_UU,L + T_LL(F_UTLL,T + eps F_UTLL,L) + sqrt(2eps(1+eps)) T_LT cos(phi_TL) F_UTLT + eps T_TT cos(2phi_TT) F_UTTT]; the decomposition carries NO double-helicity-flip Delta term (their subject is b1).",
-        "Eq. (11c) eps = (1 - gamma^2 y^2/4)/(1 - y + y^2/2 + gamma^2 y^2/4); Eq. (13) gamma = M_d Q/(p_d.q) = 2 x_d M_d/Q; rescaled x = 2 x_d.",
-        "Eq. (14): in the deuteron rest frame with q along z, T_LL = t_zz, T_LT cos(phi_TL) = t_xz, T_TT cos(2phi_TT) = t_xx - t_yy (components of the polarization tensor).",
-        "Eq. (16): F_UU,L = (1+gamma^2) F2/x_d - 2 F1, F_UU,T = 2 F1.",
-        "Eq. (17): relations to HJM b1-b4. (17d) F_UTLT = -(gamma/2x_d)[(1+gamma^2)(b2/3 - b4) + 2b2/3 - 2b3] -> the cos(phi) tensor term is O(gamma). (17e) F_UTTT = -(gamma^2/x_d)(b2/6 - b3/2) -> the cos(2phi) tensor term from b2, b3 is O(gamma^2) (higher twist). Eq. (18) Callan-Gross-like b2 = 2 x_d b1 = x b1.",
-        "Eq. (20): axis along the virtual photon (N = N_q) -> T_LL = Q/3, T_LT = T_TT = 0 (only two tensor SFs enter: the clean choice for b1/A_zz). Eq. (22): axis along the electron beam (N = N_e) -> T_LL = (3cos^2 theta_q - 1)Q/6, T_LT cos(phi_TL) = -sin(2theta_q) Q/4, T_TT cos(2phi_TT) = (1 - cos 2theta_q) Q/4, theta_q = angle between q and the beam in the target rest frame.",
-        "Eqs. (25)-(27): Bjorken limit A_T = -(2/3) b1/F1 (the HERMES extraction relation). Reference gamma values: 0.66 at x = 0.5, Q2 = 2 GeV2; 0.30 at Q2 = 10 GeV2.",
-        "Fig. 6: at Q2 = 2 GeV2 the higher-twist b3, b4 are not negligible in the tensor asymmetry and are larger for polarization along the photon direction; they decrease with Q2.",
-        "Target context: JLab b1 experiment, DNP ND3 target, 5 T magnet with +-35 deg bore, longitudinal field planned; running with a longitudinal field creates theta_q != 0."
-      ],
-      "used_in": [
-        "reports/reconstruction_chain_report.template.html section 2 (Harmonics from the tensor structure functions at finite gamma)",
-        "plans/00 dev run 6 addendum",
-        "refs/README.md"
-      ],
-      "repo_usage_note": "At the sweet spots gamma^2 <= 0.023, so the b-type leakage into the cos 2phi' amplitude is ~gamma^2 (b1/F1)/6 ~ 4e-4, <= 3% of the Delta amplitude; the O(gamma) cos phi' term is orthogonal to the cos 2phi' fit."
-    },
-    "mantysaari2024-polarized-deuteron-imaging": {
-      "file": "refs/2408.13213v1.pdf",
-      "arxiv": "2408.13213",
-      "journal": "Phys. Lett. B 858 (2024) 139053",
-      "title": "Spatial imaging of polarized deuterons at the Electron-Ion Collider",
-      "authors": [
-        "H. Mantysaari",
-        "F. Salazar",
-        "B. Schenke",
-        "C. Shen",
-        "W. Zhao"
-      ],
-      "year": 2024,
-      "keywords": [
-        "polarized deuteron",
-        "coherent J/psi",
-        "rho",
-        "diffraction",
-        "CGC",
-        "dipole",
-        "azimuthal Fourier coefficients",
-        "a2",
-        "a4",
-        "deformation",
-        "effective radius",
-        "x_P = 1.7e-3"
-      ],
-      "key_content": [
-        "Eq. (9) (repo-verified from the full text): d^2sigma/(dPhi d|t|) = dsigma/d|t| (1/2pi)[1 + 2 sum_{n>=1} a_n(|t|) e^{i n Phi}] -> the cos(2Phi) modulation COEFFICIENT is 2 a_2, not a_2.",
-        "Phi is 'the angle between the produced vector meson and the polarization direction of the deuteron' (in photoproduction the vector-meson transverse momentum is the momentum transfer, i.e. the recoil azimuth); only even n appear (Eqs. 7-8 densities).",
-        "'the longitudinal and transverse polarizations are defined in the gamma*d center-of-momentum frame... When Q2 > 0 ... a Lorentz transformation is required from the lab frame to this frame, which would mix the polarization states' (the O(gamma) mixing absorbed by covariant azimuth definitions).",
-        "Fig. 4 (digitized in evgen/polligen/coherent.py MANTYSAARI_A2_DEUTERON, x_P = 1.7e-3, transverse polarization): a_2(m=0) = +0.08/+0.15/+0.30/+0.43 and a_2(m=+-1) = -0.04/-0.08/-0.17/-0.28 at |t| = 0.05/0.1/0.2/0.3 GeV^2; a_2(0) ~ -2 a_2(+-1); cos(2Phi) dominates at |t| < 0.5 GeV^2.",
-        "Fig. 2: for jz = +-1 the |t| distribution becomes flatter from Phi = 0 to pi/2, opposite for jz = 0 (the D-wave-deformed density modulates the diffractive slope).",
-        "Effective transverse radius from a fit dsigma/dt ~ exp(-B_D|t|) within 0 < |t| < 0.3 GeV^2, R = sqrt(2 B_D); Fig. 5: R(Phi) with period pi, jz = +-1 peaks at Phi = 0, jz = 0 dips at Phi = 0; longitudinal polarization shows no Phi dependence.",
-        "Slightly increased gluon saturation effects for longitudinally polarized deuterons (ratio of coherent rho cross sections)."
-      ],
-      "used_in": [
-        "evgen/polligen/coherent.py (MANTYSAARI_A2_DEUTERON, a2_deformation, cos2phi_coefficient_deformation)",
-        "plans/06 section 6.4b + convention check",
-        "reports/cos2phi_money_plots_report section 4.3 (callout)",
-        "reports/reconstruction_chain_report sections 4 and 7",
-        "docs/note_cos2phi_coherent_6Li.md ref [13]"
-      ],
-      "repo_usage_note": "Money plot 6 injects a_2 as the cos 2phi coefficient and is conservative by x2; money plot 6R injects c_2 = 2 a_2 in the RECOIL azimuth beta = phi_t - phi_S."
-    },
-    "zeus2009-leading-protons-lrg": {
-      "file": "refs/0812.2003v3.pdf",
-      "arxiv": "0812.2003",
-      "journal": "Nucl. Phys. B 816 (2009) 1 (DESY-08-175)",
-      "title": "Deep inelastic scattering with leading protons or large rapidity gaps at HERA",
-      "authors": [
-        "ZEUS Collaboration",
-        "S. Chekanov et al."
-      ],
-      "year": 2009,
-      "keywords": [
-        "diffractive DIS",
-        "leading proton spectrometer",
-        "LPS",
-        "large rapidity gap",
-        "azimuthal asymmetry",
-        "A_LT",
-        "A_TT",
-        "t-slope",
-        "beam divergence",
-        "Phi resolution",
-        "x_P",
-        "beta",
-        "M_X",
-        "Pomeron intercept"
-      ],
-      "key_content": [
-        "Sec. 10.2 (repo-verified): dsigma/dPhi ~ 1 + A_LT cos(Phi) + A_TT cos(2Phi), Phi = angle between the positron and proton scattering planes in the gamma*p frame; for 0.0002 < x_P < 0.01: A_LT = -0.036 +- 0.036 (stat) +0.016/-0.014 (syst), A_TT = -0.030 +- 0.037 +0.022/-0.006; for 0.01 < x_P < 0.1: A_LT = +0.051 +- 0.024 +0.012/-0.011, A_TT = -0.010 +- 0.024 +0.010/-0.009 -> consistent with zero (Figs. 8-9, Tables 3-5); Q2 > 4 GeV2 and an 18 cm RCAL radial cut used for the Phi analysis.",
-        "LPS: t resolution sigma(t)/t = 0.14 GeV/sqrt|t| dominated by the angular spread of the HERA proton beam; Phi resolution ~0.2 rad; longitudinal momentum-fraction resolution ~0.5%, transverse-momentum resolution ~5 MeV from the detector; the effective pT resolution was dominated by the intrinsic transverse-momentum spread of the proton beam at the IP, ~45 MeV horizontal and ~100 MeV vertical (factor-2 anisotropy); LPS acceptance ~2% for x_L > 0.98 rising to ~10% at x_L = 0.9; stations S1-S6 at 23.8-90.0 m; analysis t range 0.09 < |t| < 0.55 GeV2.",
-        "Eq. (5): t = -pT^2/x_L - (1-x_L)^2 M_p^2/x_L with pT relative to the incoming beam direction.",
-        "t-slope: b = 7.0 +- 0.3 GeV^-2 (0.0002 < x_P < 0.01), 6.9 +- 0.3 (0.01 < x_P < 0.1), no Q2 dependence -> soft process; extrapolation to 0 < |t| < 1 GeV2 with b = 7.0 roughly doubles the cross section.",
-        "M_X from calorimeter+tracking energy-flow objects, and from the LPS as M_X,LPS^2 ~ [1 - x_L(1+x)] W^2; beam-halo overlap removed with E + p_z(CAL + LPS) < 1860 GeV; LRG sample x_P < 0.02 is >~ 90% diffractive.",
-        "Kinematic coverage: 2 < Q2 < 120 GeV2 (LPS), 40 < W < 240 GeV, 2 < M_X < 40 GeV, x_P < 0.1; Pomeron intercept extraction (Sec. 10.5)."
-      ],
-      "used_in": [
-        "evgen/scripts/money_cos2phi_coherent_reco.py (u1, u2 defaults and help)",
-        "evgen/polligen/reco.py rp_measure docstring",
-        "reports/reconstruction_chain_report sections 4 and 7",
-        "plans/04 #20"
-      ],
-      "repo_usage_note": "u1 = 0.05, u2 = 0.02 in the coherent pseudo-experiments sit at the 1-sigma edge of these bounds; the HERA 45/100 MeV anisotropy is the precedent for the cutout-aspect concern."
-    },
-    "nikolaev1998-azimuthal-asymmetry-ddis": {
-      "file": "refs/9812212v1.pdf",
-      "arxiv": "hep-ph/9812212",
-      "journal": "(preprint, 1 Dec 1998; IKP Juelich / Landau Institute / Virginia Tech)",
-      "title": "Azimuthal asymmetry as a new handle on sigma_L/sigma_T in diffractive DIS",
-      "authors": [
-        "N. N. Nikolaev",
-        "A. V. Pronyaev",
-        "B. G. Zakharov"
-      ],
-      "year": 1998,
-      "keywords": [
-        "diffractive DIS",
-        "LT interference",
-        "azimuthal asymmetry",
-        "R_D",
-        "sigma_L/sigma_T",
-        "beta",
-        "leading proton",
-        "higher twist",
-        "SCHNC"
-      ],
-      "key_content": [
-        "Eq. (1): Q2 y dsigma/(dQ2 dy dM2 dDelta2 dphi) = (alpha_em/2pi^2)[(1 - y + y^2/2) dsigma_T + (1-y) dsigma_L + (1-y) dsigma_TT cos(2phi) + (1 - y/2) sqrt(1-y) dsigma_LT cos(phi)] = ... [1 - y^2 R_D/(2(1-y)+y^2) + 2(1-y) A_TT/(2(1-y)+y^2) cos(2phi) + (2-y) sqrt(1-y) A_LT/(2(1-y)+y^2) cos(phi)] -> the y-factors of the u1 (cos phi) and u2 (cos 2phi) terms used in the repo.",
-        "Eq. (2): A_LT = F_LT/(F_T + F_L) = rho_LT/(1 + R_D); Eq. (3): R_D = rho_LT/A_LT - 1; the ratio rho_LT = F_LT/F_T is claimed model independent for beta >~ 0.9 (aligned-jet dominance).",
-        "pQCD predicts R_D = sigma_L^D/sigma_T^D >~ 1 for beta >~ 0.9 (higher-twist sigma_L^D dominance), vs R ~ 0.2-0.3 in inclusive DIS; the LT interference is an s-channel helicity non-conserving effect; Eqs. (5)-(8) give the q-qbar excitation amplitudes."
-      ],
-      "used_in": [
-        "reports/reconstruction_chain_report section 4 (y-dependence of u1, u2)",
-        "refs/README.md"
-      ]
-    },
-    "pronyaev1998-forward-cone-lt": {
-      "file": "refs/9808432v1.pdf",
-      "arxiv": "hep-ph/9808432",
-      "journal": "(conference proceedings, 27 Aug 1998)",
-      "title": "The forward cone and L/T separation in diffractive DIS",
-      "authors": [
-        "A. V. Pronyaev"
-      ],
-      "year": 1998,
-      "keywords": [
-        "diffraction slope",
-        "B_D",
-        "LT/T ratio",
-        "azimuthal asymmetry",
-        "beta",
-        "leading proton spectrometer"
-      ],
-      "key_content": [
-        "Eq. (1): same decomposition as Nikolaev-Pronyaev-Zakharov with cos(phi) prefactor (2-y) sqrt(1-y) and cos(2phi) prefactor (1-y); phi = angle between the (e,e') and (p,p') scattering planes.",
-        "Eq. (7): R_LT/T = F_LT/F_T = (p_perp/Q) 12 beta^3 (2 - 3beta)/[(1-beta)(3 + 4beta + 8beta^2)] (model independent; sign change at beta = 2/3). At the repo's coherent kinematics (beta ~ 0.5, pT/Q ~ 0.2) this gives A_LT ~ 0.03.",
-        "Eqs. (4)-(5): hardness scale Q2bar = (k^2 + m_f^2)/(1 - beta); diffraction cone B_D = Delta B_aX + Delta B_pY + Delta B_int with a rise of B_T from the exclusive limit to the continuum M2 ~ Q2."
-      ],
-      "used_in": [
-        "reports/reconstruction_chain_report section 4",
-        "refs/README.md"
-      ]
-    },
-    "ruspa2002-inclusive-diffraction-hera": {
-      "file": "refs/0206031v1.pdf",
-      "arxiv": "hep-ex/0206031",
-      "journal": "(proceedings, 14 Jun 2002; on behalf of H1 and ZEUS)",
-      "title": "Inclusive diffraction at HERA",
-      "authors": [
-        "M. Ruspa"
-      ],
-      "year": 2002,
-      "keywords": [
-        "diffractive structure function",
-        "F2D(4)",
-        "F2D(3)",
-        "diffractive fraction",
-        "M_X method",
-        "LPS",
-        "W dependence"
-      ],
-      "key_content": [
-        "Eq. (2): F2^D(4)(beta, Q2, x_P, t) = beta Q^4/(4pi alpha^2 (1 - y + y^2/2)) dsigma_diff(gamma*p)/(dbeta dQ2 dx_P dt) (dimension GeV^-2); integration over t gives F2^D(3).",
-        "Fig. 5: the ratio dsigma_diff/dM_X / sigma_tot(gamma*p) vs W for ZEUS 94, LPS 95 and BPC 96-97 data with ALLM97, +-21% normalization uncertainty -> the qualitative basis of the 'HERA diffraction ~10% of DIS' bracket for the coherent fraction f0 in plans/06 (no single number in the text)."
-      ],
-      "used_in": [
-        "plans/06 section 6.4 (f0 bracket, qualitative)",
-        "refs/README.md"
-      ]
-    },
-    "jentsch2023-epic-far-forward-dis": {
-      "file": "refs/ePIC_far_forward_talk_DIS_2023_v2.pdf",
-      "arxiv": null,
-      "journal": "Talk, DIS 2023 (30th International Workshop on Deep-Inelastic Scattering), Michigan State University, 27-31 March 2023",
-      "title": "Far-Forward Detectors and Physics with ePIC @ the EIC",
-      "authors": [
-        "A. Jentsch (on behalf of the ePIC Collaboration)"
-      ],
-      "year": 2023,
-      "keywords": [
-        "ePIC",
-        "far-forward",
-        "Roman Pots",
-        "off-momentum detectors",
-        "B0",
-        "ZDC",
-        "AC-LGAD",
-        "slot",
-        "acceptance",
-        "pT resolution",
-        "beam effects",
-        "crossing angle",
-        "crab",
-        "transfer matrix"
-      ],
-      "key_content": [
-        "Slide 11 acceptance table: ZDC theta < 5.5 mrad (eta > 6); Roman Pots (2 stations) 0.0* < theta < 5.0 mrad (lower bound depends on optics); Off-Momentum Detectors (2 stations) 0.0 < theta < 5.0 mrad; B0 5.5 < theta < 20.0 mrad (4.6 < eta < 5.9). Far-forward means theta < 2.1 deg (~37 mrad).",
-        "Slide 15 Roman Pots: 500 um pixelated AC-LGAD sensors, 'potless' design with thin RF foils, sensor planes 25.6 cm x 12.8 cm (modules 3.2 cm) arranged AROUND A HORIZONTAL SLOT through which the beam passes; two stations 2 m apart with two layers each; detector directly in vacuum (impedance studies); generic R&D for adaptive (ML) reconstruction.",
-        "Slide 16 OMD: horizontal Roman-Pot-style sensors; protons 123.75 < E < 151.25 GeV (45% < x_L < 55%), 0 < theta < 5 mrad; 'even more challenging reconstruction ... extreme orbit path in the magnets'.",
-        "Slide 12/14 B0: MAPS (3 layers) + AC-LGAD (1 layer), PbWO4 EMCAL or Si preshower; tracking resolution demonstrated in stand-alone simulations.",
-        "Slide 21/23 ZDC: 60 x 60 x 168 cm, PbWO4 crystal layer + W/Si (12 planes) + Pb/Si (22) + Pb/scintillator (30), 30 m from the IR, acceptance +4.5/-5.5 mrad (aperture limits), position resolution ~1.3 mm at 40 GeV, meets the Yellow Report photon and neutron energy-resolution requirements.",
-        "Slide 19 (detector resolution only): Delta pT/pT ~ 0.5-1.5% for Roman Pots at 275 and 100 GeV/c, ~1% B0 at 41 GeV/c, ~2% B0 at 100 GeV/c, OMD ~0.4-1.5%; 'Roman Pots/OMDs suffer from additional smearing due to improper transfer matrix reconstruction'.",
-        "Slide 20 (detector + beam effects: angular divergence, crossing angle, crab rotation/vertex smearing): Roman Pots at 275 GeV/c Delta pT/pT ~ 0.09 at pT = 0.45 GeV falling to ~0.04 at 1 GeV (i.e. Delta pT ~ 40 MeV, roughly constant); at 100 GeV/c ~0.10 at 0.15-0.2 GeV falling to ~0.065 at 0.4 GeV; OMD (x_L ~ 0.5) ~0.15 at 0.13 GeV to ~0.06 at 0.4 GeV; B0 at 100 GeV/c ~0.04 at 0.6 GeV to 0.02 at 1.9 GeV -> 'Beam effects the dominant source of momentum smearing!'"
-      ],
-      "used_in": [
-        "evgen/polligen/reco.py rp_measure (slot-like cutout, cut_scale_xy)",
-        "evgen/polligen/recopseudo.py CoherentResponse",
-        "evgen/scripts/money_cos2phi_coherent_reco.py defaults",
-        "reports/reconstruction_chain_report sections 4 and 7",
-        "plans/04 #20"
-      ]
-    },
-    "bacchetta2007-sidis-small-pt": {
-      "file": "refs/hep-ph_0611265.pdf",
-      "arxiv": "hep-ph/0611265",
-      "journal": "JHEP 02 (2007) 093",
-      "title": "Semi-inclusive deep inelastic scattering at small transverse momentum",
-      "authors": [
-        "A. Bacchetta",
-        "M. Diehl",
-        "K. Goeke",
-        "A. Metz",
-        "P. J. Mulders",
-        "M. Schlegel"
-      ],
-      "year": 2007,
-      "keywords": [
-        "covariant azimuthal angles",
-        "phi_h",
-        "phi_S",
-        "g_perp",
-        "epsilon_perp",
-        "SIDIS structure functions",
-        "Trento conventions"
-      ],
-      "key_content": [
-        "Eqs. (2.4)-(2.5): cos(phi_S) = -l_mu S_nu g_perp^{mu nu}/sqrt(l_perp^2 S_perp^2), sin(phi_S) = -l_mu S_nu eps_perp^{mu nu}/sqrt(l_perp^2 S_perp^2) with g_perp^{mu nu} = g^{mu nu} - (q^mu P^nu + P^mu q^nu)/(P.q(1+gamma^2)) + gamma^2/(1+gamma^2)(q^mu q^nu/Q2 - P^mu P^nu/M2), eps_perp^{mu nu} = eps^{mu nu rho sigma} P_rho q_sigma/(P.q sqrt(1+gamma^2)) -- implemented as evgen/polligen/reco.py azimuth_wrt_lepton_plane (repo-verified: reduces to phi_e - phi_S exactly in the head-on frame for a massless target).",
-        "Local copy: arXiv v2 (26 Feb 2007, DESY 06-204, 29 pages)."
-      ],
-      "used_in": [
-        "evgen/polligen/reco.py",
-        "reports/reconstruction_chain_report section 2, ref [3]"
-      ]
-    },
-    "trento2004-and-diehl-sapeta2005": {
-      "file": "refs/hep-ph_0410050.pdf; refs/hep-ph_0503023.pdf",
-      "arxiv": "hep-ph/0410050; hep-ph/0503023",
-      "journal": "Phys. Rev. D 70 (2004) 117504; Eur. Phys. J. C 41 (2005) 515",
-      "title": "Single-spin asymmetries: the Trento conventions; On the analysis of lepton scattering on longitudinally or transversely polarized protons",
-      "authors": [
-        "A. Bacchetta, U. D'Alesio, M. Diehl, C. A. Miller",
-        "M. Diehl, S. Sapeta"
-      ],
-      "year": 2005,
-      "keywords": [
-        "angle conventions",
-        "target mass",
-        "gamma",
-        "transverse polarization",
-        "frame"
-      ],
-      "key_content": [
-        "Trento sign and orientation conventions for azimuthal angles about the virtual photon; Diehl-Sapeta: the O(gamma) mixing of longitudinal and transverse target polarization between lab and photon frames.",
-        "Local copies: Trento conventions = arXiv hep-ph/0410050v2 (DESY 04-193, 6 pages); Diehl-Sapeta = hep-ph/0503023v1 (DESY 05-037, 32 pages)."
-      ],
-      "used_in": [
-        "reports/reconstruction_chain_report ref [4]"
-      ]
-    },
-    "jacquet-blondel1979-and-bassler-bernardi1995": {
-      "file": "refs/hep-ex_9412004.pdf",
-      "arxiv": "hep-ex/9412004",
-      "journal": "DESY 79/48 (1979) 391; Nucl. Instrum. Meth. A 361 (1995) 197",
-      "title": "Jacquet-Blondel hadronic method (DESY 79/48, no free copy); U. Bassler, G. Bernardi, On the kinematic reconstruction of deep inelastic scattering at HERA: the Sigma method (DESY 94-231)",
-      "authors": [
-        "F. Jacquet, A. Blondel",
-        "U. Bassler, G. Bernardi"
-      ],
-      "year": 1995,
-      "keywords": [
-        "kinematic reconstruction",
-        "Jacquet-Blondel",
-        "Sigma method",
-        "hadronic final state",
-        "low y",
-        "ISR"
-      ],
-      "key_content": [
-        "y_JB = Sigma/(2E_e) with Sigma = sum_h (E_h - p_z,h) over the hadronic final state (p_z along the ion); y_Sigma = Sigma/(Sigma + E'(1 - cos theta_e)) is insensitive to collinear ISR; x = Q2_e/(s y_Sigma) is the mixed (e-Sigma) method used at HERA at low y.",
-        "Local copy = the Bassler-Bernardi paper only (arXiv hep-ex/9412004v1, 6 Dec 1994, 19 pages); the Jacquet-Blondel 1979 study is a DESY proceedings contribution with no free copy."
-      ],
-      "used_in": [
-        "evgen/polligen/reco.py hadronic_y, mixed_method",
-        "reports/reconstruction_chain_report section 3, refs [5]-[6]"
-      ]
-    },
-    "eic-yellow-report2021": {
-      "file": "refs/2103.05419_part1.pdf; refs/2103.05419_part2.pdf; refs/2103.05419_part3.pdf; refs/2103.05419_part4.pdf",
-      "arxiv": "2103.05419",
-      "journal": "Nucl. Phys. A 1026 (2022) 122447",
-      "title": "Science Requirements and Detector Concepts for the Electron-Ion Collider: EIC Yellow Report",
-      "authors": [
-        "R. Abdul Khalek et al."
-      ],
-      "year": 2021,
-      "keywords": [
-        "Yellow Report",
-        "kinematic reconstruction",
-        "inclusive DIS",
-        "far-forward",
-        "Roman Pots 10 sigma",
-        "beam parameters",
-        "luminosity accounting"
-      ],
-      "key_content": [
-        "Sec. 8.1 inclusive DIS: comparison of electron, Jacquet-Blondel, double-angle and Sigma kinematic reconstruction methods with resolution maps (the electron method degrades as (1-y)/y at low y; hadronic methods extend the reach to y ~ 0.01).",
-        "Far-forward: Roman Pots at 10 sigma from the beam with pT cutoff ~0.2 GeV (high-acceptance optics) to ~0.45 GeV (high-divergence) for 275 GeV protons; OMD/B0/ZDC windows as in fastsim/polli_fastsim/farforward.py.",
-        "Luminosity accounting (repo-verified): 10 fb^-1 = 30 weeks at 1e33 cm^-2 s^-1 with 60% efficiency (1.5 fb^-1/month).",
-        "Local copy: arXiv v3 (27 Oct 2021, 902 pages, 124 MB) split losslessly with PyMuPDF into four parts because GitHub rejects files above 100 MB: part1 = pages 1-300, part2 = 301-450, part3 = 451-600, part4 = 601-902 (page numbers of the PDF). The unsplit refs/2103.05419.pdf is git-ignored; `python refs/find_ref.py --fetch` re-downloads it."
-      ],
-      "used_in": [
-        "fastsim/polli_fastsim/farforward.py",
-        "plans/03",
-        "reports (all)"
-      ]
-    },
-    "jentsch-tu-weiss2021-ed-tagging": {
-      "file": "refs/2108.08314.pdf",
-      "arxiv": "2108.08314",
-      "journal": "Phys. Rev. C 104 (2021) 065205",
-      "title": "Deep-inelastic electron-deuteron scattering with spectator nucleon tagging at the future Electron-Ion Collider: Extracting free nucleon structure",
-      "authors": [
-        "A. Jentsch",
-        "Z. Tu",
-        "C. Weiss"
-      ],
-      "year": 2021,
-      "keywords": [
-        "spectator tagging",
-        "far-forward acceptance",
-        "Roman Pots",
-        "OMD",
-        "ZDC",
-        "B0",
-        "resolution model",
-        "Table I"
-      ],
-      "key_content": [
-        "Table I far-forward acceptance and resolution model (RP z = 26/28 m, theta < 5 mrad, 10 sigma beam cut; OMD 22.5/24.5 m; B0 5.5-20 mrad; ZDC) used as the Phase-1 parameterization; spectator-proton pT resolution ~10% at pT = 100 MeV/c in the Roman Pots (driven by the beam angular divergence) and ~20% at 100 MeV/c in the Off-Momentum Detectors (transfer-matrix reconstruction) -- repo-verified 2026-08-25 from the PDF text (earlier dictionary text quoted only the 20%).",
-        "Table I (repo-verified 2026-08-25 from the PDF): geometric acceptance of the baseline EIC far-forward design -- B0 tracker p 5.5-20.0 mrad; Off-Momentum p 0.0-5.0 mrad, xi 0.45-0.65; Roman Pots p 0.0-5.0 mrad, xi 0.6-0.95 (the RP acceptance at high xi is limited by the beam-size cut, footnote); ZDC n 0.0-4.0 mrad (symmetric; up to ~5.5 mrad for phi = 0). Analysis: 18 x 110 GeV/u e-d, Q2 > 10 GeV2, 0.01 < y < 0.95, 1e8 events = 1 fb^-1; BeAGLE 1.01.03."
-      ],
-      "used_in": [
-        "fastsim/polli_fastsim/farforward.py",
-        "plans/03 section 2.2",
-        "reports/reconstruction_chain_report ref [8]"
-      ]
-    },
-    "chang2026-ir8-light-nuclei": {
-      "file": "refs/2511.05638.pdf",
-      "arxiv": "2511.05638",
-      "journal": "Phys. Rev. D 113 (2026) 032018",
-      "title": "Opportunities for imaging light nuclei with a second interaction region at the Electron-Ion Collider",
-      "authors": [
-        "W. Chang",
-        "E.-C. Aschenauer",
-        "A. Jentsch",
-        "A. Kumar",
-        "Z. Tu",
-        "Z. Yin"
-      ],
-      "year": 2026,
-      "keywords": [
-        "IR-8",
-        "secondary focus",
-        "intact recoil tagging",
-        "eSTARlight",
-        "coherent J/psi",
-        "7Li"
-      ],
-      "key_content": [
-        "Intact-recoil tagging efficiency x acceptance at the IR-8 secondary focus: d 47%, 3He 32%, 4He 29%, 7Li 17.8% (17.75%) at top energies; NO 6Li entry (the repo's ~20% is an interpolation, repo-verified).",
-        "Verbatim (repo-verified 2026-08-25 from the PDF): the coherent-VM intact-nucleus detection efficiency at IR-8 'from deuterium (2D) to oxygen (16O) is 47.12%, 32.23%, 29.42%, 17.75%, 12.37%, 6.36%, 1.59%' for 2D, 3He, 4He, 7Li, 9Be, 12C, 16O at top energies (eSTARlight e + A -> e' + A' + VM, VM = J/psi, phi, rho); no 6Li sample in the paper."
-      ],
-      "used_in": [
-        "plans/06",
-        "reports/cos2phi_money_plots_report",
-        "reports/reconstruction_chain_report ref [10]"
-      ]
-    },
-    "hoodbhoy-jaffe-manohar1989-and-jaffe-manohar1989": {
-      "file": null,
-      "arxiv": null,
-      "journal": "Nucl. Phys. B 312 (1989) 571; Phys. Lett. B 223 (1989) 218",
-      "title": "Novel effects in deep inelastic scattering from spin-one hadrons; Nuclear gluonometry",
-      "authors": [
-        "P. Hoodbhoy, R. L. Jaffe, A. Manohar",
-        "R. L. Jaffe, A. Manohar"
-      ],
-      "year": 1989,
-      "keywords": [
-        "spin-1 DIS",
-        "b1",
-        "b2",
-        "b3",
-        "b4",
-        "Delta",
-        "double helicity flip",
-        "gluonometry",
-        "master formula"
-      ],
-      "key_content": [
-        "Master formula used throughout the repo (docs/Discussions.pptx p.5): dsigma/(dx dy dphi) = (2y alpha^2/Q2)[F1 + (2/3)a_m b1 + (1-y)/(xy^2)(F2 + (2/3)a_m b2) - (1-y)/y^2 c_m sin^2(theta_m) Delta cos(2phi)], c_m = 3m^2 - 2 -> (1,-2,1), a_m = c_m(3cos^2 theta_m - 1)/4; Delta requires J >= 1, transverse polarization and unpolarized electrons; purely gluonic at leading twist.",
-        "Attribution nuance (repo-verified): Delta(x,Q2) is defined in PLB 223:218 ('Nuclear gluonometry'); NPB 312:571 is the b1 companion."
-      ],
-      "used_in": [
-        "fastsim/polli_fastsim/asymmetries.py",
-        "evgen/polligen/xsec.py",
-        "all reports"
-      ]
-    },
-    "sather-schmidt1990-double-helicity-flip-moment": {
-      "file": null,
-      "arxiv": null,
-      "journal": "Phys. Rev. D 42 (1990) 1424",
-      "title": "Size and scaling of the double-helicity-flip hadronic structure function",
-      "authors": [
-        "E. Sather",
-        "C. Schmidt"
-      ],
-      "year": 1990,
-      "keywords": [
-        "Delta moment",
-        "bag model",
-        "Delta++",
-        "-0.012 alpha_s"
-      ],
-      "key_content": [
-        "int x Delta dx = -0.012 alpha_s -- computed for a single bag (Delta++) target, with no x-shape (repo-verified 2026-08-17); applying it to the per-nucleon Delta of 6Li is a scenario choice of the money_delta line."
-      ],
-      "used_in": [
-        "fastsim/polli_fastsim/delta_models.py (C_BAG)",
-        "reports/cos2phi_money_plots_report section 3"
-      ]
-    },
-    "cosyn-weiss-tagged-tensor2026": {
-      "file": "refs/2603.23699.pdf; refs/2603.23700.pdf",
-      "arxiv": "2603.23699; 2603.23700",
-      "journal": "Phys. Rev. C 114 (2026) 025201; 025202",
-      "title": "Semi-inclusive deep-inelastic scattering on a polarized spin-1 target. I. Cross section and spin observables; II. Deuteron and spectator nucleon tagging",
-      "authors": [
-        "W. Cosyn",
-        "C. Weiss"
-      ],
-      "year": 2026,
-      "keywords": [
-        "tagged tensor asymmetry",
-        "spectator tagging",
-        "deuteron",
-        "S/D interference",
-        "300 MeV/c"
-      ],
-      "key_content": [
-        "Titles corrected 2026-08-25 from the arXiv PDFs (JLAB-THY-26-4663 = Part I, 28 pages; JLAB-THY-26-4661 = Part II, 45 pages); earlier repo text called them 'tagged DIS on spin-1 targets'.",
-        "Part II abstract (verbatim, repo-verified 2026-08-25): 'Tensor-polarized spin asymmetries of order unity are achieved for spectator momenta >~ 300 MeV, which select configurations with large D-wave' -- the source of the 'O(1) tagged tensor asymmetry at ~300 MeV/c' statement (not PRC 102:065204 or PLB 799:135035); tagging 'controls the D-wave sustaining the tensor-polarized spin asymmetries', which can saturate the mathematical bounds A_T in [-2, 1] (Part I).",
-        "Part II: the light-front impulse approximation is accurate for |k| <~ 300 MeV and FSI phase space is suppressed for tagged-proton momenta |p_p| <~ 300 MeV in the deuteron rest frame; Eqs. (6.7): the tensor structures D[UTLL] = O(1), D[UTLT] = O(1/Q), D[TTT] = O(1) in the SIDIS decomposition, with theta_N the polarization-axis angle to the lepton plane (Part I conventions)."
-      ],
-      "used_in": [
-        "plans/01 sections 2.4 and 6",
-        "reports/polarized_li_primer section 4.4"
-      ]
-    },
-    "epios2026-polarized-ion-beams": {
-      "file": "refs/2510.10794.pdf",
-      "arxiv": "2510.10794",
-      "journal": "Phys. Rev. C 113 (2026) 060501",
-      "title": "Realizing the scientific program with polarized ion beams at EIC (EPIOS white paper)",
-      "authors": [
-        "G. Atoian et al."
-      ],
-      "year": 2026,
-      "keywords": [
-        "EPIOS",
-        "polarized 6Li",
-        "polarized 7Li",
-        "G factor",
-        "snakes",
-        "top energy",
-        "transverse polarization native"
-      ],
-      "key_content": [
-        "G(6Li) = -0.178, G(7Li) = +1.532; 6Li deuteron-like (partial solenoid snake + tune jumps), 7Li partial snakes; ~138/~117 GeV/u top energies (rigidity limit 275 GeV x Z/A); NO Li luminosity number; 'beams are transversely polarized and only converted to longitudinal at the IPs'; 'the best chance for discovery may come from larger nuclei... spin-1 6Li or 14N, or spin-3/2 7Li or 23Na'. Source targets (P_z >= 0.90, P_zz >= 0.80) are the ANL proposal's, not EPIOS's (repo-verified).",
-        "Repo-verified 2026-08-25 from the PDF (47 pages): table of species p/d/3He/6Li/7Li with G = 1.793/-0.143/-4.184/-0.178/1.532 and mc^2/G = 0.523/13.116/0.671/31.466/4.264 GeV; 'the measurement of Delta(x,Q2) requires electron scattering from transversely polarized nuclei. Spin-1 or greater is needed, but as a multi-nucleonic effect, Delta is expected to be ...'; '6Li, 14N which, together with the deuteron, are the only stable spin-one nuclei'."
-      ],
-      "used_in": [
-        "plans/01 section 3",
-        "reports/polarized_li_primer section 1"
-      ]
-    },
-    "hamwi2026-li-resonances": {
-      "file": "refs/2509.18558.pdf",
-      "arxiv": "2509.18558",
-      "journal": "Phys. Rev. Accel. Beams 29 (2026) 073501",
-      "title": "Polarization Transmission in the Electron-Ion Collider's Hadron Storage Ring",
-      "authors": [
-        "E. Hamwi",
-        "G. H. Hoffstaetter"
-      ],
-      "year": 2026,
-      "keywords": [
-        "depolarizing resonances",
-        "81",
-        "573",
-        "63",
-        "2457",
-        "G factors"
-      ],
-      "key_content": [
-        "Title and author list corrected 2026-08-25 from the arXiv PDF (13 pages, Cornell): the paper is by Hamwi and Hoffstaetter; J. Devlin appears only in the acknowledgments (earlier repo text cited 'Hamwi-Devlin-Hoffstaetter, Spin dynamics of light polarized ions in the EIC hadron ring'). Journal reference PRAB 29 (2026) 073501 as recorded in plans/01 (not printed on the arXiv copy).",
-        "Table I 'Species-dependent Linear Resonance Spectrum' (repo-verified 2026-08-25): species / G / max|G gamma| / number of resonances = p 1.7928 / 525 / 1575; D -0.1430 / 21 / 63; 3He2+ -4.1842 / 819 / 2457; 6Li3+ -0.1818 / 27 / 81; 7Li3+ 1.5196 / 191 / 573 (G values differ slightly from EPIOS: -0.178 / +1.532).",
-        "'particles with small anomalous magnetic moment (2H, 6Li) are not amenable to Siberian snake devices, since their small G-factors require impractically long snake' magnets; the HSR interaction region breaks the lattice symmetry and excites strong resonances; 'possibly lithium-6 6Li3+ and lithium-7 7Li3+ nuclei' listed among the species considered."
-      ],
-      "used_in": [
-        "plans/01 section 6",
-        "reports/polarized_li_primer section 1.1"
-      ]
-    },
-    "tunl-a6-evaluation2002": {
-      "file": "refs/TUNL_A6_2002.pdf",
-      "arxiv": null,
-      "journal": "Nucl. Phys. A 708 (2002) 3",
-      "title": "Energy levels of light nuclei A = 5, 6, 7",
-      "authors": [
-        "D. R. Tilley et al. (TUNL)"
-      ],
-      "year": 2002,
-      "keywords": [
-        "6Li levels",
-        "alpha+d threshold",
-        "3.5629 MeV 0+",
-        "2.186 MeV 3+",
-        "5.366 MeV 2+",
-        "breakup thresholds"
-      ],
-      "key_content": [
-        "S(alpha+d) = 1.4743 MeV; alpha+p+n = 3.699; 3He+t = 15.795 MeV; 2.186 MeV 3+ T=0 (Gamma = 24 keV, ~100% alpha+d); 3.5629 MeV 0+ T=1 (Gamma = 8.2 eV, alpha decay parity/angular-momentum forbidden, Gamma_alpha <= 6e-7 eV, M1 gamma to g.s.); 5.366 MeV 2+ T=1 (Gamma = 541 keV, ~35% p+5He, ~65% p+n+alpha, alpha+d < 1%) (repo-verified plans/06 section 6.5).",
-        "Local copy: the TUNL 'Energy Levels of Light Nuclei A = 6' revised manuscript (D.R. Tilley et al., 05 October 2017 revision of NPA 708 (2002) 3, 98 pages) from nucldata.tunl.duke.edu; the 6Li level table gives 2.186 MeV 3+;0 Gamma = 0.024 +- 0.002 MeV (alpha, d), 5.366 MeV 2+;1 Gamma = 0.541 +- 0.020 MeV (gamma, n, p, alpha), and Q_m(4He(d,gamma)6Li) = 1.4743 MeV; the alpha + d decay of the 3.5629 MeV 0+ state is discussed via (1996CS03) (repo-verified 2026-08-25)."
-      ],
-      "used_in": [
-        "evgen/polligen/coherent.py LI6_BREAKUP",
-        "plans/06 section 6.2"
-      ],
-      "url": "https://nucldata.tunl.duke.edu/nucldata/ourpubs/06_2002.pdf"
-    },
-    "li-sick-whitney-yearian1971-6li-form-factor": {
-      "file": null,
-      "arxiv": null,
-      "journal": "Nucl. Phys. A 162 (1971) 583 (also Suelzle et al., Phys. Rev. 162 (1967) 992)",
-      "title": "High-energy electron scattering from 6Li",
-      "authors": [
-        "G. C. Li",
-        "I. Sick",
-        "R. R. Whitney",
-        "M. R. Yearian"
-      ],
-      "year": 1971,
-      "keywords": [
-        "6Li charge form factor",
-        "first minimum",
-        "q2 = 8 fm^-2",
-        "|t| = 0.31 GeV2"
-      ],
-      "key_content": [
-        "First 6Li charge form-factor minimum at q^2 = 8 fm^-2, i.e. |t| ~ 0.31 GeV2 -> the exponential coherent slope is valid below it; C2 form factor unobservably small below q ~ 3 fm^-1."
-      ],
-      "used_in": [
-        "evgen/polligen/coherent.py (T_DIP in money_cos2phi_coherent.py)",
-        "plans/06"
-      ]
-    },
-    "maple2024-epic-tracking-inclusive-dis-seminar": {
-      "file": "refs/EIC_Seminar_SMaple_2024.pdf",
-      "arxiv": null,
-      "journal": "Seminar, University of Birmingham, 11 December 2024 (Indico Global event 4787; slides EIC_Seminar_SMaple.pdf, 67 pages)",
-      "title": "Tracking and Inclusive DIS reconstruction with the ePIC detector at the EIC",
-      "authors": [
-        "S. Maple (ePIC / University of Birmingham)"
-      ],
-      "year": 2024,
-      "keywords": [
-        "ePIC",
-        "kinematic reconstruction",
-        "electron method",
-        "Jacquet-Blondel",
-        "double angle",
-        "Sigma method",
-        "e-Sigma",
-        "kinematic fit",
-        "Bayesian",
-        "ISR",
-        "hadronic final state resolution",
-        "delta_h",
-        "low y",
-        "tracking",
-        "MAPS",
-        "MPGD",
-        "AC-LGAD"
-      ],
-      "key_content": [
-        "Slide 40: inclusive kinematics from two of the four measured quantities D = {E_e, theta_e, delta_h, pT,h}, delta_h = sum_HFS E_i(1 - cos theta_i) (the E - p_z sum), pT,h the HFS transverse momentum; resolutions depend on the event's (x, Q2), detector acceptance/resolution, and radiative processes.",
-        "Slide 42 (ePIC 18x275 map, best method for y with marker size = y resolution 25/10/5/1%): electron method at high y, Sigma method in the middle, DA method along the y = 0.01 edge with ~25% markers; 'Resolution throughout phase space allowing 5 (log) bins per decade in x and Q2'; 'Coverage driven by acceptance: 0.01 < y < 0.95, Q2 > 1 GeV2'; 'Lower y accessible -> however it's easier to rely on overlap between data at different sqrt(s)'; 'No single method wins everywhere!'",
-        "Slide 43: Bayesian kinematic fit (KF) of all 4 measured quantities for lambda = {x, y, E_gamma} with a prior P0 ~ (1 + (1-y)^2)/(x^3 y^2) x (1 + (1 - E_gamma/E0)^2)/(E_gamma/E0); posterior by Metropolis-Hastings, global mode.",
-        "Slide 44 (smeared EIC pseudodata, Djangoh 18x275, Q2 > 1 GeV2): sigma(theta_e) = 0.1 mrad, sigma(E_e)/E = 11%/sqrt(E) (+) 2%, sigma(delta_h)/delta_h = 25%, sigma(pT,h)/pT,h = 25% (repo-verified 2026-08-25).",
-        "Slide 45: Delta y/y per method in y bins 0.01-0.05, 0.05-0.1, 0.1-0.2, 0.2-0.5, 0.5-0.8: in 0.01 < y < 0.05 the Sigma/JB/DA/KF methods give roughly Gaussian widths ~0.2-0.3 while the electron method is flat (unusable); at y > 0.2 the electron method and KF are narrowest.",
-        "Slide 47 (fully simulated ePIC, Pythia8 NC DIS, Craterlake 23.12.0, Q2 > 100 GeV2, electron from tracking, 0 <= eta <= 0.5): parametrized resolutions sigma_E = 0.055 p (+) 0.45 (Delta p/p in %, A p (+) B with A = 0.055, B = 0.45), sigma_theta = 72/pT (+) 2.8 mrad, sigma_delta_h = 0.25 delta_h, sigma_pT,h = 0.25 pT,h.",
-        "Slide 48: full ePIC simulation: 'KF gives comparable y resolution to electron method at high y; loses at low y to DA method'; in 0.01 < y < 0.05 DA is the narrowest, Sigma/JB broad with tails, electron flat. Slide 50: adding an HFS correlation term (width ~8%) recovers the KF at low y (comparable to DA).",
-        "Slide 51: ISR energy from the E - p_z conservation Sigma_total = 2E_e,beam (the relation implicit in the Sigma method); slides 52-56, 65: KF on H1 2003/04 data+MC (0.01 < y_eSigma < 0.6, Q2 > 200 GeV2) with sigma(theta_e) = 4 mrad, sigma(E_e)/E = 11%/sqrt(E) (+) 1%, sigma(delta_h)/delta_h = 13.5%, sigma(pT,h)/pT,h = 54%/sqrt(pT,h) (+) 4%; ISR energy reproduced within 30% for E_gamma > 3-4 GeV.",
-        "Slides 27-28, 37: ePIC tracking momentum and pointing resolution within reach of the Yellow Report targets except at the largest |eta|; backward momentum requirement still challenging ('high resolution EM calorimetry in this region may provide better reconstruction')."
-      ],
-      "used_in": [
-        "evgen/polligen/reco.py hadronic_y docstring",
-        "evgen/polligen/recopseudo.py RecoModel.y_had_res = 0.25",
-        "reports/reconstruction_chain_report section 3 and ref [19]",
-        "plans/04 #21"
-      ],
-      "repo_usage_note": "Source of the 25% hadronic-y resolution default and of the 0.01 < y < 0.95 / energy-overlap coverage rule."
-    },
-    "athena2022-detector-proposal": {
-      "file": "refs/2210.09048.pdf",
-      "arxiv": "2210.09048",
-      "journal": "JINST 17 (2022) P10019",
-      "title": "ATHENA detector proposal -- a totally hermetic electron nucleus apparatus proposed for IP6 at the Electron-Ion Collider",
-      "authors": [
-        "ATHENA Collaboration",
-        "J. Adam et al."
-      ],
-      "year": 2022,
-      "keywords": [
-        "ATHENA",
-        "detector proposal",
-        "inclusive DIS",
-        "kinematic reconstruction",
-        "e-Sigma",
-        "double angle",
-        "Jacquet-Blondel",
-        "y resolution",
-        "Fig. 22",
-        "eID efficiency",
-        "binning"
-      ],
-      "key_content": [
-        "Sec. 3.1 (PDF p. 50-51, printed p. 44-45): 'The electron-only method performs best over most of the kinematic phase space and will be used for NC DIS measurements at all but the lowest y values... At the lowest y values, the electron method resolution degrades like 1/y. Here, the ability of ATHENA to reconstruct the overall hadronic final state with good resolution can be exploited using the e-Sigma or Double Angle (DA) methods, to ensure high quality measurements for y <~ 0.1, leading to high quality reconstruction at high x... The resolution with the JB method is at the 20-30% level throughout the kinematic range' (repo-verified 2026-08-25).",
-        "Fig. 22 (18 x 275 GeV, FullSim): best reconstruction method for y over the (x, Q2) plane with marker size = y resolution (25/10/5/1%): DA (orange) along the y = 0.01 edge with ~25% markers, e-Sigma (green) at low-to-mid Q2 and y ~ 0.02-0.1 with ~10% markers, electron (blue) elsewhere with 5-1%.",
-        "Binning/coverage: Q2 > 1 GeV2, y < 0.95 (clean electron ID), y > 0.01 'to ensure that the kinematic variables can be sufficiently well reconstructed (Fig. 22)'; five logarithmic bins per decade in x and Q2; one year per beam-energy combination; HERA point-to-point systematics 1.5-2.5% depending on y.",
-        "Table 5 electron-ID efficiency anchors (used by fastsim/scripts/money_delta_20260729.py and reco.eps_eid, via the ATHENA/ECCE tables)."
-      ],
-      "used_in": [
-        "reports/reconstruction_chain_report section 3 and ref [18]",
-        "evgen/polligen/reco.py hadronic_y, eps_eid",
-        "plans/04 #21"
-      ]
-    },
-    "arratia2022-dnn-dis-kinematics": {
-      "file": "refs/2110.05505v2.pdf",
-      "arxiv": "2110.05505",
-      "journal": "Nucl. Instrum. Meth. A 1025 (2022) 166164",
-      "title": "Reconstructing the Kinematics of Deep Inelastic Scattering with Deep Learning",
-      "authors": [
-        "M. Arratia",
-        "D. Britzger",
-        "O. Long",
-        "B. Nachman"
-      ],
-      "year": 2022,
-      "keywords": [
-        "DNN",
-        "kinematic reconstruction",
-        "electron method",
-        "double angle",
-        "Jacquet-Blondel",
-        "ISigma",
-        "Sigma",
-        "e-Sigma",
-        "Table 1",
-        "QED radiation",
-        "ISR",
-        "FSR",
-        "ATHENA fast simulation",
-        "Delphes",
-        "Rapgap",
-        "H1 full simulation",
-        "low y"
-      ],
-      "key_content": [
-        "Table 1: formulas of all classical methods from three of the five quantities {E0, E, theta, Sigma, gamma}: electron, DA, hadron (JB), ISigma, IDA, E0ESigma, E0thetaSigma, thetaSigmagamma, double energy (A4), ESigmaT, E0ET, Sigma, eSigma (Sigma = sum_HFS(E_i - p_z,i); Sigma_e the electron's E - p_z; T the HFS transverse momentum).",
-        "Setup: Rapgap 3.3 e+p at E0 = 18 GeV, Ep = 275 GeV through the Delphes fast simulation of ATHENA, restricted to Q2 > 200 GeV2; electron = highest-pT track with pT > 5 GeV, EM fraction > 0.8, isolation < 0.2; HFS from energy-flow candidates; Djangoh 1.4 for prior dependence; H1 full simulation (Rapgap 3.1, Geant3, HERA-II) for the demonstration.",
-        "Fig. 5 (ATHENA fast simulation, RMS of reco/gen vs generated y, ratio within 0-2): y resolution at y -> 0.05: electron ~0.3, hadron (JB) ~0.17, DA ~0.15, ISigma ~0.13, DNN ~0.05; at y = 0.2: electron ~0.10, DA/ISigma ~0.10, hadron ~0.17; x follows y at low y (electron ~0.3 at y -> 0.05); Q2 resolution: electron ~0.03-0.07, DA/ISigma ~0.05-0.1, hadron 0.15-0.35; the electron method's mean of y/y_gen is biased to 1.12 at the lowest y (repo read-off 2026-08-25).",
-        "Sec. 5 'Impact of further acceptance and resolution effects at low y': 'At low y, the HFS-based methods perform better than the electron method... the HFS momentum balance Sigma goes to zero as y goes to zero... Sigma at low y [is] especially sensitive to resolution effects or efficiency losses in the central part of the detector or fake components from calorimetric noise'; the Delphes fast simulation lacks calorimeter noise and edge effects; an ad-hoc Landau noise (mu = 0, sigma = 0.05 GeV per HFS momentum component) brings the fast simulation closer to the H1 full simulation at y <~ 0.15 (Fig. 11).",
-        "Fig. 8-9 (H1 full simulation): DNN yields the smallest RMS and is bias-free; at low y the DNN improves y and x substantially over electron and DA; the H1 selection required 45 < Sigma + Sigma_e < 65 GeV to suppress ISR."
-      ],
-      "used_in": [
-        "reports/reconstruction_chain_report section 3 and ref [20]",
-        "evgen/polligen/reco.py hadronic_y docstring",
-        "plans/04 #21"
-      ]
-    },
-    "aggarwal-caldwell2022-kinematic-fitting": {
-      "file": "refs/2206.04897.pdf",
-      "arxiv": "2206.04897",
-      "journal": "JINST 17 (2022) P09035",
-      "title": "Kinematic fitting of neutral current events in deep inelastic ep collisions",
-      "authors": [
-        "R. Aggarwal",
-        "A. Caldwell"
-      ],
-      "year": 2022,
-      "keywords": [
-        "kinematic fit",
-        "Bayes",
-        "informative prior",
-        "ISR energy",
-        "electron method",
-        "double angle",
-        "HERA"
-      ],
-      "key_content": [
-        "Bayesian kinematic fit of the DIS scaling variables using all measured quantities, with informative priors; better resolution than the electron and double-angle methods and an estimate of the undetected ISR photon energy; demonstrated on a NC ep sample at sqrt(s) = 318 GeV with Q2 > 400 GeV2 (HERA kinematics). The method applied to ePIC in the Maple 2024 seminar."
-      ],
-      "used_in": [
-        "reports/reconstruction_chain_report ref [20] (related)",
-        "refs/README.md"
-      ]
-    },
-    "pecar-vossen2022-sidis-ml-reconstruction": {
-      "file": "refs/2209.14489.pdf",
-      "arxiv": "2209.14489",
-      "journal": "Proceedings DIS2022 (Santiago de Compostela, May 2022)",
-      "title": "Reconstruction of event kinematics in semi-inclusive deep-inelastic scattering using the hadronic final state and machine learning",
-      "authors": [
-        "C. Pecar",
-        "A. Vossen"
-      ],
-      "year": 2022,
-      "keywords": [
-        "SIDIS",
-        "machine learning",
-        "particle flow network",
-        "Jacquet-Blondel",
-        "double angle",
-        "virtual photon direction",
-        "p_h perp",
-        "phi_h",
-        "low y"
-      ],
-      "key_content": [
-        "EIC SIDIS reconstruction of the virtual-photon axis (p_h perp, phi_h) with a particle-flow network vs electron, JB and DA methods; Figs. 4-5: 'HFS methods surpass electron method for very low y, while PFN equals or outperforms electron method for all y'; cites the Yellow Report / ATHENA fast-simulation method comparisons."
-      ],
-      "used_in": [
-        "refs/README.md"
-      ]
-    },
-    "diefenthaler2022-deeply-learning-dis": {
-      "file": "refs/2108.11638.pdf",
-      "arxiv": "2108.11638",
-      "journal": "Eur. Phys. J. C 82 (2022) 1064",
-      "title": "Deeply Learning Deep Inelastic Scattering Kinematics",
-      "authors": [
-        "M. Diefenthaler",
-        "A. Farhat",
-        "A. Verbytskyi",
-        "Y. Xu"
-      ],
-      "year": 2022,
-      "keywords": [
-        "DNN",
-        "ZEUS",
-        "HERA",
-        "kinematic reconstruction",
-        "Q2",
-        "x"
-      ],
-      "key_content": [
-        "DNNs trained on ZEUS simulated data to reconstruct Q2 and x, combining the inputs/outputs of three classical methods; 'sufficiently surpass all classical reconstruction methods on most of the kinematic range'. HERA-based (not EIC).",
-        "Local copy: arXiv 2108.11638 (EPJ manuscript, 16 pages)."
-      ],
-      "used_in": [
-        "refs/README.md (search record)"
-      ]
-    },
-    "epic-inclusive-wg-resources": {
-      "file": null,
-      "arxiv": null,
-      "journal": "web resources (checked 2026-08-25)",
-      "title": "ePIC Inclusive Physics WG wiki; BNL EIC 'DIS Kinematics' wiki; JeffersonLab/dis-reconstruction",
-      "authors": [
-        "P. Newman, S. Maple, B. Schmookler, C. Gwenlan (WG contacts)"
-      ],
-      "year": 2025,
-      "keywords": [
-        "ePIC inclusive working group",
-        "kinematic reconstruction task",
-        "particle flow",
-        "Indico category 417",
-        "wiki"
-      ],
-      "key_content": [
-        "https://wiki.bnl.gov/EPIC/index.php?title=Inclusive : open task 'Optimised hadron treatment (particle flow?) in Jacquet-Blondel, Double angle and (e)-Sigma methods', kinematic fitting and ML; Indico https://indico.bnl.gov/category/417/ ; list eic-projdet-Inclusive-l@lists.bnl.gov.",
-        "https://wiki.bnl.gov/eic/index.php/DIS_Kinematics : 'x and y resolutions diverge for low y' for the lepton method; JB 'good resolution in y', Q2 resolution degrades with pT lost down the beam pipe; x follows Q2.",
-        "https://github.com/JeffersonLab/dis-reconstruction (B. Schmookler): eic-smear/Delphes Yellow-Report detector models, PYTHIA6/8 and DJANGOH samples 5x41-18x275 (and 27.5x920), kinematic maps and cross-section studies behind the Yellow Report."
-      ],
-      "used_in": [
-        "refs/README.md (where to look next for ePIC inclusive-DIS performance)"
-      ]
-    },
-    "abe1999-r1998-world-fit": {
-      "file": "refs/hep-ex_9808028.pdf",
-      "arxiv": "hep-ex/9808028",
-      "journal": "Phys. Lett. B 452 (1999) 194 (SLAC-PUB-7927)",
-      "title": "Measurements of R = sigma_L/sigma_T for 0.03 < x < 0.1 and Fit to World Data",
-      "authors": [
-        "K. Abe et al. (E143 Collaboration)"
-      ],
-      "year": 1999,
-      "keywords": [
-        "R1998",
-        "R1990",
-        "sigma_L/sigma_T",
-        "R",
-        "longitudinal cross section",
-        "Theta",
-        "E143",
-        "SLAC",
-        "world fit",
-        "F_L",
-        "Callan-Gross",
-        "depolarization",
-        "Whitlow"
-      ],
-      "key_content": [
-        "Eq. (2): THREE six-parameter forms, R1998 = their average ('As in the case of R1990, we define R1998 to be the average of the three fits'). R_a = a1 Theta/log(Q2/0.04) + a2 (Q^8 + a3^4)^(-1/4) [1 + a4 x + a5 x^2] x^a6; R_b = b1 Theta/log(Q2/0.04) + [b2/Q2 + b3/(Q^4 + 0.3^2)] [1 + b4 x + b5 x^2] x^b6; R_c = c1 Theta/log(Q2/0.04) + c2 [(Q2 - Q2thr)^2 + c3^2]^(-1/2) with Q2thr = c4 x + c5 x^2 + c6 x^3.  In the paper's notation Q^4 = (Q2)^2 and Q^8 = (Q2)^4; log is natural and 0.04 GeV2 = Lambda^2 (verified against the arXiv LaTeX source, 2026-08-26).",
-        "Eq. (3): Theta(x, Q2) = 1 + 12 [Q2/(Q2+1)] [0.125^2/(0.125^2 + x^2)].  Theta multiplies the log term of Eq. (2) and NOTHING ELSE.  Theta is 6.2-12.9 over x <= 0.05, 1 <= Q2 <= 130 (repo-measured; the code review's '6.5-9.5' is low), so putting it on all three terms saturates the sum: code review 2026-08-25 item S1, where the fast-sim money scripts' r1998 returns R = 1.000 over the whole low-x region.",
-        "Table II (coefficients, chi2/df for 231 dof): a = 0.0485, 0.5470, 2.0621, -0.3804, 0.5090, -0.0285 (0.9); b = 0.0481, 0.6114, -0.3509, -0.4611, 0.7172, -0.0317 (0.9); c = 0.0577, 0.4644, 1.8288, 12.3708, -43.1043, 41.7415 (1.0).",
-        "Fit support: 237 points, 0.005 <= x <= 0.86 and 0.5 <= Q2 <= 130 GeV2 (paragraph above Eq. 2); confidence level 73% for all the data, 38% for x <= 0.07.",
-        "Fitting error, unnumbered equation below Eq. (3): delta-R(x,Q2) = 0.0078 - 0.013 x + (0.070 - 0.39 x + 0.70 x^2)/(1.7 + Q2).  The functional-form systematic is the spread of the three fits.  The paper's sentence 'This error is largest at low Q2, reaching a maximum value for x ~ 0.04' does not follow from that formula: d(delta-R)/dx = 0 at 1.4 x = 0.39 + 0.013 (1.7 + Q2), a MINIMUM at x = 0.299 for Q2 = 0.5 and x = 0.3408 for Q2 = 5, with no maximum anywhere in 0.005 <= x <= 0.86. At Q2 = 0.5 (repo-measured 2026-08-26) delta-R = 0.03867 at x = 0.005, 0.03252 at x = 0.04, 0.01117 at the x = 0.299 minimum and 0.11131 at x = 0.86. The formula is implemented as published; only the sentence is disputed.",
-        "Table I: E143 carbon cross sections and nine extracted values of R with stat and sys errors -- x, Q2 [GeV2], R: 0.0325, 1.32, 0.45 +- 0.01 +- 0.07; 0.0375, 1.47, 0.51 +- 0.02 +- 0.09; 0.0450, 1.67, 0.40 +- 0.01 +- 0.10; 0.0550, 1.90, 0.28 +- 0.01 +- 0.09; 0.0650, 2.11, 0.29 +- 0.02 +- 0.10; 0.0750, 2.29, 0.18 +- 0.02 +- 0.11; 0.0850, 2.46, 0.26 +- 0.03 +- 0.10; 0.0950, 2.60, 0.25 +- 0.03 +- 0.14; 0.1050, 2.73, 0.17 +- 0.03 +- 0.13.  This is the external anchor of fastsim/tests/test_structure_r.py: R1998 reproduces all nine within 1.6 sigma (max |pull| 1.562, mean pull^2 0.647), while the Theta-everywhere form of the fast-sim money scripts overshoots every one of them by 5.2-8.0 sigma even after being clipped to R = 1 (repo-measured 2026-08-26).",
-        "Eq. (1): dsigma/dE'dOmega = sigma_Mott [eps Q2/(2 M x F2)]^-1 form, i.e. the definition R = sigma_L/sigma_T with eps^-1 = 1 + 2(1 + Q2/4M^2x^2) tan^2(theta/2); R relates F1 and F2 by F1 = F2 (1 + gamma^2)/(2x(1+R)) (massless limit F1 = F2/(2x(1+R)) is what the repo uses)."
-      ],
-      "used_in": [
-        "fastsim/polli_fastsim/structure.py (r1998, r1998_forms, r1998_spread, r1998_fit_error, R1998_PARAMS)",
-        "fastsim/tests/test_structure_r.py (Table I and Table II anchors)",
-        "fastsim/scripts/money_delta_realistic.py and money_delta_20260729.py (their local r1998, the defect of code review S1; frozen)",
-        "docs/code_review_2026-08-25.md item S1; plans/08 C2"
-      ]
-    }
+ "_about": "Reference dictionary of the PolarizedLithiumSim program: the paper copies committed in refs/ (PDFs tracked in git since 2026-08-25; the EIC Yellow Report as four parts) and the few references without a free copy. Each entry: identifiers, title, where the local file is (';'-separated list for multi-part files; null = no free copy), the important content with equation/figure/page pointers, and where the reference is used in the repository. Search it with `python refs/find_ref.py <keyword>`; `--check` lists the local-copy status, `--fetch` re-downloads missing arXiv PDFs. Facts marked (repo-verified) were checked against the primary source during the dated fact-check passes recorded in plans/01 section 6, plans/06 section 6.5 and the reconstruction-chain report.",
+ "_updated": "2026-08-26",
+ "entries": {
+  "cosyn2025-tensor-polarization-options": {
+   "file": "refs/2410.12764v1.pdf",
+   "arxiv": "2410.12764",
+   "journal": "Eur. Phys. J. A 61 (2025) 83",
+   "title": "Polarization options in inclusive DIS off tensor polarized deuteron",
+   "authors": [
+    "W. Cosyn",
+    "B. Roldan Tomei",
+    "A. Sosa",
+    "A. Zec"
+   ],
+   "year": 2025,
+   "keywords": [
+    "spin-1",
+    "tensor polarization",
+    "b1",
+    "b2",
+    "b3",
+    "b4",
+    "inclusive DIS",
+    "target mass",
+    "gamma",
+    "polarization axis",
+    "along q",
+    "JLab b1 experiment",
+    "epsilon"
+   ],
+   "key_content": [
+    "Eq. (10): exact spin-1 inclusive cross section for UNPOLARIZED electrons: dsigma/dxdQ2 = pi y^2 alpha^2/(Q^4(1-eps)) [F_UU,T + eps F_UU,L + T_LL(F_UTLL,T + eps F_UTLL,L) + sqrt(2eps(1+eps)) T_LT cos(phi_TL) F_UTLT + eps T_TT cos(2phi_TT) F_UTTT]; the decomposition carries NO double-helicity-flip Delta term (their subject is b1).",
+    "Eq. (11c) eps = (1 - gamma^2 y^2/4)/(1 - y + y^2/2 + gamma^2 y^2/4); Eq. (13) gamma = M_d Q/(p_d.q) = 2 x_d M_d/Q; rescaled x = 2 x_d.",
+    "Eq. (14): in the deuteron rest frame with q along z, T_LL = t_zz, T_LT cos(phi_TL) = t_xz, T_TT cos(2phi_TT) = t_xx - t_yy (components of the polarization tensor).",
+    "Eq. (16): F_UU,L = (1+gamma^2) F2/x_d - 2 F1, F_UU,T = 2 F1.",
+    "Eq. (17): relations to HJM b1-b4. (17d) F_UTLT = -(gamma/2x_d)[(1+gamma^2)(b2/3 - b4) + 2b2/3 - 2b3] -> the cos(phi) tensor term is O(gamma). (17e) F_UTTT = -(gamma^2/x_d)(b2/6 - b3/2) -> the cos(2phi) tensor term from b2, b3 is O(gamma^2) (higher twist). Eq. (18) Callan-Gross-like b2 = 2 x_d b1 = x b1.",
+    "Eq. (20): axis along the virtual photon (N = N_q) -> T_LL = Q/3, T_LT = T_TT = 0 (only two tensor SFs enter: the clean choice for b1/A_zz). Eq. (22): axis along the electron beam (N = N_e) -> T_LL = (3cos^2 theta_q - 1)Q/6, T_LT cos(phi_TL) = -sin(2theta_q) Q/4, T_TT cos(2phi_TT) = (1 - cos 2theta_q) Q/4, theta_q = angle between q and the beam in the target rest frame.",
+    "Eqs. (25)-(27): Bjorken limit A_T = -(2/3) b1/F1 (the HERMES extraction relation). Reference gamma values: 0.66 at x = 0.5, Q2 = 2 GeV2; 0.30 at Q2 = 10 GeV2.",
+    "Fig. 6: at Q2 = 2 GeV2 the higher-twist b3, b4 are not negligible in the tensor asymmetry and are larger for polarization along the photon direction; they decrease with Q2.",
+    "Target context: JLab b1 experiment, DNP ND3 target, 5 T magnet with +-35 deg bore, longitudinal field planned; running with a longitudinal field creates theta_q != 0."
+   ],
+   "used_in": [
+    "reports/reconstruction_chain_report.template.html section 2 (Harmonics from the tensor structure functions at finite gamma)",
+    "plans/00 dev run 6 addendum",
+    "refs/README.md"
+   ],
+   "repo_usage_note": "At the sweet spots gamma^2 <= 0.023, so the b-type leakage into the cos 2phi' amplitude is ~gamma^2 (b1/F1)/6 ~ 4e-4, <= 3% of the Delta amplitude; the O(gamma) cos phi' term is orthogonal to the cos 2phi' fit."
+  },
+  "mantysaari2024-polarized-deuteron-imaging": {
+   "file": "refs/2408.13213v1.pdf",
+   "arxiv": "2408.13213",
+   "journal": "Phys. Lett. B 858 (2024) 139053",
+   "title": "Spatial imaging of polarized deuterons at the Electron-Ion Collider",
+   "authors": [
+    "H. Mantysaari",
+    "F. Salazar",
+    "B. Schenke",
+    "C. Shen",
+    "W. Zhao"
+   ],
+   "year": 2024,
+   "keywords": [
+    "polarized deuteron",
+    "coherent J/psi",
+    "rho",
+    "diffraction",
+    "CGC",
+    "dipole",
+    "azimuthal Fourier coefficients",
+    "a2",
+    "a4",
+    "deformation",
+    "effective radius",
+    "x_P = 1.7e-3"
+   ],
+   "key_content": [
+    "Eq. (9) (repo-verified from the full text): d^2sigma/(dPhi d|t|) = dsigma/d|t| (1/2pi)[1 + 2 sum_{n>=1} a_n(|t|) e^{i n Phi}] -> the cos(2Phi) modulation COEFFICIENT is 2 a_2, not a_2.",
+    "Phi is 'the angle between the produced vector meson and the polarization direction of the deuteron' (in photoproduction the vector-meson transverse momentum is the momentum transfer, i.e. the recoil azimuth); only even n appear (Eqs. 7-8 densities).",
+    "'the longitudinal and transverse polarizations are defined in the gamma*d center-of-momentum frame... When Q2 > 0 ... a Lorentz transformation is required from the lab frame to this frame, which would mix the polarization states' (the O(gamma) mixing absorbed by covariant azimuth definitions).",
+    "Fig. 4 (digitized in evgen/polligen/coherent.py MANTYSAARI_A2_DEUTERON, x_P = 1.7e-3, transverse polarization): a_2(m=0) = +0.08/+0.15/+0.30/+0.43 and a_2(m=+-1) = -0.04/-0.08/-0.17/-0.28 at |t| = 0.05/0.1/0.2/0.3 GeV^2; a_2(0) ~ -2 a_2(+-1); cos(2Phi) dominates at |t| < 0.5 GeV^2.",
+    "Fig. 2: for jz = +-1 the |t| distribution becomes flatter from Phi = 0 to pi/2, opposite for jz = 0 (the D-wave-deformed density modulates the diffractive slope).",
+    "Effective transverse radius from a fit dsigma/dt ~ exp(-B_D|t|) within 0 < |t| < 0.3 GeV^2, R = sqrt(2 B_D); Fig. 5: R(Phi) with period pi, jz = +-1 peaks at Phi = 0, jz = 0 dips at Phi = 0; longitudinal polarization shows no Phi dependence.",
+    "Slightly increased gluon saturation effects for longitudinally polarized deuterons (ratio of coherent rho cross sections)."
+   ],
+   "used_in": [
+    "evgen/polligen/coherent.py (MANTYSAARI_A2_DEUTERON, a2_deformation, cos2phi_coefficient_deformation)",
+    "plans/06 section 6.4b + convention check",
+    "reports/cos2phi_money_plots_report section 4.3 (callout)",
+    "reports/reconstruction_chain_report sections 4 and 7",
+    "docs/note_cos2phi_coherent_6Li.md ref [13]"
+   ],
+   "repo_usage_note": "Money plot 6 injects a_2 as the cos 2phi coefficient and is conservative by x2; money plot 6R injects c_2 = 2 a_2 in the RECOIL azimuth beta = phi_t - phi_S."
+  },
+  "zeus2009-leading-protons-lrg": {
+   "file": "refs/0812.2003v3.pdf",
+   "arxiv": "0812.2003",
+   "journal": "Nucl. Phys. B 816 (2009) 1 (DESY-08-175)",
+   "title": "Deep inelastic scattering with leading protons or large rapidity gaps at HERA",
+   "authors": [
+    "ZEUS Collaboration",
+    "S. Chekanov et al."
+   ],
+   "year": 2009,
+   "keywords": [
+    "diffractive DIS",
+    "leading proton spectrometer",
+    "LPS",
+    "large rapidity gap",
+    "azimuthal asymmetry",
+    "A_LT",
+    "A_TT",
+    "t-slope",
+    "beam divergence",
+    "Phi resolution",
+    "x_P",
+    "beta",
+    "M_X",
+    "Pomeron intercept"
+   ],
+   "key_content": [
+    "Sec. 10.2 (repo-verified): dsigma/dPhi ~ 1 + A_LT cos(Phi) + A_TT cos(2Phi), Phi = angle between the positron and proton scattering planes in the gamma*p frame; for 0.0002 < x_P < 0.01: A_LT = -0.036 +- 0.036 (stat) +0.016/-0.014 (syst), A_TT = -0.030 +- 0.037 +0.022/-0.006; for 0.01 < x_P < 0.1: A_LT = +0.051 +- 0.024 +0.012/-0.011, A_TT = -0.010 +- 0.024 +0.010/-0.009 -> consistent with zero (Figs. 8-9, Tables 3-5); Q2 > 4 GeV2 and an 18 cm RCAL radial cut used for the Phi analysis.",
+    "LPS: t resolution sigma(t)/t = 0.14 GeV/sqrt|t| dominated by the angular spread of the HERA proton beam; Phi resolution ~0.2 rad; longitudinal momentum-fraction resolution ~0.5%, transverse-momentum resolution ~5 MeV from the detector; the effective pT resolution was dominated by the intrinsic transverse-momentum spread of the proton beam at the IP, ~45 MeV horizontal and ~100 MeV vertical (factor-2 anisotropy); LPS acceptance ~2% for x_L > 0.98 rising to ~10% at x_L = 0.9; stations S1-S6 at 23.8-90.0 m; analysis t range 0.09 < |t| < 0.55 GeV2.",
+    "Eq. (5): t = -pT^2/x_L - (1-x_L)^2 M_p^2/x_L with pT relative to the incoming beam direction.",
+    "t-slope: b = 7.0 +- 0.3 GeV^-2 (0.0002 < x_P < 0.01), 6.9 +- 0.3 (0.01 < x_P < 0.1), no Q2 dependence -> soft process; extrapolation to 0 < |t| < 1 GeV2 with b = 7.0 roughly doubles the cross section.",
+    "M_X from calorimeter+tracking energy-flow objects, and from the LPS as M_X,LPS^2 ~ [1 - x_L(1+x)] W^2; beam-halo overlap removed with E + p_z(CAL + LPS) < 1860 GeV; LRG sample x_P < 0.02 is >~ 90% diffractive.",
+    "Kinematic coverage: 2 < Q2 < 120 GeV2 (LPS), 40 < W < 240 GeV, 2 < M_X < 40 GeV, x_P < 0.1; Pomeron intercept extraction (Sec. 10.5)."
+   ],
+   "used_in": [
+    "evgen/scripts/money_cos2phi_coherent_reco.py (u1, u2 defaults and help)",
+    "evgen/polligen/reco.py rp_measure docstring",
+    "reports/reconstruction_chain_report sections 4 and 7",
+    "plans/04 #20"
+   ],
+   "repo_usage_note": "u1 = 0.05, u2 = 0.02 in the coherent pseudo-experiments sit at the 1-sigma edge of these bounds; the HERA 45/100 MeV anisotropy is the precedent for the cutout-aspect concern."
+  },
+  "nikolaev1998-azimuthal-asymmetry-ddis": {
+   "file": "refs/9812212v1.pdf",
+   "arxiv": "hep-ph/9812212",
+   "journal": "(preprint, 1 Dec 1998; IKP Juelich / Landau Institute / Virginia Tech)",
+   "title": "Azimuthal asymmetry as a new handle on sigma_L/sigma_T in diffractive DIS",
+   "authors": [
+    "N. N. Nikolaev",
+    "A. V. Pronyaev",
+    "B. G. Zakharov"
+   ],
+   "year": 1998,
+   "keywords": [
+    "diffractive DIS",
+    "LT interference",
+    "azimuthal asymmetry",
+    "R_D",
+    "sigma_L/sigma_T",
+    "beta",
+    "leading proton",
+    "higher twist",
+    "SCHNC"
+   ],
+   "key_content": [
+    "Eq. (1): Q2 y dsigma/(dQ2 dy dM2 dDelta2 dphi) = (alpha_em/2pi^2)[(1 - y + y^2/2) dsigma_T + (1-y) dsigma_L + (1-y) dsigma_TT cos(2phi) + (1 - y/2) sqrt(1-y) dsigma_LT cos(phi)] = ... [1 - y^2 R_D/(2(1-y)+y^2) + 2(1-y) A_TT/(2(1-y)+y^2) cos(2phi) + (2-y) sqrt(1-y) A_LT/(2(1-y)+y^2) cos(phi)] -> the y-factors of the u1 (cos phi) and u2 (cos 2phi) terms used in the repo.",
+    "Eq. (2): A_LT = F_LT/(F_T + F_L) = rho_LT/(1 + R_D); Eq. (3): R_D = rho_LT/A_LT - 1; the ratio rho_LT = F_LT/F_T is claimed model independent for beta >~ 0.9 (aligned-jet dominance).",
+    "pQCD predicts R_D = sigma_L^D/sigma_T^D >~ 1 for beta >~ 0.9 (higher-twist sigma_L^D dominance), vs R ~ 0.2-0.3 in inclusive DIS; the LT interference is an s-channel helicity non-conserving effect; Eqs. (5)-(8) give the q-qbar excitation amplitudes."
+   ],
+   "used_in": [
+    "reports/reconstruction_chain_report section 4 (y-dependence of u1, u2)",
+    "refs/README.md"
+   ]
+  },
+  "pronyaev1998-forward-cone-lt": {
+   "file": "refs/9808432v1.pdf",
+   "arxiv": "hep-ph/9808432",
+   "journal": "(conference proceedings, 27 Aug 1998)",
+   "title": "The forward cone and L/T separation in diffractive DIS",
+   "authors": [
+    "A. V. Pronyaev"
+   ],
+   "year": 1998,
+   "keywords": [
+    "diffraction slope",
+    "B_D",
+    "LT/T ratio",
+    "azimuthal asymmetry",
+    "beta",
+    "leading proton spectrometer"
+   ],
+   "key_content": [
+    "Eq. (1): same decomposition as Nikolaev-Pronyaev-Zakharov with cos(phi) prefactor (2-y) sqrt(1-y) and cos(2phi) prefactor (1-y); phi = angle between the (e,e') and (p,p') scattering planes.",
+    "Eq. (7): R_LT/T = F_LT/F_T = (p_perp/Q) 12 beta^3 (2 - 3beta)/[(1-beta)(3 + 4beta + 8beta^2)] (model independent; sign change at beta = 2/3). At the repo's coherent kinematics (beta ~ 0.5, pT/Q ~ 0.2) this gives A_LT ~ 0.03.",
+    "Eqs. (4)-(5): hardness scale Q2bar = (k^2 + m_f^2)/(1 - beta); diffraction cone B_D = Delta B_aX + Delta B_pY + Delta B_int with a rise of B_T from the exclusive limit to the continuum M2 ~ Q2."
+   ],
+   "used_in": [
+    "reports/reconstruction_chain_report section 4",
+    "refs/README.md"
+   ]
+  },
+  "ruspa2002-inclusive-diffraction-hera": {
+   "file": "refs/0206031v1.pdf",
+   "arxiv": "hep-ex/0206031",
+   "journal": "(proceedings, 14 Jun 2002; on behalf of H1 and ZEUS)",
+   "title": "Inclusive diffraction at HERA",
+   "authors": [
+    "M. Ruspa"
+   ],
+   "year": 2002,
+   "keywords": [
+    "diffractive structure function",
+    "F2D(4)",
+    "F2D(3)",
+    "diffractive fraction",
+    "M_X method",
+    "LPS",
+    "W dependence"
+   ],
+   "key_content": [
+    "Eq. (2): F2^D(4)(beta, Q2, x_P, t) = beta Q^4/(4pi alpha^2 (1 - y + y^2/2)) dsigma_diff(gamma*p)/(dbeta dQ2 dx_P dt) (dimension GeV^-2); integration over t gives F2^D(3).",
+    "Fig. 5: the ratio dsigma_diff/dM_X / sigma_tot(gamma*p) vs W for ZEUS 94, LPS 95 and BPC 96-97 data with ALLM97, +-21% normalization uncertainty -> the qualitative basis of the 'HERA diffraction ~10% of DIS' bracket for the coherent fraction f0 in plans/06 (no single number in the text)."
+   ],
+   "used_in": [
+    "plans/06 section 6.4 (f0 bracket, qualitative)",
+    "refs/README.md"
+   ]
+  },
+  "jentsch2023-epic-far-forward-dis": {
+   "file": "refs/ePIC_far_forward_talk_DIS_2023_v2.pdf",
+   "arxiv": null,
+   "journal": "Talk, DIS 2023 (30th International Workshop on Deep-Inelastic Scattering), Michigan State University, 27-31 March 2023",
+   "title": "Far-Forward Detectors and Physics with ePIC @ the EIC",
+   "authors": [
+    "A. Jentsch (on behalf of the ePIC Collaboration)"
+   ],
+   "year": 2023,
+   "keywords": [
+    "ePIC",
+    "far-forward",
+    "Roman Pots",
+    "off-momentum detectors",
+    "B0",
+    "ZDC",
+    "AC-LGAD",
+    "slot",
+    "acceptance",
+    "pT resolution",
+    "beam effects",
+    "crossing angle",
+    "crab",
+    "transfer matrix"
+   ],
+   "key_content": [
+    "Slide 11 acceptance table: ZDC theta < 5.5 mrad (eta > 6); Roman Pots (2 stations) 0.0* < theta < 5.0 mrad (lower bound depends on optics); Off-Momentum Detectors (2 stations) 0.0 < theta < 5.0 mrad; B0 5.5 < theta < 20.0 mrad (4.6 < eta < 5.9). Far-forward means theta < 2.1 deg (~37 mrad).",
+    "Slide 15 Roman Pots: 500 um pixelated AC-LGAD sensors, 'potless' design with thin RF foils, sensor planes 25.6 cm x 12.8 cm (modules 3.2 cm) arranged AROUND A HORIZONTAL SLOT through which the beam passes; two stations 2 m apart with two layers each; detector directly in vacuum (impedance studies); generic R&D for adaptive (ML) reconstruction.",
+    "Slide 16 OMD: horizontal Roman-Pot-style sensors; protons 123.75 < E < 151.25 GeV (45% < x_L < 55%), 0 < theta < 5 mrad; 'even more challenging reconstruction ... extreme orbit path in the magnets'.",
+    "Slide 12/14 B0: MAPS (3 layers) + AC-LGAD (1 layer), PbWO4 EMCAL or Si preshower; tracking resolution demonstrated in stand-alone simulations.",
+    "Slide 21/23 ZDC: 60 x 60 x 168 cm, PbWO4 crystal layer + W/Si (12 planes) + Pb/Si (22) + Pb/scintillator (30), 30 m from the IR, acceptance +4.5/-5.5 mrad (aperture limits), position resolution ~1.3 mm at 40 GeV, meets the Yellow Report photon and neutron energy-resolution requirements.",
+    "Slide 19 (detector resolution only): Delta pT/pT ~ 0.5-1.5% for Roman Pots at 275 and 100 GeV/c, ~1% B0 at 41 GeV/c, ~2% B0 at 100 GeV/c, OMD ~0.4-1.5%; 'Roman Pots/OMDs suffer from additional smearing due to improper transfer matrix reconstruction'.",
+    "Slide 20 (detector + beam effects: angular divergence, crossing angle, crab rotation/vertex smearing): Roman Pots at 275 GeV/c Delta pT/pT ~ 0.09 at pT = 0.45 GeV falling to ~0.04 at 1 GeV (i.e. Delta pT ~ 40 MeV, roughly constant); at 100 GeV/c ~0.10 at 0.15-0.2 GeV falling to ~0.065 at 0.4 GeV; OMD (x_L ~ 0.5) ~0.15 at 0.13 GeV to ~0.06 at 0.4 GeV; B0 at 100 GeV/c ~0.04 at 0.6 GeV to 0.02 at 1.9 GeV -> 'Beam effects the dominant source of momentum smearing!'"
+   ],
+   "used_in": [
+    "evgen/polligen/reco.py rp_measure (slot-like cutout, cut_scale_xy)",
+    "evgen/polligen/recopseudo.py CoherentResponse",
+    "evgen/scripts/money_cos2phi_coherent_reco.py defaults",
+    "reports/reconstruction_chain_report sections 4 and 7",
+    "plans/04 #20"
+   ]
+  },
+  "bacchetta2007-sidis-small-pt": {
+   "file": "refs/hep-ph_0611265.pdf",
+   "arxiv": "hep-ph/0611265",
+   "journal": "JHEP 02 (2007) 093",
+   "title": "Semi-inclusive deep inelastic scattering at small transverse momentum",
+   "authors": [
+    "A. Bacchetta",
+    "M. Diehl",
+    "K. Goeke",
+    "A. Metz",
+    "P. J. Mulders",
+    "M. Schlegel"
+   ],
+   "year": 2007,
+   "keywords": [
+    "covariant azimuthal angles",
+    "phi_h",
+    "phi_S",
+    "g_perp",
+    "epsilon_perp",
+    "SIDIS structure functions",
+    "Trento conventions"
+   ],
+   "key_content": [
+    "Eqs. (2.4)-(2.5): cos(phi_S) = -l_mu S_nu g_perp^{mu nu}/sqrt(l_perp^2 S_perp^2), sin(phi_S) = -l_mu S_nu eps_perp^{mu nu}/sqrt(l_perp^2 S_perp^2) with g_perp^{mu nu} = g^{mu nu} - (q^mu P^nu + P^mu q^nu)/(P.q(1+gamma^2)) + gamma^2/(1+gamma^2)(q^mu q^nu/Q2 - P^mu P^nu/M2), eps_perp^{mu nu} = eps^{mu nu rho sigma} P_rho q_sigma/(P.q sqrt(1+gamma^2)) -- implemented as evgen/polligen/reco.py azimuth_wrt_lepton_plane (repo-verified: reduces to phi_e - phi_S exactly in the head-on frame for a massless target).",
+    "Local copy: arXiv v2 (26 Feb 2007, DESY 06-204, 29 pages)."
+   ],
+   "used_in": [
+    "evgen/polligen/reco.py",
+    "reports/reconstruction_chain_report section 2, ref [3]"
+   ]
+  },
+  "trento2004-and-diehl-sapeta2005": {
+   "file": "refs/hep-ph_0410050.pdf; refs/hep-ph_0503023.pdf",
+   "arxiv": "hep-ph/0410050; hep-ph/0503023",
+   "journal": "Phys. Rev. D 70 (2004) 117504; Eur. Phys. J. C 41 (2005) 515",
+   "title": "Single-spin asymmetries: the Trento conventions; On the analysis of lepton scattering on longitudinally or transversely polarized protons",
+   "authors": [
+    "A. Bacchetta, U. D'Alesio, M. Diehl, C. A. Miller",
+    "M. Diehl, S. Sapeta"
+   ],
+   "year": 2005,
+   "keywords": [
+    "angle conventions",
+    "target mass",
+    "gamma",
+    "transverse polarization",
+    "frame"
+   ],
+   "key_content": [
+    "Trento sign and orientation conventions for azimuthal angles about the virtual photon; Diehl-Sapeta: the O(gamma) mixing of longitudinal and transverse target polarization between lab and photon frames.",
+    "Local copies: Trento conventions = arXiv hep-ph/0410050v2 (DESY 04-193, 6 pages); Diehl-Sapeta = hep-ph/0503023v1 (DESY 05-037, 32 pages)."
+   ],
+   "used_in": [
+    "reports/reconstruction_chain_report ref [4]"
+   ]
+  },
+  "jacquet-blondel1979-and-bassler-bernardi1995": {
+   "file": "refs/hep-ex_9412004.pdf",
+   "arxiv": "hep-ex/9412004",
+   "journal": "DESY 79/48 (1979) 391; Nucl. Instrum. Meth. A 361 (1995) 197",
+   "title": "Jacquet-Blondel hadronic method (DESY 79/48, no free copy); U. Bassler, G. Bernardi, On the kinematic reconstruction of deep inelastic scattering at HERA: the Sigma method (DESY 94-231)",
+   "authors": [
+    "F. Jacquet, A. Blondel",
+    "U. Bassler, G. Bernardi"
+   ],
+   "year": 1995,
+   "keywords": [
+    "kinematic reconstruction",
+    "Jacquet-Blondel",
+    "Sigma method",
+    "hadronic final state",
+    "low y",
+    "ISR"
+   ],
+   "key_content": [
+    "y_JB = Sigma/(2E_e) with Sigma = sum_h (E_h - p_z,h) over the hadronic final state (p_z along the ion); y_Sigma = Sigma/(Sigma + E'(1 - cos theta_e)) is insensitive to collinear ISR; x = Q2_e/(s y_Sigma) is the mixed (e-Sigma) method used at HERA at low y.",
+    "Local copy = the Bassler-Bernardi paper only (arXiv hep-ex/9412004v1, 6 Dec 1994, 19 pages); the Jacquet-Blondel 1979 study is a DESY proceedings contribution with no free copy."
+   ],
+   "used_in": [
+    "evgen/polligen/reco.py hadronic_y, mixed_method",
+    "reports/reconstruction_chain_report section 3, refs [5]-[6]"
+   ]
+  },
+  "eic-yellow-report2021": {
+   "file": "refs/2103.05419_part1.pdf; refs/2103.05419_part2.pdf; refs/2103.05419_part3.pdf; refs/2103.05419_part4.pdf",
+   "arxiv": "2103.05419",
+   "journal": "Nucl. Phys. A 1026 (2022) 122447",
+   "title": "Science Requirements and Detector Concepts for the Electron-Ion Collider: EIC Yellow Report",
+   "authors": [
+    "R. Abdul Khalek et al."
+   ],
+   "year": 2021,
+   "keywords": [
+    "Yellow Report",
+    "kinematic reconstruction",
+    "inclusive DIS",
+    "far-forward",
+    "Roman Pots 10 sigma",
+    "beam parameters",
+    "luminosity accounting"
+   ],
+   "key_content": [
+    "Sec. 8.1 inclusive DIS: comparison of electron, Jacquet-Blondel, double-angle and Sigma kinematic reconstruction methods with resolution maps (the electron method degrades as (1-y)/y at low y; hadronic methods extend the reach to y ~ 0.01).",
+    "Far-forward: Roman Pots at 10 sigma from the beam with pT cutoff ~0.2 GeV (high-acceptance optics) to ~0.45 GeV (high-divergence) for 275 GeV protons; OMD/B0/ZDC windows as in fastsim/polli_fastsim/farforward.py.",
+    "Luminosity accounting (repo-verified): 10 fb^-1 = 30 weeks at 1e33 cm^-2 s^-1 with 60% efficiency (1.5 fb^-1/month).",
+    "Local copy: arXiv v3 (27 Oct 2021, 902 pages, 124 MB) split losslessly with PyMuPDF into four parts because GitHub rejects files above 100 MB: part1 = pages 1-300, part2 = 301-450, part3 = 451-600, part4 = 601-902 (page numbers of the PDF). The unsplit refs/2103.05419.pdf is git-ignored; `python refs/find_ref.py --fetch` re-downloads it."
+   ],
+   "used_in": [
+    "fastsim/polli_fastsim/farforward.py",
+    "plans/03",
+    "reports (all)"
+   ]
+  },
+  "jentsch-tu-weiss2021-ed-tagging": {
+   "file": "refs/2108.08314.pdf",
+   "arxiv": "2108.08314",
+   "journal": "Phys. Rev. C 104 (2021) 065205",
+   "title": "Deep-inelastic electron-deuteron scattering with spectator nucleon tagging at the future Electron-Ion Collider: Extracting free nucleon structure",
+   "authors": [
+    "A. Jentsch",
+    "Z. Tu",
+    "C. Weiss"
+   ],
+   "year": 2021,
+   "keywords": [
+    "spectator tagging",
+    "far-forward acceptance",
+    "Roman Pots",
+    "OMD",
+    "ZDC",
+    "B0",
+    "resolution model",
+    "Table I"
+   ],
+   "key_content": [
+    "Table I far-forward acceptance and resolution model (RP z = 26/28 m, theta < 5 mrad, 10 sigma beam cut; OMD 22.5/24.5 m; B0 5.5-20 mrad; ZDC) used as the Phase-1 parameterization; spectator-proton pT resolution ~10% at pT = 100 MeV/c in the Roman Pots (driven by the beam angular divergence) and ~20% at 100 MeV/c in the Off-Momentum Detectors (transfer-matrix reconstruction) -- repo-verified 2026-08-25 from the PDF text (earlier dictionary text quoted only the 20%).",
+    "Table I (repo-verified 2026-08-25 from the PDF): geometric acceptance of the baseline EIC far-forward design -- B0 tracker p 5.5-20.0 mrad; Off-Momentum p 0.0-5.0 mrad, xi 0.45-0.65; Roman Pots p 0.0-5.0 mrad, xi 0.6-0.95 (the RP acceptance at high xi is limited by the beam-size cut, footnote); ZDC n 0.0-4.0 mrad (symmetric; up to ~5.5 mrad for phi = 0). Analysis: 18 x 110 GeV/u e-d, Q2 > 10 GeV2, 0.01 < y < 0.95, 1e8 events = 1 fb^-1; BeAGLE 1.01.03."
+   ],
+   "used_in": [
+    "fastsim/polli_fastsim/farforward.py",
+    "plans/03 section 2.2",
+    "reports/reconstruction_chain_report ref [8]"
+   ]
+  },
+  "chang2026-ir8-light-nuclei": {
+   "file": "refs/2511.05638.pdf",
+   "arxiv": "2511.05638",
+   "journal": "Phys. Rev. D 113 (2026) 032018",
+   "title": "Opportunities for imaging light nuclei with a second interaction region at the Electron-Ion Collider",
+   "authors": [
+    "W. Chang",
+    "E.-C. Aschenauer",
+    "A. Jentsch",
+    "A. Kumar",
+    "Z. Tu",
+    "Z. Yin"
+   ],
+   "year": 2026,
+   "keywords": [
+    "IR-8",
+    "secondary focus",
+    "intact recoil tagging",
+    "eSTARlight",
+    "coherent J/psi",
+    "7Li"
+   ],
+   "key_content": [
+    "Intact-recoil tagging efficiency x acceptance at the IR-8 secondary focus: d 47%, 3He 32%, 4He 29%, 7Li 17.8% (17.75%) at top energies; NO 6Li entry (the repo's ~20% is an interpolation, repo-verified).",
+    "Verbatim (repo-verified 2026-08-25 from the PDF): the coherent-VM intact-nucleus detection efficiency at IR-8 'from deuterium (2D) to oxygen (16O) is 47.12%, 32.23%, 29.42%, 17.75%, 12.37%, 6.36%, 1.59%' for 2D, 3He, 4He, 7Li, 9Be, 12C, 16O at top energies (eSTARlight e + A -> e' + A' + VM, VM = J/psi, phi, rho); no 6Li sample in the paper."
+   ],
+   "used_in": [
+    "plans/06",
+    "reports/cos2phi_money_plots_report",
+    "reports/reconstruction_chain_report ref [10]"
+   ]
+  },
+  "hoodbhoy-jaffe-manohar1989-and-jaffe-manohar1989": {
+   "file": null,
+   "arxiv": null,
+   "journal": "Nucl. Phys. B 312 (1989) 571; Phys. Lett. B 223 (1989) 218",
+   "title": "Novel effects in deep inelastic scattering from spin-one hadrons; Nuclear gluonometry",
+   "authors": [
+    "P. Hoodbhoy, R. L. Jaffe, A. Manohar",
+    "R. L. Jaffe, A. Manohar"
+   ],
+   "year": 1989,
+   "keywords": [
+    "spin-1 DIS",
+    "b1",
+    "b2",
+    "b3",
+    "b4",
+    "Delta",
+    "double helicity flip",
+    "gluonometry",
+    "master formula"
+   ],
+   "key_content": [
+    "Master formula used throughout the repo (docs/Discussions.pptx p.5): dsigma/(dx dy dphi) = (2y alpha^2/Q2)[F1 + (2/3)a_m b1 + (1-y)/(xy^2)(F2 + (2/3)a_m b2) - (1-y)/y^2 c_m sin^2(theta_m) Delta cos(2phi)], c_m = 3m^2 - 2 -> (1,-2,1), a_m = c_m(3cos^2 theta_m - 1)/4; Delta requires J >= 1, transverse polarization and unpolarized electrons; purely gluonic at leading twist.",
+    "Attribution nuance (repo-verified): Delta(x,Q2) is defined in PLB 223:218 ('Nuclear gluonometry'); NPB 312:571 is the b1 companion."
+   ],
+   "used_in": [
+    "fastsim/polli_fastsim/asymmetries.py",
+    "evgen/polligen/xsec.py",
+    "all reports"
+   ]
+  },
+  "sather-schmidt1990-double-helicity-flip-moment": {
+   "file": null,
+   "arxiv": null,
+   "journal": "Phys. Rev. D 42 (1990) 1424",
+   "title": "Size and scaling of the double-helicity-flip hadronic structure function",
+   "authors": [
+    "E. Sather",
+    "C. Schmidt"
+   ],
+   "year": 1990,
+   "keywords": [
+    "Delta moment",
+    "bag model",
+    "Delta++",
+    "-0.012 alpha_s"
+   ],
+   "key_content": [
+    "int x Delta dx = -0.012 alpha_s -- computed for a single bag (Delta++) target, with no x-shape (repo-verified 2026-08-17); applying it to the per-nucleon Delta of 6Li is a scenario choice of the money_delta line."
+   ],
+   "used_in": [
+    "fastsim/polli_fastsim/delta_models.py (C_BAG)",
+    "reports/cos2phi_money_plots_report section 3"
+   ]
+  },
+  "cosyn-weiss-tagged-tensor2026": {
+   "file": "refs/2603.23699.pdf; refs/2603.23700.pdf",
+   "arxiv": "2603.23699; 2603.23700",
+   "journal": "Phys. Rev. C 114 (2026) 025201; 025202",
+   "title": "Semi-inclusive deep-inelastic scattering on a polarized spin-1 target. I. Cross section and spin observables; II. Deuteron and spectator nucleon tagging",
+   "authors": [
+    "W. Cosyn",
+    "C. Weiss"
+   ],
+   "year": 2026,
+   "keywords": [
+    "tagged tensor asymmetry",
+    "spectator tagging",
+    "deuteron",
+    "S/D interference",
+    "300 MeV/c"
+   ],
+   "key_content": [
+    "Titles corrected 2026-08-25 from the arXiv PDFs (JLAB-THY-26-4663 = Part I, 28 pages; JLAB-THY-26-4661 = Part II, 45 pages); earlier repo text called them 'tagged DIS on spin-1 targets'.",
+    "Part II abstract (verbatim, repo-verified 2026-08-25): 'Tensor-polarized spin asymmetries of order unity are achieved for spectator momenta >~ 300 MeV, which select configurations with large D-wave' -- the source of the 'O(1) tagged tensor asymmetry at ~300 MeV/c' statement (not PRC 102:065204 or PLB 799:135035); tagging 'controls the D-wave sustaining the tensor-polarized spin asymmetries', which can saturate the mathematical bounds A_T in [-2, 1] (Part I).",
+    "Part II: the light-front impulse approximation is accurate for |k| <~ 300 MeV and FSI phase space is suppressed for tagged-proton momenta |p_p| <~ 300 MeV in the deuteron rest frame; Eqs. (6.7): the tensor structures D[UTLL] = O(1), D[UTLT] = O(1/Q), D[TTT] = O(1) in the SIDIS decomposition, with theta_N the polarization-axis angle to the lepton plane (Part I conventions)."
+   ],
+   "used_in": [
+    "plans/01 sections 2.4 and 6",
+    "reports/polarized_li_primer section 4.4"
+   ]
+  },
+  "epios2026-polarized-ion-beams": {
+   "file": "refs/2510.10794.pdf",
+   "arxiv": "2510.10794",
+   "journal": "Phys. Rev. C 113 (2026) 060501",
+   "title": "Realizing the scientific program with polarized ion beams at EIC (EPIOS white paper)",
+   "authors": [
+    "G. Atoian et al."
+   ],
+   "year": 2026,
+   "keywords": [
+    "EPIOS",
+    "polarized 6Li",
+    "polarized 7Li",
+    "G factor",
+    "snakes",
+    "top energy",
+    "transverse polarization native"
+   ],
+   "key_content": [
+    "G(6Li) = -0.178, G(7Li) = +1.532; 6Li deuteron-like (partial solenoid snake + tune jumps), 7Li partial snakes; ~138/~117 GeV/u top energies (rigidity limit 275 GeV x Z/A); NO Li luminosity number; 'beams are transversely polarized and only converted to longitudinal at the IPs'; 'the best chance for discovery may come from larger nuclei... spin-1 6Li or 14N, or spin-3/2 7Li or 23Na'. Source targets (P_z >= 0.90, P_zz >= 0.80) are the ANL proposal's, not EPIOS's (repo-verified).",
+    "Repo-verified 2026-08-25 from the PDF (47 pages): table of species p/d/3He/6Li/7Li with G = 1.793/-0.143/-4.184/-0.178/1.532 and mc^2/G = 0.523/13.116/0.671/31.466/4.264 GeV; 'the measurement of Delta(x,Q2) requires electron scattering from transversely polarized nuclei. Spin-1 or greater is needed, but as a multi-nucleonic effect, Delta is expected to be ...'; '6Li, 14N which, together with the deuteron, are the only stable spin-one nuclei'."
+   ],
+   "used_in": [
+    "plans/01 section 3",
+    "reports/polarized_li_primer section 1"
+   ]
+  },
+  "hamwi2026-li-resonances": {
+   "file": "refs/2509.18558.pdf",
+   "arxiv": "2509.18558",
+   "journal": "Phys. Rev. Accel. Beams 29 (2026) 073501",
+   "title": "Polarization Transmission in the Electron-Ion Collider's Hadron Storage Ring",
+   "authors": [
+    "E. Hamwi",
+    "G. H. Hoffstaetter"
+   ],
+   "year": 2026,
+   "keywords": [
+    "depolarizing resonances",
+    "81",
+    "573",
+    "63",
+    "2457",
+    "G factors"
+   ],
+   "key_content": [
+    "Title and author list corrected 2026-08-25 from the arXiv PDF (13 pages, Cornell): the paper is by Hamwi and Hoffstaetter; J. Devlin appears only in the acknowledgments (earlier repo text cited 'Hamwi-Devlin-Hoffstaetter, Spin dynamics of light polarized ions in the EIC hadron ring'). Journal reference PRAB 29 (2026) 073501 as recorded in plans/01 (not printed on the arXiv copy).",
+    "Table I 'Species-dependent Linear Resonance Spectrum' (repo-verified 2026-08-25): species / G / max|G gamma| / number of resonances = p 1.7928 / 525 / 1575; D -0.1430 / 21 / 63; 3He2+ -4.1842 / 819 / 2457; 6Li3+ -0.1818 / 27 / 81; 7Li3+ 1.5196 / 191 / 573 (G values differ slightly from EPIOS: -0.178 / +1.532).",
+    "'particles with small anomalous magnetic moment (2H, 6Li) are not amenable to Siberian snake devices, since their small G-factors require impractically long snake' magnets; the HSR interaction region breaks the lattice symmetry and excites strong resonances; 'possibly lithium-6 6Li3+ and lithium-7 7Li3+ nuclei' listed among the species considered."
+   ],
+   "used_in": [
+    "plans/01 section 6",
+    "reports/polarized_li_primer section 1.1"
+   ]
+  },
+  "tunl-a6-evaluation2002": {
+   "file": "refs/TUNL_A6_2002.pdf",
+   "arxiv": null,
+   "journal": "Nucl. Phys. A 708 (2002) 3",
+   "title": "Energy levels of light nuclei A = 5, 6, 7",
+   "authors": [
+    "D. R. Tilley et al. (TUNL)"
+   ],
+   "year": 2002,
+   "keywords": [
+    "6Li levels",
+    "alpha+d threshold",
+    "3.5629 MeV 0+",
+    "2.186 MeV 3+",
+    "5.366 MeV 2+",
+    "breakup thresholds"
+   ],
+   "key_content": [
+    "S(alpha+d) = 1.4743 MeV; alpha+p+n = 3.699; 3He+t = 15.795 MeV; 2.186 MeV 3+ T=0 (Gamma = 24 keV, ~100% alpha+d); 3.5629 MeV 0+ T=1 (Gamma = 8.2 eV, alpha decay parity/angular-momentum forbidden, Gamma_alpha <= 6e-7 eV, M1 gamma to g.s.); 5.366 MeV 2+ T=1 (Gamma = 541 keV, ~35% p+5He, ~65% p+n+alpha, alpha+d < 1%) (repo-verified plans/06 section 6.5).",
+    "Local copy: the TUNL 'Energy Levels of Light Nuclei A = 6' revised manuscript (D.R. Tilley et al., 05 October 2017 revision of NPA 708 (2002) 3, 98 pages) from nucldata.tunl.duke.edu; the 6Li level table gives 2.186 MeV 3+;0 Gamma = 0.024 +- 0.002 MeV (alpha, d), 5.366 MeV 2+;1 Gamma = 0.541 +- 0.020 MeV (gamma, n, p, alpha), and Q_m(4He(d,gamma)6Li) = 1.4743 MeV; the alpha + d decay of the 3.5629 MeV 0+ state is discussed via (1996CS03) (repo-verified 2026-08-25)."
+   ],
+   "used_in": [
+    "evgen/polligen/coherent.py LI6_BREAKUP",
+    "plans/06 section 6.2"
+   ],
+   "url": "https://nucldata.tunl.duke.edu/nucldata/ourpubs/06_2002.pdf"
+  },
+  "li-sick-whitney-yearian1971-6li-form-factor": {
+   "file": null,
+   "arxiv": null,
+   "journal": "Nucl. Phys. A 162 (1971) 583 (also Suelzle et al., Phys. Rev. 162 (1967) 992)",
+   "title": "High-energy electron scattering from 6Li",
+   "authors": [
+    "G. C. Li",
+    "I. Sick",
+    "R. R. Whitney",
+    "M. R. Yearian"
+   ],
+   "year": 1971,
+   "keywords": [
+    "6Li charge form factor",
+    "first minimum",
+    "q2 = 8 fm^-2",
+    "|t| = 0.31 GeV2"
+   ],
+   "key_content": [
+    "First 6Li charge form-factor minimum at q^2 = 8 fm^-2, i.e. |t| ~ 0.31 GeV2 -> the exponential coherent slope is valid below it; C2 form factor unobservably small below q ~ 3 fm^-1."
+   ],
+   "used_in": [
+    "evgen/polligen/coherent.py (T_DIP in money_cos2phi_coherent.py)",
+    "plans/06"
+   ]
+  },
+  "maple2024-epic-tracking-inclusive-dis-seminar": {
+   "file": "refs/EIC_Seminar_SMaple_2024.pdf",
+   "arxiv": null,
+   "journal": "Seminar, University of Birmingham, 11 December 2024 (Indico Global event 4787; slides EIC_Seminar_SMaple.pdf, 67 pages)",
+   "title": "Tracking and Inclusive DIS reconstruction with the ePIC detector at the EIC",
+   "authors": [
+    "S. Maple (ePIC / University of Birmingham)"
+   ],
+   "year": 2024,
+   "keywords": [
+    "ePIC",
+    "kinematic reconstruction",
+    "electron method",
+    "Jacquet-Blondel",
+    "double angle",
+    "Sigma method",
+    "e-Sigma",
+    "kinematic fit",
+    "Bayesian",
+    "ISR",
+    "hadronic final state resolution",
+    "delta_h",
+    "low y",
+    "tracking",
+    "MAPS",
+    "MPGD",
+    "AC-LGAD"
+   ],
+   "key_content": [
+    "Slide 40: inclusive kinematics from two of the four measured quantities D = {E_e, theta_e, delta_h, pT,h}, delta_h = sum_HFS E_i(1 - cos theta_i) (the E - p_z sum), pT,h the HFS transverse momentum; resolutions depend on the event's (x, Q2), detector acceptance/resolution, and radiative processes.",
+    "Slide 42 (ePIC 18x275 map, best method for y with marker size = y resolution 25/10/5/1%): electron method at high y, Sigma method in the middle, DA method along the y = 0.01 edge with ~25% markers; 'Resolution throughout phase space allowing 5 (log) bins per decade in x and Q2'; 'Coverage driven by acceptance: 0.01 < y < 0.95, Q2 > 1 GeV2'; 'Lower y accessible -> however it's easier to rely on overlap between data at different sqrt(s)'; 'No single method wins everywhere!'",
+    "Slide 43: Bayesian kinematic fit (KF) of all 4 measured quantities for lambda = {x, y, E_gamma} with a prior P0 ~ (1 + (1-y)^2)/(x^3 y^2) x (1 + (1 - E_gamma/E0)^2)/(E_gamma/E0); posterior by Metropolis-Hastings, global mode.",
+    "Slide 44 (smeared EIC pseudodata, Djangoh 18x275, Q2 > 1 GeV2): sigma(theta_e) = 0.1 mrad, sigma(E_e)/E = 11%/sqrt(E) (+) 2%, sigma(delta_h)/delta_h = 25%, sigma(pT,h)/pT,h = 25% (repo-verified 2026-08-25).",
+    "Slide 45: Delta y/y per method in y bins 0.01-0.05, 0.05-0.1, 0.1-0.2, 0.2-0.5, 0.5-0.8: in 0.01 < y < 0.05 the Sigma/JB/DA/KF methods give roughly Gaussian widths ~0.2-0.3 while the electron method is flat (unusable); at y > 0.2 the electron method and KF are narrowest.",
+    "Slide 47 (fully simulated ePIC, Pythia8 NC DIS, Craterlake 23.12.0, Q2 > 100 GeV2, electron from tracking, 0 <= eta <= 0.5): parametrized resolutions sigma_E = 0.055 p (+) 0.45 (Delta p/p in %, A p (+) B with A = 0.055, B = 0.45), sigma_theta = 72/pT (+) 2.8 mrad, sigma_delta_h = 0.25 delta_h, sigma_pT,h = 0.25 pT,h.",
+    "Slide 48: full ePIC simulation: 'KF gives comparable y resolution to electron method at high y; loses at low y to DA method'; in 0.01 < y < 0.05 DA is the narrowest, Sigma/JB broad with tails, electron flat. Slide 50: adding an HFS correlation term (width ~8%) recovers the KF at low y (comparable to DA).",
+    "Slide 51: ISR energy from the E - p_z conservation Sigma_total = 2E_e,beam (the relation implicit in the Sigma method); slides 52-56, 65: KF on H1 2003/04 data+MC (0.01 < y_eSigma < 0.6, Q2 > 200 GeV2) with sigma(theta_e) = 4 mrad, sigma(E_e)/E = 11%/sqrt(E) (+) 1%, sigma(delta_h)/delta_h = 13.5%, sigma(pT,h)/pT,h = 54%/sqrt(pT,h) (+) 4%; ISR energy reproduced within 30% for E_gamma > 3-4 GeV.",
+    "Slides 27-28, 37: ePIC tracking momentum and pointing resolution within reach of the Yellow Report targets except at the largest |eta|; backward momentum requirement still challenging ('high resolution EM calorimetry in this region may provide better reconstruction')."
+   ],
+   "used_in": [
+    "evgen/polligen/reco.py hadronic_y docstring",
+    "evgen/polligen/recopseudo.py RecoModel.y_had_res = 0.25",
+    "reports/reconstruction_chain_report section 3 and ref [19]",
+    "plans/04 #21"
+   ],
+   "repo_usage_note": "Source of the 25% hadronic-y resolution default and of the 0.01 < y < 0.95 / energy-overlap coverage rule."
+  },
+  "athena2022-detector-proposal": {
+   "file": "refs/2210.09048.pdf",
+   "arxiv": "2210.09048",
+   "journal": "JINST 17 (2022) P10019",
+   "title": "ATHENA detector proposal -- a totally hermetic electron nucleus apparatus proposed for IP6 at the Electron-Ion Collider",
+   "authors": [
+    "ATHENA Collaboration",
+    "J. Adam et al."
+   ],
+   "year": 2022,
+   "keywords": [
+    "ATHENA",
+    "detector proposal",
+    "inclusive DIS",
+    "kinematic reconstruction",
+    "e-Sigma",
+    "double angle",
+    "Jacquet-Blondel",
+    "y resolution",
+    "Fig. 22",
+    "eID efficiency",
+    "binning"
+   ],
+   "key_content": [
+    "Sec. 3.1 (PDF p. 50-51, printed p. 44-45): 'The electron-only method performs best over most of the kinematic phase space and will be used for NC DIS measurements at all but the lowest y values... At the lowest y values, the electron method resolution degrades like 1/y. Here, the ability of ATHENA to reconstruct the overall hadronic final state with good resolution can be exploited using the e-Sigma or Double Angle (DA) methods, to ensure high quality measurements for y <~ 0.1, leading to high quality reconstruction at high x... The resolution with the JB method is at the 20-30% level throughout the kinematic range' (repo-verified 2026-08-25).",
+    "Fig. 22 (18 x 275 GeV, FullSim): best reconstruction method for y over the (x, Q2) plane with marker size = y resolution (25/10/5/1%): DA (orange) along the y = 0.01 edge with ~25% markers, e-Sigma (green) at low-to-mid Q2 and y ~ 0.02-0.1 with ~10% markers, electron (blue) elsewhere with 5-1%.",
+    "Binning/coverage: Q2 > 1 GeV2, y < 0.95 (clean electron ID), y > 0.01 'to ensure that the kinematic variables can be sufficiently well reconstructed (Fig. 22)'; five logarithmic bins per decade in x and Q2; one year per beam-energy combination; HERA point-to-point systematics 1.5-2.5% depending on y.",
+    "Table 5 electron-ID efficiency anchors (used by fastsim/scripts/money_delta_20260729.py and reco.eps_eid, via the ATHENA/ECCE tables)."
+   ],
+   "used_in": [
+    "reports/reconstruction_chain_report section 3 and ref [18]",
+    "evgen/polligen/reco.py hadronic_y, eps_eid",
+    "plans/04 #21"
+   ]
+  },
+  "arratia2022-dnn-dis-kinematics": {
+   "file": "refs/2110.05505v2.pdf",
+   "arxiv": "2110.05505",
+   "journal": "Nucl. Instrum. Meth. A 1025 (2022) 166164",
+   "title": "Reconstructing the Kinematics of Deep Inelastic Scattering with Deep Learning",
+   "authors": [
+    "M. Arratia",
+    "D. Britzger",
+    "O. Long",
+    "B. Nachman"
+   ],
+   "year": 2022,
+   "keywords": [
+    "DNN",
+    "kinematic reconstruction",
+    "electron method",
+    "double angle",
+    "Jacquet-Blondel",
+    "ISigma",
+    "Sigma",
+    "e-Sigma",
+    "Table 1",
+    "QED radiation",
+    "ISR",
+    "FSR",
+    "ATHENA fast simulation",
+    "Delphes",
+    "Rapgap",
+    "H1 full simulation",
+    "low y"
+   ],
+   "key_content": [
+    "Table 1: formulas of all classical methods from three of the five quantities {E0, E, theta, Sigma, gamma}: electron, DA, hadron (JB), ISigma, IDA, E0ESigma, E0thetaSigma, thetaSigmagamma, double energy (A4), ESigmaT, E0ET, Sigma, eSigma (Sigma = sum_HFS(E_i - p_z,i); Sigma_e the electron's E - p_z; T the HFS transverse momentum).",
+    "Setup: Rapgap 3.3 e+p at E0 = 18 GeV, Ep = 275 GeV through the Delphes fast simulation of ATHENA, restricted to Q2 > 200 GeV2; electron = highest-pT track with pT > 5 GeV, EM fraction > 0.8, isolation < 0.2; HFS from energy-flow candidates; Djangoh 1.4 for prior dependence; H1 full simulation (Rapgap 3.1, Geant3, HERA-II) for the demonstration.",
+    "Fig. 5 (ATHENA fast simulation, RMS of reco/gen vs generated y, ratio within 0-2): y resolution at y -> 0.05: electron ~0.3, hadron (JB) ~0.17, DA ~0.15, ISigma ~0.13, DNN ~0.05; at y = 0.2: electron ~0.10, DA/ISigma ~0.10, hadron ~0.17; x follows y at low y (electron ~0.3 at y -> 0.05); Q2 resolution: electron ~0.03-0.07, DA/ISigma ~0.05-0.1, hadron 0.15-0.35; the electron method's mean of y/y_gen is biased to 1.12 at the lowest y (repo read-off 2026-08-25).",
+    "Sec. 5 'Impact of further acceptance and resolution effects at low y': 'At low y, the HFS-based methods perform better than the electron method... the HFS momentum balance Sigma goes to zero as y goes to zero... Sigma at low y [is] especially sensitive to resolution effects or efficiency losses in the central part of the detector or fake components from calorimetric noise'; the Delphes fast simulation lacks calorimeter noise and edge effects; an ad-hoc Landau noise (mu = 0, sigma = 0.05 GeV per HFS momentum component) brings the fast simulation closer to the H1 full simulation at y <~ 0.15 (Fig. 11).",
+    "Fig. 8-9 (H1 full simulation): DNN yields the smallest RMS and is bias-free; at low y the DNN improves y and x substantially over electron and DA; the H1 selection required 45 < Sigma + Sigma_e < 65 GeV to suppress ISR."
+   ],
+   "used_in": [
+    "reports/reconstruction_chain_report section 3 and ref [20]",
+    "evgen/polligen/reco.py hadronic_y docstring",
+    "plans/04 #21"
+   ]
+  },
+  "aggarwal-caldwell2022-kinematic-fitting": {
+   "file": "refs/2206.04897.pdf",
+   "arxiv": "2206.04897",
+   "journal": "JINST 17 (2022) P09035",
+   "title": "Kinematic fitting of neutral current events in deep inelastic ep collisions",
+   "authors": [
+    "R. Aggarwal",
+    "A. Caldwell"
+   ],
+   "year": 2022,
+   "keywords": [
+    "kinematic fit",
+    "Bayes",
+    "informative prior",
+    "ISR energy",
+    "electron method",
+    "double angle",
+    "HERA"
+   ],
+   "key_content": [
+    "Bayesian kinematic fit of the DIS scaling variables using all measured quantities, with informative priors; better resolution than the electron and double-angle methods and an estimate of the undetected ISR photon energy; demonstrated on a NC ep sample at sqrt(s) = 318 GeV with Q2 > 400 GeV2 (HERA kinematics). The method applied to ePIC in the Maple 2024 seminar."
+   ],
+   "used_in": [
+    "reports/reconstruction_chain_report ref [20] (related)",
+    "refs/README.md"
+   ]
+  },
+  "pecar-vossen2022-sidis-ml-reconstruction": {
+   "file": "refs/2209.14489.pdf",
+   "arxiv": "2209.14489",
+   "journal": "Proceedings DIS2022 (Santiago de Compostela, May 2022)",
+   "title": "Reconstruction of event kinematics in semi-inclusive deep-inelastic scattering using the hadronic final state and machine learning",
+   "authors": [
+    "C. Pecar",
+    "A. Vossen"
+   ],
+   "year": 2022,
+   "keywords": [
+    "SIDIS",
+    "machine learning",
+    "particle flow network",
+    "Jacquet-Blondel",
+    "double angle",
+    "virtual photon direction",
+    "p_h perp",
+    "phi_h",
+    "low y"
+   ],
+   "key_content": [
+    "EIC SIDIS reconstruction of the virtual-photon axis (p_h perp, phi_h) with a particle-flow network vs electron, JB and DA methods; Figs. 4-5: 'HFS methods surpass electron method for very low y, while PFN equals or outperforms electron method for all y'; cites the Yellow Report / ATHENA fast-simulation method comparisons."
+   ],
+   "used_in": [
+    "refs/README.md"
+   ]
+  },
+  "diefenthaler2022-deeply-learning-dis": {
+   "file": "refs/2108.11638.pdf",
+   "arxiv": "2108.11638",
+   "journal": "Eur. Phys. J. C 82 (2022) 1064",
+   "title": "Deeply Learning Deep Inelastic Scattering Kinematics",
+   "authors": [
+    "M. Diefenthaler",
+    "A. Farhat",
+    "A. Verbytskyi",
+    "Y. Xu"
+   ],
+   "year": 2022,
+   "keywords": [
+    "DNN",
+    "ZEUS",
+    "HERA",
+    "kinematic reconstruction",
+    "Q2",
+    "x"
+   ],
+   "key_content": [
+    "DNNs trained on ZEUS simulated data to reconstruct Q2 and x, combining the inputs/outputs of three classical methods; 'sufficiently surpass all classical reconstruction methods on most of the kinematic range'. HERA-based (not EIC).",
+    "Local copy: arXiv 2108.11638 (EPJ manuscript, 16 pages)."
+   ],
+   "used_in": [
+    "refs/README.md (search record)"
+   ]
+  },
+  "epic-inclusive-wg-resources": {
+   "file": null,
+   "arxiv": null,
+   "journal": "web resources (checked 2026-08-25)",
+   "title": "ePIC Inclusive Physics WG wiki; BNL EIC 'DIS Kinematics' wiki; JeffersonLab/dis-reconstruction",
+   "authors": [
+    "P. Newman, S. Maple, B. Schmookler, C. Gwenlan (WG contacts)"
+   ],
+   "year": 2025,
+   "keywords": [
+    "ePIC inclusive working group",
+    "kinematic reconstruction task",
+    "particle flow",
+    "Indico category 417",
+    "wiki"
+   ],
+   "key_content": [
+    "https://wiki.bnl.gov/EPIC/index.php?title=Inclusive : open task 'Optimised hadron treatment (particle flow?) in Jacquet-Blondel, Double angle and (e)-Sigma methods', kinematic fitting and ML; Indico https://indico.bnl.gov/category/417/ ; list eic-projdet-Inclusive-l@lists.bnl.gov.",
+    "https://wiki.bnl.gov/eic/index.php/DIS_Kinematics : 'x and y resolutions diverge for low y' for the lepton method; JB 'good resolution in y', Q2 resolution degrades with pT lost down the beam pipe; x follows Q2.",
+    "https://github.com/JeffersonLab/dis-reconstruction (B. Schmookler): eic-smear/Delphes Yellow-Report detector models, PYTHIA6/8 and DJANGOH samples 5x41-18x275 (and 27.5x920), kinematic maps and cross-section studies behind the Yellow Report."
+   ],
+   "used_in": [
+    "refs/README.md (where to look next for ePIC inclusive-DIS performance)"
+   ]
+  },
+  "abe1999-r1998-world-fit": {
+   "file": "refs/hep-ex_9808028.pdf",
+   "arxiv": "hep-ex/9808028",
+   "journal": "Phys. Lett. B 452 (1999) 194 (SLAC-PUB-7927)",
+   "title": "Measurements of R = sigma_L/sigma_T for 0.03 < x < 0.1 and Fit to World Data",
+   "authors": [
+    "K. Abe et al. (E143 Collaboration)"
+   ],
+   "year": 1999,
+   "keywords": [
+    "R1998",
+    "R1990",
+    "sigma_L/sigma_T",
+    "R",
+    "longitudinal cross section",
+    "Theta",
+    "E143",
+    "SLAC",
+    "world fit",
+    "F_L",
+    "Callan-Gross",
+    "depolarization",
+    "Whitlow"
+   ],
+   "key_content": [
+    "Eq. (2): THREE six-parameter forms, R1998 = their average ('As in the case of R1990, we define R1998 to be the average of the three fits'). R_a = a1 Theta/log(Q2/0.04) + a2 (Q^8 + a3^4)^(-1/4) [1 + a4 x + a5 x^2] x^a6; R_b = b1 Theta/log(Q2/0.04) + [b2/Q2 + b3/(Q^4 + 0.3^2)] [1 + b4 x + b5 x^2] x^b6; R_c = c1 Theta/log(Q2/0.04) + c2 [(Q2 - Q2thr)^2 + c3^2]^(-1/2) with Q2thr = c4 x + c5 x^2 + c6 x^3.  In the paper's notation Q^4 = (Q2)^2 and Q^8 = (Q2)^4; log is natural and 0.04 GeV2 = Lambda^2 (verified against the arXiv LaTeX source, 2026-08-26).",
+    "Eq. (3): Theta(x, Q2) = 1 + 12 [Q2/(Q2+1)] [0.125^2/(0.125^2 + x^2)].  Theta multiplies the log term of Eq. (2) and NOTHING ELSE.  Theta is 6.2-12.9 over x <= 0.05, 1 <= Q2 <= 130 (repo-measured; the code review's '6.5-9.5' is low), so putting it on all three terms saturates the sum: code review 2026-08-25 item S1, where the fast-sim money scripts' r1998 returns R = 1.000 over the whole low-x region.",
+    "Table II (coefficients, chi2/df for 231 dof): a = 0.0485, 0.5470, 2.0621, -0.3804, 0.5090, -0.0285 (0.9); b = 0.0481, 0.6114, -0.3509, -0.4611, 0.7172, -0.0317 (0.9); c = 0.0577, 0.4644, 1.8288, 12.3708, -43.1043, 41.7415 (1.0).",
+    "Fit support: 237 points, 0.005 <= x <= 0.86 and 0.5 <= Q2 <= 130 GeV2 (paragraph above Eq. 2); confidence level 73% for all the data, 38% for x <= 0.07.",
+    "Fitting error, unnumbered equation below Eq. (3): delta-R(x,Q2) = 0.0078 - 0.013 x + (0.070 - 0.39 x + 0.70 x^2)/(1.7 + Q2).  The functional-form systematic is the spread of the three fits.  The paper's sentence 'This error is largest at low Q2, reaching a maximum value for x ~ 0.04' does not follow from that formula: d(delta-R)/dx = 0 at 1.4 x = 0.39 + 0.013 (1.7 + Q2), a MINIMUM at x = 0.299 for Q2 = 0.5 and x = 0.3408 for Q2 = 5, with no maximum anywhere in 0.005 <= x <= 0.86. At Q2 = 0.5 (repo-measured 2026-08-26) delta-R = 0.03867 at x = 0.005, 0.03252 at x = 0.04, 0.01117 at the x = 0.299 minimum and 0.11131 at x = 0.86. The formula is implemented as published; only the sentence is disputed.",
+    "Table I: E143 carbon cross sections and nine extracted values of R with stat and sys errors -- x, Q2 [GeV2], R: 0.0325, 1.32, 0.45 +- 0.01 +- 0.07; 0.0375, 1.47, 0.51 +- 0.02 +- 0.09; 0.0450, 1.67, 0.40 +- 0.01 +- 0.10; 0.0550, 1.90, 0.28 +- 0.01 +- 0.09; 0.0650, 2.11, 0.29 +- 0.02 +- 0.10; 0.0750, 2.29, 0.18 +- 0.02 +- 0.11; 0.0850, 2.46, 0.26 +- 0.03 +- 0.10; 0.0950, 2.60, 0.25 +- 0.03 +- 0.14; 0.1050, 2.73, 0.17 +- 0.03 +- 0.13.  This is the external anchor of fastsim/tests/test_structure_r.py: R1998 reproduces all nine within 1.6 sigma (max |pull| 1.562, mean pull^2 0.647), while the Theta-everywhere form of the fast-sim money scripts overshoots every one of them by 5.2-8.0 sigma even after being clipped to R = 1 (repo-measured 2026-08-26).",
+    "Eq. (1): dsigma/dE'dOmega = sigma_Mott [eps Q2/(2 M x F2)]^-1 form, i.e. the definition R = sigma_L/sigma_T with eps^-1 = 1 + 2(1 + Q2/4M^2x^2) tan^2(theta/2); R relates F1 and F2 by F1 = F2 (1 + gamma^2)/(2x(1+R)) (massless limit F1 = F2/(2x(1+R)) is what the repo uses)."
+   ],
+   "used_in": [
+    "fastsim/polli_fastsim/structure.py (r1998, r1998_forms, r1998_spread, r1998_fit_error, R1998_PARAMS)",
+    "fastsim/tests/test_structure_r.py (Table I and Table II anchors)",
+    "fastsim/scripts/money_delta_realistic.py and money_delta_20260729.py (their local r1998, the defect of code review S1; frozen)",
+    "docs/code_review_2026-08-25.md item S1; plans/08 C2"
+   ]
+  },
+  "lee2024-snspd-120gev-proton-beam-test": {
+   "file": "refs/2312.13405.pdf",
+   "arxiv": "2312.13405",
+   "journal": "Nucl. Instrum. Meth. A 1069 (2024) 169956",
+   "title": "Beam Tests of SNSPDs with 120 GeV Protons",
+   "authors": [
+    "S. Lee",
+    "T. Polakovic",
+    "W. Armstrong",
+    "A. Dibos",
+    "T. Draher",
+    "N. Pastika",
+    "Z.-E. Meziani",
+    "V. Novosad"
+   ],
+   "year": 2024,
+   "keywords": [
+    "SNSPD",
+    "superconducting nanowire",
+    "NbN",
+    "wire width",
+    "detection efficiency",
+    "bias current scan",
+    "120 GeV proton",
+    "FTBF",
+    "MT6.2",
+    "cryogenic",
+    "EIC",
+    "far-forward",
+    "Argonne",
+    "MEP",
+    "pair-breaking",
+    "hot spot",
+    "r_s",
+    "134 nm",
+    "threshold",
+    "bias current",
+    "Z identification"
+   ],
+   "key_content": [
+    "The Argonne (MEP/Physics Division) device actually beam-tested: 12 nm NbN on a 300 um Si substrate, 30 x 30 um^2 active area per device with a fill factor of 1/2, 8 devices per 8 x 8 mm^2 chip. Wire widths 300, 400, 600 and 800 nm were fabricated; the paper's conclusion is that the wire width is the critical efficiency parameter and that widths above 400 nm lose efficiency at low bias -- ~250 nm is named as the ideal.",
+    "The number the whole Z-ID case rests on: the hot-spot radius. Their Eq. 1 r_s = sqrt(Q/(e pi c rho (Tc - T0))) and Eq. 2 detection criterion r_s / [(w/2)(1 - I_b/I_c)] >= 1 give the firing threshold I_th/I_c = 1 - 2 r_s / w. Fitting their measured threshold-vs-width points (~0.215 at 300 nm, 0.49 at 400, 0.62 at 600, 0.70 at 800) gives r_s = 134 nm for a 120 GeV proton, and the fit crosses zero at w ~ 268 nm -- hence their '~250 nm ideal'. Background counts rise exponentially above I_b/I_c > 0.8.",
+    "Operating point: T = 2.82 K in a Janis SHI-4 GM cryocooler (not a dilution or sorption fridge); film Tc ~ 7 K; Ic = 25.2 uA for the 400 nm device.",
+    "Beam: FTBF MT6.2, 120 GeV protons, ~10^6 protons/min in a 4.2 s spill. Background/signal measured to be (2.08 +/- 0.89)% -- i.e. essentially noise-free operation in a hadron beam.",
+    "Radiation hardness is explicitly NOT measured: characterization is stated as 'planned in the near future'. Any far-forward EIC application must treat the radiation tolerance as unmeasured.",
+    "Their own stated EIC motivation, which is exactly the far-forward aperture argument: 'Geometrical acceptance of semi-conductor detectors satisfying these requirements is limited by the beamline magnets, which can be mitigated by operating SNSPDs within the frigid bore of superconducting magnets.'",
+    "Corresponding author warmstrong@anl.gov (Argonne MEP group)."
+   ],
+   "used_in": [
+    "reports/nanowire_far_forward.template.html (the device baseline: 12 nm NbN film thickness sets the Z-ID energy deposits; 30 x 30 um^2 x 8 devices sets the tiling arithmetic; 2.82 K sets the cryostat class)",
+    "plans/09_nearbeam_nanowire_far_forward.md"
+   ]
+  },
+  "polakovic2019-snspd-high-magnetic-field": {
+   "file": "refs/1907.13059.pdf",
+   "arxiv": "1907.13059",
+   "journal": "Nucl. Instrum. Meth. A 959 (2020) 163543",
+   "title": "Superconducting nanowires as high-rate photon detectors in strong magnetic fields",
+   "authors": [
+    "T. Polakovic",
+    "W.R. Armstrong",
+    "V. Yefremenko",
+    "J.E. Pearson",
+    "K. Hafidi",
+    "G. Karapetrov",
+    "Z.-E. Meziani",
+    "V. Novosad"
+   ],
+   "year": 2019,
+   "keywords": [
+    "SNSPD",
+    "NbN",
+    "magnetic field",
+    "5 T",
+    "parallel field",
+    "perpendicular field",
+    "dark counts",
+    "count rate",
+    "kinetic inductance",
+    "fall time",
+    "vortex pinning",
+    "ion beam assisted sputtering",
+    "Argonne"
+   ],
+   "key_content": [
+    "The field-tolerance result the far-forward siting argument rests on: saturated internal efficiency is retained in fields PARALLEL to the device plane up to 5 T (the setup limit), with a conservative extrapolation to ~8 T; in PERPENDICULAR fields the practical limit is only ~0.5 T, past which dark counts from the near-critical state dominate. Orientation, not field magnitude, is the design constraint.",
+    "Device: NbN meander, 13.5 nm thick, 80 nm wide wires on 110 nm pitch, 10 x 10 um^2 pixel, grown by ion beam assisted sputtering. Tc = 8 K, Hc2(0) = 32 T, xi(0) = 3.2 nm, jC = 2.2e10 A/m^2.",
+    "Bias margin: saturated internal efficiency at ~9 uA against a critical current of 23 uA at zero field; at 5 T parallel, saturation at ~10 uA with dark-count onset at 12.5 uA -- the working margin narrows but survives.",
+    "Rate: 10^7 counts/s measured (limited by the LED heat load of the test setup, not the device); 10^8 counts/s expected from the 80-20% fall time tau_F = 11.78 +/- 1.6 ns, since rate ~ 1/tau_F. 20-80% rise time tau_R = 341 +/- 31 ps. Rate is raised by shortening the wire (lower L_K), shunting, or paralleling segments.",
+    "Operation at 3 K with negligible change at 4 K, and 'nearly zero dark counts' below the exponential onset."
+   ],
+   "used_in": [
+    "reports/nanowire_far_forward.template.html (the parallel/perpendicular field asymmetry drives the sensor-plane orientation in the B1apf/B2apf region; the 10^8 /s rate ceiling sets the per-device occupancy budget)",
+    "plans/09_nearbeam_nanowire_far_forward.md"
+   ]
+  },
+  "wang2026-smspd-microwire-arrays": {
+   "file": "refs/2510.11725.pdf",
+   "arxiv": "2510.11725",
+   "journal": "submitted to JINST",
+   "title": "Towards High-Efficiency Particle Detection Using Superconducting Microwire Arrays",
+   "authors": [
+    "C. Wang",
+    "C. Pena",
+    "A. Bornheim",
+    "S. Wu",
+    "A. Albert",
+    "T. Sievert",
+    "A. Apresyan",
+    "E. Knehr",
+    "B. Korzh",
+    "J. Luskin",
+    "L. Mori",
+    "S. Patel",
+    "G. Reales Gutierrez",
+    "M. Sahu",
+    "E. Schmidt",
+    "M. Shaw",
+    "E. Sledge",
+    "M. Spiropulu",
+    "T. Taher",
+    "S. Xie"
+   ],
+   "year": 2026,
+   "keywords": [
+    "SMSPD",
+    "microwire",
+    "WSi",
+    "fill factor",
+    "detection efficiency",
+    "time resolution",
+    "130 ps",
+    "CERN SPS",
+    "H6",
+    "120 GeV hadron",
+    "muon",
+    "large area",
+    "FCC-ee",
+    "Muon Collider",
+    "JPL",
+    "Caltech",
+    "Fermilab"
+   ],
+   "key_content": [
+    "The large-area branch of the technology: an 8-channel 1 x 1 mm^2 WSi SMSPD array (pixel 0.125 x 1 mm^2) on a 4.7 nm W42Si58 film, 1 um wires on a 3 um gap. This is the answer to the SNSPD area problem -- mm^2 instead of the 100 um^2 of a nanowire device.",
+    "Price of the area: the fill factor is only 25% (1 um wire, 3 um gap) and the operating temperature is 0.8 K (PhotonSpot helium sorption fridge, ~30 h hold) against Tc = 1.85 K -- far colder than the 2.8-3 K NbN devices of arXiv:2312.13405 and 1907.13059.",
+    "Performance with 120 GeV hadrons and muons at CERN SPS H6, referenced to a 10 um silicon telescope: fill-factor-normalized detection efficiency ~75% and time resolution 130 +/- 17 ps, consistent across pixels and particle types. First SMSPD efficiency measurement for muons.",
+    "Improvement over the group's earlier 3 nm WSi / 1.5 um wire device: 60% -> 75% efficiency, 1.15 ns -> 130 ps time resolution. Thicker film, narrower wire."
+   ],
+   "used_in": [
+    "reports/nanowire_far_forward.template.html (the area-versus-temperature trade: mm^2 SMSPD tiles vs 30 x 30 um^2 NbN devices, and the 25% fill factor that the geometric-efficiency budget must carry)",
+    "plans/09_nearbeam_nanowire_far_forward.md"
+   ]
+  },
+  "lee2026-cryogenic-test-station-alpha": {
+   "file": "refs/2601.03158.pdf",
+   "arxiv": "2601.03158",
+   "journal": "Nucl. Instrum. Meth. A 1093 (2027) 171953",
+   "title": "Optimization of Cryogenic Detector Test Station by Rejecting Electromagnetic Interference",
+   "authors": [
+    "S. Lee",
+    "W. Armstrong",
+    "J. DiPreta",
+    "C. Dulya",
+    "V. Novosad",
+    "T. Polakovic"
+   ],
+   "year": 2026,
+   "keywords": [
+    "SNSPD",
+    "NbN",
+    "alpha particle",
+    "241Am",
+    "hot spot",
+    "EMI",
+    "cryogenic",
+    "test station",
+    "wire width",
+    "Argonne",
+    "MEP"
+   ],
+   "key_content": [
+    "The second anchor of the hot-spot scaling, and the reason a relativistic 6Li is an INTERPOLATION rather than an extrapolation. Verbatim: 'The deposited energy forms a non-superconducting core of size proportional to the square root of the deposited energy. The previous work with a 120 GeV proton determined the hot spot size to be 134 nm, and a 5.5 MeV alpha particle creates an approximately 1 um hot spot by the same scaling.' A 6Li at 137.5 GeV/u lands at r_s ~ 400 nm, between their two measured points.",
+    "Devices: 12 nm NbN meanders, w in {100, 200, 300, 400} nm at d = 10 um and {100, 200, 400, 800} nm at d = 30 um, T = 2.7 K on a GM cryocooler. Source 241Am 100 uCi, alphas at 5.49/5.44/5.34 MeV.",
+    "Count-rate plateaus with NO latching: 2.5 +/- 0.3 Hz (100 nm, d = 10 um), 2.0 +/- 0.5 (200 nm, d = 10 um), 15.9 +/- 2.8 (200 nm, d = 30 um); the 30/10 um ratio 8.0 +/- 2.4 against a geometric 9. A ~1 um hot spot therefore does not latch a 100-200 nm wire.",
+    "The wire-width hint that Z-ID needs: 'the energy deposited by alpha particles is sufficient for detection in the 100 nm wire, which is narrower than the 250 nm devices optimal for 120 GeV proton detection'. But this is a STOPPING alpha, not a relativistic one, and the two mechanisms differ.",
+    "The alpha analysis itself is NOT published: 'While a detailed study of alpha detection is underway'. Low-bias operation needed an EMI-rejection scheme to see counts above the noise floor at all -- which is a caution for any 'bias the wire down until only Z = 3 fires' strategy."
+   ],
+   "used_in": [
+    "reports/nanowire_far_forward.template.html (the second calibration point of r_s ~ sqrt(Q); the no-latching result; the readout-SNR caution on low-bias operation)",
+    "plans/09_nearbeam_nanowire_far_forward.md"
+   ]
+  },
+  "pena2025-smspd-2mm-array": {
+   "file": "refs/2410.00251.pdf",
+   "arxiv": "2410.00251",
+   "journal": "JINST 20 (2025) P03001",
+   "title": "Characterization of a Superconducting Microwire Single-Photon Detector Array for Charged-Particle Detection",
+   "authors": [
+    "C. Pena",
+    "C. Wang",
+    "S. Xie",
+    "et al. (Caltech / JPL / Fermilab)"
+   ],
+   "year": 2025,
+   "keywords": [
+    "SMSPD",
+    "microwire",
+    "WSi",
+    "charged particle",
+    "120 GeV proton",
+    "FTBF",
+    "spatial resolution",
+    "amplitude",
+    "binary",
+    "fill factor",
+    "2x2 mm2"
+   ],
+   "key_content": [
+    "The largest SMSPD array run in a GeV hadron beam: 8-channel 2 x 2 mm^2 WSi on a 3 nm film, 1.5 um wires with 2.25 um gaps (40% fill factor), pixels 0.25 x 2 mm^2. Spatial resolution 30 +/- 1 um for 120 GeV protons; time resolution 1.15 ns.",
+    "The measurement that kills pulse-height Z-ID: waveforms and amplitude distributions from 120 GeV protons, 8 GeV pions and 8 GeV showering electrons are indistinguishable, and 'the same amplitude threshold is used' for all. The amplitude is the diverted BIAS current, not the deposit. Charge information in this technology lives in the firing threshold and the wire width, never in the pulse height.",
+    "Together with arXiv:2510.11725 (4.7 nm film, 1 um wires, 75% efficiency, 130 ps) this is the area state of the art for particle detection: a few mm^2 with 8 channels."
+   ],
+   "used_in": [
+    "reports/nanowire_far_forward.template.html (amplitude is binary -> Z-ID must be threshold-based; the area state of the art)",
+    "plans/09_nearbeam_nanowire_far_forward.md"
+   ]
   }
+ }
 }

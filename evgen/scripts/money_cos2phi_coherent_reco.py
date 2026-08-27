@@ -97,6 +97,14 @@ def main():
                          "tools/fullsim), as a floor under the envelope "
                          "cutout.  'none' is the envelope alone, which is "
                          "every number published before 2026-08-26")
+    ap.add_argument("--near-beam-mrad", type=float, default=None,
+                    help="replace the pots' measured HORIZONTAL aperture "
+                         "with this half-width [mrad], keeping the measured "
+                         "vertical: what a near-beam layer reaching closer "
+                         "than the silicon package would buy (plans/09; "
+                         "0.727 mrad = the 10 sigma envelope of the "
+                         "high-acceptance optics).  Needs --rp-aperture "
+                         "measured")
     ap.add_argument("--envelope-split", type=float, default=0.0,
                     help="RELATIVE difference of the Roman-Pot vertical "
                          "half-height between the m=+-1-rich and m=0-rich "
@@ -153,6 +161,15 @@ def main():
                          "per optics at 20.5, 50 and 137.5 (reco."
                          "RP_APERTURE_MEASURED)"
                          % config.ion_momentum_per_nucleon)
+    if args.near_beam_mrad is not None:
+        if aperture is None:
+            raise SystemExit("--near-beam-mrad replaces the horizontal half "
+                             "of the measured aperture, so it needs "
+                             "--rp-aperture measured")
+        print("near-beam layer: horizontal aperture %.3f mrad (was %.3f), "
+              "vertical unchanged at %.3f"
+              % (args.near_beam_mrad, 1e3 * aperture[0], 1e3 * aperture[1]))
+        aperture = (1e-3 * args.near_beam_mrad, aperture[1])
     cresp = rp.CoherentResponse(sc, config, args.sigma_theta,
                                 aspect=args.aspect, shape=args.shape,
                                 n_mc=args.n_mc, rng=rng,

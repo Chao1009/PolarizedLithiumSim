@@ -167,11 +167,11 @@ automatically.
 ## 2 · The five-minute check: the test suites
 
 ```bash
-cd evgen   && python3 -m pytest tests/ -q     # 183 passed, ~30 s
+cd evgen   && python3 -m pytest tests/ -q     # 195 passed, ~30 s
 cd fastsim && python3 -m pytest tests/ -q     # 48 passed, ~3 s
 ```
 
-231 tests, all of which run without the PDF grids except the two in
+243 tests, all of which run without the PDF grids except the two in
 `fastsim/tests/test_grids.py`, which skip.  These are not smoke tests:
 they pin physics identities against independent constructions — the
 spin-1 cross section against an explicit density-matrix trace, the
@@ -371,6 +371,38 @@ against the near-beam envelope, for the circular, square and slot
 cutouts.  Compare its answer with the *measured* ePIC aperture of §5.3 —
 they disagree, and that disagreement is an open item (plans/04 #20).
 
+### 4.6 The near-beam study (plans/09)
+
+```bash
+python3 scripts/nearbeam_aperture_scan.py --outdir .   # 3 s
+python3 scripts/nearbeam_reach_gain.py    --outdir .   # 2 s
+python3 scripts/nearbeam_sensor_budget.py --outdir .   # 1 s
+```
+
+Three questions, three scripts. The first prices *every* near-beam
+aperture — coherent tagged fraction and α-tag acceptance against the
+half-width in angle, per optics, with the measured ePIC aperture and the
+10σ envelope marked. The second runs the full coherent chain at both
+apertures and reports what the *measurement* does, not just the
+acceptance. The third asks whether a superconducting nanowire can be the
+thing that delivers a closer approach: energy deposits in a 12 nm NbN
+film, the hot-spot firing-threshold model of charge identification
+(Figure 3 of the report), the sizing, and the channel count at each
+available granularity.
+
+The coherent script also grew `--near-beam-mrad`, which replaces the
+measured *horizontal* aperture and keeps the measured vertical:
+
+```bash
+python3 scripts/money_cos2phi_coherent_reco.py --config 1 \
+        --rp-aperture measured --cut-scale-x 1.0 --near-beam-mrad 0.727
+```
+
+`--cut-scale-x 1.0` matters. The default 2.5 comes from the
+pre-measurement belief in a wide horizontal slot, and on top of a
+measured geometric aperture it imposes a 25σ horizontal retraction that
+binds *before* the geometry does — hiding the whole effect.
+
 ---
 
 ## 5 · Third-party generators
@@ -534,7 +566,7 @@ a current container before quoting an acceptance in a paper.
 ## 6 · The reports
 
 ```bash
-python3 reports/build_report.py          # three self-contained HTML pages
+python3 reports/build_report.py          # four self-contained HTML pages
 python3 reports/build_report.py --pdf    # and their PDFs (needs §1.6)
 ```
 
@@ -578,6 +610,10 @@ trust anything downstream of it.
 | … top config | `--config 2` | 0.74 / 0.34 / 0.69 / 0.18 |
 | unfolding model dependence | `scripts/money_cos2phi_reco.py --unfold-scan` | bin-by-bin (−5.0, +8.5, −9.3, +6.3)% → folded (−0.9, −1.2, −0.2, +0.3)% |
 | coherent tagged fraction | `scripts/coherent_optics_scan.py` | 32% / 3.0% / 4×10⁻⁵ / 2×10⁻⁷ at 0.10 / 0.22 / 0.45 / 0.60 GeV |
+| near-beam gain, coherent | `scripts/nearbeam_aperture_scan.py` | silicon → 10σ: 1.41×10⁻² → 3.71×10⁻¹ (×26), 5.12×10⁻⁵ → 2.91×10⁻² (×569), 1.94×10⁻¹⁷ → 1.97×10⁻⁹ (dead either way) |
+| near-beam gain, α tag | same | 0.103 → 0.550, 0.024 → 0.137, 0.0012 → 0.0054 |
+| near-beam gain, through the chain | `scripts/nearbeam_reach_gain.py` | 5 × 41: acc 1.43×10⁻² → 3.62×10⁻¹, 2 → 3 \|t\| bins; 10 × 100: 1.02×10⁻⁴ → 3.25×10⁻², 2 → 4 bins and δa_t 1.45 → 0.0069 |
+| hot-spot Z-ID thresholds | `scripts/nearbeam_sensor_budget.py` | r_s = 134 / 268 / 402 nm for p,d / α / ⁶Li; at w = 1 µm, I_th/I_c = 0.73 / 0.46 / 0.20 |
 
 ### Third-party
 
@@ -657,6 +693,8 @@ about eleven minutes.
 | `fastsim/tagging_acceptance` | 3 | `evgen/money_tagged_azz` | 3 |
 | `fastsim/diag_sig2_grid` | 1 | `evgen/tagged_polarimetry_7li` | 3 |
 | `fastsim/coverage_and_stat_maps` | 7 | `evgen/coherent_optics_scan` | 3 |
+| `evgen/nearbeam_aperture_scan` | 3 | `evgen/nearbeam_reach_gain` | 2 |
+| `evgen/nearbeam_sensor_budget` | 1 | | |
 | `fastsim/_check_reco_mask_invariants` | <1 | `evgen/reco_chain_figures` | 13 |
 | `fastsim/money_delta_realistic` | 36 | `evgen/money_cos2phi_reco` | 4 |
 | `fastsim/money_delta_pdfgrid` | **293** | `evgen/money_cos2phi_coherent_reco` | 3 |

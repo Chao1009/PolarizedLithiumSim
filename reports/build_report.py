@@ -14,6 +14,8 @@ Two build steps per page:
 Pages built (template -> html):
   cos2phi_money_plots_report.template.html   projection report
   polarized_li_primer.template.html          educational physics primer
+  reconstruction_chain_report.template.html  the reconstruction chain
+  nanowire_far_forward.template.html         the near-beam nanowire study
 
 With --pdf each page is also print-rendered through headless
 Edge/Chrome (the templates carry the @page A4 setup).
@@ -42,6 +44,12 @@ MONEY_FIGS = {
     "__M6__": "evgen/money_cos2phi_coherent_6Li.png",
 }
 
+NANOWIRE_FIGS = {
+    "__NB1__": "evgen/nearbeam_aperture_6Li.png",
+    "__NB2__": "evgen/nearbeam_reach_gain_6Li.png",
+    "__NB3__": "evgen/nearbeam_zid_threshold.png",
+}
+
 RECO_FIGS = {
     "__RC1__": "evgen/reco_chain_inclusive_6Li.png",
     "__RC2__": "evgen/reco_chain_coherent_6Li.png",
@@ -56,6 +64,7 @@ PAGES = (
     {"stem": "polarized_li_primer",
      "figures": {k: MONEY_FIGS[k] for k in ("__PS__", "__M5__")}},
     {"stem": "reconstruction_chain_report", "figures": RECO_FIGS},
+    {"stem": "nanowire_far_forward", "figures": NANOWIRE_FIGS},
 )
 
 BROWSERS = (

@@ -156,6 +156,27 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
     §VIII, 2602.04636). Make-or-break for the coherent intact-⁶Li tag
     (plans/06 §6.2). *Engage:* ePIC FF WG (A. Jentsch). *Default:*
     assume no event-by-event Z-ID at IP6 → two-component |t| fit.
+    *2026-08-26 (plans/09, `reports/nanowire_far_forward`):* **a
+    candidate answer exists, and it is not the dE/dx one.** A
+    superconducting nanowire latches — its pulse amplitude is the
+    diverted bias current and is identical for hadrons, muons, pions and
+    showering electrons (arXiv:2510.11725, 2410.00251) — so any
+    pulse-height scheme is dead. What the deposit sets is the FIRING
+    THRESHOLD, I_th/I_c = 1 − 2 r_s/w with r_s = √(Q/(eπcρ(T_c−T_0)))
+    (Argonne's own Eqs. 1–2, arXiv:2312.13405). Since dE/dx ∝ z² at
+    fixed β and ⁶Li at 137.5 GeV/u has βγ = 148 against 128 for their
+    calibration proton, **r_s ∝ z**: 134 / 268 / 402 nm for d,p / α /
+    ⁶Li, anchored on their *measured* 134 nm. At w = 1 µm — the
+    microwire width that already exists — the three turn-ons are 0.73 /
+    0.46 / 0.20 I_c, and **two bias points at 0.33 and 0.60 I_c tag Z by
+    the firing pattern alone**, both below the 0.80 I_c dark-count wall.
+    The scheme is a granted patent (US 8,872,109) demonstrated on singly-
+    vs doubly-charged lysozyme. One plane is a one-bit measurement (α →
+    ⁶Li confusion 20–25%), so 3–5 planes are needed for sub-percent.
+    *Blocking measurement:* the α turn-on curve on the same wires as the
+    120 GeV proton (plans/09 D1) — their α analysis is "underway", and a
+    relativistic ⁶Li is an INTERPOLATION between their two measured
+    points (134 nm proton, ≈1 µm for a 5.5 MeV ²⁴¹Am α).
 20. **Roman-Pot cutout geometry and Li beam divergence** (reconstruction-
     chain note, 2026-08-24). The near-beam cut is angular,
     pT_cut = 10σ_θ·A·p_u, so the same optics gives tag acceptances of
@@ -211,6 +232,28 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
     no beam envelope, and a September-2024 `epic-main`. *Action:* repeat
     on the current release with beam effects, and put the aspect ratio to
     the FF WG as a question with a number attached.
+    *2026-08-26 (plans/09 §9.4 — **the geometry has moved**):* reading
+    the current `main` of `eic/epic` directly, the pot layout changed
+    after the September-2024 snapshot `tools/fullsim` ran in. Modules
+    went 32 × 32 mm → **16 × 16 mm**; the single energy-independent
+    insertion became **per-energy 10σ offsets** in `beamline_*.xml`
+    ("These are the ten-sigma cuts for the Roman pots, translated to the
+    physical layout we currently have. They are not perfectly ten-sigma
+    for reasons of physical geometry."); and the 1 mm aluminium RF
+    shields are **commented out** ("we don't know if we will even need it
+    … Oct. 2025"). The old 32 mm block gives 32/30.6 m = 1.046 mrad
+    against the 1.03 measured — agreement to 1.5%, so measurement and
+    file reading confirm each other. The current 16 mm block implies
+    roughly half that, *below* the 0.727 mrad 10σ envelope; at 5 × 41 the
+    per-energy insertion moves the other way (29.6 mm inner edge).
+    **Every aperture-conditional number — the tagged fractions, the
+    sign-flipped ⟨cos 2β⟩, "the coherent programme is a low-energy
+    programme" — is therefore conditioned on a superseded geometry and
+    must be re-measured** (plans/09 B1, priority). What a closer approach
+    is WORTH is unaffected and now curved rather than tabulated:
+    `nearbeam_aperture_scan.py` prices every aperture, and the chain says
+    the gain is ×26 at 5 × 41, ×569 at 10 × 100, and at mid energy the
+    difference between a_t = 0.48 ± 1.45 and four clean bins.
 21. **Hadronic-method y resolution at y = 0.01–0.05 for e + light ions**
     (same note). Three of the four inclusive sweet spots sit at
     y = 0.010–0.025 where the electron alone gives δy/y = 50–120%; the
@@ -263,6 +306,6 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
 | 14–16 | generator theory inputs (plans/05) | open | Cloët/Cosyn (14), Wiringa (15), Cosyn/Sargsian (16) |
 | 17 | HepMC3 ion-spin convention | scheduled | plans/05 step 5.D → ePIC MC group |
 | 18 | coherent-⁶Li diffractive model (plans/06) | open | small-x theory engagement; scenario bands until then |
-| 19 | RP Z-ID for A/Z = 2 (plans/06) | open | ask ePIC FF WG — decides coherent-tag purity strategy |
-| 20 | RP cutout geometry + Li divergence (reco note) | open | ePIC FF WG / C-AD — decides coherent-tag energy and estimator |
+| 19 | RP Z-ID for A/Z = 2 (plans/06) | candidate answer | nanowire firing threshold, r_s ∝ z (plans/09 §9.2); blocked on the α turn-on curve (plans/09 D1) — ask ANL MEP |
+| 20 | RP cutout geometry + Li divergence (reco note) | **re-measure** | the ePIC pot geometry moved after the Sep-2024 snapshot (plans/09 §9.4, B1); then ePIC FF WG / C-AD for the light-ion optics |
 | 21 | hadronic-method δy/y at y ≈ 0.01–0.05 (reco note) | open | ePIC inclusive WG; e+Li sample through eic-smear |
