@@ -1,5 +1,9 @@
 # polligen — doubly polarized e+⁶,⁷Li event generation
 
+*Reproducing these results?  [../docs/reproduction_manual.md](../docs/reproduction_manual.md)
+§4 has every command with its runtime and expected output, and §5.1 the
+PYTHIA 8 sample they consume.*
+
 Event-level Monte Carlo for the *doubly polarized* eA process (plans/05):
 polarized electrons on vector/tensor-polarized ⁶,⁷Li, spin-labeled events,
 run-plan bookkeeping. Step 5.A (physics kernel + inclusive sampler) and
@@ -11,7 +15,7 @@ next. Imports `../fastsim/polli_fastsim` — nothing there is duplicated.
 
 ```bash
 cd evgen
-python3 -m pytest tests/ -q            # 143 tests (grid tests auto-skip)
+python3 -m pytest tests/ -q            # 183 tests
 python3 scripts/closure_fom.py --ion 6Li --events 200000 --trials 200
 python3 scripts/closure_fom.py --ion 7Li --events 200000 --trials 200
 python3 scripts/money_tagged_azz.py --events 400000       # money plot 4
@@ -173,19 +177,37 @@ double-angle / mixed methods, `HadronResponse` (tracker |η| ≤ 3.5, p_T > 0.2 
 Yellow-Report resolutions, 50 MeV noise), `ToyHFS` (string-fragmentation
 stand-in, exact four-momentum closure, π⁰ → γγ) and `HFSLibrary`/`HFSResponse`
 ((x, Q²) library transferring a generator's response onto the pseudo-events).
-The production sample is PYTHIA 8 (`tools/pythia8/gen_dis_hfs.py`, runs in
-eic-shell); locally the toy is used and labelled.
+The production sample is **PYTHIA 8, and it now exists**: 12 M events over the
+three beam configurations (`tools/pythia8/gen_dis_hfs.py` builds natively —
+no container — and `evgen/samples/README.md` is the manifest).  Without a
+sample both scripts fall back to the toy and label it.
 
 ```bash
-python3 scripts/hfs_resolution.py --outdir .                 # Figure 3: resolution vs y, captured Σ, sweet spots, noise scan
-python3 scripts/money_cos2phi_reco.py --y-source hfs --outdir .   # 5R/7R with the HFS-based y (…_hfs.png)
-python3 scripts/hfs_resolution.py --sample samples/pythia8_e10_p50_dis.npz samples/pythia8_e10_n50_dis.npz
+python3 scripts/hfs_resolution.py --config 1     --sample samples/pythia8_e10_p50_dis.npz samples/pythia8_e10_n50_dis.npz --outdir .
+python3 scripts/money_cos2phi_reco.py --y-source hfs --hfs-sample <the same pair> --outdir .
 ```
 
-Toy result (illustrative): captured Σ fraction 0.90; Σ-method δy/y at the four
-sweet spots 0.28 / 0.17 / 0.24 / 0.07 with 50 MeV noise (9–12% without noise) —
-the 25% stand-in is the noise floor acting on Σ_h ≈ 0.2 GeV; 5R rerun with the
-HFS-based y reproduces the Table 2 errors (purities 0.60 / 0.68 / 0.68 / 0.86).
+**Measured with PYTHIA (2026-08-26), Σ method, 50 MeV calorimeter noise, at the
+four money-plot-5 sweet spots:**
+
+| configuration | x = 0.056, Q² = 1.14 | 0.022, 1.14 | 0.141, 3.13 | 0.141, 14.3 |
+|---|---|---|---|---|
+| low, 5 × 20.5 | 0.21 | 0.12 | 0.17 | 0.10 |
+| **mid, 10 × 50** | **0.32** | **0.22** | **0.28** | **0.11** |
+| top, 18 × 137.5 | 0.74 | 0.34 | 0.69 | 0.18 |
+
+Three things the toy could not say.  (i) The 25% stand-in is right in
+magnitude at the mid configuration but the toy was **optimistic by 0.04–0.05
+absolute at every spot** (it gave 0.28 / 0.17 / 0.24 / 0.07).  (ii) The
+resolution degrades monotonically with beam energy, because the sweet spots
+move to lower y as s grows — at the top configuration the hadronic method is
+0.34–0.74 and the electron method 0.2–5.4, so **the low-energy configuration
+is where the x ≈ 0.05–0.14 bins are measurable**, which is the open item the
+reconstruction note lists.  (iii) The noise floor is the whole story below
+y ≈ 0.02: in the lowest y bin (y = 0.005) the Σ resolution runs 0.20 → 0.32 →
+0.54 → 1.01 for 0 → 25 → 50 → 100 MeV, and at y = 0.0125 it runs 0.18 → 0.21 →
+0.27 → 0.44, so plans/04 #21 (the ePIC noise and threshold floor at
+Σ_h ≈ 0.2–0.5 GeV) sets it, exactly as the note says.
 
 ## Step-5.A validation gates (plans/05 §5.4) — all passing
 
