@@ -156,8 +156,29 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
     §VIII, 2602.04636). Make-or-break for the coherent intact-⁶Li tag
     (plans/06 §6.2). *Engage:* ePIC FF WG (A. Jentsch). *Default:*
     assume no event-by-event Z-ID at IP6 → two-component |t| fit.
-    *2026-08-26 (plans/09, `reports/nanowire_far_forward`):* **a
-    candidate answer exists, and it is not the dE/dx one.** A
+    *2026-08-26 (plans/09, `reports/nanowire_far_forward`):* **the
+    question has been asked of the wrong technology.** A nanowire
+    supplies a candidate mechanism (below), but the INCUMBENT already
+    carries more information: EICROC provides per channel an 8-bit
+    40 MHz SAR ADC for charge (the ToT of ALTIROC was replaced by it for
+    dynamic range) behind an AC-LGAD with a 30 µm active thickness, and
+    30 µm of silicon separates ⁶Li from α at **4.8σ per plane** against a
+    nanowire's one bit — over the **four** planes ePIC already has (2
+    stations × 2 layers). The limit on either is the δ-ray upper tail,
+    which falls as 1/λ and so is nearly thickness-independent; four
+    planes with a majority vote take a 5–6% single-plane fake to ~10⁻³.
+    **Ask the incumbent first** (plans/09 D1): a Geant4 study through the
+    four layers, plus EICROC's input charge dynamic range in fC and the
+    sensor's gain-suppression curve at ~9 MIP. One person-month, no
+    hardware, closes #19 either way.
+    *Better still, and free:* the background #19 exists to reject is
+    ⁶Li → α + d, and that is **two hits**. k_rel ≈ 40 MeV/c is transverse
+    and unboosted, so the α (4p_u) and the d (2p_u) take opposite kicks
+    and land 6.7 / 18.4 / 44.8 mm apart at 18×275 / 10×100 / 5×41 —
+    **13 to 90 pixels of the existing 500 µm pitch**. An intact ⁶Li is one
+    hit. Topology beats dE/dx here, in sensors that already exist, and
+    nobody had looked (plans/09 B4).
+    *The nanowire mechanism, for the record:* A
     superconducting nanowire latches — its pulse amplitude is the
     diverted bias current and is identical for hadrons, muons, pions and
     showering electrons (arXiv:2510.11725, 2410.00251) — so any
@@ -173,10 +194,13 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
     The scheme is a granted patent (US 8,872,109) demonstrated on singly-
     vs doubly-charged lysozyme. One plane is a one-bit measurement (α →
     ⁶Li confusion 20–25%), so 3–5 planes are needed for sub-percent.
-    *Blocking measurement:* the α turn-on curve on the same wires as the
-    120 GeV proton (plans/09 D1) — their α analysis is "underway", and a
-    relativistic ⁶Li is an INTERPOLATION between their two measured
-    points (134 nm proton, ≈1 µm for a 5.5 MeV ²⁴¹Am α).
+    *Blocking measurement, and only if the LGAD route fails* (plans/09
+    D5): the α turn-on curve on the same wires as the 120 GeV proton —
+    their α analysis is "underway". Note it tests the √Q law and **not**
+    z² at fixed β: their ²⁴¹Am α differs from the 120 GeV proton almost
+    entirely through 1/β² (β = 0.054 vs ≈1). Nobody has ever varied Z at
+    fixed velocity on one of these devices, so the "interpolation, not
+    extrapolation" argument is only half true.
 20. **Roman-Pot cutout geometry and Li beam divergence** (reconstruction-
     chain note, 2026-08-24). The near-beam cut is angular,
     pT_cut = 10σ_θ·A·p_u, so the same optics gives tag acceptances of
@@ -306,6 +330,6 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
 | 14–16 | generator theory inputs (plans/05) | open | Cloët/Cosyn (14), Wiringa (15), Cosyn/Sargsian (16) |
 | 17 | HepMC3 ion-spin convention | scheduled | plans/05 step 5.D → ePIC MC group |
 | 18 | coherent-⁶Li diffractive model (plans/06) | open | small-x theory engagement; scenario bands until then |
-| 19 | RP Z-ID for A/Z = 2 (plans/06) | candidate answer | nanowire firing threshold, r_s ∝ z (plans/09 §9.2); blocked on the α turn-on curve (plans/09 D1) — ask ANL MEP |
+| 19 | RP Z-ID for A/Z = 2 (plans/06) | **redirected** | ask the incumbent: EICROC's 8-bit charge over 4 AC-LGAD planes gives 4.8σ/plane vs a nanowire's 1 bit (plans/09 D1); and α + d is two hits 13–90 pixels apart (plans/09 B4) |
 | 20 | RP cutout geometry + Li divergence (reco note) | **re-measure** | the ePIC pot geometry moved after the Sep-2024 snapshot (plans/09 §9.4, B1); then ePIC FF WG / C-AD for the light-ion optics |
 | 21 | hadronic-method δy/y at y ≈ 0.01–0.05 (reco note) | open | ePIC inclusive WG; e+Li sample through eic-smear |

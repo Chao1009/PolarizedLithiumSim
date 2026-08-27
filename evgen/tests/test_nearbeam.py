@@ -4,8 +4,9 @@ Two claims carry the report and both are pinned here:
 
   * the deposit ratio is z^2 EXACTLY at fixed velocity, so the hot-spot
     radius goes as z linearly.  This is what lets Argonne's single
-    measured point (r_s = 134 nm for a 120 GeV proton) fix the 6Li and
-    alpha radii without a thermodynamic calculation;
+    anchor (r_s = 134 nm for a 120 GeV proton -- an EXTRAPOLATED fit
+    parameter, not a datum) fix the 6Li and alpha radii without a
+    thermodynamic calculation;
   * below w = 2 r_s the firing threshold is zero, the wire fires at any
     bias, and it carries NO charge information -- which is why Argonne's
     ~250 nm MIP-efficiency optimum has zero Z discrimination and Z-ID
@@ -14,6 +15,10 @@ Two claims carry the report and both are pinned here:
 The published anchors themselves (134 nm; the ~250 nm optimum; the
 0.8 I_c dark-count wall; the ~1 um hot spot of a 5.5 MeV alpha) are
 checked against the numbers the papers state.
+
+One test here exists to pin a NEGATIVE result: the ePIC AC-LGAD stack
+carries more charge information per plane than a threshold nanowire, and
+that is what decides open question #19 against this technology.
 """
 
 import math
@@ -151,12 +156,54 @@ def test_species_ordering_survives_the_softer_inverted_radius():
     assert t[0] < nb.DARK_COUNT_WALL
 
 
-def test_a_relativistic_6Li_brackets_between_argonnes_two_measurements():
-    """The Z-ID case is an interpolation: 134 nm (their 120 GeV proton)
-    < ~400 nm (a relativistic 6Li) < ~1 um (their 5.5 MeV 241Am alpha,
-    by the same sqrt(Q) scaling)."""
+def test_the_241Am_alpha_is_a_beta_point_not_a_z_point():
+    """The report's first version argued that a relativistic 6Li is an
+    'interpolation' between Argonne's two measured points.  It is -- in Q.
+    But their 241Am alpha differs from the 120 GeV proton almost entirely
+    through 1/beta^2, not through z^2, so it calibrates sqrt(Q) across
+    ENERGY and says nothing about z^2 at fixed velocity.  This test pins
+    the distinction so the claim cannot quietly come back."""
     r_li = nb.hot_spot_nm(3)
     # their own arithmetic: sqrt(5.5 MeV / 0.1 MeV) x 134 nm ~ 1 um
     r_am_alpha = nb.R_S_PROTON_NM * math.sqrt(5.5 / 0.1)
     assert r_am_alpha == pytest.approx(1000.0, rel=0.05)
-    assert nb.R_S_PROTON_NM < r_li < r_am_alpha
+    assert nb.R_S_PROTON_NM < r_li < r_am_alpha          # in Q, yes
+
+    # but the alpha's velocity is nothing like the proton's, so the
+    # 1/beta^2 factor alone spans more than the whole z^2 range
+    beta_am = math.sqrt(2.0 * 5.5 / 3727.4)              # 5.5 MeV alpha
+    assert beta_am == pytest.approx(0.054, abs=0.005)
+    assert 1.0 / beta_am ** 2 > 3.0 ** 2
+
+
+def test_the_incumbent_ac_lgad_carries_more_information_per_plane():
+    """The finding that decides open question #19 against this
+    technology.  A threshold nanowire yields ONE BIT per plane; the
+    ePIC AC-LGAD digitises an 8-bit charge over a 30 um active layer,
+    which separates 6Li from alpha well enough that a nanowire can at
+    best match it.  Landau in silicon, Gaussian-equivalent core width
+    FWHM/2.355 = 4.02 xi / 2.355."""
+    si = nb.Film(thickness_nm=30e3, density=2.33, z_over_a=0.4993,
+                 i_ev=173.0, delta=5.604, name="Si 30 um")
+    mpv = {z: nb.bethe_mean_ev(z, BG_6LI_TOP, si) for z in (1, 2, 3)}
+    xi = {z: nb.landau_xi_ev(z, 1.0, si) for z in (1, 2, 3)}
+    # the AC-LGAD active layer is thick enough for Landau to apply here,
+    # unlike the 12 nm film
+    assert si.xi_over_i() > 1.0
+    sig = math.hypot(4.02 * xi[3] / 2.355, 4.02 * xi[2] / 2.355)
+    separation = (mpv[3] - mpv[2]) / sig
+    assert separation > 4.0                      # against a nanowire's 1 bit
+    assert mpv[3] / mpv[1] == pytest.approx(9.0)  # z^2, as everywhere
+
+
+def test_alpha_deuteron_breakup_is_two_hits_tens_of_pixels_apart():
+    """The handle that beats any dE/dx scheme for the background #19 was
+    written about.  Both fragments sit at beam rigidity so neither is
+    dispersed, but k_rel is TRANSVERSE and therefore unboosted: the alpha
+    at 4 p_u and the deuteron at 2 p_u take opposite kicks of the same
+    k_rel and land far apart against a 500 um pitch."""
+    k_gev, r12_m, pitch_mm = 0.040, 30.6, 0.5
+    for p_u, expect_mm in ((137.5, 6.7), (50.0, 18.4), (20.5, 44.8)):
+        sep_mm = 1e3 * r12_m * k_gev * (1.0 / (4.0 * p_u) + 1.0 / (2.0 * p_u))
+        assert sep_mm == pytest.approx(expect_mm, rel=0.02)
+        assert sep_mm / pitch_mm > 13.0          # resolvable at every optics

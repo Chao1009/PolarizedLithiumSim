@@ -14,6 +14,11 @@ Superconducting nanowire detectors, developed for nuclear physics by the
 Argonne MEP and Physics Divisions, are the candidate technology.
 **Report:** `reports/nanowire_far_forward.html` / `.pdf`.
 
+**Answer: no.** Neither candidate role survives, and both fail on
+arithmetic rather than on unknowns (§9.2, §9.3). What survives is the
+pricing curve — which is technology-independent — a correction to the
+programme's own baseline (§9.4), and a redirected open question #19.
+
 **Status legend:** ☐ todo ◐ started ☑ done · **D-items are decisions or
 external inputs, not work.**
 
@@ -60,7 +65,7 @@ geometry does — hiding the entire effect. Both new scripts hold the
 envelope at 10σ per axis and let the measured geometry be the only
 aperture.
 
-## 9.1 The idea is already on record — and its stated mechanism is wrong
+## 9.1 The idea is already on record — and neither its stated mechanism nor its fallback survives
 
 Near-beam recoil tagging is not a new application to propose to the
 Argonne group. **EIC Yellow Report §14.5.3** lists the four SNSPD
@@ -78,75 +83,124 @@ motivate the rest of the far-forward programme.
 
 **But the stated mechanism does not hold.** The 10σ rule is machine
 protection and beam halo, not sensor damage; a more radiation-hard sensor
-does not relax it. The honest version of the argument is **granularity and
-dead edge**: the insertion is quantised by the module, the innermost step
-is held back to protect a block one module wide, and a millimetre-scale
-tile whose active area reaches within a few hundred nanometres of the
-substrate edge is the object that de-quantises that staircase. That is a
-pot-mechanics argument worth making — but it is not the one the proposal
-makes.
+does not relax it. LHC ran the CT-PPS pots at 25σ at 6.5 TeV.
 
-## 9.2 Charge identification is where the technology delivers
+**And the dead-edge fallback does not survive arithmetic.** A nanowire's
+active area reaches within a few hundred nanometres of the substrate edge
+(and the SMSPD's edge is measurably sharper than the 10 µm telescope used
+to look at it) — a real and unusual property. But slim-edge planar and 3D
+silicon already deployed in Roman Pots reaches 100–200 µm, so the
+difference is ≈150 µm, or **0.005 mrad at R₁₂ = 30.6 m** — 1% of the
+0.52 mrad edge, 0.3% of the 10 × 100 gap. Unmeasurable in |t|.
 
-Open question #19 has no answer at IP6. A nanowire supplies one — but not
-the way one would guess.
+**The granularity half does survive — and it belongs to ePIC.** At
+10 × 100 the blind block is 32 mm wide against a 10σ_x of order 10–17 mm:
+a factor ~330 in coherent yield surrendered to retracting a whole 32 mm
+block. The fix is a staircase retraction near x = 0, narrower modules, or
+the x-moving layer ePIC is **already designing** — Jentsch, July 2025:
+*"Simplest option would be one 'x' moving layer and one 'y' moving layer
+in each station … Expect to have this finalized in the next 6-8 weeks."*
+This is the highest-value item in the study, and it is a layout change to
+a baselined detector, not new technology.
 
-**Not by pulse height.** The device latches: the amplitude is the diverted
-*bias* current. Both Fermilab/JPL beam papers show amplitude distributions
-from 120 GeV hadrons, 120 GeV muons, 8 GeV pions and 8 GeV showering
-electrons to be indistinguishable, with one threshold serving all
-(arXiv:2510.11725, 2410.00251). Any pulse-height scheme is dead on arrival.
+## 9.2 Charge identification: right mechanism, wrong technology
 
-**By firing threshold.** In the normal-core hot-spot regime,
+Open question #19 has no answer at IP6. A nanowire supplies a *candidate*
+mechanism — but not the one it is usually sold with, and not one that
+beats the incumbent.
+
+**Not by pulse height.** The device latches: the amplitude is the
+diverted *bias* current. Both Fermilab/JPL beam papers show amplitude
+distributions from 120 GeV hadrons, 120 GeV muons, 8 GeV pions and 8 GeV
+showering electrons to be indistinguishable, with one threshold serving
+all (arXiv:2510.11725, 2410.00251). Any pulse-height scheme is dead.
+
+**It would be by firing threshold.** In the normal-core hot-spot regime,
 
     r_s = sqrt(Q / (e π c ρ (T_c − T_0)))     I_th/I_c = 1 − 2 r_s / w
 
-— Argonne's own Eqs. 1–2 (arXiv:2312.13405), the same relation Renema
-writes as E = (w/C)²(1 − I_b/I_c)² and the ion literature as
+— Argonne's Eqs. 1–2 (arXiv:2312.13405), the same relation Renema writes
+as E = (w/C)²(1 − I_b/I_c)² and the ion literature as
 I_th/I_c = 1 − (zeV)^½ C/w (Cristiano et al., SUST 28 (2015) 124004).
 Since dE/dx ∝ z² at fixed β, and ⁶Li at 137.5 GeV/u has βγ = 148 against
-128 for Argonne's calibration proton — the same velocity to 15% —
-**r_s ∝ z linearly**: 134 / 268 / 402 nm for d,p / α / ⁶Li, anchored on
-Argonne's *measured* 134 nm.
+128 for Argonne's calibration proton, **r_s ∝ z linearly**: 134 / 268 /
+402 nm for d,p / α / ⁶Li.
 
 | wire width | I_th/I_c: p,d | α | ⁶Li | separated turn-ons |
 |---|---|---|---|---|
 | 250 nm | 0.00 | 0.00 | 0.00 | none — **ANL's MIP optimum** |
-| 400 nm | 0.33 | 0.00 | 0.00 | none |
 | 800 nm | 0.67 | 0.33 | 0.00 | α from d |
 | **1000 nm** | **0.73** | **0.46** | **0.20** | **all three — the existing microwire** |
 | 1500 nm | 0.82 | 0.64 | 0.46 | all three |
 
-**Two bias points at 0.33 and 0.60 I_c tag Z by the firing pattern alone**,
-both well below the 0.80 I_c at which Argonne measure the dark-count rate
-rising exponentially. Bias-point charge-state discrimination is a granted
-patent (US 8,872,109, Ohkubo & Suzuki), demonstrated on singly- versus
-doubly-charged lysozyme by subtracting two bias points.
+Two bias points at 0.33 and 0.60 I_c would tag Z by the firing pattern
+alone, both below the 0.80 I_c dark-count wall. In its favour: that
+operating point is also the one that makes the device blind to a 300 K
+beam pipe (a 300 K surface radiates ≈3×10¹⁸ photons cm⁻² s⁻¹ above the
+0.04 eV threshold), and the wide wire Z-ID needs is the same microwire
+the area problem independently needs.
 
-Three things make this the strong part of the case:
+### Why it fails anyway
 
-* **It is an interpolation.** Argonne have measured a 120 GeV proton at
-  r_s = 134 nm and a 5.5 MeV ²⁴¹Am α that their own √Q scaling puts at
-  ≈ 1 µm (arXiv:2601.03158). A relativistic ⁶Li lands at ≈ 400 nm —
-  between their two measured points, on devices from the same programme.
-* **The Z-ID operating point is also the blackbody-immune one.** A 300 K
-  surface radiates ≈ 3×10¹⁸ photons cm⁻² s⁻¹ above the 0.04 eV SNSPD
-  threshold, so a photon-mode device cannot look at a warm beam pipe.
-  Biasing at 0.33 and 0.60 I_c puts the wire below its photon threshold
-  and leaves only the hard-hot-spot particle mode — which is what the
-  Z-ID scheme wants anyway.
-* **The area answer and the Z-ID answer are the same device.** Argonne's
-  efficiency optimum, w ≈ 250 nm, is precisely 2r_s for a proton: maximal
-  MIP efficiency and *zero* charge information. Z-ID needs deliberately
-  *wide* wires — the microwire (SMSPD) geometry Caltech/JPL/Fermilab
-  already fabricate at 1 µm.
+**(1) The anchor is softer than it looks.** r_s = 134 nm is the
+*extrapolated* zero-crossing of a four-point fit, and the authors write
+*"While the physical validity of this simple model is a question of
+future work"*. Inverting their four points individually gives 102–118 nm
+(mean 113). And the volume in which Q is counted differs by a **factor
+5000** between their own two papers: the 2024 paper says *"the energy
+that the proton has deposited into the thin film"* (≈20 eV), the 2026
+paper applies the same √Q scaling to the *substrate* deposit (0.1 MeV).
+Both scale as z², so r_s ∝ z survives; the absolute radii do not.
 
-**The honest limit.** One threshold plane is a one-bit dE/dx measurement
-on a straggling distribution: α → ⁶Li confusion is 20–25% per plane and
-improves only weakly with film thickness, so sub-percent mis-ID needs 3–5
-independent planes. That is a limitation of any threshold dE/dx detector —
-and still the difference between a stack with charge information and a
-Roman Pot with none.
+**(2) "An interpolation, not an extrapolation" is only half true.**
+Argonne's ²⁴¹Am α differs from their 120 GeV proton almost entirely
+through 1/β² (β = 0.054 against ≈1), not through z². It tests the √Q law
+across energy; it says **nothing about z² at fixed velocity**. Nobody has
+ever varied Z at fixed β on one of these devices, and every published ion
+demonstration varies kinetic energy through an acceleration voltage, so
+charge enters as E = zeV — linear in z, not z² from dE/dx.
+
+**(3) The incumbent already carries more information — and this is
+decisive.** EICROC provides per channel an **8-bit 40 MHz SAR ADC** for
+charge alongside its 10-bit 25 ps ToA TDC (the ToT of ALTIROC was
+replaced by that ADC precisely for dynamic range), behind an AC-LGAD with
+a **30 µm active thickness** at 500 µm pitch.
+
+| discriminant | MPV d / α / ⁶Li | α ↔ ⁶Li per plane | planes ePIC has |
+|---|---|---|---|
+| AC-LGAD, 30 µm Si, 8-bit charge | 7.2 / 31.7 / 75.2 keV | **4.8σ** | **4** |
+| nanowire, 12 nm NbN, threshold | — | 1 bit | 0 |
+
+A nanowire cannot beat this observable; at best it matches it. The limit
+on either is the **δ-ray upper tail**, which falls as 1/λ and is nearly
+independent of sample thickness (30 µm of Si gives 4.8σ, a 1 µm substrate
+volume 3.8σ) — so thickening does not rescue it, but four planes with a
+majority vote take a 5–6% single-plane fake to ~10⁻³. **ePIC already has
+four planes.**
+
+### The handle that beats both, and is free
+
+The background #19 exists to reject is ⁶Li → α + d. Both fragments sit at
+beam rigidity, so neither is separated by dispersion — but the breakup's
+relative momentum, k_rel ≈ √(2μQ) ≈ 40 MeV/c (plans/06 §6.2), is
+*transverse* and is therefore not boosted. The α at 4p_u and the d at
+2p_u take opposite kicks of the same k_rel:
+
+| optics | α | d | separation | in 500 µm pixels |
+|---|---|---|---|---|
+| 18 × 275 | 2.2 mm | 4.5 mm | 6.7 mm | **13** |
+| 10 × 100 | 6.1 mm | 12.2 mm | 18.4 mm | **37** |
+| 5 × 41 | 14.9 mm | 29.9 mm | 44.8 mm | **90** |
+
+(k_rel = 40 MeV/c at R₁₂ = 30.6 m, measured for 18 × 275; the other rows
+carry that lever arm for want of the per-optics value, so read them as
+scaling. Very small k_rel puts both fragments near the beam and may lose
+both — quantifying that tail is the study, not this table.)
+
+**An intact ⁶Li is one hit; the breakup is two, tens of pixels apart, in
+sensors that already exist.** Topology is a stronger discriminant than
+dE/dx for exactly the background #19 was written about, and nobody in
+this programme had looked at it.
 
 ## 9.3 What stands in the way
 
@@ -186,9 +240,14 @@ here. The aperture `tools/fullsim` measured came from the September-2024
 
 The old block gives 32 mm / 30.6 m = 1.046 mrad against the 1.03 mrad the
 scan measured — agreement to 1.5%, which is the check that the measurement
-and the file reading confirm each other. The current block implies roughly
-half that, *below* the 0.727 mrad 10σ envelope; at 5 × 41 the per-energy
-insertion moves the other way, to a 29.6 mm inner edge.
+and the file reading confirm each other. **The correction runs in opposite directions at the two ends**, which is
+why it cannot be guessed. At 18 × 275 the 16 mm block implies ≈0.52 mrad
+— *below* the 0.727 mrad 10σ envelope, so the sensor package no longer
+binds and the beam does. At 5 × 41 the per-energy insertion moves the
+other way, to a 29.6 mm inner edge, because the pots now retract properly
+for the larger low-energy beam: the aperture there gets **worse**. That
+is precisely the configuration at which the coherent programme was said
+to survive.
 
 **So the measured aperture, the ⟨cos 2β⟩ = −0.77, the 1.4×10⁻² tagged
 fraction and "the coherent programme is a low-energy programme" are all
@@ -230,38 +289,44 @@ Every number here is ⁶Li. ⁷Li's α tag already lands inside the Roman-Pot
 window (plans/00, strategic finding 2), so the gain is smaller and needs
 its own pass before any claim is made.
 
-### D1 — the α turn-on curve · **ANL MEP**
-Turn-on bias versus wire width for the ²⁴¹Am α, on the same wires as the
-120 GeV proton. If the α curve sits where r_s ∝ z predicts, the Z-ID case
-is validated with data they already own. Their α analysis is explicitly
-*"underway"*.
+### B4 — two-hit topology for α + d ☐ **new, and cheap**
+§9.2. What fraction of breakup events puts both fragments in acceptance,
+and how well does hit multiplicity separate them from an intact ⁶Li?
+Free, already instrumented, unexamined.
 
-### D2 — has the ~250 nm optimum been checked against anything but z = 1? · **ANL MEP**
-Nobody has put a relativistic z > 1 nucleus in front of an SNSPD. If Z-ID
-is real this is the first measurement of it, and FTBF or the SPS could do
-it with a light-ion beam.
+### D1 — can the existing AC-LGAD stack do Z-ID? · **ePIC FF WG / OMEGA-IJCLab / BNL**
+**Ask this before anything about nanowires.** A Geant4/DD4hep study
+through all four RP layers with an EICROC front-end model, plus two
+numbers nobody has published: the chip's **input charge dynamic range in
+fC** (does 9 × MIP clip the front end?) and the sensor's **gain-suppression
+curve** at ~9 MIP. One person-month, no hardware, and it closes #19
+either way.
 
-### D3 — per-optics R₁₂, R₃₄ and the light-ion beam sizes · **ePIC FF WG / C-AD**
+### D2 — what actually sets the 10σ retraction, and σ_x for light ions · **C-AD / ePIC FF WG**
+A conversation, not an experiment. The first part decides whether any
+"rad-hard ⇒ closer" argument can work at all. The second is worth three
+orders of magnitude in coherent yield at top energy by itself: the
+repository's envelope implies 10σ_x ≈ 22 mm (0.73 mrad) while Jentsch's
+"1σ ~ 1 mm" and the published "inner detector edge … 1 cm or less" imply
+~10 mm (0.33 mrad).
+
+### D3 — per-optics R₁₂ and R₃₄ · **ePIC FF WG**
 R₁₂ = 30.6 m was measured for 18 × 275 only, which is why this plan works
 in angle and quotes millimetres for that optics alone. The 10σ offsets in
-`beamline_*.xml` exist only for proton optics, and are marked *"rough
-extrapolation"* at 5 × 41. This is plans/04 #20's original ask.
+`beamline_*.xml` exist only for proton optics and are marked *"rough
+extrapolation"* at 5 × 41.
 
-### D4 — area, wire width, channel count, and by when · **ANL MEP**
-Polakovic's 2024 DOE Early Career award (to 2029) is explicitly to
-*"expand their effective sensing areas and interface them with
-semiconducting readout electronics"*. Armstrong's parallel award targets
-JLab ⁴He, not the EIC pot — so an EIC-pot demonstrator is not currently
-anyone's funded near-term deliverable.
+### D4 — the x-moving layer and a staircase retraction near x = 0 · **ePIC FF WG (A. Jentsch)**
+Where the ×60–×330 actually lives, and already being designed.
 
-### D5 — a dose limit for NbN, and the pot radiation environment · **ANL MEP / ePIC FF WG**
-Neither is published. Without both, "more radiation hard" cannot become
-"therefore N mm closer".
-
-### D6 — pot beam-coupling impedance and RF heating · **C-AD**
-No quantitative EIC pot impedance study is public; the geometry comment
-says the shield's necessity is unknown for exactly this reason. It sets
-the cryogenic load of §9.3.
+### D5 — *only if D1 says the LGAD cannot do it:* the α turn-on curve · **ANL MEP**
+Turn-on bias versus wire width for the ²⁴¹Am α, on the same wires as the
+120 GeV proton. Costs them one plot from data they already hold, and
+kills the concept at zero cost if the α curve is not where √Q predicts.
+**Be precise that it tests the √Q law, not z² at fixed β.** The
+experiment that would test that — a relativistic light-ion beam on a
+1–2 µm microwire at FTBF or the SPS — is a beam-time request, and this
+study should not be what motivates it.
 
 ---
 
@@ -274,7 +339,22 @@ the cryogenic load of §9.3.
   geometry it was made in, and that geometry has moved (§9.4).
 * **The coherent programme's energy reach** — aperture-conditional, not
   physics-conditional (§9.0).
-* **The recommendation.** Put the charge-identification question to the
-  MEP group ahead of anything about apertures. It is specific, testable,
-  answerable with data they may already own, and it addresses a gap
-  nothing else at IP6 addresses.
+* **The recommendation, corrected.** The first version of this plan
+  concluded that charge identification was the strong half of the case
+  and should be put to the MEP group ahead of anything about apertures.
+  An adversarial review established the opposite: the incumbent AC-LGAD
+  already digitises an 8-bit charge over a 30 µm active layer across four
+  planes, giving ≈4.8σ per plane against a nanowire's one bit, so a
+  nanowire is a downgrade. **Ask the incumbent first (D1), and ask C-AD
+  what the 10σ rule actually protects (D2).** Ranked list of what would
+  help the lithium tags: (1) the low-energy configuration; (2) re-tiling
+  the near-beam silicon, which ePIC is already designing; (3) using the
+  charge EICROC already digitises; (4) two-hit topology for α + d; (5)
+  the IR-8 secondary focus and its z² Cherenkov. Superconducting
+  nanowires appear nowhere on it.
+* **Where the technology *would* belong.** The Argonne programme's own
+  four-application list points at the cold bore of a superconducting
+  magnet, in front of the ZDC, and a Compton polarimeter. The result that
+  makes the technology unique — saturated efficiency to 5 T *parallel* to
+  the device plane, against 0.5 T perpendicular — is worth nothing at a
+  pot in a field-free drift and everything inside a magnet.

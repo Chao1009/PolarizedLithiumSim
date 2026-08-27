@@ -21,7 +21,26 @@ Two independent pieces, both used by the near-beam study and its report
         I_th / I_c = 1 - 2 r_s / w
 
     Argonne's own Eqs. 1-2 (Lee et al., arXiv:2312.13405, NIM A 1069
-    (2024) 169956).  The same relation appears on the photon side as
+    (2024) 169956).  Two cautions the paper states about itself and one
+    the literature states about it:
+
+      * r_s = 134 nm is the EXTRAPOLATED zero-crossing of a four-point
+        fit, not a measurement.  The authors write "While the physical
+        validity of this simple model is a question of future work".
+        Inverting their four Fig. 7 points individually gives 102-118 nm
+        (mean 113) -- see tests/test_nearbeam.py.
+      * The VOLUME in which Q is counted is unresolved by a factor 5000.
+        The 2024 paper defines Q as "the energy that the proton has
+        deposited into the thin film" (~20 eV by the Bethe mean below);
+        the 2026 paper, with overlapping authorship, applies the same
+        sqrt(Q) scaling to the SUBSTRATE deposit (0.1 MeV for the same
+        proton, arXiv:2601.03158).  Both scale as z^2, so r_s ~ z
+        survives; the absolute radii do not.
+      * Their 5.5 MeV 241Am alpha is NOT a z-scaling calibration point.
+        It differs from the 120 GeV proton almost entirely through
+        1/beta^2 (beta = 0.054 against ~1), so it tests the sqrt(Q) law
+        across energy and says nothing about z^2 at fixed velocity.
+        Nobody has varied Z at fixed beta on one of these devices.  The same relation appears on the photon side as
     E = (w/C)^2 (1 - I_b/I_c)^2 (Renema et al., arXiv:1301.3337) and in
     the ion literature as I_th/I_c = 1 - (zeV)^(1/2) C/w (Cristiano et
     al., Supercond. Sci. Technol. 28 (2015) 124004).
@@ -29,10 +48,7 @@ Two independent pieces, both used by the near-beam study and its report
     Since dE/dx goes as z^2 at fixed velocity, r_s goes as z LINEARLY.
     A 6Li at 137.5 GeV/u has beta*gamma = 148 against 128 for Argonne's
     120 GeV calibration proton -- the same velocity to 15% -- so the step
-    from their measured r_s = 134 nm to z = 3 needs no velocity
-    correction.  They have also run a 5.5 MeV 241Am alpha, which their
-    own sqrt(Q) scaling puts at ~1 um (arXiv:2601.03158): a relativistic
-    6Li at ~400 nm lands BETWEEN their two measured points.
+    from their r_s = 134 nm to z = 3 needs no velocity correction.
 
 The consequence that decides the design: below w = 2 r_s the threshold is
 zero, the wire fires at any bias, and it carries no charge information at
@@ -40,6 +56,14 @@ all.  Argonne's stated efficiency optimum for a MIP, w ~ 250 nm, is
 exactly 2 r_s for a proton -- maximal efficiency and zero charge
 information -- so Z identification needs deliberately WIDE wires, which
 is the microwire (SMSPD) geometry that already exists at w = 1 um.
+
+WHERE THIS ENDS UP (reports/nanowire_far_forward, 2026-08-26): a
+threshold nanowire delivers ONE BIT per plane, while the incumbent ePIC
+AC-LGAD digitises an 8-bit charge over a 30 um active layer -- which
+separates 6Li from alpha at ~4.8 sigma per plane, over the four planes
+ePIC already has.  A nanowire cannot beat that observable.  This module
+is kept because the threshold physics is correct, testable and worth
+recording; it is not kept because the design won.
 """
 
 import math
@@ -51,7 +75,9 @@ __all__ = ["NBN", "Film", "bethe_mean_ev", "hot_spot_nm", "threshold_ratio",
 K_MEV = 0.307075                 # MeV mol^-1 cm^2
 M_E_EV = 0.510998e6
 
-R_S_PROTON_NM = 134.0            # MEASURED, 120 GeV p in 12 nm NbN
+R_S_PROTON_NM = 134.0            # EXTRAPOLATED, 120 GeV p in 12 nm NbN
+                                 # -- a fit parameter, not a datum: see the
+                                 # module docstring
 W_MIP_OPTIMAL_NM = 250.0         # ANL's stated optimum for a MIP (= 2 r_s)
 DARK_COUNT_WALL = 0.80           # I_b/I_c above which background rises
                                  # exponentially (arXiv:2312.13405 Sec. 3.1)

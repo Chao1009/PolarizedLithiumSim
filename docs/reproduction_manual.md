@@ -167,11 +167,11 @@ automatically.
 ## 2 · The five-minute check: the test suites
 
 ```bash
-cd evgen   && python3 -m pytest tests/ -q     # 195 passed, ~30 s
+cd evgen   && python3 -m pytest tests/ -q     # 197 passed, ~35 s
 cd fastsim && python3 -m pytest tests/ -q     # 48 passed, ~3 s
 ```
 
-243 tests, all of which run without the PDF grids except the two in
+245 tests, all of which run without the PDF grids except the two in
 `fastsim/tests/test_grids.py`, which skip.  These are not smoke tests:
 they pin physics identities against independent constructions — the
 spin-1 cross section against an explicit density-matrix trace, the
@@ -613,7 +613,7 @@ trust anything downstream of it.
 | near-beam gain, coherent | `scripts/nearbeam_aperture_scan.py` | silicon → 10σ: 1.41×10⁻² → 3.71×10⁻¹ (×26), 5.12×10⁻⁵ → 2.91×10⁻² (×569), 1.94×10⁻¹⁷ → 1.97×10⁻⁹ (dead either way) |
 | near-beam gain, α tag | same | 0.103 → 0.550, 0.024 → 0.137, 0.0012 → 0.0054 |
 | near-beam gain, through the chain | `scripts/nearbeam_reach_gain.py` | 5 × 41: acc 1.43×10⁻² → 3.62×10⁻¹, 2 → 3 \|t\| bins; 10 × 100: 1.02×10⁻⁴ → 3.25×10⁻², 2 → 4 bins and δa_t 1.45 → 0.0069 |
-| hot-spot Z-ID thresholds | `scripts/nearbeam_sensor_budget.py` | r_s = 134 / 268 / 402 nm for p,d / α / ⁶Li; at w = 1 µm, I_th/I_c = 0.73 / 0.46 / 0.20 |
+| hot-spot Z-ID thresholds | `scripts/nearbeam_sensor_budget.py` | r_s = 134 / 268 / 402 nm for p,d / α / ⁶Li; at w = 1 µm, I_th/I_c = 0.73 / 0.46 / 0.20 — but see the report §4.1: the incumbent AC-LGAD gives 4.8σ/plane against this one bit |
 
 ### Third-party
 
