@@ -82,6 +82,14 @@ from contextlib import contextmanager
 
 import numpy as np
 
+# NumPy compat: np.trapezoid does not exist below NumPy 2.0 (the installed
+# 1.25.1 raises AttributeError inside solve_A_from_sum_rule, the first thing
+# main() does) and np.trapz was removed in 2.4.  Same two-sided shim as
+# polli_fastsim/delta_models.py and money_delta_20260729.py; this script is
+# the last consumer that had not picked it up (code review 2026-08-25 item
+# S11).  It renames a function, so no number moves.
+_trapezoid = getattr(np, "trapezoid", None) or np.trapz
+
 # ── ensure polli_fastsim is importable ────────────────────────────────────────
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 
@@ -545,7 +553,7 @@ def solve_A_from_sum_rule(cfg, nf2_obj, base, variant, c_coef):
     # x^α (1-x)^β / _PEAK_VALS[variant]  so that at x_peak the shape is 1
     # matching the convention in delta_shape / delta_shape_with_alphas
 
-    integral = float(np.trapezoid(integrand, x_full))
+    integral = float(_trapezoid(integrand, x_full))
 
     if abs(integral) < 1e-30:
         raise RuntimeError(

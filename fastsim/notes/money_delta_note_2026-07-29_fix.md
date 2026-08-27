@@ -1,5 +1,19 @@
 # Reco-Selection Consistency Fix for `money_delta_20260729.py`
 
+> **Superseded in one input, 2026-08-26 (R = σ_L/σ_T).**  Every `L_5σ`,
+> `A_bag` and significance number below was computed with the script's
+> `r1998`, which multiplies Θ(x, Q²) into all three terms of the SLAC fit
+> instead of the log term alone and therefore returns R = 1 over the region
+> that carries the sensitivity (code review 2026-08-25 item S1).  Re-run
+> with the published fit (`--r-model r1998`, now `structure.r1998`):
+> **L_5σ at Δ/F₁ = 10⁻³ becomes 67.5 / 65.8 / 155.1 fb⁻¹/u** for
+> LOW / MID / TOP against the 135.3 / 131.3 / 274.6 recorded here, |A_bag|
+> falls 21–25% (0.318/0.310/0.297 → 0.237/0.236/0.235) and the peak-bin
+> significance rises ×1.09–1.20.  The numbers below are still exactly
+> reproducible — that is the point of a dated note — with the default
+> `--r-model simplified`.  See plans/00 development run 8.
+
+
 **Date:** 2026-07-31 (fix audit; original script dated 2026-07-29)
 **Addendum:** 2026-07-31 — `A_bag` provenance cleanup (§11; later follow-on change)
 **Scope:** `fastsim/scripts/money_delta_20260729.py` — reco-side analysis path (§1–§10)

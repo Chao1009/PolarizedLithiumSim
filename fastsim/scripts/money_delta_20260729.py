@@ -89,8 +89,22 @@ Output (16 PNGs, prefixed _20260729_):
     money_delta_20260729_phimodulation_peakbin_top_30deg.png
     money_delta_20260729_phimodulation_peakbin_top_45deg.png
 
+R model (added 2026-08-26, plans/08 C3):
+  --r-model selects R = σ_L/σ_T.  The default 'simplified' is the July form
+  kept verbatim above, so the run reproduces money_delta_note_2026-07-29.md
+  and _fix.md exactly.  That form multiplies Θ(x, Q²) of Abe et al. (E143),
+  PLB 452 (1999) 194, Eq. (3) into all three terms of their Eq. (2) instead
+  of the log term alone, which clips R to 1.000 for x ≲ 0.1, Q² ≲ 5 GeV²
+  (code review 2026-08-25 item S1); 'theta-log' and 'r1998' are the repaired
+  and the published fit, for the re-run recommendation 0(b) asks for.
+  --emit-a-bag-reference prints the solved A_bag triple in source form.
+
 Reproducibility: rng = np.random.default_rng(seed=42) inside smear_config().
-Runtime estimate: ~5–10 min on a laptop (≈10⁶ MC events total).
+Runtime: 15.9 s wall for the three configs at n_mc=1000 (≈10⁶ MC events),
+measured 2026-08-26 with /usr/bin/time on the development box.  The
+"~5–10 min on a laptop" this line used to carry was an estimate that the
+July session never got to check — the script could not be run at all
+(code review 2026-08-25 item S11).
 """
 
 import argparse
@@ -99,6 +113,34 @@ import sys
 from contextlib import contextmanager
 
 import numpy as np
+
+# NumPy compat: np.trapezoid does not exist below NumPy 2.0 (the installed
+# 1.25.1 raises AttributeError inside solve_A_from_sum_rule, the first thing
+# main() does) and np.trapz was removed in 2.4.  Same two-sided shim as
+# polli_fastsim/delta_models.py, which this script never picked up
+# (code review 2026-08-25 item S11).
+_trapezoid = getattr(np, "trapezoid", None) or np.trapz
+
+
+def _make_stdio_portable():
+    """Stop a non-UTF-8 console from killing the run on the banner.
+
+    Every line this script prints carries literal Unicode (φ, ⟨⟩, fb⁻¹,
+    °, ─).  On a Windows cp936/GBK console print() raises
+    UnicodeEncodeError at the third banner line -- before any physics runs
+    and long before the np.trapezoid line above (code review 2026-08-25
+    item S11).  Changing the ERROR HANDLER and not the encoding leaves the
+    byte stream bit-for-bit identical wherever the glyphs already encode,
+    and degrades to \\uXXXX escapes where they do not, so no run is lost
+    to a console setting.  Verified with
+    `PYTHONIOENCODING=gbk python3 money_delta_20260729.py`.
+    """
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(errors="backslashreplace")
+        except (AttributeError, ValueError, OSError):
+            pass   # not a reconfigurable TextIOWrapper; nothing to do
+
 
 # ── ensure polli_fastsim is importable ────────────────────────────────────────
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
@@ -232,7 +274,7 @@ _PEAK_VALS = {name: _xab_peak_value(a, b) for name, (a, b) in _VARIANTS.items()}
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# R = σ_L/σ_T parameterization (R1998 only)
+# R = σ_L/σ_T parameterizations (--r-model selects one; see R_MODELS below)
 # ══════════════════════════════════════════════════════════════════════════════
 
 def r1998(x, q2):
@@ -251,6 +293,82 @@ def r1998(x, q2):
         1.0 - 0.00815 * np.log(np.maximum(x, 1e-12)) / np.log(0.5)
     )
     return np.clip(part1 + part2 + part3, 0.0, 1.0)
+
+
+def r1998_theta_log(x, q2):
+    """`r1998` above with Θ restricted to the log term — the minimal repair.
+
+    Abe et al. (E143), PLB 452 (1999) 194 (arXiv:hep-ex/9808028): their
+    Θ(x, Q²) of Eq. (3) multiplies the a₁/ln(Q²/0.04) term of Eq. (2) and
+    nothing else.  `r1998` above multiplies it into all three terms, which
+    saturates the sum and clips R to 1.000 for x ≲ 0.1, Q² ≲ 5 GeV²
+    (code review 2026-08-25 item S1).  Same coefficients and same clip as
+    `r1998`, so the difference between the two isolates that defect from
+    any change of parameterisation; `structure.r1998` is the published fit
+    itself and is the third `--r-model` choice.
+    """
+    q2 = np.asarray(q2, dtype=float)
+    x  = np.asarray(x,  dtype=float)
+    log_q2 = np.log(np.maximum(q2, 1.01) / 0.04)
+    theta = 1.0 + 12.0 * q2 / (q2 + 1.0) * 0.125**2 / (0.125**2 + x**2)
+    part1 = 0.0485 * theta / log_q2
+    part2 = 0.5470 / (q2**2 + 2.0**4) ** 0.5
+    part3 = 0.2379 / (q2 + 0.3**2) * (
+        1.0 - 0.00815 * np.log(np.maximum(x, 1e-12)) / np.log(0.5)
+    )
+    return np.clip(part1 + part2 + part3, 0.0, 1.0)
+
+
+# --r-model: which R = σ_L/σ_T the production runs with.  "simplified" is the
+# frozen July form and the DEFAULT, so the dated reproduction stays bit-for-bit
+# what money_delta_note_2026-07-29(_fix).md records, defect and all
+# (plans/08: "Keep the monkey-patch in the dated scripts: they are frozen
+# reproductions of dated notes").  The other two exist because code review
+# 2026-08-25 recommendation 0(b) asks for this production to be RE-RUN with a
+# corrected R: "theta-log" is the one-line repair of the frozen form, "r1998"
+# is the published three-form average of polli_fastsim.structure (plans/08 C2).
+# The banner label of "simplified" is the string the July run printed.
+# Each entry is (R function, banner label, figure caption).  The figure caption
+# is what the PNG titles carry: the PNGs travel without the stdout that names
+# the model, so a non-default run has to say on the figure itself which R
+# produced it, while the default stays the bare "R1998" the July figures were
+# captioned with (a default run must be byte-identical, plots included).
+R_MODELS = {
+    "simplified": (r1998,             "R1998",
+                   "R1998"),
+    "theta-log":  (r1998_theta_log,   "R1998 simplified, Θ on the log term only",
+                   r"R1998 [$\Theta$ on log term only]"),
+    "r1998":      (structure_mod.r1998,
+                   "R1998 published (Abe et al. Eq. 2, three-form average)",
+                   "R1998 [published fit]"),
+}
+
+DEFAULT_R_MODEL = "simplified"
+
+# Solved |A_bag| magnitudes, per R model, as a hard regression guard: the
+# sum-rule solver must reproduce the recorded triple to within 1% or the run
+# aborts.  "simplified" is the frozen July triple; the solver reproduced it to
+# ≤0.08% (money_delta_note_2026-07-29_fix.md §11: −0.3178 / −0.3100 / −0.2967).
+# A different R changes F₁ = F₂/(2x(1+R)) and therefore the solved A_bag, so
+# each model needs its own line here — `--emit-a-bag-reference` prints one
+# ready to paste, which is the only sanctioned way to add an entry.
+# Provenance differs by row, and it matters when one of them fires: the
+# "simplified" triple is an INDEPENDENT anchor (money_delta_note_2026-07-29_fix
+# .md §11, recorded before this script was ever runnable), while "theta-log" and
+# "r1998" were emitted by this solver itself on 2026-08-26 against
+# EPPS21nlo_CT18Anlo_Li6 member 0 — they are regression anchors, not external
+# ones, and a defect present at emit time would have been baked in.  What holds
+# those two honest is an identity the solver does not use: the sum rule fixes
+# ∫Δdx, so A_bag ∝ 1/⟨F₁⟩ ∝ ⟨1+R⟩, while the low-y amplitude is Δ/(2(1+R)F₁)
+# ∝ A_bag/(1+R) at the bin.  Measured at the MID peak reco bin (x = 0.0112,
+# Q² = 2.43): amplitude ratio r1998/simplified = 1.15251 against
+# (0.235825/0.310041) × (2.000/1.321205) = 1.15141, closing to 0.10%
+# (theta-log: 1.17542 vs 1.17550, 0.01%).
+REFERENCE_ABS_A_BAG = {
+    "simplified": {"low": 0.318, "mid": 0.310, "top": 0.297},
+    "theta-log":  {"low": 0.242, "mid": 0.240, "top": 0.238},
+    "r1998":      {"low": 0.237, "mid": 0.236, "top": 0.235},
+}
 
 
 # Store the original r_sigma_lt before any monkey-patching
@@ -475,7 +593,7 @@ def solve_A_from_sum_rule(cfg, nf2_obj, base, variant, c_coef):
     # x^α (1-x)^β / _PEAK_VALS[variant]  so that at x_peak the shape is 1
     # matching the convention in delta_shape / delta_shape_with_alphas
 
-    integral = float(np.trapezoid(integrand, x_full))
+    integral = float(_trapezoid(integrand, x_full))
 
     if abs(integral) < 1e-30:
         raise RuntimeError(
@@ -1255,7 +1373,7 @@ def build_phi_plot(A_ref, N_flat, A_bag_config, config_label, case_label,
                    case_tag, config_tag, outdir,
                    extra_info=None,
                    n_phi_bins=None, bin_width_deg=5,
-                   filename_suffix=None):
+                   filename_suffix=None, r_caption="R1998"):
     """Build one φ-modulation plot for a single (config, case) combination.
 
     Parameters
@@ -1275,6 +1393,9 @@ def build_phi_plot(A_ref, N_flat, A_bag_config, config_label, case_label,
     filename_suffix: str or None   if given, appended before '.png' instead of
                                    the default '_{config_tag}' suffix, e.g.
                                    '_top_5deg' → filename ends with that string
+    r_caption      : str           R = σ_L/σ_T caption for the title; the
+                                   default is the frozen July caption, so an
+                                   unpatched caller reproduces the July figure
 
     Returns
     -------
@@ -1361,9 +1482,12 @@ def build_phi_plot(A_ref, N_flat, A_bag_config, config_label, case_label,
         rf"$^6$Li fractional yield modulation vs $\phi$ — {config_label} config,"
         rf" {case_label}{bin_info} [detector-realistic]"
     )
+    # r_caption, not a literal "R1998": a --r-model re-run writes its own
+    # directory but the figures leave it as loose PNGs (code review of C3).
     title_line2 = (
         r"$L = 10\,\mathrm{fb}^{-1}/\mathrm{u}$, mid$\_x$ shape, EPPS21, "
-        r"R1998, Cloet $P_{zz}$=0.267; ePIC tracking + e-ID eff."
+        + r_caption
+        + r", Cloet $P_{zz}$=0.267; ePIC tracking + e-ID eff."
     )
     ax.set_title(title_line1 + "\n" + title_line2, fontsize=9)
 
@@ -1406,7 +1530,7 @@ def build_phi_plot(A_ref, N_flat, A_bag_config, config_label, case_label,
 
 def build_perbin_heatmap(cfg, base, config_tag, config_label, A_bag_config,
                          luminosity, outdir, proj, n_reco, A_reco,
-                         reco_mask):
+                         reco_mask, r_caption="R1998"):
     """Build per-bin 1×3 subplot heatmap using detector-smeared event counts.
 
     Uses reco n_reco and A_reco in place of proj.n_events and per-bin A_cos2φ.
@@ -1425,6 +1549,8 @@ def build_perbin_heatmap(cfg, base, config_tag, config_label, A_bag_config,
                                          encoded in `reco_mask`)
     n_reco         : ndarray (nx, nq2)  reconstructed event counts
     A_reco         : ndarray (nx, nq2)  rate-weighted A_cos2φ per reco bin
+    r_caption      : str        R = σ_L/σ_T caption for the suptitle; the
+                                default is the frozen July caption
     reco_mask      : bool ndarray       reco-analysis mask from
                                         `reco_analysis_mask(proj, n_reco)`.
                                         The inline `accepted & (n >= MIN_EVENTS)`
@@ -1525,7 +1651,8 @@ def build_perbin_heatmap(cfg, base, config_tag, config_label, A_bag_config,
         f"Interpretation A: "
         r"$\Delta = s \cdot \alpha_s(Q^2) \cdot F_1 \cdot x^\alpha (1-x)^\beta$"
         f", $s = |A_\\mathrm{{bag}}|$ = {A_bag_config:.3f}, "
-        "mid_x shape, EPPS21, R1998, Cloet $P_{{zz}}$=0.267; ePIC tracking + e-ID",
+        "mid_x shape, EPPS21, " + r_caption
+        + ", Cloet $P_{{zz}}$=0.267; ePIC tracking + e-ID",
         fontsize=10,
     )
     fig.tight_layout(rect=[0, 0, 1, 0.94])
@@ -1643,6 +1770,7 @@ def print_smearing_diagnostics(config_label, diag,
 # ══════════════════════════════════════════════════════════════════════════════
 
 def main():
+    _make_stdio_portable()
     ap = argparse.ArgumentParser(
         description=(
             "6Li φ-distribution plots — detector-realistic version with MC smearing.\n\n"
@@ -1677,8 +1805,10 @@ def main():
     )
     ap.add_argument(
         "--outdir",
-        default="fastsim/out/money_delta",
-        help="Output directory for PNGs (default: fastsim/out/money_delta)",
+        default=None,
+        help="Output directory for PNGs (default: <fastsim>/out/money_delta, "
+             "or <fastsim>/out/money_delta_r_<model> for a non-default "
+             "--r-model, so a re-run never overwrites the July figures)",
     )
     ap.add_argument(
         "--n-mc",
@@ -1686,8 +1816,40 @@ def main():
         default=1000,
         help="MC pseudo-events per true bin (default: 1000)",
     )
+    ap.add_argument(
+        "--r-model",
+        choices=sorted(R_MODELS),
+        default=DEFAULT_R_MODEL,
+        help="R = sigma_L/sigma_T used everywhere F1 = F2/(2x(1+R)) is "
+             "formed. 'simplified' (default) is the frozen July form and "
+             "reproduces money_delta_note_2026-07-29 bit-for-bit; "
+             "'theta-log' is that form with Theta restricted to the log "
+             "term (the code review S1 repair); 'r1998' is the published "
+             "SLAC/E143 fit from polli_fastsim.structure. Anything but the "
+             "default needs its own REFERENCE_ABS_A_BAG entry -- see "
+             "--emit-a-bag-reference.",
+    )
+    ap.add_argument(
+        "--emit-a-bag-reference",
+        action="store_true",
+        help="Solve A_bag for the three configs under the selected "
+             "--r-model, print the REFERENCE_ABS_A_BAG line in the exact "
+             "form the source constant is written in, and exit. Produces "
+             "no plots and touches no other behaviour; this is how a "
+             "changed R gets a new audit triple without demoting the "
+             "1% hard guard.",
+    )
     args = ap.parse_args()
-    outdir = pathlib.Path(args.outdir)
+    r_func, r_label, r_caption = R_MODELS[args.r_model]
+    if args.outdir is not None:
+        outdir = pathlib.Path(args.outdir)
+    else:
+        # Anchored on the file, not on the caller's cwd (code review S11).
+        out_root = pathlib.Path(__file__).resolve().parents[1] / "out"
+        outdir = out_root / (
+            "money_delta" if args.r_model == DEFAULT_R_MODEL
+            else f"money_delta_r_{args.r_model}"
+        )
     n_mc = args.n_mc
 
     # ── Startup banner ────────────────────────────────────────────────────────
@@ -1699,7 +1861,7 @@ def main():
     print("Observable: dN/dφ = N_flat · [1 + P_zz · (s/A_bag) · <A_cos2φ> · cos(2φ)]")
     print(f"Luminosity: {LUMI_FB:g} fb⁻¹/nucleon  (fixed)")
     print(f"Shape:      mid_x (α=0.7, β=3)")
-    print(f"R:          R1998")
+    print(f"R:          {r_label}")
     print(f"PDF:        {EPPS21_SET}")
     print(f"P_zz:       {PZZ} (Cloet)")
     print(f"N_φ bins:   {N_PHI} (5° each)")
@@ -1784,7 +1946,35 @@ def main():
         q2_min=2.0,
     )
 
-    with r_override(r1998):
+    if args.emit_a_bag_reference:
+        # Solve-and-print only: the drift guard below would abort a changed R
+        # before the new triple could ever be read off, so the emit path runs
+        # ahead of it and exits.  No plots, no smearing, no state.
+        with r_override(r_func):
+            solved = {}
+            print(f"Solving A_bag from bag sum rule (c = {C_BAG:+.3f}, {VARIANT}, "
+                  f"Interpretation A) with R = {r_label}")
+            for cfg_pre, cfg_tag_pre, _label_pre in all_configs:
+                nf2_pre = NuclearF2FromGrid(cfg_pre.ion, EPPS21_SET)
+                A_signed, q2_mean = solve_A_from_sum_rule(
+                    cfg_pre, nf2_pre, base, VARIANT, C_BAG
+                )
+                solved[cfg_tag_pre] = abs(float(A_signed))
+                print(f"  {cfg_tag_pre.upper()}: A_bag (signed) = {A_signed:+.6f}   "
+                      f"|A_bag| = {abs(A_signed):.6f}   "
+                      f"<Q²> = {q2_mean:.2f} GeV²")
+        print()
+        print("REFERENCE_ABS_A_BAG entry (paste into the dict near the top of "
+              "this file):")
+        print('    "{}":{}{{"low": {:.3f}, "mid": {:.3f}, "top": {:.3f}}},'.format(
+            args.r_model,
+            # 11 - len: aligns the `{` with the source dict above (col 19).
+            " " * max(1, 11 - len(args.r_model)),
+            solved["low"], solved["mid"], solved["top"],
+        ))
+        return
+
+    with r_override(r_func):
         # ── Solve A_bag for each config (once; cached in A_BAG_SIGNED) ────────
         # Solver returns the SIGNED value (negative under Interpretation A with
         # C_BAG < 0). The signed value is printed here for transparency; the main
@@ -1792,9 +1982,23 @@ def main():
         # and plots remain identical to the previous hardcoded-magnitude behavior.
         print("Solving A_bag from bag sum rule (c = {:+.3f}, mid_x, Interpretation A)"
               .format(C_BAG))
-        print("(reference magnitudes previously hardcoded: LOW=0.318, MID=0.310, TOP=0.297)")
+        reference_abs_a_bag = REFERENCE_ABS_A_BAG.get(args.r_model)   # audit-only
+        if reference_abs_a_bag is None:
+            # Do not demote the hard stop for an unaudited R: get the triple
+            # with --emit-a-bag-reference, paste it, then re-run.
+            raise RuntimeError(
+                f"No REFERENCE_ABS_A_BAG entry for --r-model {args.r_model!r}. "
+                f"Run with --emit-a-bag-reference, paste the printed line into "
+                f"REFERENCE_ABS_A_BAG, and re-run; the 1% drift guard is not "
+                f"optional."
+            )
+        # Same wording as the July run; the triple is the one for the ACTIVE
+        # R model, which for the default is the July triple character for
+        # character.
+        print("(reference magnitudes previously hardcoded: "
+              "LOW={low:.3f}, MID={mid:.3f}, TOP={top:.3f})"
+              .format(**reference_abs_a_bag))
         print("(downstream pipeline uses |A_bag|; signed value shown here for audit)")
-        REFERENCE_ABS_A_BAG = {"low": 0.318, "mid": 0.310, "top": 0.297}   # audit-only
         for cfg_pre, cfg_tag_pre, _label_pre in all_configs:
             nf2_pre = NuclearF2FromGrid(cfg_pre.ion, EPPS21_SET)
             A_signed, q2_mean = solve_A_from_sum_rule(
@@ -1815,7 +2019,7 @@ def main():
                     f"Check sign convention in solve_A_from_sum_rule."
                 )
             A_BAG_SIGNED[cfg_tag_pre] = float(A_signed)
-            ref_abs = REFERENCE_ABS_A_BAG[cfg_tag_pre]
+            ref_abs = reference_abs_a_bag[cfg_tag_pre]
             delta_pct = 100.0 * abs(abs(A_signed) - ref_abs) / ref_abs
             # ── Guard 3: delta_pct must be finite before the drift check ─────
             if not np.isfinite(delta_pct):
@@ -1949,6 +2153,7 @@ def main():
                 n_reco=n_reco,
                 A_reco=A_reco,
                 reco_mask=reco_mask,
+                r_caption=r_caption,
             )
             print()
 
@@ -2011,6 +2216,7 @@ def main():
                         n_phi_bins=n_bins,
                         bin_width_deg=bin_deg,
                         filename_suffix=suffix,
+                        r_caption=r_caption,
                     )
                     phi_bin_paths.append(outpath)
                     print(f"    wrote {outpath.name}")
@@ -2026,6 +2232,7 @@ def main():
                     config_tag=config_tag,
                     outdir=outdir,
                     extra_info=extra_peakbin,
+                    r_caption=r_caption,
                 )
                 print(f"  wrote {outpath.name}")
 
@@ -2076,6 +2283,7 @@ def main():
                 config_tag=config_tag,
                 outdir=outdir,
                 extra_info=extra_q2slice,
+                r_caption=r_caption,
             )
             print(f"  wrote {outpath.name}")
 
@@ -2120,6 +2328,7 @@ def main():
                 config_tag=config_tag,
                 outdir=outdir,
                 extra_info=None,
+                r_caption=r_caption,
             )
             print(f"  wrote {outpath.name}")
 

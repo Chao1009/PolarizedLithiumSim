@@ -136,6 +136,32 @@ def r1998(x, q2):
     return np.clip(part1 + part2 + part3, 0.0, 1.0)
 
 
+def r1998_theta_log(x, q2):
+    """`r1998` above with Θ restricted to the log term — the minimal repair.
+
+    Abe et al. (E143), PLB 452 (1999) 194 (arXiv:hep-ex/9808028): Θ(x, Q²)
+    of their Eq. (3) multiplies the a₁/ln(Q²/0.04) term of Eq. (2) and
+    nothing else.  `r1998` above multiplies it into all three terms, which
+    saturates the sum and clips R to 1.000 for x ≲ 0.1, Q² ≲ 5 GeV² — the
+    region that carries 62–72% of Σa²P²N/2 here, so the L_5σ this script
+    publishes is too pessimistic by 1.96× (mid, 131.26 → 67.11 fb⁻¹/u) and
+    1.75× (top, 274.64 → 156.91), measured 2026-08-26 with `--r-model
+    theta-log` (code review 2026-08-25 item S1).
+    Same coefficients and clip as `r1998`, so the difference between the
+    two isolates the defect from any change of parameterisation.
+    """
+    q2 = np.asarray(q2, dtype=float)
+    x  = np.asarray(x,  dtype=float)
+    log_q2 = np.log(np.maximum(q2, 1.01) / 0.04)
+    theta = 1.0 + 12.0 * q2 / (q2 + 1.0) * 0.125**2 / (0.125**2 + x**2)
+    part1 = 0.0485 * theta / log_q2
+    part2 = 0.5470 / (q2**2 + 2.0**4) ** 0.5
+    part3 = 0.2379 / (q2 + 0.3**2) * (
+        1.0 - 0.00815 * np.log(np.maximum(x, 1e-12)) / np.log(0.5)
+    )
+    return np.clip(part1 + part2 + part3, 0.0, 1.0)
+
+
 def r_christy_bosted(x, q2):
     """Simplified DIS-region form of Christy & Bosted PRC 81:055213 (2010).
 
@@ -262,6 +288,26 @@ R_FUNCS = [
     ("Christy-Bosted", r_christy_bosted),
 ]
 
+# --r-model: which function stands behind the "R1998" entry of R_FUNCS — the
+# one that also carries CENTRAL_R_NAME and therefore the published central
+# L_5σ.  "simplified" is the frozen July form and the DEFAULT, so the numbers
+# money_delta_note_2026-07-16/-20.md record (131.26 / 274.64 fb⁻¹/u) come back
+# unchanged; the other two exist because code review 2026-08-25
+# recommendation 0(b) asks for this reach to be re-derived with a corrected R.
+# Only the function is swapped: the KEY stays "R1998" so the curve, the
+# 12-combination band and the central-key lookup are untouched.  What does move
+# is the second element, the caption the figure carries: the PNG leaves the
+# output directory that names the model, so a non-default run has to say on the
+# plot which R produced it, while the default stays the bare "R1998" of the
+# published figure (a default run is byte-identical, plots included).
+R_MODELS = {
+    "simplified": (r1998,               "R1998"),
+    "theta-log":  (r1998_theta_log,     r"R1998 [$\Theta$ on log term only]"),
+    "r1998":      (structure_mod.r1998, "R1998 [published fit]"),
+}
+
+DEFAULT_R_MODEL = "simplified"
+
 VARIANT_NAMES = ["low_x", "mid_x", "high_x"]
 
 # "central" combination for the thick solid overlay
@@ -273,7 +319,8 @@ CENTRAL_PZZ     = 0.267   # Cloet 1/3
 TOY_PZZ = 0.80
 
 
-def build_realistic_plot(cfg, base, outdir, tag, title_beam):
+def build_realistic_plot(cfg, base, outdir, tag, title_beam, r_funcs=None,
+                         r_caption="R1998"):
     """Build one realistic money plot for a given BeamConfig.
 
     Parameters
@@ -283,6 +330,10 @@ def build_realistic_plot(cfg, base, outdir, tag, title_beam):
     outdir     : pathlib.Path
     tag        : str  file-name suffix ('mid' or 'top')
     title_beam : str  human-readable beam description for the title
+    r_funcs    : list  (name, callable) R models; None = the frozen R_FUNCS
+    r_caption  : str   R = σ_L/σ_T caption for the central-curve legend and the
+                       title; the default is the frozen July caption, so an
+                       unpatched caller reproduces the published figure
 
     Returns
     -------
@@ -297,10 +348,11 @@ def build_realistic_plot(cfg, base, outdir, tag, title_beam):
 
     combo_sig2 = {}   # key: (variant, r_name, pzz_label) → sig2 at S0
 
-    n_combos = len(VARIANT_NAMES) * len(R_FUNCS) * len(PZZ_SCENARIOS)
+    r_funcs = R_FUNCS if r_funcs is None else r_funcs
+    n_combos = len(VARIANT_NAMES) * len(r_funcs) * len(PZZ_SCENARIOS)
     done = 0
     for variant in VARIANT_NAMES:
-        for r_name, r_func in R_FUNCS:
+        for r_name, r_func in r_funcs:
             with r_override(r_func):
                 for pzz_label, pzz in PZZ_SCENARIOS:
                     done += 1
@@ -346,8 +398,11 @@ def build_realistic_plot(cfg, base, outdir, tag, title_beam):
                     label="Min-max band (3 shapes × 2 R × 2 $P_{zz}$)")
 
     # Central realistic curve
+    # r_caption, not a literal "R1998": under a non-default --r-model the curve
+    # is no longer the published one and the PNG has to say so (C3 review).
     ax.plot(SCALES, reach_central, "-", color="black", lw=2.2,
-            label=r"Central realistic: mid-$x$ $\Delta$, R1998, Cloet $P_{zz}=0.267$")
+            label=(r"Central realistic: mid-$x$ $\Delta$, " + r_caption
+                   + r", Cloet $P_{zz}=0.267$"))
 
     # Toy-backend comparison
     ax.plot(SCALES, reach_toy, "--", color="gray", lw=1.6,
@@ -368,7 +423,7 @@ def build_realistic_plot(cfg, base, outdir, tag, title_beam):
     ax.set_ylabel(r"$L_{5\sigma}$ [fb$^{-1}$/nucleon]", fontsize=11)
     ax.set_title(
         f"$^6$Li gluonometry realistic reach — {title_beam}\n"
-        r"CT18NLO + EMC + [R1998/CB] + $P_{zz}$ dilution band",
+        + r"CT18NLO + EMC + [" + r_caption + r"/CB] + $P_{zz}$ dilution band",
         fontsize=10,
     )
     ax.legend(fontsize=7, loc="upper right")
@@ -401,17 +456,94 @@ def build_realistic_plot(cfg, base, outdir, tag, title_beam):
 # Main
 # ══════════════════════════════════════════════════════════════════════════════
 
+# LOW is not part of the published money plot (it was never drawn); it is
+# selectable so the third beam configuration of money_delta_20260729.py can be
+# quoted on the same footing.  The default list is the frozen pair.
+ALL_CONFIGS = {
+    "low": (BeamConfig(electron_energy=5.0, ion=LI6,
+                       ion_momentum_per_nucleon=27.5),
+            "5 GeV $e$ × 27.5 GeV/u $^6$Li"),
+    "mid": (BeamConfig(electron_energy=10.0, ion=LI6,
+                       ion_momentum_per_nucleon=50.0),
+            "10 GeV $e$ × 50 GeV/u $^6$Li"),
+    "top": (BeamConfig(electron_energy=18.0, ion=LI6,
+                       ion_momentum_per_nucleon=137.5),
+            "18 GeV $e$ × 137.5 GeV/u $^6$Li"),
+}
+
+DEFAULT_CONFIGS = "mid,top"
+
+
+def _make_stdio_portable():
+    """Stop a non-UTF-8 console from killing the run on the summary table.
+
+    Every line this script prints carries literal Unicode (L_5σ, Δ/F₁,
+    fb⁻¹).  On a Windows cp936/GBK console print() raises
+    UnicodeEncodeError (code review 2026-08-25 item S11, reported against
+    the sibling dated script).  Changing the ERROR HANDLER and not the
+    encoding leaves the byte stream bit-for-bit identical wherever the
+    glyphs already encode.
+    """
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(errors="backslashreplace")
+        except (AttributeError, ValueError, OSError):
+            pass   # not a reconfigurable TextIOWrapper; nothing to do
+
+
 def main():
+    _make_stdio_portable()
     ap = argparse.ArgumentParser(
         description="Realistic 6Li gluonometry reach: L_5σ vs Δ/F₁ (two EIC configs)."
     )
     ap.add_argument(
         "--outdir",
-        default="fastsim/out/money_delta",
-        help="Output directory for PNGs (default: fastsim/out/money_delta)",
+        default=None,
+        help="Output directory for PNGs (default: <fastsim>/out/money_delta, "
+             "or <fastsim>/out/money_delta_r_<model> for a non-default "
+             "--r-model, so a re-run never overwrites the July figures)",
+    )
+    ap.add_argument(
+        "--r-model",
+        choices=sorted(R_MODELS),
+        default=DEFAULT_R_MODEL,
+        help="R = sigma_L/sigma_T behind the 'R1998' curve, which is also "
+             "the central curve. 'simplified' (default) reproduces the "
+             "July L_5sigma exactly; 'theta-log' is that form with Theta "
+             "restricted to the log term (code review S1 repair); 'r1998' "
+             "is the published SLAC/E143 fit from polli_fastsim.structure.",
+    )
+    ap.add_argument(
+        "--configs",
+        default=DEFAULT_CONFIGS,
+        help=f"Comma-separated beam configurations from "
+             f"{sorted(ALL_CONFIGS)} (default: {DEFAULT_CONFIGS}, the pair "
+             f"the published money plot draws)",
     )
     args = ap.parse_args()
-    outdir = pathlib.Path(args.outdir)
+    r_func, r_caption = R_MODELS[args.r_model]
+    r_funcs = [("R1998", r_func),
+               ("Christy-Bosted", r_christy_bosted)]
+    if args.outdir is not None:
+        outdir = pathlib.Path(args.outdir)
+    else:
+        # Anchored on the file, not on the caller's cwd (code review S11).
+        out_root = pathlib.Path(__file__).resolve().parents[1] / "out"
+        outdir = out_root / (
+            "money_delta" if args.r_model == DEFAULT_R_MODEL
+            else f"money_delta_r_{args.r_model}"
+        )
+    try:
+        config_tags = [t.strip() for t in args.configs.split(",") if t.strip()]
+        configs = [(ALL_CONFIGS[t][0], t, ALL_CONFIGS[t][1]) for t in config_tags]
+    except KeyError as exc:
+        ap.error(f"unknown config {exc.args[0]!r}; choose from {sorted(ALL_CONFIGS)}")
+    if not configs:
+        # "" and "," parse to an empty list, which used to print an empty
+        # summary table and exit 0 -- a silent no-op where the caller asked
+        # for a reach (C3 review).
+        ap.error("--configs selected no configuration; choose from "
+                 f"{sorted(ALL_CONFIGS)}")
 
     # ── Load CT18NLO backend (fail gracefully if parton not installed) ────
     try:
@@ -428,22 +560,13 @@ def main():
         sys.exit(2)
     base = backends["base"]
 
-    # ── Two EIC beam configurations ────────────────────────────────────────
-    # Plot A: mid config  (E_e=10 GeV, p_ion=50 GeV/u)
-    # Plot B: top config  (E_e=18 GeV, p_ion=137.5 GeV/u)
-    configs = [
-        (BeamConfig(electron_energy=10.0, ion=LI6, ion_momentum_per_nucleon=50.0),
-         "mid", "10 GeV $e$ × 50 GeV/u $^6$Li"),
-        (BeamConfig(electron_energy=18.0, ion=LI6, ion_momentum_per_nucleon=137.5),
-         "top", "18 GeV $e$ × 137.5 GeV/u $^6$Li"),
-    ]
-
     summaries = []
     for cfg, tag, title_beam in configs:
         print(f"\n{'='*66}")
         print(f"Building realistic plot: {tag.upper()} config — {cfg.label()}")
         print(f"{'='*66}")
-        _, summary = build_realistic_plot(cfg, base, outdir, tag, title_beam)
+        _, summary = build_realistic_plot(cfg, base, outdir, tag, title_beam,
+                                          r_funcs=r_funcs, r_caption=r_caption)
         summaries.append(summary)
 
     # ── Summary table ─────────────────────────────────────────────────────
@@ -465,6 +588,10 @@ def main():
     print("=" * 72)
     print("Note: 'Band lo/hi' = best/worst of 12 combinations at Δ/F₁=1e-3.")
     print("      Central = mid_x shape, R1998, Cloet P_zz=0.267.")
+    if args.r_model != DEFAULT_R_MODEL:
+        # Loud, and only when the frozen July reproduction is NOT what ran.
+        print(f"      R1998 here is --r-model {args.r_model!r}, NOT the frozen "
+              f"July form: these are not the published numbers.")
     print("      Toy     = toy_delta_gluon, default R, no EMC, uniform eff, P_zz=0.8.")
 
 

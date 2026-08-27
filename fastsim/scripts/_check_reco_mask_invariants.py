@@ -15,13 +15,26 @@ PASS/FAIL and, for failures, the offending line numbers.
 
 Usage:
     python3 fastsim/scripts/_check_reco_mask_invariants.py \\
-        fastsim/scripts/money_delta_20260729.py
+        [fastsim/scripts/money_delta_20260729.py]
+
+With no argument the target is money_delta_20260729.py next to this file, so
+the checker runs from any working directory.
 
 See plan-money-delta-20260729-fix.md § "Static-analysis validation" for the
 authoritative S1-S6 specification.
 """
 import ast
+import pathlib
 import sys
+
+# The file under test is UTF-8 (φ, ⟨⟩, ⁻¹ in its docstrings and banner) while
+# open() without `encoding` uses the locale's — cp936 on a Chinese Windows
+# console, where the read raises UnicodeDecodeError before a single check runs
+# (code review 2026-08-25 item S11).  The default target is anchored on this
+# file rather than on the caller's cwd for the same reason: the checker was
+# runnable only from the repository root.
+TARGET_ENCODING = "utf-8"
+DEFAULT_TARGET = pathlib.Path(__file__).with_name("money_delta_20260729.py")
 
 # ── Name sets ────────────────────────────────────────────────────────────────
 
@@ -83,7 +96,7 @@ def _literal_parts(node):
 
 def check(path):
     """Parse `path` and run S1-S6.  Return 0 on all-pass, 1 on any failure."""
-    with open(path) as fh:
+    with open(path, encoding=TARGET_ENCODING) as fh:
         src = fh.read()
     tree = ast.parse(src, filename=path)
 
@@ -223,9 +236,5 @@ def check(path):
 
 
 if __name__ == "__main__":
-    target = (
-        sys.argv[1]
-        if len(sys.argv) > 1
-        else "fastsim/scripts/money_delta_20260729.py"
-    )
+    target = sys.argv[1] if len(sys.argv) > 1 else DEFAULT_TARGET
     sys.exit(check(target))

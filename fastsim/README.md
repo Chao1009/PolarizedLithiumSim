@@ -1,5 +1,9 @@
 # polli_fastsim — Phase-1 fast simulation
 
+*Reproducing these results?  [../docs/reproduction_manual.md](../docs/reproduction_manual.md)
+§3 has every command with its runtime and expected output, including the
+dated money-Δ line and the R switch that changes its reach.*
+
 Fast (analytic + sampling) simulation for the polarized ⁶Li/⁷Li @ EIC
 feasibility study. Companion to `../plans/02_phase1_event_generation.md`.
 
@@ -7,20 +11,30 @@ feasibility study. Companion to `../plans/02_phase1_event_generation.md`.
 
 ```bash
 cd fastsim
-python3 -m pytest tests/ -q                 # 24 tests (grid tests auto-skip)
+python3 -m pytest tests/ -q                 # grid tests auto-skip
 python3 scripts/phase_space_map.py --ion 7Li --lumi 10 --outdir out
 python3 scripts/tagging_acceptance.py --outdir out      # spectator tagging
 python3 scripts/money_polemc.py --outdir out            # polarized EMC FOM
 python3 scripts/money_b1.py --outdir out                # tensor b1 FOM
 python3 scripts/money_delta.py --outdir out             # gluonometry reach
 python3 scripts/validate_inputs.py                      # toy vs PDF grids
+python3 scripts/money_delta_realistic.py                # L_5σ reach (frozen July R)
+python3 scripts/money_delta_20260729.py                 # dated production, 16 PNGs
+python3 scripts/_check_reco_mask_invariants.py          # its S1–S6 static guard
 ```
+
+The two dated `money_delta_*` scripts default to the R = σ_L/σ_T form
+their notes were written with, defect and all; `--r-model theta-log` and
+`--r-model r1998` re-run them with the corrected and the published fit
+(plans/08 C3). `money_delta_20260729.py` additionally needs the EPPS21
+⁶Li grid; `money_delta_realistic.py` runs on CT18NLO alone.
 
 One-time PDF-grid setup (optional; toys are the default backend):
 ```bash
 pip3 install --user parton && python3 -m parton update
 yes | python3 -m parton install CT18NLO
 yes | python3 -m parton install NNPDFpol11_100
+yes | python3 -m parton install EPPS21nlo_CT18Anlo_Li6   # money_delta_20260729
 ```
 
 ## Modules
@@ -47,12 +61,22 @@ yes | python3 -m parton install NNPDFpol11_100
   p_T threshold to the α; the 10σ envelope is angular, i.e. 0.40 GeV for
   a 4 × 137.5 GeV α, which gives ≈ 0.7–2.7%.
 - **Gluonometry**: 5σ on Δ/F₁ = 10⁻³ (Sather–Schmidt scale) at
-  **~25–37 fb⁻¹/u** with CT18 grid inputs (15–22 with the toy F2) —
-  inside the plausible program either way. Caveat (code review
-  2026-08-25, S1/S4): this headline uses P_zz = 0.8 without the 2-of-6
-  dilution; the scripts' central P_zz = 0.267 gives 131/275 fb⁻¹/u, and
-  the money_delta scripts' `r1998` returns R = 1 at low x (≈ 63–69 /
-  152–164 fb⁻¹/u once corrected) — to be re-derived.
+  **~66–155 fb⁻¹/u** (LOW/MID/TOP = 67.5 / 65.8 / 155.1 fb⁻¹/u) with
+  CT18 grid inputs, the 2-of-6-diluted P_zz = 0.267 and the published
+  R₁₉₉₈ — inside the 1–100 fb⁻¹/u plausible-program band at 5 × 27.5 and
+  10 × 50, above it at 18 × 137.5.
+  Re-derived 2026-08-26 (plans/08 C3):
+  `python3 scripts/money_delta_realistic.py --r-model r1998 --configs low,mid,top`.
+  The two numbers this replaces were both wrong in the same direction:
+  the old **~25–37 fb⁻¹/u** headline used P_zz = 0.8 with no 2-of-6
+  dilution (code review 2026-08-25, S4), and the 131/275 fb⁻¹/u that
+  corrected it (still reproducible with `--r-model simplified`, the
+  default) used an `r1998` whose Θ multiplied all three terms of Abe
+  et al. Eq. (2) and so returned R = 1.000 for x ≲ 0.1 (S1). Restricting
+  Θ to the log term alone moves MID 131.26 → 67.11 and TOP
+  274.64 → 156.91; the published three-form fit
+  (`structure.r1998`) gives 65.80 / 155.12 — inside the 63–69 / 152–164
+  the code review predicted.
 - **Polarized EMC**: δΔR ≈ 2.6–4% per x-bin at x = 0.3–0.5 at 10 fb⁻¹/u
   (grid inputs, 3 energies combined; 12% at x = 0.7); CBT-vs-TMT
   discrimination ≈ 5σ at x ≈ 0.5–0.7 with 100 fb⁻¹/u.
