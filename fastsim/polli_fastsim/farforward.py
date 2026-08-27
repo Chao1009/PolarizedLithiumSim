@@ -81,6 +81,53 @@ HIGH_ACCEPTANCE = Optics("high-acceptance", 0.20 / (10.0 * 275.0))    #  73 urad
 # documentation decision, not a code one (plans/04 #11, plans/08).
 HIGH_DIVERGENCE = Optics("high-divergence", 0.45 / (10.0 * 275.0))    # 164 urad
 
+# --- what the published tables actually say (plans/10) --------------------
+#
+# The two Optics above are ENERGY-INDEPENDENT and ISOTROPIC, and back-derived
+# from a 275 GeV proton.  The Yellow Report's own beam tables are neither.
+# Table 10.1 (e+p) and 10.2 (e+Au) give RMS divergence h/v and dp/p per
+# configuration; these are those tables, verbatim, for the HADRON beam.
+#
+#   config: (HD_h, HD_v, HA_h, HA_v) [urad], dp_over_p [1e-4]
+#
+# Note that at 41 GeV the Yellow Report lists no separate high-acceptance
+# option -- the two rows are identical -- and that the divergence is
+# isotropic at 275 and 100 GeV but 220/380 at 41.
+YR_PROTON_DIVERGENCE = {
+    "18x275": ((119.0, 119.0, 65.0, 65.0), 6.8),    # 1160-bunch column
+    "10x100": ((206.0, 206.0, 180.0, 180.0), 9.7),
+    "5x41":   ((220.0, 380.0, 220.0, 380.0), 10.3),
+}
+YR_GOLD_DIVERGENCE = {                              # strong hadron cooling
+    "110GeV/u": ((218.0, 379.0), 6.2),
+    "41GeV/u":  ((275.0, 377.0), 10.0),
+}
+
+#: sigma_theta = sqrt(eps_N / (beta*gamma * beta*)).  At a given machine
+#: configuration the lattice is set by RIGIDITY, so beta* is common to every
+#: species and an A/Z = 2 ion sits at HALF the proton's beta*gamma -- hence
+#: sqrt(2) more divergence at equal normalised emittance.  Calibrating that
+#: assumption against the published gold rows gives eps_N(Au)/eps_N(p) = 0.85
+#: horizontally and 2.6 vertically, and gold's IBS (~ N Z^4/A^2) is 450x
+#: lithium's -- so equal eps_N is well supported for a light ion and the
+#: lithium divergence is set by KINEMATICS, not by intrabeam scattering.
+LIGHT_ION_DIVERGENCE_FACTOR = 1.409     # sqrt(beta*gamma_p / beta*gamma_Li)
+
+
+def yr_divergence_for(config, a_over_z=2.0, optics="high-acceptance"):
+    """Estimated (sigma_theta_h, sigma_theta_v) [rad] and dp/p for a fully
+    stripped ion of the given A/Z in an EIC configuration, from the Yellow
+    Report proton tables scaled by sqrt(A/Z) (plans/10).
+
+    This is an ESTIMATE, not a machine specification: it assumes the ion's
+    normalised emittance equals the proton's, which the gold calibration
+    supports for a light ion but which no published light-ion optics
+    confirms.  plans/10 D1 is the question that would replace it."""
+    (hd_h, hd_v, ha_h, ha_v), dpp = YR_PROTON_DIVERGENCE[config]
+    h, v = (ha_h, ha_v) if optics == "high-acceptance" else (hd_h, hd_v)
+    f = float(np.sqrt(a_over_z))
+    return (1e-6 * h * f, 1e-6 * v * f), 1e-4 * dpp
+
 
 def route_charged(R, theta, pT, optics=HIGH_ACCEPTANCE):
     """Classify charged fragments into far-forward systems.

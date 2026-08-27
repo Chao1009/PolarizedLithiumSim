@@ -168,10 +168,10 @@ automatically.
 
 ```bash
 cd evgen   && python3 -m pytest tests/ -q     # 202 passed, ~35 s
-cd fastsim && python3 -m pytest tests/ -q     # 48 passed, ~3 s
+cd fastsim && python3 -m pytest tests/ -q     # 51 passed, ~3 s
 ```
 
-250 tests, all of which run without the PDF grids except the two in
+253 tests, all of which run without the PDF grids except the two in
 `fastsim/tests/test_grids.py`, which skip.  These are not smoke tests:
 they pin physics identities against independent constructions — the
 spin-1 cross section against an explicit density-matrix trace, the
