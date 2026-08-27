@@ -323,6 +323,58 @@ def _():
     return bad
 
 
+@check("artefacts: the manual's test counts match what pytest collects")
+def _():
+    """The reproduction manual quotes the size of each suite as a check a
+    reader can run.  If it drifts, the first thing a new reader does fails."""
+    import subprocess
+    txt = (ROOT / "docs/reproduction_manual.md").read_text()
+    bad = []
+    for pkg, pat in (("evgen", r"cd evgen\s+&& python3 -m pytest tests/ -q\s+# (\d+) passed"),
+                     ("fastsim", r"cd fastsim && python3 -m pytest tests/ -q\s+# (\d+) passed")):
+        m = re.search(pat, txt)
+        if not m:
+            bad.append("the manual no longer states a %s test count" % pkg)
+            continue
+        r = subprocess.run([sys.executable, "-m", "pytest", "tests/",
+                            "--collect-only", "-q"],
+                           capture_output=True, text=True, cwd=str(ROOT / pkg))
+        got = re.search(r"(\d+) tests? collected", r.stdout)
+        if not got:
+            bad.append("could not collect %s tests" % pkg)
+        elif int(got.group(1)) != int(m.group(1)):
+            bad.append("the manual says %s has %s tests, pytest collects %s"
+                       % (pkg, m.group(1), got.group(1)))
+    return bad
+
+
+@check("artefacts: the 6Li configuration energies appear consistently in the docs")
+def _():
+    """Every document that names the three 6Li energies must name the same
+    three.  This is the check that a hand-edit missed a file."""
+    from polli_fastsim import beams
+    pus = [c.ion_momentum_per_nucleon for c in beams.default_configs("6Li")]
+    triple = re.compile(r"(\d+\.?\d*)\s*/\s*(\d+\.?\d*)\s*/\s*(\d+\.?\d*)\s*GeV/u")
+    bad = []
+    for pat in ("reports/*.template.html", "plans/*.md", "docs/reproduction_manual.md",
+                "evgen/README.md"):
+        for f in glob.glob(str(ROOT / pat)):
+            txt = pathlib.Path(f).read_text()
+            for m in triple.finditer(txt):
+                vals = [float(x) for x in m.groups()]
+                if abs(vals[2] - pus[2]) > 0.2:       # not a 6Li energy triple
+                    continue
+                near = txt[max(0, m.start() - 300):m.start() + 120]
+                if ALLOW.search(near):
+                    continue
+                if any(abs(v - p) > 0.2 for v, p in zip(vals, pus)):
+                    bad.append("%s quotes %s GeV/u, configurations are %s"
+                               % (pathlib.Path(f).name,
+                                  " / ".join("%g" % v for v in vals),
+                                  " / ".join("%g" % p for p in pus)))
+    return bad
+
+
 # --- REFERENCES ------------------------------------------------------------
 
 @check("references: every refs_dict entry with a local file has one")
