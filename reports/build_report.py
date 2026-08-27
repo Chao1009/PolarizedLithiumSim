@@ -23,7 +23,9 @@ Usage:  python reports/build_report.py [--pdf]
 
 import argparse
 import base64
+import glob
 import io
+import os
 import pathlib
 import re
 import shutil
@@ -61,6 +63,12 @@ BROWSERS = (
     r"C:\Program Files\Microsoft\Edge\Application\msedge.exe",
     r"C:\Program Files\Google\Chrome\Application\chrome.exe",
     "msedge", "chrome", "chromium", "google-chrome",
+    # Linux boxes that carry no system browser: playwright downloads one
+    # into the user cache without root (pip install playwright &&
+    # python3 -m playwright install chromium), which is how the PDFs are
+    # built on the analysis machine.
+    *sorted(glob.glob(os.path.expanduser(
+        "~/.cache/ms-playwright/chromium-*/chrome-linux64/chrome"))),
 )
 
 
@@ -135,7 +143,8 @@ def build_pdf(out_html):
         sys.exit("no headless-capable browser found for --pdf")
     out_pdf = out_html.with_suffix(".pdf")
     subprocess.run(
-        [exe, "--headless", "--disable-gpu", "--no-pdf-header-footer",
+        [exe, "--headless", "--disable-gpu", "--no-sandbox",
+         "--no-pdf-header-footer",
          "--print-to-pdf=%s" % out_pdf, out_html.as_uri()],
         check=True)
     print("wrote %s (%.1f MB)" % (out_pdf, out_pdf.stat().st_size / 1e6))

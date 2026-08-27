@@ -25,18 +25,25 @@ on polarized ion beams at the EIC, March 22 – April 2, 2027.
 |---|---|
 | `plans/` | the program plan and findings — start at [plans/00_README.md](plans/00_README.md) (document map + development-run log) |
 | `fastsim/` | `polli_fastsim`: analytic fast simulation — rates, FOM maps, tagging acceptance, money plots 1–3, and the dated `money_delta_*` study suite (moment-constrained Δ ansatz, detector efficiency, reco selection) with working notes in `fastsim/notes/` |
-| `evgen/` | `polligen`: the doubly polarized e+⁶,⁷Li event generator (the first of its kind) — spin-density kernel, inclusive + tagged samplers, run-plan bookkeeping, estimators, the coherent intact-⁶Li channel, money plots 4–7 and their reconstructed-level versions 5R/7R/6R, the hadronic-final-state layer with the hadron-side detector response (`polligen/hfs.py`; PYTHIA 8 sample via `tools/pythia8`), the systematics the spin-state ratio cannot cancel (per-fill acceptance, assumed luminosity and nuisance harmonics, energy scales) and the WP5 coherent optics scan |
-| `docs/` | source documents + the self-contained physics note [docs/note_cos2phi_coherent_6Li.md](docs/note_cos2phi_coherent_6Li.md) (verified 50-entry bibliography) + the simulation code review and reconstruction audit [docs/code_review_2026-08-25.md](docs/code_review_2026-08-25.md) (measurability audit of 5R/7R/6R, findings F1-F13, numerical checks) |
+| `evgen/` | `polligen`: the doubly polarized e+⁶,⁷Li event generator (the first of its kind) — spin-density kernel, inclusive + tagged samplers, run-plan bookkeeping, estimators, the coherent intact-⁶Li channel, money plots 4–7 and their reconstructed-level versions 5R/7R/6R, the hadronic-final-state layer with the hadron-side detector response (`polligen/hfs.py`) on the standing **PYTHIA 8 production** (`tools/pythia8`, manifest in `evgen/samples/README.md`), the systematics the spin-state ratio cannot cancel (per-fill acceptance, assumed luminosity and nuisance harmonics, energy scales), the forward-folded amplitude response that replaces the bin-by-bin K, and the WP5 coherent optics scan |
+| `docs/` | the **[reproduction manual](docs/reproduction_manual.md)** — environment, every command, expected numbers, and the third-party generators — plus source documents, the self-contained physics note [docs/note_cos2phi_coherent_6Li.md](docs/note_cos2phi_coherent_6Li.md) (verified 50-entry bibliography) and the simulation code review and reconstruction audit [docs/code_review_2026-08-25.md](docs/code_review_2026-08-25.md) (measurability audit of 5R/7R/6R, findings F1-F13, numerical checks) |
 | `reports/` | circulate-able reports (self-contained HTML + rendered PDF): the cos 2φ money-plot report, the educational primer, and the reconstruction-chain analysis note (what is measured, how the azimuth and Δ are reconstructed, audit of the simulation — 2026-08-24); served as a website by the GitHub Pages workflow (`.github/workflows/pages.yml` + `reports/index.html`) — activate once via Settings → Pages → Source: "GitHub Actions" (public repo required on free plans) |
-| `tools/` | BeAGLE and full-simulation (eic-shell/ePIC) setup notes |
+| `tools/` | PYTHIA 8 hadronic-final-state generation (`tools/pythia8`), the BeAGLE route and the e+d control that calibrates the cluster model's tail (`tools/beagle`, `tools/analysis`), and the full ePIC chain — including the ion gun that shoots an intact ⁶Li at the far-forward detectors (`tools/fullsim`) |
 
 ## Quick start
 
+Everything below, and everything else this program publishes, is
+reproducible from a clean Linux box: **[docs/reproduction_manual.md](docs/reproduction_manual.md)**
+is the map from result to command — what to install, what to run, how
+long it takes, what the answer should be, and what cannot be reproduced
+here and why.
+
 ```bash
-# fast simulation (25 tests; PDF-grid tests need the `parton` package)
+# fast simulation (48 tests; PDF-grid tests need the `parton` package
+# with CT18NLO, EPPS21nlo_CT18Anlo_Li6 and NNPDFpol11_100 installed)
 cd fastsim && python -m pytest tests/ -q
 
-# event generator (143 tests)
+# event generator (183 tests)
 cd evgen && python -m pytest tests/ -q
 
 # money plots (outputs land next to the scripts' working directory)
@@ -61,8 +68,22 @@ python scripts/money_tagged_azz.py --events 400000    # tagged tensor asymmetry
   the 1-/10-year programs; modulation amplitude anchored on the
   polarized-deuteron CGC calculation (sign flip vs d predicted).
 - **Tagging inverts between isotopes at IP6**: ⁷Li α-tag works
-  (96–99% to the Roman Pots); ⁶Li α-tag is beam-blind — 1.7% with the high-acceptance optics, 1.3% with high-divergence, since the 10σ envelope is an *angle* and scales with the α momentum (2026-08-25; it read 3–9% while the 0.20 GeV proton cut was applied verbatim);
+  (96–99% to the Roman Pots); ⁶Li α-tag is beam-blind — 1.85% with the high-acceptance optics, 1.51% with high-divergence, since the 10σ envelope is an *angle* and scales with the α momentum (2026-08-25; it read 3–9% while the 0.20 GeV proton cut was applied verbatim, and 1.7/1.3% until the beam mass became the physical nuclear one on 2026-08-26);
   tritons need IR-8.
+- **The hadronic final state is PYTHIA 8, not a toy** (2026-08-26): 12 M
+  events over the three beam configurations, generated natively
+  (`tools/pythia8`).  Σ-method δy/y at the four sweet spots is
+  0.32 / 0.22 / 0.28 / 0.11 at the mid configuration — the toy was
+  optimistic by 0.04–0.05 absolute at every one — and it degrades
+  monotonically with beam energy (0.21–0.10 low, 0.74–0.18 top), so the
+  x ≈ 0.1 bins belong to the **low-energy** configuration.
+- **The Roman-Pot aperture for an intact ⁶Li is measured, and it is
+  horizontal** (2026-08-26): npsim cannot shoot a nucleus, so
+  `tools/fullsim/ion_gun_hepmc.py` feeds one through the ePIC geometry as
+  HepMC.  The boundary is |θ_x| ≳ 2.0 / 1.35 / 1.03 mrad in the
+  5×41 / 10×100 / 18×275 optics against |θ_y| ≳ 1.8–3 mrad — the opposite
+  aspect to the slot the coherent chain assumes, which flips the sign of
+  the acceptance-induced ⟨cos 2β⟩ (plans/04 #20).
 - **First systematics numbers**: relative-luminosity bias formulas
   (removed exactly by lumi-corrected estimators); the α+d breakup
   background requires Roman-Pot charge discrimination — an open
