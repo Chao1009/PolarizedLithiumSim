@@ -375,6 +375,7 @@ they disagree, and that disagreement is an open item (plans/04 #20).
 ### 4.6 The near-beam study (plans/09)
 
 ```bash
+python3 scripts/eic_beam_figures.py       --outdir .   # 2 s
 python3 scripts/nearbeam_aperture_scan.py --outdir .   # 3 s
 python3 scripts/nearbeam_reach_gain.py    --outdir .   # 2 s
 python3 scripts/nearbeam_sensor_budget.py --outdir .   # 1 s
@@ -569,8 +570,8 @@ a current container before quoting an acceptance in a paper.
 ## 6 · The reports
 
 ```bash
-python3 reports/build_report.py          # four self-contained HTML pages,
-                                         # numbered 0-3 in reading order
+python3 reports/build_report.py          # five self-contained HTML pages,
+                                         # numbered 0-4 in reading order
 python3 reports/build_report.py --pdf    # and their PDFs (needs §1.6)
 ```
 

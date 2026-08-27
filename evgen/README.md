@@ -28,6 +28,7 @@ python3 scripts/reco_chain_figures.py     # reconstruction-chain figures
 python3 scripts/money_cos2phi_reco.py          # money plots 5R + 7R (reco level)
 python3 scripts/money_cos2phi_coherent_reco.py # money plot 6R (reco level)
 python3 scripts/coherent_optics_scan.py   # WP5: the coherent tag vs the near-beam envelope
+python3 scripts/eic_beam_figures.py       # report 3: the ion energy menu and the divergence
 python3 scripts/nearbeam_aperture_scan.py # plans/09: what every near-beam aperture is worth
 python3 scripts/nearbeam_reach_gain.py    # plans/09: the coherent chain at both apertures
 python3 scripts/nearbeam_sensor_budget.py # plans/09: hot-spot Z-ID, sizing, channel count
@@ -37,7 +38,8 @@ python3 ../reports/build_report.py --pdf  # assemble reports/ pages
 #   -> 0 polarized_li_primer.html/pdf (educational physics primer)
 #   -> 1 cos2phi_money_plots_report.html/pdf (the projected measurements)
 #   -> 2 reconstruction_chain_report.html/pdf (measurement + reco audit)
-#   -> 3 nanowire_far_forward.html/pdf (the near-beam detector study)
+#   -> 3 eic_epic_reference.html/pdf (the machine and the detector)
+#   -> 4 nanowire_far_forward.html/pdf (the near-beam detector study)
 #   figures embedded from the PNGs above; display math typeset at
 #   build time (matplotlib mathtext, no JS/fonts in the output)
 ```

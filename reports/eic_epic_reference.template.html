@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>EIC and ePIC: the Machine and the Detector This Programme Is Projected On</title>
+<style>
+  :root {
+    --ground: #FFFFFF;
+    --ink: #1A2530;
+    --ink-2: #51626F;
+    --ink-3: #7C8B96;
+    --accent: #0067A0;
+    --accent-warm: #C24E00;
+    --accent-green: #1B7F5B;
+    --hairline: #D8E0E6;
+    --wash: #EFF4F7;
+    --wash-warm: #FBF1E9;
+  }
+  @page { size: A4; margin: 12mm 8mm 14mm 8mm; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: Charter, "Bitstream Charter", "Iowan Old Style", Georgia, serif;
+    font-size: 10.2pt;
+    line-height: 1.52;
+  }
+  .page { max-width: 178mm; margin: 0 auto; }
+  .eyebrow {
+    font-family: "Segoe UI", system-ui, sans-serif;
+    font-size: 7.6pt;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 600;
+    margin: 0 0 4pt;
+  }
+  h1 { font-size: 17.5pt; line-height: 1.22; margin: 0 0 4pt; font-weight: 700; letter-spacing: -0.01em; }
+  .dateline { font-family: "Segoe UI", system-ui, sans-serif; font-size: 8pt; color: var(--ink-3); margin: 0 0 10pt; }
+  h2 { font-size: 12.5pt; margin: 16pt 0 5pt; letter-spacing: -0.005em; break-after: avoid; }
+  h3 { font-size: 10.5pt; margin: 10pt 0 3pt; break-after: avoid; }
+  p { margin: 4.5pt 0; }
+  .lede { font-size: 10.8pt; color: var(--ink-2); }
+  em.k { font-style: normal; color: var(--accent-warm); font-weight: 600; }
+  figure { margin: 10pt 0; break-inside: avoid; }
+  figure .panel { background: #FFFFFF; border: 0.7pt solid var(--hairline); border-radius: 5pt; padding: 4pt; }
+  figure img { display: block; width: 100%; height: auto; }
+  figure svg { display: block; width: 100%; height: auto; }
+  figcaption { margin: 5pt 2pt 0; font-family: "Segoe UI", system-ui, sans-serif; font-size: 7.8pt; color: var(--ink-2); line-height: 1.5; }
+  figcaption b { color: var(--ink); }
+  .eq { text-align: center; margin: 8pt 0; break-inside: avoid; }
+  .eq img.tex { display: inline-block; max-width: 100%; height: auto; vertical-align: middle; }
+  table { border-collapse: collapse; width: 100%; font-family: "Segoe UI", system-ui, sans-serif; font-size: 7.9pt; line-height: 1.45; margin: 6pt 0; }
+  th { text-align: left; font-size: 6.8pt; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); font-weight: 600; padding: 3pt 7pt 3pt 0; border-bottom: 1.1pt solid var(--hairline); }
+  td { padding: 3.5pt 7pt 3.5pt 0; border-bottom: 0.6pt solid var(--hairline); vertical-align: top; }
+  .mono { font-family: Consolas, "Cascadia Mono", monospace; font-variant-numeric: tabular-nums; font-size: 7.7pt; }
+  .callout { background: var(--wash); border-left: 2.2pt solid var(--accent); border-radius: 0 4pt 4pt 0; padding: 6pt 9pt; margin: 8pt 0; font-size: 9.4pt; break-inside: avoid; }
+  .callout.warm { background: var(--wash-warm); border-left-color: var(--accent-warm); }
+  code { font-family: Consolas, "Cascadia Mono", monospace; font-size: 0.86em; background: var(--wash); border-radius: 3pt; padding: 0.5pt 3pt; }
+  .refs { font-family: "Segoe UI", system-ui, sans-serif; font-size: 7.6pt; color: var(--ink-2); line-height: 1.5; }
+  .refs p { margin: 2.6pt 0; padding-left: 18pt; text-indent: -18pt; }
+  .foot { margin-top: 14pt; padding-top: 6pt; border-top: 0.7pt solid var(--hairline); font-family: "Segoe UI", system-ui, sans-serif; font-size: 7.4pt; color: var(--ink-3); line-height: 1.55; }
+  ol.steps { padding-left: 18pt; }
+  ol.steps li { margin: 3pt 0; }
+  .status-ok { color: var(--accent-green); font-weight: 600; }
+  .status-part { color: var(--accent-warm); font-weight: 600; }
+  .status-no { color: #A12B2B; font-weight: 600; }
+  .schem text { font-family: "Segoe UI", system-ui, sans-serif; fill: #1A2530; }
+  .schem .h { font-weight: 600; fill: #0067A0; }
+  .schem .n { fill: #51626F; }
+  .schem .box { fill: #FFFFFF; stroke: #B9C6D0; stroke-width: 1; }
+  .schem .boxa { fill: #EFF4F7; stroke: #0067A0; stroke-width: 1; }
+  .schem .arr { stroke: #51626F; stroke-width: 1.1; fill: none; marker-end: url(#ah); }
+  .schem .arrb { stroke: #0067A0; stroke-width: 1.4; fill: none; marker-end: url(#ahb); }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <p class="eyebrow">Polarized ⁶,⁷Li @ EIC · <b>Report 3</b> · Reference</p>
+  <h1>EIC and ePIC: the machine and the detector this programme is projected on</h1>
+  <p class="dateline">2026-08-27 · the specification behind reports 1, 2 and 4 · every row carries its source and its <b>status</b> — design value, requirement, measured, derived here, or unknown · figures from <code>evgen/scripts/eic_beam_figures.py</code></p>
+
+  <p class="lede">Every projection in this programme rests on numbers that belong to the
+  accelerator or to the detector, not to us. This note gathers them in one place, says where each
+  comes from, and — more importantly — says what each one <i>is</i>: a design value in a
+  conceptual design report, a requirement the detector must meet, something actually measured, or
+  a gap we have filled with a stand-in. The lithium case is called out separately, because almost
+  nothing about it is specified and the little that is has to be derived.</p>
+
+  <div class="callout">
+    <b>Three things a reader should take away.</b>
+    (1) <b>Ion energies are set by speed, not rigidity.</b> The two rings must share a revolution
+    period, so the hadron γ is fixed by the ring circumference and the magnets supply whatever
+    rigidity that demands. The ⁶Li menu is <b>41, and 99–138 GeV/u</b>, with nothing between (§1).
+    (2) <b>Almost nothing about a lithium beam is published.</b> Not the emittance, not the
+    intensity, not β*, not a luminosity. What can be derived is derived in §4; what cannot is
+    listed in §6 with an owner.
+    (3) <b>This programme's detector model is partly stand-in.</b> The tracking resolution and the
+    electron-ID curve in <code>polligen.reco</code> carry no published ePIC source, and §6 says so
+    explicitly rather than letting them pass as specification.
+  </div>
+
+  <h2>1 · The collider, and why the ion energies are what they are</h2>
+
+  <p>The EIC is two rings in the RHIC tunnel: the <em class="k">Electron Storage Ring</em> at
+  5, 10 and 18 GeV, and the <em class="k">Hadron Storage Ring</em> carrying protons to 275 GeV and
+  ions to the same magnetic rigidity. ePIC sits at IP6; a second interaction region at IP8 is
+  designed but not funded. The crossing angle is 25 mrad at IP6 and 35 mrad at IP8, recovered by
+  crab cavities.</p>
+
+  <div class="callout warm">
+    <b>The constraint that sets the ion menu.</b> Colliding bunches requires the two rings to have
+    the <i>same revolution period</i>. The electrons are ultrarelativistic at every energy, so
+    their period is fixed; the hadrons must match it, and since the circumference is adjustable
+    only within a narrow range, <b>the hadron β — hence γ — is quantised by the ring geometry</b>.
+    The magnets then have to supply whatever rigidity that γ implies for the species in the ring,
+    up to the 275 GeV proton rigidity of 917.3 T·m.
+    <br><br>
+    So two different limits bind at two different ends. At the <i>top</i> the magnets bind and the
+    ion is <b>rigidity-capped</b> at p/nucleon = 275 GeV × (Z/A). At the <i>bottom</i> the
+    circumference binds and the ion is <b>γ-matched</b> — the same <i>speed</i> as the proton
+    configuration, and therefore a different energy per nucleon than rigidity scaling would give.
+  </div>
+
+  <p><b>The check that settles it.</b> Yellow Report Table 10.2 lists gold at <b>41 GeV/u</b>
+  (γ = 44.02) against the 41 GeV proton's γ = 43.70 — equal to 0.7%, which is exactly the u versus
+  m<sub>p</sub> mass difference. Rigidity scaling would have put gold at 41 × 79/197 = 16.4 GeV/u.
+  It does not. The same rule reproduces the published ³He menu — <i>"41, and 100–183
+  GeV/nucleon"</i> — exactly.</p>
+
+  <figure>
+    <div class="panel"><img src="data:image/png;base64,__EIC1__" alt="Ion energy menu per species: an isolated gamma-matched point near 41 GeV per nucleon and a continuous band from about 100 GeV per nucleon up to each species rigidity cap, with the forbidden band between"></div>
+    <figcaption><b>Figure 1 · The ion energy menu.</b> Each species has an isolated γ-matched point
+    at ≈41 GeV/u and a continuous band from ≈99 GeV/u up to its own rigidity cap — and nothing in
+    between, because the circumference cannot be adjusted far enough. Crosses mark what rigidity
+    scaling would have given, which is what this repository used until 2026-08-27.
+    <code>eic_beam_figures.py</code>.</figcaption>
+  </figure>
+
+  <table>
+    <tr><th>species</th><th>A/Z</th><th>γ-matched point</th><th>continuous band</th><th>rigidity cap</th><th>status</th></tr>
+    <tr><td>p</td><td class="mono">1</td><td class="mono">41 GeV</td><td class="mono">100–275 GeV</td><td class="mono">275 GeV</td><td>design value</td></tr>
+    <tr><td>d</td><td class="mono">2</td><td class="mono">41.0 GeV/u</td><td class="mono">100–137.5</td><td class="mono">137.5</td><td>design value</td></tr>
+    <tr><td>³He</td><td class="mono">3/2</td><td class="mono">40.9</td><td class="mono">99.8–183.3</td><td class="mono">183.3</td><td>design value (menu published)</td></tr>
+    <tr><td><b>⁶Li</b></td><td class="mono">2</td><td class="mono"><b>40.8</b></td><td class="mono"><b>99.5–137.5</b></td><td class="mono">137.5</td><td><b>derived</b>; top ≈138 in EPIOS</td></tr>
+    <tr><td><b>⁷Li</b></td><td class="mono">7/3</td><td class="mono"><b>40.8</b></td><td class="mono"><b>99.5–117.9</b></td><td class="mono">117.9</td><td><b>derived</b>; top ≈117 in EPIOS</td></tr>
+    <tr><td>Au</td><td class="mono">2.49</td><td class="mono">41</td><td class="mono">— (110 published)</td><td class="mono">110.3</td><td>design value</td></tr>
+  </table>
+  <p style="font-size:8pt;color:var(--ink-2);margin-top:-2pt">Table 1 — <code>beams.default_configs</code>
+  computes these; running the same machinery on a <i>proton</i> returns 41 / 100 / 275 exactly, which
+  is the implementation's self-check. Only the lithium rows are derived rather than published, and
+  only their top energies appear in EPIOS.</p>
+
+  <h2>2 · The electron beam</h2>
+
+  <table>
+    <tr><th>quantity</th><th>value</th><th>source</th><th>status</th></tr>
+    <tr><td>energies</td><td class="mono">5, 10, 18 GeV</td><td>YR §10.1</td><td>design value</td></tr>
+    <tr><td>β* (h/v)</td><td class="mono">45 / 5.6 cm</td><td>EPIOS Table I (EIC column)</td><td>design value</td></tr>
+    <tr><td>RMS emittance (h/v)</td><td class="mono">20 / 1.3 nm</td><td>EPIOS Table I</td><td>design value</td></tr>
+    <tr><td>bunch charge</td><td class="mono">28 nC</td><td>EPIOS Table I</td><td>design value</td></tr>
+    <tr><td>bunches</td><td class="mono">1160</td><td>EPIOS Table I</td><td>design value</td></tr>
+    <tr><td>divergence h/v, 18 GeV</td><td class="mono">202 / 187 (HD), 89 / 82 µrad (HA)</td><td>YR Table 10.1</td><td>design value</td></tr>
+    <tr><td>Δp/p</td><td class="mono">5.8–10.9 ×10⁻⁴</td><td>YR Table 10.1</td><td>design value</td></tr>
+    <tr><td>polarization</td><td class="mono">70% assumed in the YR physics studies</td><td>YR §10.1</td><td>assumption for projections</td></tr>
+  </table>
+
+  <h2>3 · The hadron beam</h2>
+
+  <p>Yellow Report <b>Table 10.1</b> (e+p) and <b>10.2</b> (e+Au) are the authoritative
+  divergence and momentum-spread tables, and they carry both optics configurations. The
+  <em class="k">high-divergence</em> and <em class="k">high-acceptance</em> settings differ by a
+  β* choice: the YR states explicitly that σ ∝ 1/√β* and β* ∝ 1/L, so acceptance is bought with
+  luminosity.</p>
+
+  <table>
+    <tr><th>proton config</th><th>HD h/v [µrad]</th><th>HA h/v</th><th>Δp/p [10⁻⁴]</th><th>L [10³³ cm⁻²s⁻¹] HD / HA</th></tr>
+    <tr><td>275 GeV, 290 bunches</td><td class="mono">150 / 150</td><td class="mono">65 / 65</td><td class="mono">6.8</td><td class="mono">1.54 / 0.32</td></tr>
+    <tr><td>275 GeV, 1160 bunches</td><td class="mono">119 / 119</td><td class="mono">65 / 65</td><td class="mono">6.8</td><td class="mono">10.0 / 3.14</td></tr>
+    <tr><td>100 GeV</td><td class="mono">220 / 220</td><td class="mono">180 / 180</td><td class="mono">9.7</td><td class="mono">4.48 / 3.14</td></tr>
+    <tr><td>100 GeV (vs e 5)</td><td class="mono">206 / 206</td><td class="mono">180 / 180</td><td class="mono">9.7</td><td class="mono">3.68 / 2.92</td></tr>
+    <tr><td><b>41 GeV</b></td><td class="mono">220 / 380</td><td class="mono"><b>220 / 380</b></td><td class="mono">10.3</td><td class="mono">0.44 / 0.44</td></tr>
+  </table>
+  <p style="font-size:8pt;color:var(--ink-2);margin-top:-2pt">Table 2 — YR Table 10.1, hadron rows,
+  verbatim. <b>Status: design value.</b> Note the last row: at 41 GeV the two optics are
+  <i>identical</i> — the only configuration with no separate high-acceptance option, and the one
+  where this programme most needs one (§6, and report 4 §7).</p>
+
+  <table>
+    <tr><th>gold config</th><th>strong hadron cooling h/v</th><th>Δp/p</th><th>stochastic cooling h/v</th><th>Δp/p</th></tr>
+    <tr><td>110 GeV/u</td><td class="mono">218 / 379 µrad</td><td class="mono">6.2×10⁻⁴</td><td class="mono">77 / 380</td><td class="mono">10×10⁻⁴</td></tr>
+    <tr><td>41 GeV/u</td><td class="mono">275 / 377</td><td class="mono">10×10⁻⁴</td><td class="mono">174 / 302</td><td class="mono">13×10⁻⁴</td></tr>
+  </table>
+  <p style="font-size:8pt;color:var(--ink-2);margin-top:-2pt">Table 3 — YR Table 10.2, gold rows.
+  The two cooling scenarios differ by a factor 2.8 horizontally at 110 GeV/u, which is a reminder
+  that the cooling choice is worth as much as the optics choice.</p>
+
+  <p><b>Other hadron parameters</b> (EPIOS Table I, EIC column, design values): β* = 80 / 7.2 cm,
+  RMS emittance 11 / 1 nm, bunch charge 11.0 nC, 1160 bunches, bunch length 6 cm, √s = 105 GeV,
+  peak luminosity 10³⁷ cm⁻² s⁻¹. The beam is deliberately <b>flat</b>, ε<sub>x</sub>/ε<sub>y</sub>
+  ≈ 11, with β* matched to it so that the two <i>divergences</i> come out nearly equal — which is
+  why Table 2's h and v agree at 275 and 100 GeV but not at 41.</p>
+
+  <h2>4 · Lithium: published, derived, unknown</h2>
+
+  <p><b>What is published</b> is thin. EPIOS (arXiv:2510.10794, PRC 113:060501) gives the spin
+  factors and the top energies and states the case; it gives <i>no</i> lithium luminosity,
+  emittance or intensity, and describes the polarized-lithium source as early-stage. Hamwi &amp;
+  Hoffstaetter (arXiv:2509.18558, PRAB 29:073501) give the resonance spectrum.</p>
+
+  <table>
+    <tr><th>quantity</th><th>⁶Li</th><th>⁷Li</th><th>source / status</th></tr>
+    <tr><td>spin</td><td class="mono">1</td><td class="mono">3/2</td><td>nuclear data</td></tr>
+    <tr><td>A/Z</td><td class="mono">2</td><td class="mono">7/3</td><td>—</td></tr>
+    <tr><td>G factor</td><td class="mono">−0.178 (EPIOS), −0.1818 (Hamwi Table I)</td><td class="mono">+1.532 / +1.5196</td><td>published; the two disagree in the last digits</td></tr>
+    <tr><td>max |Gγ|, resonances</td><td class="mono">27, 81</td><td class="mono">191, 573</td><td>Hamwi Table I, <b>design study</b></td></tr>
+    <tr><td>snake scheme</td><td>deuteron-like: <b>not amenable to Siberian snakes</b> (small G needs impractically long snakes); partial solenoid + tune jumps</td><td>partial snakes</td><td>Hamwi; EPIOS</td></tr>
+    <tr><td>top energy</td><td class="mono">137.5 GeV/u</td><td class="mono">117.9 GeV/u</td><td>derived from the rigidity cap; ≈138 / ≈117 in EPIOS</td></tr>
+    <tr><td>energy menu</td><td class="mono">41, and 99–138</td><td class="mono">41, and 99–118</td><td><b>derived</b> (§1)</td></tr>
+    <tr><td>σ_θ h/v, high acceptance</td><td class="mono">220/380, 180/180, 92/92 µrad</td><td>≈same at the two lower</td><td><b>derived</b> (below)</td></tr>
+    <tr><td>Δp/p</td><td class="mono">7–10 ×10⁻⁴</td><td class="mono">same</td><td><b>derived</b>; species-insensitive</td></tr>
+    <tr><td>emittance, intensity, β*, luminosity</td><td colspan="2" class="mono">— nothing published —</td><td><b>unknown</b> (§6)</td></tr>
+  </table>
+
+  <h3>4.1 · The divergence, derived</h3>
+
+  <p>σ_θ = √(ε_N/(βγ·β*)), so at a given machine configuration — where β* is common to every
+  species because the lattice is set by rigidity — the only species dependence is through βγ. And
+  §1 says a <b>γ-matched</b> ion has the proton's βγ exactly. So:</p>
+
+  <div class="eq"><img class="tex" data-tex="\sigma_\theta(\mathrm{ion}) \;=\; \sqrt{\frac{(\beta\gamma)_p}{(\beta\gamma)_{\mathrm{ion}}}}\;\; \sigma_\theta(p)" /></div>
+
+  <p>which is <b>1</b> wherever the ion is γ-matched — the two lower configurations — and
+  <b>√2</b> where it is rigidity-capped with A/Z = 2, i.e. ⁶Li at the top. So a ⁶Li carries the
+  proton's divergence at 41 and 100 GeV and pays the √2 only at 18 × 275 — <i>not</i> a blanket
+  factor, which is what an earlier draft of this programme's correction assumed.</p>
+
+  <figure>
+    <div class="panel"><img src="data:image/png;base64,__EIC2__" alt="Beam angular divergence per configuration and optics for protons and 6Li, showing the species factor applying only at the top configuration and the single 72.7 microrad value previously used"></div>
+    <figcaption><b>Figure 2 · The divergence.</b> Protons and ⁶Li per configuration and optics.
+    The species √2 appears only at 18 × 275, where ⁶Li is rigidity-capped; at the two lower
+    configurations it is γ-matched and identical. The dashed line is the single energy-independent
+    72.7 µrad this programme used until 2026-08-27 — below almost everything.
+    <code>eic_beam_figures.py</code>, <code>reco.sigma_theta_for</code>.</figcaption>
+  </figure>
+
+  <p><b>Is equal ε_N defensible for lithium?</b> Gold is the published test. Scaling the 275 GeV
+  proton to Au at 110 GeV/u by 1/√(βγ) alone predicts 236 µrad against an observed 218 (h) and
+  379 (v) — so ε_N(Au)/ε_N(p) = 0.85 horizontally and 2.6 vertically. Intrabeam scattering at
+  fixed beam current goes as Z³/A²: <b>0.75 for ⁶Li</b>, 1 for a proton, ≈17× that for gold. RHIC
+  deuterons showed no measurable IBS growth while gold grew 20–45%/h. Lithium is a proton-class
+  ion, so equal ε_N is the right starting assumption — and it is an assumption, not a
+  specification.</p>
+
+  <h2>5 · The ePIC detector</h2>
+
+  <h3>5.1 · Far-forward — where this programme lives</h3>
+
+  <table>
+    <tr><th>subsystem</th><th>position</th><th>acceptance</th><th>technology</th><th>status</th></tr>
+    <tr><td>B0</td><td class="mono">z ≈ 5.4–6.4 m</td><td class="mono">5.5 < θ < 20 mrad</td><td>AC-LGAD + EMCal</td><td>design value</td></tr>
+    <tr><td>Off-Momentum Detectors</td><td class="mono">z ≈ 22.5, 24.5 m</td><td class="mono">θ < 5 mrad, x_L 0.45–0.65</td><td>AC-LGAD</td><td>design value</td></tr>
+    <tr><td>Roman Pots</td><td class="mono">z = 32.55, 34.25 m</td><td class="mono">θ < 5 mrad, x_L 0.6–0.95, <b>inner edge optics-dependent</b></td><td>AC-LGAD, in-vacuum</td><td>geometry file (current <code>main</code>)</td></tr>
+    <tr><td>ZDC</td><td class="mono">z ≈ 37.5 m</td><td class="mono">θ < 4–5.5 mrad, neutrals</td><td>W/Si + crystal</td><td>design value</td></tr>
+  </table>
+  <p style="font-size:8pt;color:var(--ink-2);margin-top:-2pt">Table 4 — the Roman-Pot z positions
+  are read from <code>compact/far_forward/roman_pots_eRD24_design.xml</code> on the current
+  <code>main</code> branch and are <b>not</b> the 26 / 28 m the Yellow Report, the ePIC wiki and
+  several papers still quote. The geometry moved; the documents did not.</p>
+
+  <p><b>The Roman-Pot sensor and its readout.</b> AC-LGAD at <b>500 × 500 µm pitch</b> with a
+  100 × 100 µm metal electrode over a <b>30 µm active thickness</b>, bump-bonded to EICROC.
+  Timing ≈35 ps per plane is a <i>requirement</i>; HPK AC-LGADs measure 20–35 ps in test beam.
+  Spatial resolution ≈140 µm from the pitch alone; ≈20 µm has been shown with charge sharing, but
+  ePIC's stated pot baseline is <b>binary 500 µm without charge sharing</b>. EICROC provides a
+  10-bit 25 ps time-of-arrival TDC and an <b>8-bit 40 MHz SAR ADC</b> for charge.</p>
+
+  <p><b>The pot insertion is quantised.</b> Modules are 16 × 16 mm and the insertion is
+  2.4 cm + a per-energy offset (0.27 / 0.71 / 2.96 cm at 18 × 275 / 10 × 100 / 5 × 41), with the
+  geometry file's own comment: <i>"These are the ten-sigma cuts for the Roman pots, translated to
+  the physical layout we currently have. They are not perfectly ten-sigma for reasons of physical
+  geometry."</i> The 1 mm aluminium RF shields are currently <b>commented out</b> — <i>"we don't
+  know if we will even need it — it depends on the beam impedence + RF heating, etc. Oct.
+  2025"</i>.</p>
+
+  <p><b>Rates and environment.</b> The ePIC Preliminary Design Report gives a few Hz per channel
+  in normal running and <i>"30–50 kHz at ~10σ"</i> from beam halo, on STAR experience. In-vacuum
+  cooling is ≈100 W per sensor layer. No published radiation fluence or dose for the pot station
+  was found.</p>
+
+  <h3>5.2 · Central detector</h3>
+
+  <table>
+    <tr><th>quantity</th><th>value</th><th>source</th><th>status</th></tr>
+    <tr><td>EMCal σ_E/E, backward (η < −2)</td><td class="mono">2%/√E ⊕ 1%</td><td>YR requirement table</td><td><b>requirement</b></td></tr>
+    <tr><td>… backward transition (−2 < η < −1)</td><td class="mono">7%/√E ⊕ 1%</td><td>YR</td><td>requirement</td></tr>
+    <tr><td>… barrel (|η| < 1)</td><td class="mono">10%/√E ⊕ 1%</td><td>YR</td><td>requirement</td></tr>
+    <tr><td>… forward (η > 1)</td><td class="mono">7%/√E ⊕ 1%</td><td>YR</td><td>requirement</td></tr>
+    <tr><td>tracking σ_p/p</td><td class="mono">√((a p)² + b²), a, b η-piecewise</td><td>—</td><td><span class="status-no">PLACEHOLDER — no published source</span></td></tr>
+    <tr><td>tracking σ_θ</td><td class="mono">5/3/2/1/2/3/5 mrad by η</td><td>—</td><td><span class="status-no">PLACEHOLDER</span></td></tr>
+    <tr><td>electron ID efficiency</td><td class="mono">0.70–0.95 by η</td><td>ATHENA JINST 17 P10019 Table 5; ECCE NIM A 1055 168464</td><td><span class="status-part">proposal-era, not ePIC</span></td></tr>
+  </table>
+  <p style="font-size:8pt;color:var(--ink-2);margin-top:-2pt">Table 5 — the calorimeter rows are
+  Yellow Report <i>requirements</i>, which is what this programme uses and what it should say it
+  uses. The tracking rows are stand-ins with no published source, flagged as such in
+  <code>polligen/reco.py</code>'s own docstrings, and the electron-ID curve is interpolated
+  between ATHENA and ECCE anchors because no official ePIC curve exists.</p>
+
+  <h2>6 · What this programme assumes that the specification does not give it</h2>
+
+  <p>Ranked by how much a wrong answer would move a published number.</p>
+
+  <table>
+    <tr><th>#</th><th>what is missing</th><th>what we do instead</th><th>owner</th></tr>
+    <tr><td>1</td><td><b>Lithium beam divergence and Δp/p</b>, per configuration and cooling scenario</td><td>derive from the proton tables with the γ-matched species step (§4.1)</td><td>C-AD / ePIC FF WG</td></tr>
+    <tr><td>2</td><td><b>Is there a high-acceptance optics at 41 GeV?</b> The YR's two rows are identical there</td><td>assume not; report 4 §7 shows the coherent channel depends on it</td><td>C-AD</td></tr>
+    <tr><td>3</td><td><b>Lithium emittance, intensity, β* and luminosity</b> — nothing published</td><td>assume proton-class ε_N, defended by the gold calibration and the Z³/A² IBS scaling</td><td>C-AD / ANL source group</td></tr>
+    <tr><td>4</td><td><b>EICROC input charge dynamic range in fC</b>, and LGAD gain suppression at ~9 MIP</td><td>assume the charge is usable; report 4 §4.1 shows the far-forward Z-ID depends on it entirely</td><td>OMEGA-IJCLab / BNL AC-LGAD group</td></tr>
+    <tr><td>5</td><td><b>Per-optics transfer matrix at the pot planes</b> — R₁₁, R₁₂, R₂₁, R₂₂, D, D′</td><td>use R₁₂ = 30.6 m, measured at 18 × 275 only, and work in angle elsewhere</td><td>ePIC FF WG</td></tr>
+    <tr><td>6</td><td><b>ePIC tracking resolution and electron-ID</b> — no published curves</td><td>η-piecewise stand-ins, flagged in the code and in Table 5</td><td>ePIC</td></tr>
+    <tr><td>7</td><td><b>Radiation environment at the Roman Pots</b> — no published fluence or dose</td><td>not modelled</td><td>ePIC FF WG</td></tr>
+    <tr><td>8</td><td><b>Polarization-preservation scheme for ⁶Li</b>, which cannot use Siberian snakes</td><td>assume it works at the EPIOS source targets</td><td>C-AD / EPIOS</td></tr>
+  </table>
+
+  <div class="callout warm">
+    <b>The honest summary.</b> The electron and proton beams are specified in detail and this
+    programme uses them as such. The <i>ion</i> beam is specified for gold and, thinly, for ³He;
+    for lithium essentially nothing exists beyond a top energy and a G factor, and §4 is a
+    derivation, not a citation. The detector is specified where it matters most for us — the
+    far-forward geometry is in a file we can read — and least where the central reconstruction
+    lives, which is why Table 5 carries two rows marked PLACEHOLDER rather than a number that
+    would look like a specification.
+  </div>
+
+  <h2>References</h2>
+
+  <div class="refs">
+    <p>[1] R. Abdul Khalek et al., <i>EIC Yellow Report</i>, Nucl. Phys. A 1026 (2022) 122447, arXiv:2103.05419 (<code>refs/2103.05419_part1..4.pdf</code>). Tables 10.1 and 10.2 (beam parameters per configuration and optics), Table 11.48 (Roman-Pot p_T smearing), §11.6 (far-forward), §14.5.3 (superconducting nanowires), and the detector requirement tables.</p>
+    <p>[2] G. Atoian et al. (EPIOS), <i>Realizing the scientific program with polarized ion beams at EIC</i>, Phys. Rev. C 113 (2026) 060501, arXiv:2510.10794 (<code>refs/2510.10794.pdf</code>). Table I (HERA vs EIC parameters); the species table with G and mc²/G; the polarized-lithium case.</p>
+    <p>[3] E. Hamwi, G. H. Hoffstaetter, <i>Polarization Transmission in the Electron-Ion Collider's Hadron Storage Ring</i>, Phys. Rev. Accel. Beams 29 (2026) 073501, arXiv:2509.18558 (<code>refs/2509.18558.pdf</code>). Table I, the species-dependent resonance spectrum; the statement that small-G ions cannot use Siberian snakes.</p>
+    <p>[4] <code>eic/epic</code>, branch <code>main</code>: <code>compact/far_forward/roman_pots_eRD24_design.xml</code> and <code>compact/fields/beamline_*.xml</code>, read directly 2026-08-26. Station positions, module size, per-energy insertions, the RF-shield comment.</p>
+    <p>[5] A. Jentsch (ePIC), <i>Far-Forward Detectors and Physics with ePIC @ the EIC</i>, DIS 2023 (<code>refs/ePIC_far_forward_talk_DIS_2023_v2.pdf</code>), and the ePIC Collaboration Meeting, JLab, July 2025. Acceptances, the AC-LGAD specification, the in-vacuum cooling load, the x-moving layer.</p>
+    <p>[6] A. Jentsch, Z. Tu, C. Weiss, Phys. Rev. C 104 (2021) 065205, arXiv:2108.08314 (<code>refs/2108.08314.pdf</code>). Table I, the far-forward acceptance windows this programme's router uses.</p>
+    <p>[7] ePIC Collaboration, <i>Preliminary Design Report</i>, September 2024. Roman-Pot rates: a few Hz per channel in normal running, 30–50 kHz at ~10σ from beam halo.</p>
+  </div>
+
+  <h2>Appendix A · Revision history</h2>
+
+  <table>
+    <tr><th>Date</th><th>Revision</th></tr>
+    <tr><td class="mono">2026-08-27</td><td>First version. Written after the γ-matching correction (plans/10) made it clear that the programme had been carrying an accelerator assumption — that ion energies scale with rigidity — that no document supports and that the published gold and ³He menus refute. The beam sections are the corrected picture; the detector sections separate requirement from placeholder; §6 is the list of what we are assuming on the machine's and the detector's behalf.</td></tr>
+  </table>
+
+  <div class="foot">
+    Status vocabulary: <b>design value</b> — appears in a design document as a parameter;
+    <b>requirement</b> — a specification the subsystem must meet, not a demonstrated performance;
+    <b>measured</b> — test beam or operations; <b>derived</b> — computed here from published
+    inputs, with the derivation shown; <b>unknown</b> — not published anywhere we could reach.
+    Beam divergences and Δp/p are Yellow Report Tables 10.1 and 10.2 unless stated. Ion energies
+    are computed by <code>fastsim/polli_fastsim/beams.py</code> and pinned by
+    <code>fastsim/tests/test_beams.py</code>. Built by <code>reports/build_report.py</code>;
+    figures from <code>evgen/scripts/eic_beam_figures.py</code>.
+  </div>
+</div>
+</body>
+</html>

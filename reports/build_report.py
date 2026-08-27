@@ -15,7 +15,8 @@ Pages built (template -> html), in report-number order:
   0  polarized_li_primer.template.html          educational physics primer
   1  cos2phi_money_plots_report.template.html   the projected measurements
   2  reconstruction_chain_report.template.html  the reconstruction chain
-  3  nanowire_far_forward.template.html         the near-beam detector study
+  3  eic_epic_reference.template.html           the machine and the detector
+  4  nanowire_far_forward.template.html         the near-beam detector study
 
 With --pdf each page is also print-rendered through headless
 Edge/Chrome (the templates carry the @page A4 setup).
@@ -44,6 +45,11 @@ MONEY_FIGS = {
     "__M6__": "evgen/money_cos2phi_coherent_6Li.png",
 }
 
+EIC_FIGS = {
+    "__EIC1__": "evgen/eic_energy_menu.png",
+    "__EIC2__": "evgen/eic_beam_divergence.png",
+}
+
 NANOWIRE_FIGS = {
     "__NB1__": "evgen/nearbeam_aperture_6Li.png",
     "__NB2__": "evgen/nearbeam_reach_gain_6Li.png",
@@ -68,7 +74,8 @@ PAGES = (
      "figures": {k: MONEY_FIGS[k] for k in ("__PS__", "__M5__")}},
     {"stem": "cos2phi_money_plots_report", "number": 1, "figures": MONEY_FIGS},
     {"stem": "reconstruction_chain_report", "number": 2, "figures": RECO_FIGS},
-    {"stem": "nanowire_far_forward", "number": 3, "figures": NANOWIRE_FIGS},
+    {"stem": "eic_epic_reference", "number": 3, "figures": EIC_FIGS},
+    {"stem": "nanowire_far_forward", "number": 4, "figures": NANOWIRE_FIGS},
 )
 
 BROWSERS = (
