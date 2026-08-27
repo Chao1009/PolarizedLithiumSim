@@ -111,8 +111,11 @@ evaporation-n ZDC tags left to BeAGLE.
 Language: numpy-vectorized Python, same style/test discipline as
 `polli_fastsim` (it imports the existing SF backends and `farforward.py`);
 4-vector-tier throughput ≥ 10⁴ ev/s is ample for Phase-1. PYTHIA tier runs
-inside eic-shell (PYTHIA8 python bindings ship in the container) or via a
-thin fifo/LHE hand-off — decided in step 5.D. C++ port only if an official
+**natively** — the bindings do NOT ship in the eic-shell container (it has
+the C++ library and headers only); PYTHIA 8.311 builds its own against the
+analysis interpreter in two and a half minutes (2026-08-26,
+`tools/pythia8/README.md`), which is how the standing 12 M-event HFS
+production was made and what removes the fifo/LHE hand-off from step 5.D. C++ port only if an official
 campaign demands it.
 
 Layout: `evgen/polligen/{spin,xsec,tagged,sample,bookkeeping,reweight,io_hepmc,hadronize}.py`
@@ -220,7 +223,10 @@ nn per the triton wave function — crude, flagged), `io_hepmc.py` (ASCII
 HepMC3; status-4 beams so `abconv` accepts it; 10-digit fragment PDG;
 spin labels as named attributes — no HepMC3 convention exists for ion spin
 states, so define one and propose it to the ePIC MC group, new plans/04
-#17), tier T2 PYTHIA attachment inside eic-shell. 100-event
+#17), tier T2 PYTHIA attachment — natively, and the HFS half of it is
+already done and in production use (`polligen/hfs.py` on the 12 M-event
+sample of `tools/pythia8`); what T2 still owes is the attachment to the
+*tagged* final state, not the generator. 100-event
 abconv → npsim → EICrecon smoke per plans/03 step 2.1.4 (⁶Li can proxy the
 existing d/⁴He beamline configs; ⁷Li needs the new field maps — already
 plans/03 step 2.1.2).

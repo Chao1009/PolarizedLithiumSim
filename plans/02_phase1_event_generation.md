@@ -173,6 +173,23 @@ need analogous care.
      pT tail is 2.2× (pT>0.2) to 13× (pT>0.45) harder ⇒ near-beam (R≈1)
      tag acceptances are tail-model-dependent at the O(10) level — the
      ⁶Li α-tag number needs VMC/BeAGLE input, as suspected.*
+     ☑ *2026-08-26 second pass, on BeAGLE **1.03.02-3.1** eH2 'en' 9×130
+     (20k events, same xrootd route; `--beta-scan` added to
+     `ed_control_analysis.py`): the first pass reproduces on the newer
+     sample — routing 93.1% OMD, tail 2.24× / 4.86× / 12.95× at
+     p_T > 0.2 / 0.3 / 0.45 GeV — and restricting to the spectator peak
+     x_L ∈ [0.9, 1.1), which removes any target-fragmentation
+     contamination, makes it worse, not better: 2.50× / 6.92× / 28×.
+     The scan says **no β reproduces the shape**: BeAGLE has a narrower
+     core and a harder tail than the two-parameter Hulthén can have at
+     once, the best shape fit sits at β = 0.40 GeV (the top of the
+     documented 0.20–0.40 range) and still falls 3× short at 0.3 GeV and
+     10× at 0.45.  Since the ⁶Li α tag is entirely a p_T-tail measurement
+     — 0.40 GeV of p_T for a 550 GeV α under the high-acceptance envelope
+     — the published tag acceptance is model-limited **from below** and
+     its model uncertainty is one-sided upward.  Still owed: the Tu et al.
+     comparison the step actually asks for, and BeAGLE's A = 6 treatment
+     is not its deuteron one.*
    - Fragment yields (α, t, d, ³He, p, n, residues with E*) vs
      photo-/electro-disintegration data and cluster-model expectations
      (⁷Li → α+t dominance at low E*); event-by-event momentum conservation.

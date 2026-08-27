@@ -89,11 +89,23 @@ current values from the 2026-08-17 report shown as the baseline:
 
 ## 7.4 Work packages
 
-### WP1 — Grid structure functions in production (◐ infrastructure exists)
+### WP1 — Grid structure functions in production (◐ infrastructure exists; R done)
+- ☑ **R is done** (2026-08-26, plans/08 C2): the published SLAC/E143 R1998
+  world fit lives in `polli_fastsim/structure.py` as `r1998` (all three of
+  the paper's forms, so their spread is the fit's functional-form
+  systematic) and reaches every consumer through one `r_func` hook.  The
+  defect it replaces clipped R to exactly 1.000 over 38% of the sensitivity
+  box.  Measured at the four sweet spots: **F₂ cancels exactly** in the
+  cos 2φ amplitude (2×10⁻¹⁶) while Δ/F₁ moves +16.6 / +18.0 / +4.7 / −4.4%,
+  so of the two structure-function inputs only R moves the physics result —
+  which reorders this work package.
+- ☑ The grids themselves are installed (CT18NLO, EPPS21nlo_CT18Anlo_Li6,
+  NNPDFpol11_100 via `parton`); the fast-sim grid tests no longer skip.
 - ☐ Promote the money_delta script-local `NuclearF2FromGrid`
-  (EPPS21nlo_CT18Anlo_Li6, R1998 for F₁) into `polli_fastsim/structure.py`
+  (EPPS21nlo_CT18Anlo_Li6) into `polli_fastsim/structure.py`
   behind the existing `NuclearF2` interface; wire through
-  `inputs.get_backends`.
+  `inputs.get_backends` (pass `r_func=structure.r1998` there, not a
+  monkey-patch).
 - ☐ Rerun money plots 5/6/7 and `phase_space_bins.py` with `--backend grid`;
   re-solve moment_A at the grid ⟨Q²⟩; record sweet-spot drift and the
   toy-vs-grid ratio per headline number (expect ≲ ×1.5 by run-2/3 checks:
@@ -184,7 +196,7 @@ exist and close:
   presentation is reco-level 5R/7R with the ratio estimator (errors improve,
   not degrade), and 6R with the angular cut curves vs σ_θ and p_u.
 
-### WP3-HFS — Hadronic final state and hadron-side detection (◐ chain built, sample pending)
+### WP3-HFS — Hadronic final state and hadron-side detection (☑ chain built, sample generated)
 Decision 2026-08-25 (option 1 of the reconstruction-note discussion): replace
 the 25% Gaussian stand-in for the hadronic y by a real hadronic final state
 through a hadron-side detector response, and treat the hadron-side detection
@@ -208,17 +220,27 @@ efficiency explicitly.
   (Figure 3 of the reconstruction report).
 - ☑ `tools/pythia8/gen_dis_hfs.py` + README: PYTHIA 8 e+p / e+n DIS at the
   per-nucleon beam energies (head-on frame, dipole recoil, Q² > 0.7, lepton
-  radiation off) → HFS .npz.  **Runs in eic-shell on the Linux box (no PYTHIA
-  on the analysis machine); one command per target, ~1 M events each.**
-- Results with the toy (illustrative): captured Σ fraction 0.90 (tracks 0.60,
-  photons 0.30, neutral hadrons 0.03); Σ-method δy/y at the four sweet spots
-  0.28 / 0.17 / 0.24 / 0.07 with 50 MeV noise (9–12% without noise; ×2 at
-  100 MeV) — the 25% stand-in is what a 50 MeV noise floor does to
-  Σ_h = 0.2 GeV; 5R rerun with the HFS-based y: purities 0.60 / 0.68 / 0.68 /
-  0.86, δÂ = 1.2 / 1.0 / 1.8 / 3.0 × 10⁻⁴ (Table 2 unchanged), 7R unchanged.
-- ☐ Generate the PYTHIA 8 samples (p and n, 10 × 50; later 5 × 20.5 and
-  18 × 137.5), rerun `hfs_resolution.py` and 5R/7R with them; quote the
-  resolution table by y and Q² in the reconstruction report.
+  radiation off) → HFS .npz.  **Runs natively — PYTHIA 8.311 builds its own
+  Python bindings against the analysis interpreter; the container has the C++
+  library but no bindings, which is what made this look container-gated.**
+  It also found that `PhaseSpace:Q2Min` had never been applied: PYTHIA
+  honours it only for `Q2Min ≥ pTHatMinDiverge²` and that defaults to 1 GeV,
+  so the 0.7–1.0 GeV² band — 31% of the sample, and the band the loosened
+  generator window exists for — was missing until `pTHatMinDiverge = 0.5`.
+- ☑ Samples generated (2026-08-26): 12 M events, p and n at 5 × 20.5,
+  10 × 50 and 18 × 137.5, 2.7 GB, manifest in `evgen/samples/README.md`.
+- Results **with PYTHIA** (the toy's, kept for contrast, in brackets):
+  captured Σ fraction 0.90 (tracks 0.51 [0.60], EMCal 0.28 [0.30], neutral
+  hadrons 0.11 [0.03]); Σ-method δy/y at the four sweet spots with 50 MeV
+  noise **0.32 / 0.22 / 0.28 / 0.11** [0.28 / 0.17 / 0.24 / 0.07], i.e. the
+  toy was optimistic by 0.04–0.05 absolute everywhere; 0.21 / 0.12 / 0.17 /
+  0.10 at LOW and 0.74 / 0.34 / 0.69 / 0.18 at TOP, so **the x ≈ 0.1 bins
+  belong to the low-energy configuration**.  5R with the HFS-based y:
+  purities 0.40 / 0.53 / 0.44 / 0.73 [0.60 / 0.68 / 0.68 / 0.86], amplitude
+  dilution D = 0.79 / 0.84 / 0.86 / 0.96, δÂ = 1.2 / 1.0 / 1.8 / 2.9 × 10⁻⁴
+  (Table 2 errors unchanged — the loss is in purity, not in statistics).
+- ☐ Quote the resolution table by y and Q² in the reconstruction report and
+  decide whether 5R/7R are published on the HFS y or the stand-in.
 - ☐ Replace the Yellow-Report response magnitudes by the ePIC design values
   (calorimeter noise/threshold floor at Σ_h ≈ 0.2–0.5 GeV is the decisive
   input — plans/04 #21 narrowed to it); add the HFS energy-scale

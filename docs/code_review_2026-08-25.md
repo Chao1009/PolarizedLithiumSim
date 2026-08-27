@@ -1,5 +1,26 @@
 # Simulation code review and reconstruction audit (2026-08-25)
 
+> **Two of this review's own numbers were corrected when its items were
+> implemented (2026-08-26, plans/08 C2 and C3).**  (i) §7 S1 estimates
+> that fixing the fast-sim `r1998` moves the moment-solved |A_bag| "only
+> ~10%"; measured, it moves **21–25%** (0.318/0.310/0.297 →
+> 0.237/0.236/0.235).  (ii) The five R values S1 quotes for "Θ only in
+> the log term" (0.34, 0.31, 0.41, 0.20, 0.12) are a property of the
+> script's own function, which is not R1998: its third term has no
+> counterpart in Abe et al. Eq. (2) and contributes 23–26% of R at the
+> two high-x points.  The published three-form R1998 gives 0.350, 0.318,
+> 0.374, 0.184, 0.097 there, and at the high-x points the difference
+> exceeds the fit's own R_a/R_b/R_c spread — so it is the R1998 numbers,
+> not S1's, that belong in the letter.  Everything else in S1 stands, and
+> its central prediction (L_5σ 131 → 63–69 and 275 → 152–164 fb⁻¹/u) is
+> confirmed at 65.8 and 155.1.  (iii) S1's "Θ … — 6.5–9.5 at x ≤ 0.05" is
+> also measured wrong: over 1 ≤ Q² ≤ 130 at x ≤ 0.05 the factor runs
+> **6.2–12.9**, falling to 4.45 at the fit's Q² = 0.5 support edge.  The
+> qualitative point — Θ is large where the sensitivity is, so multiplying
+> it into every term saturates the sum — is exactly right, which is why
+> the item was worth implementing.
+
+
 Scope: the whole simulation code (`evgen/polligen`, `evgen/scripts`,
 `fastsim/polli_fastsim`, `fastsim/scripts`, both test suites), audited
 under three questions: (1) is each step of the reconstruction chain

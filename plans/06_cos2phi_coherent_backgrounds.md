@@ -31,6 +31,8 @@ scenario inputs):
 - **Coherent:** the intact ⁶Li has exactly beam rigidity (A/Z = 2,
   R = 1.000), so at IP6 it is visible **only** in the Roman-Pot
   near-beam pT tail: acceptance exp(−B·pT_cut²) = **13.5%**
+  — but see the 2026-08-26 measurement below: the ePIC pot aperture is
+  tighter than this envelope and opens horizontally, not vertically
   [9–20% for B ∈ 40–60 GeV⁻²] with high-acceptance optics —
   and **4×10⁻⁵ with high-divergence optics: the coherent program
   fixes the optics choice**. Scenario rates give ~10⁸ tagged events at
@@ -358,6 +360,11 @@ the arXiv source (now in `coherent.MANTYSAARI_A2_DEUTERON`):
   default stands. The eSTARlight IR-8 study's intact-recoil efficiencies
   (d 47%, ³He 32%, ⁴He 29%, ⁷Li 17.8%) interpolate to ≈ 20% for ⁶Li at
   IR-8 — versus our 13.5% RP pT-tail estimate at IP6 (constant 0.20 GeV cut;
+  and versus the **measured** aperture of 2026-08-26, |θ_x| ≳ 2.0 / 1.35 /
+  1.03 mrad in the 5×41 / 10×100 / 18×275 optics, which gives a tagged
+  fraction of 1.4×10⁻² / 2.7×10⁻³ / 1.9×10⁻¹⁷ at B = 50 GeV⁻² and inverts
+  the cutout aspect this section assumes — `tools/fullsim/README.md`,
+  plans/04 #20, plans/08 §8.4;
   9% for the angular envelope at 50 GeV/u, reconstruction-chain report §4), an independent
   cross-check of the tagging scale.
 

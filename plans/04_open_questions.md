@@ -180,6 +180,24 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
     `reco.rp_measure(cut_scale_xy=(2.5, 1))` is the new default of
     money plot 6R. Still needed: the slot dimensions and the light-ion
     optics.
+    *2026-08-26 (measured, `tools/fullsim`):* an intact ⁶Li shot through
+    the ePIC geometry (`ion_gun_hepmc.py` → npsim, epic-main of
+    jug_xl-nightly, 84 points in p_T × azimuth) **inverts the aspect
+    ratio**. The pot silicon does surround a horizontal slot, as the
+    2026-08-25 entry says; but the far-forward optics image an IP angle
+    onto the pot plane with R₁₂ ≈ 30.6 m horizontally against a few
+    metres vertically, so what clears the slot is the HORIZONTAL angle:
+    the boundary is |θ_x| ≳ 2.0 / 1.35 / 1.03 mrad in the 5×41 / 10×100 /
+    18×275 optics (p_T = 0.25 / 0.41 / 0.85 GeV for the ⁶Li at that
+    ring's rigidity), against |θ_y| ≳ 1.8–3 mrad. In `rp_measure` terms
+    that is `cut_scale_xy ≈ (1, 2.3)`, not (2.5, 1) — a factor ≈ 5.8 the
+    wrong way — and the fake ⟨cos 2β⟩ about the vertical spin axis is
+    therefore large and **negative**, not positive. The tagged fraction
+    falls with it (B = 50 GeV⁻²): 1.4×10⁻² against 0.82 at 20.5 GeV/u,
+    5×10⁻⁵ against 0.40 at 50. *Caveats:* one event per scan point, 30° azimuthal steps,
+    no beam envelope, and a September-2024 `epic-main`. *Action:* repeat
+    on the current release with beam effects, and put the aspect ratio to
+    the FF WG as a question with a number attached.
 21. **Hadronic-method y resolution at y = 0.01–0.05 for e + light ions**
     (same note). Three of the four inclusive sweet spots sit at
     y = 0.010–0.025 where the electron alone gives δy/y = 50–120%; the
@@ -196,6 +214,17 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
     i.e. the 25% default is the noise floor acting on Σ_h ≈ 0.2 GeV. *Needed
     now:* the PYTHIA sample (one eic-shell command) and the ePIC calorimeter
     noise/threshold floor at Σ_h ≈ 0.2–0.5 GeV.
+    *2026-08-26 (the PYTHIA sample exists):* 12 M events over the three beam
+    configurations, generated natively (`tools/pythia8`). Σ-method
+    δy/y = **0.32 / 0.22 / 0.28 / 0.11** at the sweet spots with the 50 MeV
+    floor — the toy was optimistic by 0.04–0.05 absolute at every one,
+    because it put 0.03 of Σ into neutral hadrons where PYTHIA puts 0.11 —
+    and 0.21 / 0.12 / 0.17 / 0.10 at LOW against 0.74 / 0.34 / 0.69 / 0.18
+    at TOP. **Half of this question is therefore answered**: what remains
+    is only the ePIC noise/threshold floor, which is what the scan
+    0 → 25 → 50 → 100 MeV turns into 0.20 → 0.32 → 0.54 → 1.01 at y = 0.005.
+    Reco purity at the sweet spots falls from 0.64–0.68 to 0.40–0.73 with
+    the real final state.
     *2026-08-25 (web search, refs/README.md):* now bracketed by documents —
     ATHENA proposal JINST 17:P10019 Sec. 3.1/Fig. 22 (e−Σ or DA for
     y ≲ 0.1; ≈ 25% y resolution at y ≈ 0.01 → ≈ 10% at y ≈ 0.1; JB 20–30%);

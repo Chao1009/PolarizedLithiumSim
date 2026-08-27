@@ -164,7 +164,7 @@ method.  The Gaussian y stand-in smears the *true* y and never sees E′,
 so it gives exactly 1 and understates the electron energy scale by about
 two.  Both levers are pinned by tests.
 
-### A6 — forward-folded response replaces the bin-by-bin K ☐
+### A6 — forward-folded response replaces the bin-by-bin K ☑
 `RecoResponse.fold(delta_func, mask)` = the response-weighted
 ⟨(∂A/∂Δ)·Δ(x_true, Q²_true)⟩, then either two K iterations with the
 shape refitted to the data, or a 2–3-parameter Δ(x) shape fitted
@@ -179,6 +179,35 @@ on noise-free pseudo-data oscillates to ±30% — worse than the
 +1.6…+27% bias it is meant to cure. Unfold along x only; include
 feed-in bins beyond the plotted range; propagate the response MC error
 (0.5–1.2% per bin, currently unpropagated).
+
+*Done 2026-08-26.*  The amplitude is **exactly linear** in Δ at fixed
+kinematics — Δ enters the master formula in one place — so
+`RecoResponse.fold(delta_func, mask, category)` is the response as an
+exact linear operator, not a linearisation, and it reproduces
+`bin_summary["a_reco_bin"]` to 3×10⁻¹⁶ when handed the model the response
+was built from (which is what makes it a drop-in for K).
+`fold_shape_fit` then fits a 2-parameter tilt of a prior shape *through*
+the response per Q² slice, on a bounded grid with the normalisation
+profiled out — bounded because that, not a matrix inverse, is the
+conditioning guard the audit asks for.  Measured on money plot 7R with
+the wrong prior: the residual bias over the plotted bins falls from
+22% / 24% / 99% (bin-by-bin K) to at most 3.5% / 7.1% / 6.9% (moment_B
+prior) and 4.7% / 5.5% / 5.0% (toy prior), and at the four sweet spots
+the model dependence K(moment_A)/K(prior) − 1 falls from (−5.0, +8.5,
+−9.3, +6.3)% and (+9.7, +2.5, +10.6, +2.8)% to (−0.9, −1.2, −0.2, +0.3)%
+and (+4.7, +2.8, +2.2, −0.9)%.  The 7R error bar now carries four terms, not one:
+statistics, the shape fit, the response MC (`fold_mc_error`, a stratified
+within-cell estimator validated against eight independent response
+seeds — 0.10–1.00% per plotted bin, median 0.29%, and
+0.32 / 0.27 / 0.21 / 0.11% at the four sweet spots at
+`n_mc_per_cell = 400`) and, dominating them, the spread over the priors
+the tilt family cannot absorb.  That last one exists because the
+adversarial pass caught the bar advertising three sources while being
+blind to the biggest: it was as small as 0.070× the residual it did not
+cover.  Refitting from every other registry shape bounds it, and the
+bound is measured to hold — ≥ 1.037× the residual at every plotted bin
+of every (slice, prior) pair.  Both paths stay: `--unfold model` is the
+default and reproduces every published 7R number bit for bit.
 
 ### A7 — η-dependent calorimeter resolution (F4) ☑
 `emcal_resolution(..., eta=None)` with the Yellow Report table, `eta=None`
@@ -228,7 +257,7 @@ operators, not on one branch against the other. For J = 3/2 write a
 *characterization* test citing `plans/04` #14: asserting cross-J equality
 would freeze a convention the documents declare open.
 
-### B4 — pin the untested paths ◐
+### B4 — pin the untested paths ☑
 `populations_maxent` (spin-temperature populations), `b2_func` ≠ 2xb₁,
 the θ_S ≠ π/2 thirds identity, and `helicity_flip_plan(...).pzz_true` —
 the quantity the money scripts divide by — have no test.
@@ -240,7 +269,14 @@ with an explicit "not the default" guard; and the tensor rate is checked
 across θ_S including the magic angle, where it vanishes exactly.  The
 spin-3/2 rank-2 sector is a characterization test (plans/04 #14).
 
-### C1 — far forward: angular near-beam cut, OMD window, nucleus mass ◐
+*Done 2026-08-26* for the fourth: `evgen/tests/test_bookkeeping.py` pins
+`helicity_flip_plan(...).pzz_true` for every branch — exactly 0 for
+j = 1/2, the spin-temperature moment for `pzz=None` (against closed forms
+of the geometric population ladder with exact rational anchors at t = 3,
+and against the density matrix built from `spin.py`'s own operators),
+closure for an explicit `pzz`, and evenness under pz → −pz.
+
+### C1 — far forward: angular near-beam cut, OMD window, nucleus mass ☑
 `route_charged` already receives θ, so the 10σ envelope becomes one line
 plus an `Optics` field — better than threading (A_frag, p_u) through
 eight call sites, and exact per event. 0.20 GeV on a 4 × 137.5 GeV α is
@@ -262,7 +298,23 @@ the published coherent high-divergence acceptance by 5× (4×10⁻⁵ →
 2.2×10⁻⁴) and is a documentation decision for the author, not a code
 one.
 
-### C2 — R₁₉₉₈ (S1) and one R hook ☐
+*Done 2026-08-26* for the nucleus mass.  `spectator.NUCLEUS_MASS` carries
+the ground-state **nuclear** masses (AME2020 atomic masses less the
+electrons; the recipe reproduces the six CODATA light nuclear masses, and
+the separation energies of the channel table close against it), and the
+beam boost and the two-body reduced mass in `kappa` both use it.  A·M_U
+is not the mass of a nucleus: it is low by 12.6 MeV for ⁶Li, and the
+boost γ, γβ, p_lab, θ and R of every spectator inherited that.  The
+kinematics move by 2×10⁻³; the *acceptance* moves more, because the R
+window edges are hard — the ⁶Li α sits at R = 0.99813, not 1.00000, and
+sliding it 0.0022 across the RP edge at R = 0.95 takes the α tag from
+1.65% to **1.85%** (high acceptance) and 1.31% to **1.51%** (high
+divergence) at 137.5 GeV/u, and 13.2% to 13.5% at 50 GeV/u.  ⁷Li, off
+rigidity at R = 0.85571 with no nearby edge, moves +0.13% relative.
+`tagged.boost_spectator` was carrying the old A·M_U and is now the same
+mass — the same beam had two masses in two modules until this run.
+
+### C2 — R₁₉₉₈ (S1) and one R hook ☑
 Θ must multiply only the 0.0485/ln(Q²/0.04) term; the present form
 clips R to 1.000 at x ≲ 0.1. Thread `r_func` through `NuclearF2`,
 `dsigma_dx_dq2`, `depolarization_d`, `InclusiveKernel` **and**
@@ -276,7 +328,7 @@ cancels **exactly** in the cos 2φ amplitude (scenario Δ is defined as
 carries R directly — toy R = 0.157–0.171 across the acceptance against
 a corrected R₁₉₉₈ = 0.12–0.34. Report the F₂ and R drifts separately.
 
-### C3 — make the July production runnable (S11) ☐
+### C3 — make the July production runnable (S11) ☑
 `np.trapezoid` shim (it already exists in `delta_models`), `encoding=
 "utf-8"`, `Path(__file__).with_name(...)`; and the two blockers that
 fire first: a `UnicodeEncodeError` on "fb⁻¹" under cp936 before the
@@ -305,14 +357,58 @@ fix and left for the author.
 |---|---|---|
 | D2 | exact finite-γ kernel (Cosyn Eqs. 9/10/14/24), b₃/b₄ slots, Eqs. 17d/17e | gated on D1 for the subtraction sign. **Correct now, without code:** report §2, code review G2 and the `plans/07` systematics row all quote the leakage as γ²b₁/6 and are ≈ 7× low; the exact ratio a₂(full)/a₂(17e alone) ≈ 6.9. Impact on everything published is ≤ 0.15%; the exposure is the Δ/F₁ ~ 10⁻³ scenario and x ≳ 0.2 at Q² ≈ 1 |
 | D3 | radiative corrections (WP4) | **two of the four planned deliverables are void**: collinear ISR generates exactly zero fake cos φ′/cos 2φ′ (the covariant azimuth is invariant under k → (1−z)k to 2×10⁻¹⁶ rad in the massless-target limit), and the ratio cancellation is already demonstrated. What survives is (a) the migration bound on purity/efficiency/K — the number the ≤5% gate should apply to — and (b) the method comparison: y_Σ and y_DA use no beam energy and are ISR-robust, but the chain's own x = Q²_e/(s y_Σ) is biased by exactly 1/(1−z), so report §3's robustness claim is true for y and false for the x the analysis uses |
-| D4 | PYTHIA 8 HFS samples | no PYTHIA 8 locally (eic-shell). A5's guard makes the merge safe when they arrive |
-| D5 | incoherent breakup shapes, veto efficiencies, event-level Z-ID | FLUKA licence → BeAGLE. `plans/07` already rules this non-blocking; the m-state-blind dilution argument is algebra, not a simulation gap |
-| D6 | ePIC numbers: the calorimeter noise/threshold floor at Σ_h ≈ 0.2–0.5 GeV (#21, the one number the letter cannot do without); the **backward-disk angular resolution** (F3 — worth more than A7); Li ring σ_θ (#20); the RP slot geometry; EICROC Z-ID (#19) | external |
+| D4 | PYTHIA 8 HFS samples | ☑ **closed 2026-08-26** — it was never external. PYTHIA 8.311 builds its own Python bindings against the analysis machine's interpreter (`tools/pythia8/README.md`); the eic-shell container has the C++ library but no bindings, which is what had made this look like a container problem. 12 M events over the three beam configurations now stand in `evgen/samples/`, and A5's beam guard makes the merge safe |
+| D5 | incoherent breakup shapes, veto efficiencies, event-level Z-ID | FLUKA licence → BeAGLE. `plans/07` already rules this non-blocking; the m-state-blind dilution argument is algebra, not a simulation gap. *2026-08-26:* the no-FLUKA half is done — the official BeAGLE e+d sample streams over xrootd and the control study is run (`tools/beagle/README.md`), which is what calibrates the cluster model's p_T tail; what FLUKA still gates is A = 6, 7 breakup itself |
+| D6 | ePIC numbers: the calorimeter noise/threshold floor at Σ_h ≈ 0.2–0.5 GeV (#21, the one number the letter cannot do without); the **backward-disk angular resolution** (F3 — worth more than A7); Li ring σ_θ (#20); the RP slot geometry; EICROC Z-ID (#19) | external — except the RP slot geometry, which is now measured rather than assumed: an intact ⁶Li through the ePIC far-forward geometry puts the aperture at \|θ_x\| ≳ 2.0 / 1.35 / 1.03 mrad in the 5×41 / 10×100 / 18×275 optics against \|θ_y\| ≳ 1.8–3 mrad, i.e. **open horizontally**, the opposite aspect to `rp_measure`'s slot (`tools/fullsim/README.md`, plans/04 #20) |
 | D8 | a coherent diffractive model for ⁶Li (#18) | blocks a coherent electron side and x_P/M_X binning. Pairing the inclusive map with the log-uniform x_P now in `CoherentResponse` gives β = x/x_P > 1 for 58% of events, so this cannot be faked locally |
 
 ---
 
-## 8.4 Commit sequence
+## 8.4 What development run 8 found beyond the plan (2026-08-26)
+
+Moving the work to the Linux box turned three of the "external" blockers
+into measurements.  Each is written up where it belongs; this is the
+index, and the numbers are in `plans/00` run 8.
+
+1. **PYTHIA 8 was never external** (D4 above).  Building it also found a
+   defect in the settings this repository had documented for two months:
+   `PhaseSpace:Q2Min` is applied **only** when `Q2Min ≥
+   pTHatMinDiverge²`, and `pTHatMinDiverge` defaults to 1 GeV, so the
+   requested 0.7 GeV² was silently ignored and the 0.7–1.0 GeV² band —
+   31% of the sample, and precisely the band the loosened generator
+   window exists to populate — was missing.  `tools/pythia8`.
+2. **The hadronic-resolution band is measured, and the toy was
+   optimistic**: δy/y = 0.32 / 0.22 / 0.28 / 0.11 at the four sweet spots
+   against the toy's 0.28 / 0.17 / 0.24 / 0.07, and the ordering across
+   beam energies (0.21–0.10 low, 0.74–0.18 top) settles the energy
+   strategy for the x ≈ 0.1 bins, which the reconstruction note lists as
+   open.  Purity at the sweet spots falls from 64–68% (stand-in) to
+   40–73%, so the response is a bigger correction than the note implies —
+   which is the argument for A6.
+3. **Every script in the repository runs** (2026-08-26).  Writing the
+   reproduction manual meant executing all 30 of them, which found the
+   two survivors of code review S11 outside the 20260729 script that C3
+   covered: the 2026-07-20 and -07-21 scripts need a fourth PDF grid
+   (`nNNPDF30_nlo_as_0118_A6_Z3`, 161 MB) and exit 2 with an install hint
+   without it, and `money_delta_20260724.py` still called `np.trapezoid`
+   bare.  Both fixed; the dated line is now reproducible end to end.
+4. **The Roman-Pot aperture is measured** (D6 above), by shooting an
+   intact ⁶Li through the ePIC geometry.  npsim cannot do that with a
+   gun — DD4hep has no generic-ion particle type — so the scan feeds one
+   through as HepMC (`tools/fullsim/ion_gun_hepmc.py`).  It inverts the
+   assumed cutout aspect and therefore the SIGN of the acceptance-induced
+   ⟨cos 2β⟩.  **New work this creates:** re-derive the coherent
+   acceptance and the 6R templates with `cut_scale_xy ≈ (1, 2.3)`, and
+   re-run `coherent_optics_scan.py` against the measured edge rather than
+   the 10σ envelope.
+5. **The e+d control calibrates the cluster tail** — and says no β in
+   the two-parameter Hulthén reproduces BeAGLE's shape (plans/02 step
+   1.5.3).  Since the ⁶Li α tag is entirely a p_T-tail measurement, its
+   model uncertainty is one-sided **upward**.
+
+---
+
+## 8.5 Commit sequence
 
 Each commit is self-contained and leaves both suites green (baseline
 125 = 101 evgen + 24 fastsim).

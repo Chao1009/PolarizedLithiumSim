@@ -15,6 +15,7 @@ brings to the EIC, in support of the ANL polarized ⁶,⁷Li ion-source program
 | [05_doubly_polarized_generator.md](05_doubly_polarized_generator.md) | "polligen": doubly polarized e+⁶,⁷Li event generator — spin-density-matrix ⊗ cluster-IA kernel, reweighting + native modes, tagged spin observables, HepMC3 for ePIC |
 | [06_cos2phi_coherent_backgrounds.md](06_cos2phi_coherent_backgrounds.md) | cos 2φ money plots as projected data points (sweet-spot bins); the coherent intact-⁶Li channel (RP tag, 13.5% HA acceptance) and its full background budget (α+d beam-blindness, T=1 veto pattern, Z-ID question #19) |
 | [07_plb_letter_gluonometry.md](07_plb_letter_gluonometry.md) | The PLB-class simulation letter: scope decision (gluonometry, inclusive + coherent), gap analysis vs referees, work packages WP1–WP7 (grid SFs, reco closure, RC bound, coherent curves, paper production), skeleton, risk register, timeline to the INT program (submit Jan 2027) |
+| [../docs/reproduction_manual.md](../docs/reproduction_manual.md) | **How to reproduce any of it**: environment (Python, PDF grids, PYTHIA 8, eic-shell, a headless browser), every command with its measured runtime and expected output, the third-party generators (PYTHIA 8, BeAGLE over xrootd, ePIC/npsim), the numbers to check against, and what cannot be reproduced here and why |
 | [08_simulation_chain_completion.md](08_simulation_chain_completion.md) | Completing the simulation chain (2026-08-25): the 23 gaps that survived an adversarial audit of the reconstruction chain, the kernel, the hadronic final state and the fast simulation — ordered, with the convention items reserved for the author (D1, D7, D9) and the externally blocked tail (D2–D8) separated out |
 
 ## The physics in three lines
@@ -49,6 +50,126 @@ brings to the EIC, in support of the ANL polarized ⁶,⁷Li ion-source program
    with partial snakes; ~138/~117 GeV/u top energies.
 5. **Calendar anchor**: INT program on polarized ion beams at EIC,
    March 22 – April 2, 2027 — target for Phase-1 money plots.
+
+## Development run 8 (2026-08-26): the generators arrive, and the aperture is measured
+
+The work moved to the Linux box, and three of the things the plans had
+filed as *external* turned out not to be.  PYTHIA 8 builds its own Python
+bindings against the analysis interpreter in two and a half minutes; the ePIC
+far-forward geometry will accept an intact ⁶Li if you hand it a HepMC
+record instead of asking the particle gun for a nucleus; and the EPPS21,
+CT18 and NNPDFpol grids install with one `pip` command, which is what had
+been keeping the July production un-runnable.  The remaining tail of
+[08_simulation_chain_completion.md](08_simulation_chain_completion.md)
+(A6, B4, C1, C2, C3) was closed in parallel, each item implemented, then
+handed to an adversarial reviewer, then repaired.  Both suites are green
+at **48 fastsim + 183 evgen**, from 25 + 143.
+
+- ☑ **The hadronic final state is PYTHIA 8, not a toy** (D4).  12 M
+  events over the three beam configurations, 2.7 GB, twelve minutes of
+  wall time (`tools/pythia8`, manifest in `evgen/samples/README.md`).
+  Building it found a defect in the settings this repository had
+  documented for two months: PYTHIA applies `PhaseSpace:Q2Min` **only**
+  when `Q2Min ≥ pTHatMinDiverge²`, and that parameter defaults to 1 GeV,
+  so the requested 0.7 GeV² was silently ignored — min Q² = 1.002 and
+  σ = 0.381 μb whatever was asked for.  With `pTHatMinDiverge = 0.5`:
+  min Q² = 0.697 and σ = 0.551 μb.  The missing 0.7–1.0 GeV² band is 31%
+  of the sample and is exactly the band the loosened generator window
+  exists to populate.
+- ☑ **The hadronic resolution is measured, and the toy was optimistic.**
+  Σ-method δy/y at the four sweet spots, 50 MeV of calorimeter noise:
+  **0.32 / 0.22 / 0.28 / 0.11** at the mid configuration against the
+  toy's 0.28 / 0.17 / 0.24 / 0.07 — optimistic by 0.04–0.05 absolute at
+  every spot, because the toy put 0.60 of Σ in tracks and 0.03 in neutral
+  hadrons where PYTHIA puts 0.51 and 0.11, and neutral hadrons are the
+  HCal's problem.  It degrades monotonically with beam energy
+  (0.21 / 0.12 / 0.17 / 0.10 low, 0.74 / 0.34 / 0.69 / 0.18 top), which
+  settles the x ≈ 0.1 bins on the **low-energy** configuration — the open
+  item the reconstruction note lists.  Sweet-spot purity falls from
+  64–68% to 40–73% and the reco-bin amplitude sits 4–21% below the
+  true-bin value instead of 1–9%: the response is a bigger correction
+  than the stand-in implied.
+- ☑ **The Roman-Pot aperture for an intact ⁶Li is measured, and it opens
+  horizontally.**  npsim cannot shoot a nucleus (`Bad particle type` for
+  every spelling), so `tools/fullsim/ion_gun_hepmc.py` feeds one through
+  as HepMC and scans p_T *and* azimuth.  The boundary is
+  |θ_x| ≳ 2.0 / 1.35 / 1.03 mrad in the 5×41 / 10×100 / 18×275 optics
+  against |θ_y| ≳ 1.8–3 mrad; the ⁶Li and an α at the same rigidity agree
+  at the same *angle*, which is the check that this is optics and not
+  species.  The cause is the transport, not the pot orientation: the
+  horizontal lever is R₁₂ ≈ 30.6 m against a vertical few metres.  This
+  **inverts** `rp_measure`'s assumed slot (`cut_scale_xy = (2.5, 1)`
+  against a measured ≈ (1, 2.3)) and therefore flips the sign of the
+  acceptance-induced ⟨cos 2β⟩, and it cuts the coherent tagged fraction
+  hard: 1.4×10⁻² at 20.5 GeV/u against the assumed 0.82.  Caveats and
+  the follow-on work in plans/08 §8.4 and plans/04 #20.
+- ☑ **The e+d control, second pass** (plans/02 step 1.5.3), on the
+  official BeAGLE 1.03.02-3.1 sample over xrootd.  Routing agrees to
+  better than two points; the p_T tail does not, and restricting to the
+  spectator peak makes it worse: BeAGLE is 2.5× / 6.9× / 28× the Hulthén
+  model at p_T > 0.2 / 0.3 / 0.45 GeV.  **No β reproduces the shape** —
+  BeAGLE has a narrower core and a harder tail than a two-parameter
+  Hulthén can have at once, and the best fit sits at β = 0.40 GeV, the
+  top of the documented scan range.  Since the ⁶Li α tag is entirely a
+  p_T-tail measurement, its model uncertainty is one-sided **upward**.
+- ☑ **The bin-centering factor has a fitted alternative** (A6).  The
+  amplitude is *exactly* linear in Δ, so `RecoResponse.fold` is the
+  response as an exact linear operator and `fold_shape_fit` fits a Δ(x)
+  shape through it per Q² slice on a bounded grid — bounded because that,
+  not a matrix inverse, is the conditioning guard.  Correcting with the
+  wrong prior, the residual bias over the plotted bins falls from
+  22% / 24% / 99% to at most 3.5% / 7.1% / 6.9%, and the sweet-spot model
+  dependence from (−5.0, +8.5, −9.3, +6.3)% to (−0.9, −1.2, −0.2, +0.3)%.
+  The 7R bar now carries four terms: statistics, the shape fit, the
+  response MC (0.10–1.00% per plotted bin) and the spread over the priors
+  the tilt family cannot absorb — the last of which exists only because
+  the adversarial pass caught the bar being blind to the biggest of them.
+  `--unfold model` stays the default and reproduces every published 7R
+  number bit for bit.
+- ☑ **R = σ_L/σ_T is the published fit, behind one hook** (C2).  The
+  E143 R1998 world fit is transcribed from the paper (all three forms,
+  refs/hep-ex_9808028.pdf), and `r_func` threads it through every
+  consumer — including `polarized.ToyG1._f1` and `fom.py`, which the
+  dated scripts' monkey-patch misses.  The defect it replaces clipped R
+  to exactly 1.000 over 38% of the sensitivity box.  Measured
+  consequence at the four sweet spots: **F₂ cancels exactly** (2×10⁻¹⁶,
+  checked with two independent levers) while Δ/F₁ moves
+  **+16.6 / +18.0 / +4.7 / −4.4%**.  One correction to the code review:
+  its five R values are a property of the script's mongrel function, not
+  of R1998, and should not be quoted.
+- ☑ **The July production runs, and its reach was half of what it should
+  be** (C3).  It reproduces the dated note to all four recorded digits
+  (A_bag −0.3178 / −0.3100 / −0.2967; the 0.07% residual is the |A_bag|
+  provenance the fix note itself flags).  With the published R, at
+  Δ/F₁ = 10⁻³: **L_5σ = 67.5 / 65.8 / 155.1 fb⁻¹/u** for LOW / MID / TOP
+  against the recorded 135.3 / 131.3 / 274.6 — the code review predicted
+  63–69 and 152–164 and both land inside.  |A_bag| moves 21–25%, not the
+  ~10% the review estimated.  The frozen numbers stay reproducible with
+  `--r-model simplified`; the six July notes carry a superseded banner.
+- ☑ **Nuclear masses and the last untested path** (C1, B4).  A·M_U is not
+  the mass of a nucleus; the beam boost now uses AME2020-derived nuclear
+  masses in both `spectator.py` and `tagged.py` (the same beam had two
+  masses in two modules).  The kinematics move 2×10⁻³, the ⁶Li α tag
+  moves 1.65% → **1.85%** because the R = 0.95 window edge is hard.
+  `helicity_flip_plan(...).pzz_true` — the quantity the money scripts
+  divide by — is pinned for every branch.
+- ☑ **A reproduction manual, and the whole dated line runs.**
+  [../docs/reproduction_manual.md](../docs/reproduction_manual.md) is the
+  map from result to command: environment, every script with its measured
+  runtime, the numbers to check against, the third-party generators, and
+  what cannot be reproduced here and why.  Writing it meant running
+  everything, which found the last two things that did not: the
+  2026-07-20 and -07-21 scripts want a fourth PDF grid
+  (`nNNPDF30_nlo_as_0118_A6_Z3`) and exited 2 without it, and
+  `money_delta_20260724.py` still carried the bare `np.trapezoid` that
+  code review S11 flagged — the same one-line shim as its successor fixes
+  it, and renaming a function moves no number.  **All seven dated scripts
+  and all 30 scripts in the repository now run**, about eleven minutes for
+  the lot.
+- ☑ **Housekeeping the box unlocked**: the CT18NLO / EPPS21nlo_CT18Anlo_Li6
+  / NNPDFpol11_100 grids are installed (the fast-sim grid tests no longer
+  skip), and `reports/build_report.py` renders the PDFs on Linux through
+  a user-cache chromium, so the whole report pipeline runs here.
 
 ## Development run 7 (2026-08-25): the systematics the estimator cannot cancel
 
