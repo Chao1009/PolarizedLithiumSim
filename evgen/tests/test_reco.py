@@ -5,6 +5,8 @@ harmonic estimator, coherent recoil + Roman-Pot emulation."""
 import pathlib
 import sys
 
+import math
+
 import numpy as np
 import pytest
 
@@ -17,6 +19,15 @@ from polli_fastsim import beams  # noqa: E402
 from polli_fastsim.kinematics import scattered_electron  # noqa: E402
 
 CONFIG = beams.default_configs("6Li")[1]
+# The near-beam envelope these machinery tests run at.  Corrected 2026-08-27
+# (plans/10): with the machine's real per-configuration divergence and the
+# gamma-matched ion energies, the coherent tag has an acceptance of ~5e-7 at
+# best, so a test at the nominal optics would be fitting empty histograms.
+# `sigma_theta_tagging` is the analytic tagging optimum -- the beta* at which
+# L x acceptance peaks, giving acc = 1/e -- and is the only working point at
+# which this measurement exists.  These tests check the FIT MACHINERY, so
+# they run there.
+SIG_TAG = reco.sigma_theta_tagging(CONFIG)
 S_NN = CONFIG.sqrt_s_per_nucleon ** 2
 
 
@@ -259,9 +270,53 @@ def test_recoil_fourvector_exact_t_and_mass():
 
 
 def test_tag_pt_cut_scaling():
+    """The LEGACY proton-derived constant, kept because every number
+    published before 2026-08-27 used it (plans/10)."""
     assert reco.tag_pt_cut(reco.SIGMA_THETA_HA, 275.0, a_beam=1) == pytest.approx(0.20)
     assert reco.tag_pt_cut(reco.SIGMA_THETA_HA, 137.5, a_beam=6) == pytest.approx(0.60)
-    assert reco.tag_pt_cut(reco.SIGMA_THETA_HA, 50.0, a_beam=6) == pytest.approx(0.218, rel=1e-2)
+    assert reco.tag_pt_cut(reco.SIGMA_THETA_HA, 50.0, a_beam=6) == pytest.approx(0.218,
+                                                                                 rel=1e-2)
+
+
+def test_sigma_theta_for_reproduces_the_yellow_report_for_protons():
+    """plans/10: the per-configuration divergence.  A PROTON must come back
+    with Table 10.1's own numbers unchanged -- that is the check that the
+    species step is not being applied where it should not be."""
+    from polli_fastsim import beams as _b
+    lo, mid, top = _b.default_configs("p")
+    assert [round(1e6 * x) for x in reco.sigma_theta_for(top)] == [65, 65]
+    assert [round(1e6 * x) for x in reco.sigma_theta_for(mid)] == [180, 180]
+    assert [round(1e6 * x) for x in reco.sigma_theta_for(lo)] == [220, 380]
+    assert [round(1e6 * x) for x in
+            reco.sigma_theta_for(top, "high-divergence")] == [119, 119]
+
+
+def test_sigma_theta_species_step_only_applies_where_rigidity_binds():
+    """6Li is GAMMA-matched at the two lower configurations -- same speed as
+    the proton, so the same divergence -- and only rigidity-capped at the
+    top, where it picks up sqrt(2)."""
+    from polli_fastsim import beams as _b
+    for i, expect in ((0, 1.00), (1, 1.00), (2, 2.0 ** 0.5)):
+        cfg = _b.default_configs("6Li")[i]
+        p_cfg = _b.default_configs("p")[i]
+        f = reco.sigma_theta_for(cfg)[0] / reco.sigma_theta_for(p_cfg)[0]
+        assert f == pytest.approx(expect, rel=0.02)
+
+
+def test_tagging_optics_is_the_analytic_optimum():
+    """sigma_theta_tagging puts the n-sigma cut at t = 1/B, which is where
+    L x acceptance peaks -- so the acceptance comes out at 1/e regardless of
+    configuration.  That invariance IS the derivation."""
+    from polli_fastsim import beams as _b
+    from polligen import coherent as _c
+    sc = _c.CoherentScenario()
+    for cfg in _b.default_configs("6Li"):
+        st = reco.sigma_theta_tagging(cfg, slope_b=sc.slope_b)
+        assert reco.tag_pt_cut(st, cfg.ion_momentum_per_nucleon,
+                               a_beam=cfg.ion.A) == pytest.approx(
+                                   sc.slope_b ** -0.5, rel=1e-9)
+        acc = sc.tag_acceptance_angular(st, cfg.ion_momentum_per_nucleon)
+        assert acc == pytest.approx(math.exp(-1.0), rel=0.02)
 
 
 def test_rp_hole_acceptance_harmonics():
@@ -282,7 +337,7 @@ def test_rp_measure_matches_analytic_acceptance_and_smears_phi():
     t = -rng.exponential(1.0 / 50.0, n)
     phi = rng.uniform(0, 2 * np.pi, n)
     pp = reco.recoil_fourvector(t, phi, 0.0, p)
-    sig = reco.SIGMA_THETA_HA
+    sig = SIG_TAG
     m = reco.rp_measure(pp, p, (sig, sig), shape="ellipse", rng=rng)
     cut = reco.tag_pt_cut(sig, CONFIG.ion_momentum_per_nucleon)
     # the cut applies to the divergence-smeared pT: Gaussian in each

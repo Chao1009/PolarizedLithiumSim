@@ -47,18 +47,72 @@ from polli_fastsim.spectator import M_U
 XING_IP6 = 25.0e-3   # rad, horizontal crossing angle at IP6
 XING_IP8 = 35.0e-3   # rad, IP8
 
-# 10-sigma near-beam cut expressed as an ANGULAR cut: the documented
-# Roman-Pot pT cuts for 275 GeV protons (0.20 GeV high-acceptance,
-# 0.41 GeV high-divergence derived from the YR divergence tables;
-# plans/06 SS6.5) divided by 10 x 275 GeV.  The Li beam divergence is
-# undocumented (plans/04 #11): these are the proton-derived placeholders
-# that `tag_pt_cut` scales to any beam, and the same envelope the
-# fast-sim router applies (farforward.Optics.sigma_theta).  NOTE: the
-# high-divergence value is quoted at the 0.41 GeV end of the 0.41-0.45
-# band here and at the rounded-up 0.45 end in the fast sim, which is
-# where every published fast-sim number comes from; see farforward.py.
-SIGMA_THETA_HA = HIGH_ACCEPTANCE.sigma_theta      #  73 microrad, = 0.20 GeV
-SIGMA_THETA_HD = 0.41 / (10.0 * 275.0)            # 149 microrad, = 0.41 GeV
+# --- the near-beam angular envelope ---------------------------------------
+#
+# CORRECTED 2026-08-27 (plans/10).  The two constants below are the LEGACY
+# proton-derived placeholders: a single energy-independent, isotropic number
+# back-derived from the documented Roman-Pot pT cuts for a 275 GeV proton
+# (0.20 GeV high-acceptance, 0.41 GeV high-divergence) divided by
+# 10 x 275 GeV.  Every published number before 2026-08-27 used them.
+#
+# The Yellow Report's own beam tables are neither energy-independent nor
+# isotropic.  Table 10.1 (e+p) gives, per configuration and per optics, the
+# RMS divergence h/v that `sigma_theta_for` now returns.  Use that.
+SIGMA_THETA_HA = HIGH_ACCEPTANCE.sigma_theta      # LEGACY  73 microrad
+SIGMA_THETA_HD = 0.41 / (10.0 * 275.0)            # LEGACY 149 microrad
+
+
+def sigma_theta_tagging(config, slope_b=50.0, n_sigma=10.0):
+    """The divergence a TAGGING-OPTIMISED optics would have [rad, isotropic].
+
+    Acceptance goes as exp(-C/beta*) while luminosity goes as 1/beta*, so
+    the figure of merit L x acceptance is maximised where the n-sigma cut
+    sits at t = 1/B, i.e. pT = 1/sqrt(B) (plans/10).  This returns the
+    sigma_theta that puts it there, which is the working point a dedicated
+    high-beta* lithium store would run at -- and the only working point at
+    which the coherent channel exists at all once the corrected energies and
+    divergences are used.  The beta* factor it implies relative to
+    `sigma_theta_for` is the square of the ratio."""
+    p_ion = config.ion.A * config.ion_momentum_per_nucleon
+    return 1.0 / (slope_b ** 0.5 * n_sigma * p_ion)
+
+
+def sigma_theta_for(config, optics="high-acceptance"):
+    """(sigma_theta_h, sigma_theta_v) [rad] for a beam configuration.
+
+    Two steps, both from plans/10:
+
+    1.  The PROTON divergence of that machine configuration, from Yellow
+        Report Table 10.1 (farforward.YR_PROTON_DIVERGENCE).
+    2.  The species step.  An ion is GAMMA-MATCHED to its proton
+        configuration unless the ring rigidity caps it first
+        (beams.Ion.momentum_per_nucleon_at).  A gamma-matched ion has the
+        SAME beta*gamma as the proton, hence the same geometric emittance at
+        equal eps_N, hence the SAME divergence -- no penalty.  A
+        rigidity-capped one sits at lower beta*gamma and picks up
+        sqrt(beta*gamma_p / beta*gamma_ion), which for 6Li at the top
+        configuration is sqrt(2).
+
+    So the correction is not a blanket factor: it is 1.00 at the two lower
+    configurations and 1.41 at the top, and it rides on top of a proton
+    divergence that itself varies 65 -> 180 -> 220 microrad.
+    """
+    from polli_fastsim import beams as _beams
+    from polli_fastsim import farforward as _ff
+    key = {41.0: "5x41", 100.0: "10x100", 275.0: "18x275"}
+    # which machine configuration is this?  match on the proton energy whose
+    # gamma-matched (or rigidity-capped) momentum reproduces the ion's
+    p_e = min(_beams.PROTON_CONFIG_ENERGIES,
+              key=lambda e: abs(config.ion.momentum_per_nucleon_at(e)
+                                - config.ion_momentum_per_nucleon))
+    (hd_h, hd_v, ha_h, ha_v), _ = _ff.YR_PROTON_DIVERGENCE[key[p_e]]
+    h, v = (ha_h, ha_v) if optics == "high-acceptance" else (hd_h, hd_v)
+    # gamma of the proton configuration and of this ion
+    g_p = ((p_e ** 2 + _beams.PROTON_MASS ** 2) ** 0.5) / _beams.PROTON_MASS
+    bg_p = (g_p ** 2 - 1.0) ** 0.5
+    bg_i = config.ion_momentum_per_nucleon / config.ion.mass_per_nucleon
+    f = (bg_p / bg_i) ** 0.5
+    return 1e-6 * h * f, 1e-6 * v * f
 
 
 # --- Minkowski helpers -----------------------------------------------------
@@ -762,13 +816,19 @@ RP_APERTURE_MEASURED = {
 
 
 def rp_aperture_for(p_per_nucleon, table=None):
-    """The measured aperture of the optics whose reference rigidity a 6Li
-    at `p_per_nucleon` sits at (20.5 -> 5x41, 50 -> 10x100, 137.5 ->
-    18x275).  Returns None off those three points rather than
-    interpolating: the pot positions are set per ring, not by a formula."""
+    """The measured aperture of the machine configuration a 6Li at
+    `p_per_nucleon` belongs to.  Returns None off those three points rather
+    than interpolating: the pot positions are set per ring, not by a formula.
+
+    The three points are derived from `beams`, not hard-coded -- they moved
+    on 2026-08-27 when the two lower configurations were corrected from
+    rigidity-scaled (20.5, 50) to gamma-matched (40.8, 99.5) GeV/u
+    (plans/10)."""
+    from polli_fastsim import beams as _beams
     table = table or RP_APERTURE_MEASURED
-    for pu, key in ((20.5, "5x41"), (50.0, "10x100"), (137.5, "18x275")):
-        if abs(float(p_per_nucleon) - pu) < 1e-6 * pu:
+    keys = ("5x41", "10x100", "18x275")
+    for cfg, key in zip(_beams.default_configs("6Li"), keys):
+        if abs(float(p_per_nucleon) - cfg.ion_momentum_per_nucleon) < 1e-3:
             return table[key]
     return None
 

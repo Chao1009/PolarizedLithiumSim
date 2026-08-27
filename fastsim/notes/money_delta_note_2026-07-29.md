@@ -1,5 +1,12 @@
 # Money-Δ Plot: Detector-Realistic Smearing (ePIC Tracking + ε_eID) — 2026-07-29
 
+> **Dated record.** Numbers here predate the 2026-08-27 corrections: ⁶Li
+> beam energies are γ-matched (40.8 / 99.5 / 137.5 GeV/u), not
+> rigidity-scaled (20.5 / 50 / 137.5), and the far-forward divergence is
+> per-configuration rather than a single 72.7 μrad. See plans/10. Kept as
+> the record of its date, not as a current reference.
+
+
 > **Superseded in one input, 2026-08-26 (R = σ_L/σ_T).**  Every `L_5σ`,
 > `A_bag` and significance number below was computed with the script's
 > `r1998`, which multiplies Θ(x, Q²) into all three terms of the SLAC fit

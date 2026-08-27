@@ -1,5 +1,12 @@
 # Plan — Internally solve signed `A_bag`, but consume `abs(A_bag)` in the observable pipeline (`money_delta_20260729.py`)
 
+> **Dated record.** Numbers here predate the 2026-08-27 corrections: ⁶Li
+> beam energies are γ-matched (40.8 / 99.5 / 137.5 GeV/u), not
+> rigidity-scaled (20.5 / 50 / 137.5), and the far-forward divergence is
+> per-configuration rather than a single 72.7 μrad. See plans/10. Kept as
+> the record of its date, not as a current reference.
+
+
 **Plan file**: `fastsim/scripts/plan-money-delta-20260729-abag-solve.md`
 **Target script (operative, unchanged status)**: `fastsim/scripts/money_delta_20260729.py`
 **Solver source of truth**: `fastsim/scripts/money_delta_20260724.py`, function `solve_A_from_sum_rule`

@@ -1,5 +1,12 @@
 # Money-Δ Plot: φ-Distribution Projections — 2026-07-28
 
+> **Dated record.** Numbers here predate the 2026-08-27 corrections: ⁶Li
+> beam energies are γ-matched (40.8 / 99.5 / 137.5 GeV/u), not
+> rigidity-scaled (20.5 / 50 / 137.5), and the far-forward divergence is
+> per-configuration rather than a single 72.7 μrad. See plans/10. Kept as
+> the record of its date, not as a current reference.
+
+
 **Observable.** Fractional yield modulation `(N_φ − N_flat)/N_flat` vs `φ` for
 the `cos(2φ)` tensor asymmetry on transversely tensor-polarized ⁶Li. Today's
 work shifts from reach plots (`δA/A`, `L_5σ`) to the raw observable: the

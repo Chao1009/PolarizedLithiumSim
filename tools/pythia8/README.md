@@ -64,7 +64,8 @@ beam and electron four-vectors (exact without radiation).
 `Q2Min ≥ pTHatMinDiverge²` (`PhaseSpace.cc`: `hasQ2Min = (Q2GlobalMin >=
 pow2(pTHatMinDiverge))`), and `pTHatMinDiverge` defaults to 1 GeV — so a
 requested 0.7 GeV² was silently ignored and the divergence cut set the
-floor instead.  Measured at 10 × 50 GeV, 4000 events: with the default,
+floor instead.  Measured at 10 × 50 GeV, 4000 events (a diagnostic run, not a
+production configuration): with the default,
 min Q² = 1.002 GeV² and σ = 0.381 μb *whatever* `Q2Min` asks for below 1;
 with `PhaseSpace:pTHatMinDiverge = 0.5` (PYTHIA's own lower limit for that
 parameter, now set by the script), min Q² = 0.697 GeV² and σ = 0.551 μb.
@@ -96,7 +97,7 @@ python3 tools/pythia8/gen_dis_hfs.py --target n ... --seed 102 \
 ```
 
 Measured 2026-08-26 on eight cores, three jobs in parallel: **9 000–13 000
-events/s**, 330 MB and 110 s per million events at 10 × 50.  The six files
+events/s**, 330 MB and ~115 s per million events at 10 × 99.5.  The six files
 of the standing production and their cross sections are the manifest in
 [evgen/samples/README.md](../../evgen/samples/README.md).
 
@@ -117,7 +118,7 @@ illustrative.
 
 The p and n files are merged by event count (`HFSSample.concatenate`),
 which is what Z = N = 3 asks for in ⁶Li — but the two cross sections are
-not equal (0.553 vs 0.466 μb at 10 × 50, 0.326 vs 0.251 at 5 × 20.5), so
+not equal (0.666 vs 0.576 μb at 10 × 99.5, 0.420 vs 0.339 at 5 × 40.8), so
 generating the same number of events for both is a *choice of weighting*,
 not a neutral merge.  It is the right one for a library that supplies
 hadronic shapes per (x, Q²) cell and the wrong one for anything that reads

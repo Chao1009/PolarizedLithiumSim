@@ -167,11 +167,11 @@ automatically.
 ## 2 · The five-minute check: the test suites
 
 ```bash
-cd evgen   && python3 -m pytest tests/ -q     # 202 passed, ~35 s
-cd fastsim && python3 -m pytest tests/ -q     # 51 passed, ~3 s
+cd evgen   && python3 -m pytest tests/ -q     # 206 passed, ~35 s
+cd fastsim && python3 -m pytest tests/ -q     # 56 passed, ~3 s
 ```
 
-253 tests, all of which run without the PDF grids except the two in
+262 tests, all of which run without the PDF grids except the two in
 `fastsim/tests/test_grids.py`, which skip.  These are not smoke tests:
 they pin physics identities against independent constructions — the
 spin-1 cross section against an explicit density-matrix trace, the
@@ -355,7 +355,8 @@ python3 scripts/hfs_resolution.py --config 1 \
 ```
 
 `--config 0/1/2` selects the low / mid / top beam configuration
-(5 × 20.5, 10 × 50, 18 × 137.5 GeV/u for ⁶Li).  Without `--sample` the
+(5 × 40.8, 10 × 99.5, 18 × 137.5 GeV/u for ⁶Li — γ-matched at the two
+lower configurations, plans/10).  Without `--sample` the
 toy string-fragmentation generator is used and every output is labelled
 "toy"; its numbers are illustrative and, measured against PYTHIA,
 optimistic (§7).
@@ -432,7 +433,7 @@ python3 tools/pythia8/gen_dis_hfs.py --target n --n-events 2000000 \
     --out evgen/samples/pythia8_e10_n50_dis.npz
 ```
 
-9 000–13 000 events/s, 330 MB and 110 s per million events at 10 × 50.
+9 000–13 000 events/s, 330 MB and ~115 s per million events at 10 × 99.5.
 The standing production is six files (p and n at each of the three
 configurations, 8 M events, 2.7 GB); `evgen/samples/README.md` is the
 manifest with each file's cross section and seed, and the whole set takes
@@ -440,7 +441,7 @@ twelve minutes with three jobs in parallel on eight cores.
 
 The files are git-ignored.  The p and n files are merged by event count,
 which is what Z = N = 3 asks for in ⁶Li — but the two cross sections are
-not equal (0.5527 against 0.4659 μb at 10 × 50), so equal event counts
+not equal (0.6661 against 0.5761 μb at 10 × 99.5), so equal event counts
 are a *choice of weighting*, right for a library of hadronic shapes and
 wrong for anything that reads the sample as a rate.
 
@@ -449,7 +450,8 @@ wrong for anything that reads the sample as a rate.
 *`PhaseSpace:Q2Min` does nothing on its own.*  PYTHIA applies it only
 when `Q2Min ≥ pTHatMinDiverge²`, and `pTHatMinDiverge` defaults to 1 GeV,
 so a requested 0.7 GeV² is silently ignored and the divergence cut sets
-the floor.  Measured at 10 × 50 over 4000 events: with the default,
+the floor.  Measured at 10 × 50 over 4000 events (a diagnostic run):
+with the default,
 min Q² = 1.002 GeV² and σ = 0.381 μb *whatever* is asked for below 1;
 with `pTHatMinDiverge = 0.5` (PYTHIA's own lower limit, which the script
 sets), min Q² = 0.697 and σ = 0.551 μb.  The 0.7–1.0 GeV² band is 31% of
@@ -605,10 +607,10 @@ trust anything downstream of it.
 | what | command (from `evgen/`) | expected |
 |---|---|---|
 | 5R sweet-spot purity, 25% stand-in | `scripts/money_cos2phi_reco.py` | 0.65 / 0.64 / 0.66 / 0.68 (D = 0.91 / 0.99 / 0.91 / 0.97) |
-| 5R sweet-spot purity, PYTHIA HFS | `… --y-source hfs --hfs-sample …` | 0.40 / 0.53 / 0.44 / 0.73 |
-| 5R amplitude dilution D, PYTHIA HFS | same | 0.79 / 0.84 / 0.86 / 0.96 |
-| Σ-method δy/y, PYTHIA, mid config | `scripts/hfs_resolution.py --config 1 --sample …` | 0.32 / 0.22 / 0.28 / 0.11 |
-| … low config | `--config 0` | 0.21 / 0.12 / 0.17 / 0.10 |
+| 5R sweet-spot purity, PYTHIA HFS | `… --y-source hfs --hfs-sample …` | 0.43 / 0.54 / 0.47 / 0.69 |
+| 5R amplitude dilution D, PYTHIA HFS | same | 0.79 / 0.85 / 0.82 / 0.95 |
+| Σ-method δy/y, PYTHIA, mid config | `scripts/hfs_resolution.py --config 1 --sample …` | 0.55 / 0.28 / 0.50 / 0.15 |
+| … low config | `--config 0` | 0.28 / 0.21 / 0.24 / 0.11 |
 | … top config | `--config 2` | 0.74 / 0.34 / 0.69 / 0.18 |
 | unfolding model dependence | `scripts/money_cos2phi_reco.py --unfold-scan` | bin-by-bin (−5.0, +8.5, −9.3, +6.3)% → folded (−0.9, −1.2, −0.2, +0.3)% |
 | coherent tagged fraction | `scripts/coherent_optics_scan.py` | 32% / 3.0% / 4×10⁻⁵ / 2×10⁻⁷ at 0.10 / 0.22 / 0.45 / 0.60 GeV |
@@ -622,7 +624,7 @@ trust anything downstream of it.
 
 | what | expected |
 |---|---|
-| PYTHIA σ_gen, e+p at 10 × 50 | 0.5527 μb (n: 0.4659) |
+| PYTHIA σ_gen, e+p at 10 × 99.5 | 0.6661 μb (n: 0.5761) |
 | PYTHIA sample, 2 M events | 17.5 M particles, 662 MB, ~190 s |
 | BeAGLE e+d, P(p_T > 0.3) in the x_L peak | 0.0261, against the Hulthén model's 0.0037 |
 | ⁶Li Roman-Pot edge, 18 × 275 optics | between 0.970 and 1.091 mrad, horizontal |

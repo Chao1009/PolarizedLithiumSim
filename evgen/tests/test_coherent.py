@@ -3,6 +3,8 @@
 import pathlib
 import sys
 
+import math
+
 import numpy as np
 import pytest
 
@@ -10,6 +12,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 
 from polligen import bookkeeping as bk  # noqa: E402
 from polligen import coherent as coh  # noqa: E402
+from polligen import reco  # noqa: E402
 from polligen.estimators import cos2phi_fit_binned  # noqa: E402
 from polligen.sample import InclusiveSampler, phi_histogram_pseudo  # noqa: E402
 from polligen.xsec import InclusiveKernel  # noqa: E402
@@ -49,19 +52,30 @@ def test_tag_acceptance_sampled_through_router():
     """Since 2026-08-25 the router's near-beam cut is ANGULAR, so the
     sampled acceptance must reproduce `tag_acceptance_angular` at the
     configuration's beam momentum -- not the constant 0.20 GeV proton
-    number, which for 6Li at 50 GeV/u is 0.218 GeV and 1.45x smaller
-    acceptance (code review S8)."""
+    number (code review S8).
+
+    Run at the LOW configuration since 2026-08-27: with the gamma-matched
+    energies (plans/10) the mid configuration leaves ~20 accepted recoils
+    in 2e5 draws, which cannot support a 3% closure test.  That starvation
+    is itself the physics -- see test_angular_cut_kills_the_upper_energies.
+    """
     sc = coh.CoherentScenario(slope_b=50.0)
-    p_u = beams.default_configs("6Li")[1].ion_momentum_per_nucleon
+    p_u = beams.default_configs("6Li")[0].ion_momentum_per_nucleon
     acc = coh.tag_acceptance_sampled(sc, HIGH_ACCEPTANCE, p_u, n=200000,
                                      rng=np.random.default_rng(2))
     assert acc == pytest.approx(
         float(sc.tag_acceptance_angular(HIGH_ACCEPTANCE.sigma_theta, p_u)),
         rel=0.03)
-    assert acc < sc.tag_acceptance(0.20)
+    # the constant 0.20 GeV proton number is simply a DIFFERENT cut: at
+    # this configuration 10 sigma_theta A p_u = 0.178 GeV, so it must not be
+    # used as a stand-in either way round -- what is invariant is that the
+    # sampled acceptance follows the ANGULAR cut, which the approx above
+    # pins, and that a wider envelope accepts less
+    cut = reco.tag_pt_cut(HIGH_ACCEPTANCE.sigma_theta, p_u, a_beam=6)
+    assert acc == pytest.approx(float(sc.tag_acceptance(cut)), rel=0.03)
     acc_hd = coh.tag_acceptance_sampled(sc, HIGH_DIVERGENCE, p_u, n=200000,
                                         rng=np.random.default_rng(3))
-    assert acc_hd < 1e-4
+    assert acc_hd < 0.1 * acc
 
 
 def test_angular_cut_scales_with_the_beam_momentum():
@@ -195,3 +209,30 @@ def test_cos2phi_fit_binned_raises_on_dead_acceptance():
         cos2phi_fit_binned(counts, edges, 0.6,
                            acceptance=lambda phi: np.zeros_like(
                                np.asarray(phi), dtype=bool))
+
+
+def test_angular_cut_kills_the_upper_energies():
+    """plans/10, corrected 2026-08-27.  The near-beam cut is 10 sigma_theta
+    A p_u, so at the gamma-matched energies the coherent intact-6Li tag
+    survives only at the low configuration -- and only because the legacy
+    72.7 urad understates the divergence.  At the machine's own
+    per-configuration divergence it does not survive anywhere."""
+    sc = coh.CoherentScenario(slope_b=50.0)
+    cfgs = beams.default_configs("6Li")
+    legacy = [float(sc.tag_acceptance_angular(HIGH_ACCEPTANCE.sigma_theta,
+                                              c.ion_momentum_per_nucleon))
+              for c in cfgs]
+    assert legacy[0] > 1e-2 > legacy[1] > legacy[2]
+
+    real = [float(sc.tag_acceptance_angular(reco.sigma_theta_for(c)[0],
+                                            c.ion_momentum_per_nucleon))
+            for c in cfgs]
+    assert max(real) < 1e-5              # dead at every configuration
+    assert real[0] > real[2]             # low energy is still the least bad
+
+    # and the tagging-optimised optics is what brings it back: by
+    # construction the acceptance is 1/e wherever it is applied
+    for c in cfgs:
+        st = reco.sigma_theta_tagging(c, slope_b=sc.slope_b)
+        acc = float(sc.tag_acceptance_angular(st, c.ion_momentum_per_nucleon))
+        assert acc == pytest.approx(math.exp(-1.0), rel=0.02)

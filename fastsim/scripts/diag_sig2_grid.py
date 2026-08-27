@@ -13,6 +13,7 @@ import numpy as np
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 
+from polli_fastsim import beams
 from polli_fastsim.beams import LI6, BeamConfig
 from polli_fastsim.fom import Scenario, project_rates
 from polli_fastsim.asymmetries import a_cos2phi
@@ -65,10 +66,12 @@ def main():
     base = backends["base"]
 
     E_e_vals   = [5.0, 7.0, 10.0, 14.0, 18.0]          # GeV
-    p_ion_vals = [20.0, 35.0, 50.0, 75.0, 100.0, 137.5]  # GeV/u
+    p_ion_vals = [20.0, 40.8, 60.0, 80.0, 99.5, 137.5]  # GeV/u
 
-    # Canonical EIC configs for 6Li (from beams.default_configs)
-    canonical = [(5.0, 20.5), (10.0, 50.0), (18.0, 137.5)]
+    # Canonical EIC configs for 6Li -- DERIVED, never hard-coded (plans/10:
+    # the two lower ones are gamma-matched, not rigidity-scaled)
+    canonical = [(c.electron_energy, c.ion_momentum_per_nucleon)
+                 for c in beams.default_configs("6Li")]
 
     # -----------------------------------------------------------------------
     # Full grid

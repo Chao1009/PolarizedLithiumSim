@@ -1,5 +1,12 @@
 # Plan: Coverage + statistical-uncertainty maps at L = 10 fb⁻¹/nucleon (new standalone script)
 
+> **Dated record.** Numbers here predate the 2026-08-27 corrections: ⁶Li
+> beam energies are γ-matched (40.8 / 99.5 / 137.5 GeV/u), not
+> rigidity-scaled (20.5 / 50 / 137.5), and the far-forward divergence is
+> per-configuration rather than a single 72.7 μrad. See plans/10. Kept as
+> the record of its date, not as a current reference.
+
+
 **Scope**: Produce three new outputs — `(x, Q²)` coverage per beam energy, `cos(2φ)` amplitude statistical-uncertainty maps on `(x, Q²)`, and a scattered-electron-angle version of the uncertainty map — all at `L = 10 fb⁻¹/u`, from a **new standalone script** in `fastsim/scripts/`. `money_delta.py` is **not** modified.
 
 **Script path (locked)**: `fastsim/scripts/coverage_and_stat_maps.py`

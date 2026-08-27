@@ -47,7 +47,12 @@ from polli_fastsim.farforward import HIGH_ACCEPTANCE  # noqa: E402
 
 C_SI, C_NB = "#C0392B", "#1F4E79"
 T_EDGES = (0.05, 0.08, 0.12, 0.17, 0.25)
-LIVE = ((0, "5 x 41", 20.5), (1, "10 x 100", 50.0))
+# Beam configurations are DERIVED from polli_fastsim.beams, never
+# hard-coded: the two lower 6Li energies moved from rigidity-scaled
+# (20.5, 50) to gamma-matched (40.8, 99.5) GeV/u on 2026-08-27 (plans/10).
+_CFG = beams.default_configs("6Li")
+LIVE = tuple((i, n, _CFG[i].ion_momentum_per_nucleon)
+             for i, n in ((0, "5 x 41"), (1, "10 x 100")))
 
 
 def run(cfg_index, aperture, args, seed):

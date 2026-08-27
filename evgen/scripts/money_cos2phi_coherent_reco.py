@@ -158,7 +158,7 @@ def main():
                 if args.rp_aperture == "measured" else None)
     if args.rp_aperture == "measured" and aperture is None:
         raise SystemExit("no measured aperture for %g GeV/u: it is tabulated "
-                         "per optics at 20.5, 50 and 137.5 (reco."
+                         "per optics at the three machine configurations (reco."
                          "RP_APERTURE_MEASURED)"
                          % config.ion_momentum_per_nucleon)
     if args.near_beam_mrad is not None:

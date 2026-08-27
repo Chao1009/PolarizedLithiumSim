@@ -1,5 +1,12 @@
 # Simulation code review and reconstruction audit (2026-08-25)
 
+> **Numbers here are as of 2026-08-25 and several are superseded.** The
+> 6Li beam energies were corrected from rigidity-scaled (20.5 / 50 /
+> 137.5 GeV/u) to γ-matched (40.8 / 99.5 / 137.5) on 2026-08-27, and the
+> far-forward divergence from a single 72.7 μrad to the per-configuration
+> Yellow Report values — see plans/10. This document is kept as the record
+> of what was reviewed on its date, not as a current reference.
+
 > **Two of this review's own numbers were corrected when its items were
 > implemented (2026-08-26, plans/08 C2 and C3).**  (i) §7 S1 estimates
 > that fixing the fast-sim `r1998` moves the moment-solved |A_bag| "only

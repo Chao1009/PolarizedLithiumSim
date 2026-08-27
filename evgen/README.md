@@ -136,7 +136,8 @@ quantifies the findings with `polligen/reco.py`:
   φ_t − φ_S (not the electron azimuth of money plot 6); the RP cutout
   fakes ⟨cos 2φ_t⟩ = 0.49 (0.71) for aspect ratio 1.25 (1.5) against a
   physics a₂ ≈ 0.036; the near-beam cut is angular, pT_cut = 10σ_θ·6p_u,
-  giving 67% / 9% / 10⁻⁸ tag acceptance at 20.5 / 50 / 137.5 GeV/u.
+  giving 5.0×10⁻⁷ / 8.4×10⁻²⁶ / 3.7×10⁻¹³ tag acceptance at the γ-matched
+  40.8 / 99.5 / 137.5 GeV/u with the per-configuration divergence (plans/10).
 
 ### Reconstructed-level closure (money plots 5R / 7R / 6R, same day)
 
@@ -199,7 +200,7 @@ four money-plot-5 sweet spots:**
 
 | configuration | x = 0.056, Q² = 1.14 | 0.022, 1.14 | 0.141, 3.13 | 0.141, 14.3 |
 |---|---|---|---|---|
-| low, 5 × 20.5 | 0.21 | 0.12 | 0.17 | 0.10 |
+| low, 5 × 40.8 | 0.28 | 0.21 | 0.24 | 0.11 |
 | **mid, 10 × 50** | **0.32** | **0.22** | **0.28** | **0.11** |
 | top, 18 × 137.5 | 0.74 | 0.34 | 0.69 | 0.18 |
 

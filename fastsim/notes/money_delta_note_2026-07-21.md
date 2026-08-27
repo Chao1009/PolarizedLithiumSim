@@ -1,5 +1,12 @@
 # Money-Δ Plot: Progress and Next Steps — 2026-07-21
 
+> **Dated record.** Numbers here predate the 2026-08-27 corrections: ⁶Li
+> beam energies are γ-matched (40.8 / 99.5 / 137.5 GeV/u), not
+> rigidity-scaled (20.5 / 50 / 137.5), and the far-forward divergence is
+> per-configuration rather than a single 72.7 μrad. See plans/10. Kept as
+> the record of its date, not as a current reference.
+
+
 **Observable.** Relative statistical uncertainty `δA/A_cos2φ` on the `cos(2φ)`
 double-helicity-flip tensor asymmetry on transversely tensor-polarized ⁶Li,
 plotted against the assumed peak `Δ/F₁` scale at **fixed luminosity**. Full

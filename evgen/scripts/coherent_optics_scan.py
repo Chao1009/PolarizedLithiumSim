@@ -5,8 +5,9 @@ plans/08 A4).
 The projection report quotes the coherent acceptance at two points
 (0.20 GeV high-acceptance, 0.41-0.45 GeV high-divergence) and the
 reconstruction note adds that the envelope is an ANGLE, so the same
-optics gives 0.09 / 0.22 / 0.60 GeV on the 6Li recoil at 20.5 / 50 /
-137.5 GeV/u.  A referee will ask for a curve, not two points; the Li
+optics gives an angular cut of 10 sigma_theta A p_u on the 6Li recoil at
+the three machine configurations (40.8 / 99.5 / 137.5 GeV/u -- gamma-
+matched at the two lower ones, plans/10).  A referee will ask for a curve, not two points; the Li
 optics are undocumented (plans/04 #11, #20), so a curve is also the
 honest form of the statement.  This script produces it:
 
@@ -54,6 +55,11 @@ C_TRUTH, C_FIT, C_ALT, C_GREY = "#0072B2", "#D55E00", "#009E73", "0.45"
 # eSTARlight IR-8 secondary-focus intact-recoil efficiency x acceptance
 # (plans/06 SS6.5): no 6Li entry exists; the interpolation is ours.
 IR8_PUBLISHED = {"d": 0.47, "3He": 0.32, "4He": 0.29, "7Li": 0.178}
+
+# Beam configurations are DERIVED, never hard-coded: the two lower 6Li
+# energies moved from rigidity-scaled (20.5, 50) to gamma-matched
+# (40.8, 99.5) GeV/u on 2026-08-27 (plans/10).
+_PU = tuple(c.ion_momentum_per_nucleon for c in beams.default_configs("6Li"))
 IR8_LI6_INTERPOLATED = 0.20
 
 
@@ -135,8 +141,8 @@ def main():
     ax1.plot(cuts, acc_sq, "-", color=C_FIT, lw=1.4, label="square, $B$ = 50")
     ax1.plot(cuts, np.exp(-50.0 * cuts ** 2), "-", color=C_GREY, lw=1.2,
              label=r"circular $e^{-B p_T^2}$ (routing code)")
-    for p_u, lab in ((20.5, "5$\\times$20.5"), (50.0, "10$\\times$50"),
-                     (137.5, "18$\\times$137.5")):
+    for p_u, lab in ((_PU[0], "5$\\times$41"), (_PU[1], "10$\\times$100"),
+                     (_PU[2], "18$\\times$275")):
         c = reco.tag_pt_cut(HIGH_ACCEPTANCE.sigma_theta, p_u,
                             a_beam=config.ion.A)
         ax1.axvline(c, color="0.75", lw=0.9, ls="-", zorder=0)
@@ -241,7 +247,7 @@ def main():
         acc_p = np.array([acceptance_curve([c], 50.0, args.cut_scale_x,
                                            1.0)[0][0] for c in cut_p])
         ax4.plot(p_us, acc_p, "-", color=col, lw=1.5, label=lab)
-    for p_u in (20.5, 50.0, 137.5):
+    for p_u in _PU:
         ax4.axvline(p_u, color="0.75", lw=0.9, zorder=0)
     ax4.set_yscale("log")
     ax4.set_ylim(1e-9, 1.5)

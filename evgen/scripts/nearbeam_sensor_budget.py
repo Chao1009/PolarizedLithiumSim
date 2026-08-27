@@ -56,6 +56,7 @@ sys.path.insert(0, str(_SCRIPTS.parent.parent / "fastsim"))
 
 from polligen import nearbeam as nb  # noqa: E402
 from polligen import reco  # noqa: E402
+from polli_fastsim import beams  # noqa: E402
 from polli_fastsim import spectator as sp  # noqa: E402
 
 # --- the devices, from the papers (the FILM physics is polligen.nearbeam) ---
@@ -70,7 +71,12 @@ R12_M = 30.6                   # IP angle -> pot-plane x, MEASURED at 18x275
 
 SPECIES = (("6Li", 3), ("alpha", 2), ("d", 1), ("p", 1))
 WIRE_WIDTHS_NM = (250.0, 400.0, 600.0, 800.0, 1000.0, 1500.0, 2000.0)
-CONFIGS = (("5 x 41", 20.5), ("10 x 100", 50.0), ("18 x 275", 137.5))
+# Beam configurations are DERIVED from polli_fastsim.beams, never
+# hard-coded: the two lower 6Li energies moved from rigidity-scaled
+# (20.5, 50) to gamma-matched (40.8, 99.5) GeV/u on 2026-08-27 (plans/10).
+_CFG = beams.default_configs("6Li")
+CONFIGS = tuple((n, c.ion_momentum_per_nucleon)
+                for n, c in zip(("5 x 41", "10 x 100", "18 x 275"), _CFG))
 # Threshold bias read off Fig. 7 of arXiv:2312.13405 for 120 GeV protons.
 # A DIGITISATION of a published figure, not a tabulated number.
 ANL_FIG7_NM_RATIO = ((300.0, 0.215), (400.0, 0.49), (600.0, 0.62),

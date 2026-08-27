@@ -378,7 +378,7 @@ index, and the numbers are in `plans/00` run 8.
    31% of the sample, and precisely the band the loosened generator
    window exists to populate — was missing.  `tools/pythia8`.
 2. **The hadronic-resolution band is measured, and the toy was
-   optimistic**: δy/y = 0.32 / 0.22 / 0.28 / 0.11 at the four sweet spots
+   optimistic**: δy/y = 0.55 / 0.28 / 0.50 / 0.15 at the four sweet spots
    against the toy's 0.28 / 0.17 / 0.24 / 0.07, and the ordering across
    beam energies (0.21–0.10 low, 0.74–0.18 top) settles the energy
    strategy for the x ≈ 0.1 bins, which the reconstruction note lists as

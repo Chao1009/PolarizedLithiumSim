@@ -1,5 +1,12 @@
 # Money-Δ Plot: Interpretation A vs B — Dropping F₁ from Δ — 2026-07-27
 
+> **Dated record.** Numbers here predate the 2026-08-27 corrections: ⁶Li
+> beam energies are γ-matched (40.8 / 99.5 / 137.5 GeV/u), not
+> rigidity-scaled (20.5 / 50 / 137.5), and the far-forward divergence is
+> per-configuration rather than a single 72.7 μrad. See plans/10. Kept as
+> the record of its date, not as a current reference.
+
+
 **Observable.** 5σ discovery luminosity `L_5σ` (fb⁻¹/nucleon) and fractional
 asymmetry uncertainty `δA/A` for the `cos(2φ)` double-helicity-flip tensor
 asymmetry on transversely tensor-polarized ⁶Li. Today's work introduces

@@ -135,7 +135,8 @@ class CoherentScenario:
         (reconstruction-chain note, 2026-08-24; open question #20).  The
         documented 0.20 GeV (HA) / 0.41 GeV (HD) proton cuts correspond to
         sigma_theta = 73 / 149 microrad: for 6Li that is 0.09 / 0.22 /
-        0.60 GeV at 20.5 / 50 / 137.5 GeV/u -> 67% / 9% / 1.5e-8."""
+        the three machine configurations (40.8 / 99.5 / 137.5 GeV/u,
+    gamma-matched at the two lower ones; plans/10)."""
         cut = n_sigma * sigma_theta * a_beam * np.asarray(p_per_nucleon,
                                                           dtype=float)
         return np.exp(-self.slope_b * cut * cut)

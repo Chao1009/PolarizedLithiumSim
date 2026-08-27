@@ -58,82 +58,121 @@ MeV of Δp_T) is Table 10.1's divergence times the proton momentum, to within
 
 ## 10.3 The estimate for lithium
 
-**The species step is kinematic, and it is the whole story.** At a given
-machine configuration the lattice is set by *rigidity*, so β* is common to
-every species and a fully stripped A/Z = 2 ion sits at **half** the proton's
-βγ. Since σ_θ = √(ε_N/(βγ β*)),
+**First, the energies were wrong, and that matters more than the divergence.**
+The HSR and the ESR must have equal revolution period and the electrons are
+ultrarelativistic, so the hadron **γ** is fixed by the ring circumference and
+the magnets supply whatever rigidity that γ demands, up to the 917.3 T·m cap.
+Ions are therefore **γ-matched**, not rigidity-scaled.
 
-    sigma_theta(6Li) = sqrt(A/Z) x sigma_theta(proton, same configuration)
-                     = 1.409 x  ... at equal normalised emittance
+*The decisive check:* YR Table 10.2 lists **gold at 41 GeV/u** (γ = 44.02)
+against the 41 GeV proton's γ = 43.70 — equal to 0.7%, exactly the u vs m_p
+mass difference. Rigidity scaling would have put gold at 41 × 79/197 = 16.4
+GeV/u. It does not. The same rule reproduces the published ³He menu
+("41, and 100–183 GeV/nucleon") exactly.
+
+So the ⁶Li menu is **41, and 99–138 GeV/u**, with nothing in between, and
+`beams.default_configs("6Li")` now returns **40.8 / 99.5 / 137.5** where it
+returned 20.5 / 50 / 137.5 before 2026-08-27. The implementation
+self-checks: run the same machinery on a *proton* and it returns 41 / 100 /
+275 exactly.
+
+**Second, the species step then applies only at the top.** A γ-matched ion
+has the *same* βγ as its proton, hence the same geometric emittance at equal
+ε_N, hence the **same divergence — no √2 penalty**. Only at the top
+configuration is ⁶Li rigidity-capped (γ = 147.6 against the proton's 293),
+and there it does pick up √2.
+
+| ⁶Li | p_ion | high acceptance h/v | high divergence h/v | Δp/p |
+|---|---|---|---|---|
+| **40.8 GeV/u** (5 × 41) | 245 GeV | **220 / 380 µrad** | 220 / 380 | 10.3×10⁻⁴ |
+| **99.5 GeV/u** (10 × 100) | 597 GeV | **180 / 180** | 206 / 206 | 9.7×10⁻⁴ |
+| **137.5 GeV/u** (18 × 275) | 825 GeV | **92 / 92** | 168 / 168 | 6.8×10⁻⁴ |
 
 **Is equal ε_N defensible?** Gold is the published test. Scaling the 275 GeV
 proton to Au at 110 GeV/u by 1/√(βγ) alone predicts 236 µrad against an
-observed 218 (h) and 379 (v) — i.e. ε_N(Au)/ε_N(p) = **0.85 horizontally and
-2.6 vertically**. Gold's intrabeam scattering, which goes as N·Z⁴/A², is
-**~450× lithium's** (Z⁴/A² = 1004 for Au, 2.25 for ⁶Li, 1 for p), and it
-still costs at most a factor 2.6. **Lithium sits far closer to a proton than
-to gold on every axis that matters, so the lithium divergence is set by
-kinematics, not by IBS.**
-
-| ⁶Li | high acceptance h/v | high divergence h/v | Δp/p | repo uses |
-|---|---|---|---|---|
-| 20.5 GeV/u (5 × 41) | **310 / 535 µrad** | 310 / 535 | 10.3×10⁻⁴ | 72.7 / 163.6 |
-| 50 GeV/u (10 × 100) | **254 / 254** | 290 / 290 | 9.7×10⁻⁴ | 72.7 / 163.6 |
-| 137.5 GeV/u (18 × 275) | **92 / 92** | 168 / 168 | 6.8×10⁻⁴ | 72.7 / 163.6 |
-
-**The repo's 72.7 µrad is low by ×1.3 at top energy, ×3.5 at mid, and ×4.3
-at the low-energy configuration** — and low energy is exactly where the
-coherent programme was said to survive.
+observed 218 (h) and 379 (v) — ε_N(Au)/ε_N(p) = **0.85 horizontally, 2.6
+vertically**. Intrabeam scattering at fixed beam current goes as Z³/A² =
+**0.75 for ⁶Li against 1 for a proton and 17× that for gold**, and RHIC
+deuterons showed no measurable IBS growth while gold grew 20–45%/h. Lithium
+is a proton-class ion.
 
 **Δp/p is the easy one.** Protons give 6.8–10.3×10⁻⁴ and gold 6.2–13×10⁻⁴
-across every energy and both cooling schemes. It is set by the RF bucket and
-the cooling equilibrium rather than by species, so **⁶Li ≈ 7–10×10⁻⁴** with
-good confidence. Note this is *larger* than the α/⁶Li rigidity difference of
-1.87×10⁻³ divided by 3 — i.e. the beam's own momentum spread is within a
-factor ~2 of the rigidity separation any dispersive Z-ID would need to
-resolve (plans/09 §9.2).
+across every energy and both cooling schemes — set by the RF bucket rather
+than the species, so ⁶Li is **7–10×10⁻⁴** with good confidence.
 
 ### What it costs
 
-Coherent tagged fraction, B = 50 GeV⁻², 10σ envelope, high acceptance:
+Coherent tagged fraction, B = 50 GeV⁻², 10σ:
 
-| config | repo (72.7 / 163.6) | estimate | cost |
+| config | as published | energy fix alone | + divergence | total cost |
+|---|---|---|---|---|
+| 5 × 41 | 6.70×10⁻¹ | 2.05×10⁻¹ | **5.0×10⁻⁷** | ×1.3×10⁶ |
+| 10 × 100 | 9.25×10⁻² | 8.1×10⁻⁵ | **8.4×10⁻²⁶** | ×1.1×10²⁴ |
+| 18 × 275 | 1.52×10⁻⁸ | 1.52×10⁻⁸ | **3.7×10⁻¹³** | ×4.1×10⁴ |
+
+**The coherent intact-⁶Li channel does not survive at any configuration.**
+Note the energy correction alone costs a factor 3.3 at 5 × 41 and 1100 at
+10 × 100, before the divergence is touched.
+
+### What recovers it
+
+Acceptance goes as exp(−C/β\*) while luminosity goes as 1/β\*, so the figure
+of merit L × acceptance is maximised where the 10σ cut sits at t = 1/B, i.e.
+p_T = 1/√B = 0.141 GeV. `reco.sigma_theta_tagging` returns that working
+point, and by construction the acceptance there is **1/e at every
+configuration** — an invariance that is itself the derivation:
+
+| config | tagging σ_θ | β\* factor over high acceptance | acceptance |
 |---|---|---|---|
-| 5 × 41 | 3.99×10⁻¹ | **1.4×10⁻⁴** | ×2900 |
-| 10 × 100 | 2.92×10⁻² | **5.5×10⁻¹⁴** | ×5×10¹¹ |
-| 18 × 275 | 2.0×10⁻⁹ | 8.3×10⁻¹⁴ | ×2.4×10⁴ |
+| 5 × 41 | 57.8 µrad | **×14.5** | 0.368 |
+| 10 × 100 | 23.7 µrad | ×57.7 | 0.368 |
+| 18 × 275 | 17.1 µrad | ×28.6 | 0.368 |
 
-**On this estimate the coherent intact-⁶Li channel does not survive at any
-configuration**, best case 1.4×10⁻⁴ at 5 × 41 against the 0.40 assumed. The
-near-beam study's ×26 and ×569 gains (plans/09) are ratios and still hold —
-but they are gains on a base three to four orders smaller than quoted.
+β\* = 13 m at 5 × 41 (from 0.90 m) is the smallest absolute ask and sits
+well inside the LHC's demonstrated forward-physics optics — TOTEM/ALFA ran
+β\* = 90 m and 2500 m against a nominal 0.55 m. Raising β\* also *shrinks*
+the beam in the final-focus quadrupoles (β = 14.9 m at the first quad against
+28.7 m today), so the IR aperture is not the constraint; matching and
+chromaticity would be.
 
-### What would move it
+**But the detector must follow.** At β\* = 13 m the 10σ envelope is 0.58
+mrad while the silicon aperture at 5 × 41 is ≈2–3 mrad, so the geometry
+pins the acceptance and the whole β\* gain is wasted. The two levers are
+strictly multiplicative, and the second one is the near-beam granularity
+question of plans/09 — the module-quantised insertion and the x-moving layer
+ePIC is already designing.
 
-The estimate assumes ε_N(⁶Li) = ε_N(proton) and the *published proton*
-β* per configuration. Two things could recover acceptance, and both are
-machine choices rather than simulation ones:
-
-* **A dedicated light-ion high-acceptance optics.** The high-acceptance
-  configuration is a deliberate β* choice that costs luminosity (the YR is
-  explicit: σ ∝ 1/√β*, β* ∝ 1/L). No light-ion optics is published. Raising
-  β* by 4 would halve σ_θ and buy back orders of magnitude in the tag.
-* **Running lithium at the lowest rigidity available.** The kinematic √(A/Z)
-  penalty is unavoidable, but the acceptance depends on σ_θ·A·p_u, so the
-  low-energy configuration remains the right home even after this correction.
+**There is no high-acceptance optics at 41 GeV today.** CDR Tables 3.3 and
+3.4 are identical in that column — the only energy where they are. Whether
+that is a physics limit or an unstudied case is the question of D1 below,
+and it decides whether the recovery exists.
 
 ## 10.4 Ordered work
 
-### A1 — reconcile the two internal values ☐
+### A0 — the energies ☑
+`beams.default_configs` is γ-matched and rigidity-capped, `beams.NUCLEUS_MASS`
+carries the physical masses per nucleon, and `fastsim/tests/test_beams.py`
+pins the menu, the proton self-check and a guard that sweeps the source tree
+for the stale 20.5 / 50 GeV/u.
+
+### A1 — per-configuration divergence ☑
+`reco.sigma_theta_for(config, optics)` returns the YR Table 10.1 divergence
+with the species step applied only where rigidity binds;
+`reco.sigma_theta_tagging(config)` returns the L × acceptance optimum.
+`farforward.YR_PROTON_DIVERGENCE` / `YR_GOLD_DIVERGENCE` hold the tables.
+The legacy `SIGMA_THETA_HA` / `_HD` remain, labelled, because every number
+published before 2026-08-27 used them.
+
+### A1b — reconcile the two legacy values ☐
 `farforward.py` says 164 µrad, `reco.py` says 149 µrad, for the same
 "high-divergence" optics. One of them is wrong. Fix, and add a test that
 pins them together.
 
-### A2 — make σ_θ per-optics and anisotropic ☐
-`Optics` already carries a single scalar. It needs (σ_x, σ_y) per beam
-configuration, and every call site needs to stop assuming isotropy. The
-`aspect` parameter in `reco.rp_measure` and `recopseudo.CoherentResponse`
-already exists for this and defaults to 1.0.
+### A2 — make the call sites use the anisotropy ☐
+`sigma_theta_for` returns (h, v) and the low configuration is genuinely
+anisotropic (220/380). The `aspect` parameter of `reco.rp_measure` and
+`recopseudo.CoherentResponse` exists for this and still defaults to 1.0;
+the scripts pass a single scalar. Thread the pair through.
 
 ### A3 — publish the sensitivity band, not a single number ☐
 Every acceptance and reach figure in the programme should carry the

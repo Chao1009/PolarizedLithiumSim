@@ -6,7 +6,7 @@ carries the build recipe and the two generator subtleties that matter
 (`PhaseSpace:Q2Min` needs `pTHatMinDiverge = 0.5` to have any effect; the
 massless Σ = 2 E_e y identity does not hold for a massive target).
 
-## Standing production — 2026-08-26, PYTHIA 8.311, `Q2Min = 0.7 GeV²`
+## Standing production — 2026-08-27, PYTHIA 8.311, `Q2Min = 0.7 GeV²`
 
 One p and one n file per beam configuration; ⁶Li (Z = N = 3) is the pair
 merged by event count.  Configurations are `beams.default_configs("6Li")`,
@@ -14,15 +14,23 @@ i.e. `--config 0/1/2` of the consuming scripts.
 
 | file | config | events | particles | σ_gen [μb] | seed | size |
 |---|---|---|---|---|---|---|
-| `pythia8_e5_p20.5_dis.npz` | 0 low, 5 × 20.5 | 1 000 000 | 6 026 571 | 0.3255 | 201 | 246 MB |
-| `pythia8_e5_n20.5_dis.npz` | 0 low, 5 × 20.5 | 1 000 000 | 6 482 737 | 0.2514 | 202 | 260 MB |
-| `pythia8_e10_p50_dis.npz` | 1 mid, 10 × 50 | 2 000 000 | 17 464 095 | 0.5527 | 101 | 662 MB |
-| `pythia8_e10_n50_dis.npz` | 1 mid, 10 × 50 | 2 000 000 | 18 719 553 | 0.4659 | 102 | 702 MB |
+| `pythia8_e5_p40.8_dis.npz` | 0 low, 5 × 40.8 | 1 000 000 | 7 169 605 | 0.4202 | 201 | 285 MB |
+| `pythia8_e5_n40.8_dis.npz` | 0 low, 5 × 40.8 | 1 000 000 | 7 715 892 | 0.3390 | 202 | 299 MB |
+| `pythia8_e10_p99.5_dis.npz` | 1 mid, 10 × 99.5 | 2 000 000 | 19 980 470 | 0.6661 | 101 | 558 MB |
+| `pythia8_e10_n99.5_dis.npz` | 1 mid, 10 × 99.5 | 2 000 000 | 21 346 737 | 0.5761 | 102 | 312 MB |
 | `pythia8_e18_p137.5_dis.npz` | 2 top, 18 × 137.5 | 1 000 000 | 11 762 519 | 0.8367 | 301 | 426 MB |
 | `pythia8_e18_n137.5_dis.npz` | 2 top, 18 × 137.5 | 1 000 000 | 12 477 453 | 0.7448 | 302 | 448 MB |
 
-**8 000 000 events, 72.9 M final-state particles, 2.7 GB**, in 12 minutes
-of wall time with three jobs in parallel on eight cores.  The mid configuration is doubled because it is the one money plots
+**8 000 000 events, 80.4 M final-state particles, 2.8 GB**, in 4 minutes of
+wall time with four jobs in parallel on eight cores (95 / 101 / 229 / 240 s).
+
+**Regenerated 2026-08-27** at the corrected beam energies. The two lower
+configurations were produced at 20.5 and 50 GeV/u until then, which are
+rigidity-scaled and are not machine configurations: EIC ions are
+gamma-matched, so 6Li sits at 40.8 and 99.5 GeV/u (plans/10). The top
+configuration is rigidity-capped and did not move, which is why its files
+and every number derived from them are unchanged -- a useful check that
+nothing else drifted.  The mid configuration is doubled because it is the one money plots
 5R/7R are published at; the low configuration is what the reconstruction
 note lists as not yet run for the x ≈ 0.1 bins, and the top configuration
 is where the coherent channel dies and the inclusive one does not.

@@ -236,7 +236,8 @@ def spectator_lab_kinematics(channel, p_per_nucleon, n=200_000, beta=0.30,
     a 2e-3 effect on the kinematics -- R low by 2.0-2.3e-3, theta high
     by 2.2-4.2e-3, pT and |k| high by 1.3e-4 to 2.0e-3 (those two come
     from kappa, which the same masses fix) at every quantile from 5% to
-    99% and at every documented energy (6Li 20.5/50/137.5, 7Li
+    99% and at every documented energy (measured at the pre-2026-08-27
+    6Li 20.5/50/137.5 and 7Li
     17.6/42.9/117.9 GeV/u) -- but NOT a 2e-3 effect on the acceptance,
     because the R window edges are hard.  Sliding the 6Li alpha, which
     sits at R ~ 1, down by 0.0022 moves events across the RP/near-beam

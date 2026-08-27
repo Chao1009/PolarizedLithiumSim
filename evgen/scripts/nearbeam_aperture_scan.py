@@ -51,17 +51,22 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 
 from polligen import reco  # noqa: E402
+from polli_fastsim import beams  # noqa: E402
 from polli_fastsim import spectator as sp  # noqa: E402
 
 C_TRUTH, C_FIT, C_ALT, C_GREY = "#1F4E79", "#C0392B", "#B8860B", "#8A8A8A"
 
 # 6Li at the reference rigidity of each ring, and the aperture measured
 # there (reco.RP_APERTURE_MEASURED, tools/fullsim/README.md).
-CONFIGS = tuple((name, pu) + reco.RP_APERTURE_MEASURED[name.replace(" ", "")]
-                + (col,)
-                for name, pu, col in (("5 x 41", 20.5, C_TRUTH),
-                                      ("10 x 100", 50.0, C_FIT),
-                                      ("18 x 275", 137.5, C_ALT)))
+# Beam configurations are DERIVED from polli_fastsim.beams, never
+# hard-coded: the two lower 6Li energies moved from rigidity-scaled
+# (20.5, 50) to gamma-matched (40.8, 99.5) GeV/u on 2026-08-27 (plans/10).
+_CFG = beams.default_configs("6Li")
+CONFIGS = tuple((name, cfg.ion_momentum_per_nucleon)
+                + reco.RP_APERTURE_MEASURED[name.replace(" ", "")] + (col,)
+                for (name, col), cfg in zip((("5 x 41", C_TRUTH),
+                                             ("10 x 100", C_FIT),
+                                             ("18 x 275", C_ALT)), _CFG))
 
 SIGMA_THETA_HA = reco.SIGMA_THETA_HA        # 72.7 urad, high-acceptance optics
 ENVELOPE = 10.0 * SIGMA_THETA_HA            # the 10 sigma retraction

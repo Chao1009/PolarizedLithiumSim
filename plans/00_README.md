@@ -80,12 +80,12 @@ at **48 fastsim + 183 evgen**, from 25 + 143.
   exists to populate.
 - ☑ **The hadronic resolution is measured, and the toy was optimistic.**
   Σ-method δy/y at the four sweet spots, 50 MeV of calorimeter noise:
-  **0.32 / 0.22 / 0.28 / 0.11** at the mid configuration against the
+  **0.55 / 0.28 / 0.50 / 0.15** at the mid configuration against the
   toy's 0.28 / 0.17 / 0.24 / 0.07 — optimistic by 0.04–0.05 absolute at
   every spot, because the toy put 0.60 of Σ in tracks and 0.03 in neutral
   hadrons where PYTHIA puts 0.51 and 0.11, and neutral hadrons are the
   HCal's problem.  It degrades monotonically with beam energy
-  (0.21 / 0.12 / 0.17 / 0.10 low, 0.74 / 0.34 / 0.69 / 0.18 top), which
+  (0.28 / 0.21 / 0.24 / 0.11 low, 0.74 / 0.34 / 0.69 / 0.18 top), which
   settles the x ≈ 0.1 bins on the **low-energy** configuration — the open
   item the reconstruction note lists.  Sweet-spot purity falls from
   64–68% to 40–73% and the reco-bin amplitude sits 4–21% below the
@@ -370,7 +370,7 @@ Tests: 143 evgen + 25 fastsim (from 94 + 24 at the start of run 6).
   anchored a₂ lives in the recoil azimuth φ_t − φ_S, the RP cutout fakes
   ⟨cos 2φ_t⟩ ≈ 0.5 at a 25% aspect ratio, and the near-beam cut is
   angular (pT_cut = 10σ_θ·6p_u): 67% / 9% / 10⁻⁸ acceptance at
-  20.5 / 50 / 137.5 GeV/u for the same optics — the low-energy
+  40.8 / 99.5 / 137.5 GeV/u for the same optics — the low-energy
   configuration is the coherent program's home; the a_n normalization
   convention of the deuteron anchor (factor 2) is flagged for a source
   check.

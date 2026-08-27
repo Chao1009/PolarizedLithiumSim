@@ -155,7 +155,7 @@ reconstructed-level closure is now specified end to end and seeded in
 - ☐ **Coherent (feeds WP5)**: present the anchored a₂ as a modulation of the
   recoil azimuth φ_t − φ_S and the exotic-glue term of the electron azimuth;
   fit R(α, β) in 2-D; replace the constant 0.20 GeV cut in `coherent.py` by
-  the angular cut `reco.tag_pt_cut` (67% / 9% / 10⁻⁸ at 20.5 / 50 /
+  the angular cut `reco.tag_pt_cut` (5.0×10⁻⁷ / 8.4×10⁻²⁶ / 3.7×10⁻¹³ at 40.8 / 99.5 /
   137.5 GeV/u) and state the cutout geometry (open question #20); settle
   the a_n normalization convention of arXiv:2408.13213 (1 + 2Σ vs 1 + Σ).
 - D2 input: the reco-level dilution is small (1–9% at the 25% default, 1–4% at 15–20%) and unbiased with the
@@ -227,17 +227,18 @@ efficiency explicitly.
   honours it only for `Q2Min ≥ pTHatMinDiverge²` and that defaults to 1 GeV,
   so the 0.7–1.0 GeV² band — 31% of the sample, and the band the loosened
   generator window exists for — was missing until `pTHatMinDiverge = 0.5`.
-- ☑ Samples generated (2026-08-26): 8 M events, p and n at 5 × 20.5,
-  10 × 50 and 18 × 137.5, 2.7 GB, manifest in `evgen/samples/README.md`.
+- ☑ Samples generated (regenerated 2026-08-27 at the γ-matched energies,
+  plans/10): 8 M events, p and n at 5 × 40.8, 10 × 99.5 and 18 × 137.5,
+  80.4 M particles, 2.8 GB, manifest in `evgen/samples/README.md`.
 - Results **with PYTHIA** (the toy's, kept for contrast, in brackets):
   captured Σ fraction 0.90 (tracks 0.51 [0.60], EMCal 0.28 [0.30], neutral
   hadrons 0.11 [0.03]); Σ-method δy/y at the four sweet spots with 50 MeV
-  noise **0.32 / 0.22 / 0.28 / 0.11** [0.28 / 0.17 / 0.24 / 0.07], i.e. the
+  noise **0.55 / 0.28 / 0.50 / 0.15** [0.28 / 0.17 / 0.24 / 0.07], i.e. the
   toy was optimistic by 0.04–0.05 absolute everywhere; 0.21 / 0.12 / 0.17 /
   0.10 at LOW and 0.74 / 0.34 / 0.69 / 0.18 at TOP, so **the x ≈ 0.1 bins
   belong to the low-energy configuration**.  5R with the HFS-based y:
-  purities 0.40 / 0.53 / 0.44 / 0.73 [0.60 / 0.68 / 0.68 / 0.86], amplitude
-  dilution D = 0.79 / 0.84 / 0.86 / 0.96, δÂ = 1.2 / 1.0 / 1.8 / 2.9 × 10⁻⁴
+  purities 0.43 / 0.54 / 0.47 / 0.69 [0.60 / 0.68 / 0.68 / 0.86], amplitude
+  dilution D = 0.79 / 0.85 / 0.82 / 0.95, δÂ = 1.2 / 1.0 / 1.8 / 2.9 × 10⁻⁴
   (Table 2 errors unchanged — the loss is in purity, not in statistics).
 - ☐ Quote the resolution table by y and Q² in the reconstruction report and
   decide whether 5R/7R are published on the HFS y or the stand-in.

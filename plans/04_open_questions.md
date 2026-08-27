@@ -204,7 +204,8 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
 20. **Roman-Pot cutout geometry and Li beam divergence** (reconstruction-
     chain note, 2026-08-24). The near-beam cut is angular,
     pT_cut = 10σ_θ·A·p_u, so the same optics gives tag acceptances of
-    67% / 9% / 10⁻⁸ at 20.5 / 50 / 137.5 GeV/u for ⁶Li (constant 0.20 GeV
+    67% / 9% / 10⁻⁸ at the then-assumed 20.5 / 50 / 137.5 GeV/u for ⁶Li
+    (superseded: the energies are γ-matched, plans/10) (constant 0.20 GeV
     in the code → 13.5%); and the pots' rectangular cutout has its sides
     parallel to the vertical spin axis, faking ⟨cos 2φ_t⟩ ≈ 0.5 for a 25%
     aspect ratio (physics a₂ ≈ 0.036) unless the spin-state ratio is
@@ -238,7 +239,8 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
     that is `cut_scale_xy ≈ (1, 2.3)`, not (2.5, 1) — a factor ≈ 5.8 the
     wrong way — and the fake ⟨cos 2β⟩ about the vertical spin axis is
     therefore large and **negative**, not positive. The tagged fraction
-    falls with it (B = 50 GeV⁻²): 1.4×10⁻² against 0.82 at 20.5 GeV/u,
+    falls with it (B = 50 GeV⁻²): 1.4×10⁻² against 0.82 at the then-assumed
+    20.5 GeV/u (superseded, plans/10),
     5×10⁻⁵ against 0.40 at 50.
     *2026-08-26 (the chain, run on it — `money_cos2phi_coherent_reco.py
     --rp-aperture measured`):* at the LOW configuration the measurement
@@ -296,10 +298,10 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
     noise/threshold floor at Σ_h ≈ 0.2–0.5 GeV.
     *2026-08-26 (the PYTHIA sample exists):* 8 M events over the three beam
     configurations, generated natively (`tools/pythia8`). Σ-method
-    δy/y = **0.32 / 0.22 / 0.28 / 0.11** at the sweet spots with the 50 MeV
+    δy/y = **0.55 / 0.28 / 0.50 / 0.15** at the sweet spots with the 50 MeV
     floor — the toy was optimistic by 0.04–0.05 absolute at every one,
     because it put 0.03 of Σ into neutral hadrons where PYTHIA puts 0.11 —
-    and 0.21 / 0.12 / 0.17 / 0.10 at LOW against 0.74 / 0.34 / 0.69 / 0.18
+    and 0.28 / 0.21 / 0.24 / 0.11 at LOW against 0.74 / 0.34 / 0.69 / 0.18
     at TOP. **Half of this question is therefore answered**: what remains
     is only the ePIC noise/threshold floor, which is what the scan
     0 → 25 → 50 → 100 MeV turns into 0.20 → 0.32 → 0.54 → 1.01 at y = 0.005.

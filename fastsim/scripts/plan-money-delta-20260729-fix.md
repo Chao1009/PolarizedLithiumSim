@@ -1,5 +1,12 @@
 # Plan: Detector-realistic money-delta script — reco-selection consistency fix
 
+> **Dated record.** Numbers here predate the 2026-08-27 corrections: ⁶Li
+> beam energies are γ-matched (40.8 / 99.5 / 137.5 GeV/u), not
+> rigidity-scaled (20.5 / 50 / 137.5), and the far-forward divergence is
+> per-configuration rather than a single 72.7 μrad. See plans/10. Kept as
+> the record of its date, not as a current reference.
+
+
 **Scope**: Fix reconstructed-event selection in `fastsim/scripts/money_delta_20260729.py` so that all reco-side outputs (peak-bin find, Q²-slice find, integrated averages, per-bin heatmaps, φ-modulation plots, diagnostics) use a single, well-defined **reconstructed-analysis mask** that reapplies the same acceptance used at the true level, and that the true-level `proj.accepted` mask is never silently used as a *reco* selection where a reco mask is meant. Document the diagnosis and fixes in a new note `fastsim/notes/money_delta_note_2026-07-29_fix.md`.
 
 **Files touched**:

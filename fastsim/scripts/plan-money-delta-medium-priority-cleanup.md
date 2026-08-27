@@ -1,5 +1,12 @@
 # Plan: Medium-priority money-delta cleanup — φ-sign convention, 20260724 x-axis mismatch, shape-normalization documentation drift
 
+> **Dated record.** Numbers here predate the 2026-08-27 corrections: ⁶Li
+> beam energies are γ-matched (40.8 / 99.5 / 137.5 GeV/u), not
+> rigidity-scaled (20.5 / 50 / 137.5), and the far-forward divergence is
+> per-configuration rather than a single 72.7 μrad. See plans/10. Kept as
+> the record of its date, not as a current reference.
+
+
 **Scope.** Address three remaining medium-priority "money-delta" issues surfaced during earlier audits:
 
 1. **φ-modulation sign convention.** `money_delta_20260728.py` and `money_delta_20260729.py` build the φ-modulation as if `A_bag` were signed, but the hardcoded `A_BAG` dict already stores absolute values. The physics is correct (sig² ∝ A²), yet the code comments, variable naming, and stdout / plot annotations equivocate between "signed" and "|A|" language.
