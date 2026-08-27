@@ -20,7 +20,11 @@ INCLUSIVE (RecoResponse + measure_inclusive)
      (bin integrals of den_f + P_f A cos 2phi' per event, cf.
      sample.phi_histogram_pseudo), Poisson-fluctuated at any luminosity;
   6. the spin-state-sorted ratio fit (reco.harmonic_ratio_fit) and the
-     conversion to Delta with an MC-derived bin-centering factor.
+     conversion to Delta with an MC-derived bin-centering factor -- either
+     the bin-by-bin K of an assumed model (delta_from_amplitude) or, since
+     the amplitude is exactly LINEAR in Delta, the shape fitted through
+     the forward-folded response itself (RecoResponse.fold,
+     fold_shape_fit; plans/08 A6).
 
 COHERENT (CoherentResponse + measure_coherent)
   recoil (t, phi_t, x_P) -> exact four-vector -> Roman-Pot emulation
@@ -231,6 +235,7 @@ class RecoResponse:
         self.eff, self.dil = eff, dil
         self.phi_true = np.mod(phip_true, 2 * np.pi)
         self._cellamp = {}
+        self._cellder = {}
 
     # --- per-cell fill amplitudes ---------------------------------------
 
@@ -293,6 +298,124 @@ class RecoResponse:
                              if n_reco > 0 else np.nan),
         }
 
+    # --- forward folding: the response as an operator on Delta ------------
+
+    def delta_response(self, category):
+        """Per-cell dA/dDelta -- the EXACT derivative of the P_zz-normalized
+        cos 2phi' amplitude with respect to the double-helicity-flip
+        structure function at that cell's kinematics.
+
+        A is linear in Delta at fixed (x, Q2): the master formula carries
+        Delta in exactly one place, a_2 = -[(1-y)/y^2] c_eff(m) sin^2
+        theta_S Delta / D_phi (Hoodbhoy-Jaffe-Manohar NPB 312:571 (1989)
+        Eq. (30) as transcribed in xsec.InclusiveKernel.amplitudes), and
+        nothing else in W depends on it.  The derivative is therefore the
+        same kernel call with the Delta table replaced by 1, and `fold`
+        below is exact rather than a linearization
+        (test_amplitude_is_exactly_linear_in_delta).
+        """
+        key = (category.name, tuple(category.populations), category.theta_s,
+               category.phi_s, category.lam_e, category.pe)
+        if key not in self._cellder:
+            smp = self.sampler
+            tab = dict(smp.tables)
+            tab["delta"] = np.ones_like(smp.x_cells)
+            out = np.zeros_like(smp.x_cells)
+            for p_m, mm in zip(np.asarray(category.populations, dtype=float),
+                               m_values(category.j)):
+                if p_m <= 0.0:
+                    continue
+                _w, _a1, a2 = smp.kernel.amplitudes(
+                    tab, smp.x_cells, smp.q2_cells, smp.s,
+                    smp._state(category, mm), with_perp=smp.with_perp)
+                out = out + p_m * a2
+            self._cellder[key] = out / float(category.moments()[1])
+        return self._cellder[key]
+
+    def delta_cells(self, delta_func):
+        """`delta_func(x, q2, f1)` on the sampler CELL CENTRES -- the same
+        (x, Q2, F1) grid on which the modulation amplitudes themselves are
+        evaluated (sample.InclusiveSampler fidelity note), so that folding
+        a model reproduces its own reco-bin amplitude identically."""
+        smp = self.sampler
+        return np.asarray(delta_func(smp.x_cells, smp.q2_cells,
+                                     smp.tables["f1"]), dtype=float)
+
+    def f1_center(self, x, q2):
+        """Per-nucleon F1 at a bin centre, from the response's OWN kernel
+        (the same NuclearF2 the amplitudes use), so that a Delta model
+        evaluated at the centre and one folded through the response are
+        evaluated with the same F1."""
+        krn = self.sampler.kernel
+        return np.asarray(krn.nf2.f1a(x, q2), dtype=float) / krn.ion.A
+
+    def fold_kernel(self, mask, category):
+        """(cells, v, norm) with fold(Delta) = sum_c v_c Delta_c / norm --
+        the response of one reco bin as a linear functional of Delta on the
+        cell grid.  Sparse (only the cells that reach the bin), so a shape
+        fit costs one dot product per bin per trial shape."""
+        cells = self.cell[mask]
+        we = (self.w * self.eff)[mask]
+        v = np.bincount(cells, weights=we * self.dil[mask],
+                        minlength=self.sampler.xsec_flat.size)
+        nz = np.flatnonzero(v)
+        return nz, v[nz] * self.delta_response(category)[nz], float(we.sum())
+
+    def fold(self, delta_func, mask, category, kernel=None):
+        """Forward-folded amplitude of a reco bin: the response-weighted
+        mean of (dA/dDelta) Delta(x_true, Q2_true) over the events that
+        reconstruct into it -- i.e. the cos 2phi' amplitude the experiment
+        would measure there if the true structure function were
+        `delta_func` (plans/08 A6).
+
+        Weights are the ones bin_summary already uses (sigma * eps_eID *
+        selection, times the per-event cos 2 dphi' dilution), so with
+        `delta_func` = the model the response was built from this returns
+        bin_summary["a_reco_bin"] to floating-point roundoff (measured
+        3e-16; the sum is only regrouped by cell).  That identity is what
+        makes it a drop-in for the bin-by-bin K of delta_from_amplitude:
+        K = Delta_shape(x_c, Q2_c) / fold(Delta_shape, bin) with any shape,
+        the model-dependent bin-centering with the migration included.
+        """
+        nz, v, norm = (self.fold_kernel(mask, category) if kernel is None
+                       else kernel)
+        if norm <= 0.0:
+            return np.nan
+        return float((v * self.delta_cells(delta_func)[nz]).sum() / norm)
+
+    def fold_mc_error(self, delta_func, mask, category):
+        """1 sigma error of `fold` from the FINITE response sample.
+
+        fold = sum_i z_i / sum_i u_i over the MC events of the bin, with
+        u_i = sigma_c/n_c * eff_i and z_i = u_i dil_i (dA/dDelta)_c Delta_c;
+        the response is stratified (n_c independent in-cell draws per
+        sampler cell), so with r_i = z_i - fold u_i the delta-method
+        variance is the sum over cells of the unbiased within-cell variance
+        of the n_c draws, n_c/(n_c-1) [sum r_i^2 - (sum r_i)^2/n_c],
+        divided by (sum u_i)^2.  Cross-cell terms vanish because the cells
+        are drawn independently; n_c is taken as fixed (it is the number of
+        draws that passed the GENERATOR acceptance, the conditioning under
+        which the weights sigma_c/n_c are defined).  Validated against the
+        spread over independent response seeds
+        (test_fold_mc_error_matches_the_spread_over_response_seeds).
+        """
+        nz, v, norm = self.fold_kernel(mask, category)
+        if norm <= 0.0:
+            return np.nan
+        val = float((v * self.delta_cells(delta_func)[nz]).sum() / norm)
+        cells = self.cell[mask]
+        u = (self.w * self.eff)[mask]
+        a = (self.delta_response(category) * self.delta_cells(delta_func))
+        r = u * (self.dil[mask] * a[cells] - val)
+        ncell = self.sampler.xsec_flat.size
+        n_c = np.bincount(self.cell, minlength=ncell).astype(float)
+        r_sum = np.bincount(cells, weights=r, minlength=ncell)
+        r_sq = np.bincount(cells, weights=r * r, minlength=ncell)
+        ok = n_c > 1.0
+        var = float((n_c[ok] / (n_c[ok] - 1.0)
+                     * (r_sq[ok] - r_sum[ok] ** 2 / n_c[ok])).sum())
+        return float(np.sqrt(max(var, 0.0)) / abs(norm))
+
     # --- expected counts ---------------------------------------------------
 
     def expected_counts(self, categories, lumi_pb, mask, edges,
@@ -348,14 +471,268 @@ def measure_inclusive(resp, plan, lumi_pb, mask, rng=None, nbins=24,
     return fit
 
 
-def delta_from_amplitude(fit, summary, delta_center):
+def delta_from_amplitude(fit, summary, delta_center, k_conv=None,
+                         k_rel_err=0.0):
     """MC bin-centering with migration: K = Delta_model(x_c, Q2_c) /
     A_reco-bin(model), Delta_hat = A_hat K, dDelta = dA |K| -- the pure
     kinematic inversion plus the in-bin-shape and migration correction
-    an experiment takes from the model it fits."""
-    k_conv = delta_center / summary["a_reco_bin"]
-    return {"delta": fit["amp"] * k_conv, "err": fit["err"] * abs(k_conv),
-            "k": k_conv}
+    an experiment takes from the model it fits.
+
+    `k_conv` replaces that K with one the caller derived otherwise -- in
+    particular `fold_shape_fit`'s, whose Delta(x) shape is FITTED THROUGH
+    THE RESPONSE instead of assumed (plans/08 A6, code review F5) -- and
+    `k_rel_err` is the relative error of that factor, added to the
+    statistical error in quadrature.  Pass `fold_shape_fit`'s
+    "k_rel_all", not "k_rel": the shape-fit and response-MC errors alone
+    are 3-10x smaller than the residual prior dependence the tilt family
+    cannot absorb, so a bar built from them is smaller than a bias the
+    closure scan already measures.  Both default to the published
+    behaviour, bit for bit.
+
+    The K error and the statistical error of A_hat come from the same
+    data, so the quadrature sum is the conservative reading and not an
+    exact treatment; the correlation is not modelled.
+    """
+    if k_conv is None:
+        k_conv = delta_center / summary["a_reco_bin"]
+    stat = fit["err"] * abs(k_conv)
+    err_k = abs(fit["amp"] * k_conv) * k_rel_err
+    return {"delta": fit["amp"] * k_conv,
+            "err": float(np.hypot(stat, err_k)) if k_rel_err else stat,
+            "err_stat": stat, "err_k": err_k, "k": k_conv,
+            "k_rel_err": k_rel_err}
+
+
+def tilted_shape(base, x_ref, params):
+    """`base` deformed by the two-parameter tilt (x/x_ref)^c1 (1-x)^c2.
+
+    The shape family `fold_shape_fit` floats: the same x^a (1-x)^b form
+    the repository's own Delta ansaetze use (delta_models.VARIANTS), so
+    the tilt is a free low-x power and a free large-x fall-off around the
+    prior -- the two directions in which moment_A, moment_B and toy
+    actually differ.  params = (norm, c1, c2); (1, 0, 0) returns `base`
+    itself, so freezing the tilt recovers today's bin-by-bin K exactly.
+    """
+    norm, c1, c2 = params
+
+    def shape(x, q2, f1):
+        x = np.asarray(x, dtype=float)
+        return (norm * np.asarray(base(x, q2, f1), dtype=float)
+                * np.power(x / x_ref, c1)
+                * np.power(np.maximum(1.0 - x, 1e-12), c2))
+    return shape
+
+
+def _profiled_chi2(fold_rows, amp, wgt):
+    """chi2 of A_hat = norm * fold(shape) with the normalization profiled
+    out analytically (the fold is LINEAR in Delta, so norm is a linear
+    parameter and only the SHAPE parameters are searched)."""
+    denom = float((fold_rows * fold_rows * wgt).sum())
+    if denom <= 0.0:
+        return np.inf, 0.0
+    norm = float((amp * fold_rows * wgt).sum() / denom)
+    return float((wgt * (amp - norm * fold_rows) ** 2).sum()), norm
+
+
+def fold_shape_fit(resp, category, bins, base, x_ref=None,
+                   bounds=((-3.0, 3.0), (-8.0, 8.0)), n_grid=17, n_zoom=5,
+                   mc_error=True, alt_bases=()):
+    """Data-driven bin-centering for one Q2 slice: fit a 3-parameter
+    Delta(x) shape FOLDED THROUGH THE RESPONSE to the measured amplitudes,
+    and return the K it implies per bin (plans/08 A6, code review F5).
+
+    `bins` is a sequence of dicts with the reco-bin mask ("mask"), the bin
+    centre ("x", "q2") and the measurement ("amp", "err"); the shape is
+    tilted_shape(base, x_ref, (norm, c1, c2)) and the fitted quantity is
+        chi2(c1, c2) = sum_b [A_hat_b - norm fold(shape, b)]^2
+                             / [dA_b^2 + dA_b(MC)^2]
+    with norm profiled out (the fold is linear in Delta) and dA(MC) the
+    response MC error of that bin's fold.  The reported
+        K_b = shape(x_b, Q2_b) / fold(shape, bin b)
+    is independent of norm, so only the two SHAPE parameters matter; the
+    bins passed here should extend BEYOND the plotted range, because the
+    edge bins of a plot are fed by true x outside it.
+
+    Why a bounded 2-parameter shape and not an unfolding matrix (the
+    audit's two constraints): A_hat is a weighted MEAN of per-event
+    amplitudes and dA/dDelta changes by ~2x between adjacent x bins, so a
+    yield migration matrix mis-weights every off-diagonal element; and
+    with a purity near 0.6 that matrix is ill-conditioned, so least
+    squares on it oscillates.  A smooth two-parameter tilt searched on a
+    bounded grid cannot oscillate bin to bin at all -- that is the
+    conditioning guard, and it is pinned by
+    test_folded_fit_does_not_oscillate.
+
+    Measured on money plot 7R (n_mc_per_cell = 400, moment_A injected,
+    noise-free pseudo-data, `--unfold-scan`): correcting with the WRONG
+    shape leaves a residual bias of at most 3.5% / 7.1% / 6.9% over the
+    plotted bins of the three Q2 slices with the moment_B prior and
+    4.7% / 5.5% / 5.0% with the toy prior, against 22% / 24% / 99% for the
+    bin-by-bin K.  At the four sweet spots the model dependence
+    K(moment_A)/K(prior) - 1 falls from (-5.0, +8.5, -9.3, +6.3)% and
+    (+9.7, +2.5, +10.6, +2.8)% to (-0.9, -1.2, -0.2, +0.3)% and
+    (+4.7, +2.8, +2.2, -0.9)%.
+
+    That residual is REAL and is bigger than the fit's own errors: the
+    tilt (x/x_ref)^c1 (1-x)^c2 cannot absorb the F1(x, Q2) factor that
+    separates the repository's interpretations A and B over three decades
+    of x, so the letter cannot quote the shape-fit and response-MC errors
+    alone.  `alt_bases` is the family the prior is drawn from -- the fit
+    is repeated from each of those shapes on the SAME data, and
+        k_prior_rel[b] = max_p |K_p[b] / K[b] - 1|
+    is returned as the third error.  It BRACKETS the residual bias
+    whenever the truth is a member of that family: with the injected
+    shape among `alt_bases` one of the refits IS the closure fit, whose
+    own bias is the chain floor (0.03% on money plot 7R), so
+    K_injected/K_prior - 1 is the residual up to O(residual^2).  Default
+    () -- no alternatives, no third error, today's numbers unchanged.
+
+    No goodness-of-fit penalty is applied to the alternatives, so this is
+    an UPPER bound: the spread is a bias and does not shrink with
+    luminosity, while the chi2 excess that would let an experiment throw
+    an alternative out grows linearly with it.  Measured on money plot 7R
+    (noise-free data, chi2 excess of the alternative's folded fit over
+    the injected one, ndof = 9): Q2 = 1.14 toy 3.5 at 1 year and 34.7 at
+    10 years, moment_B 0.16 and 1.55; Q2 = 14.3 toy 0.03 and 0.27,
+    moment_B 0.17 and 1.65.  So at the low-Q2 slice a 10-year measurement
+    rejects the shape that sets the 4.7% systematic, while at Q2 = 14.3
+    no member of the family is distinguishable even at 10 years and the
+    6.1% spread there is irreducible.  The per-alternative chi2 comes
+    back in "alt_chi2" (same order as `alt_bases`) so the caller can see
+    which alternatives the data disfavour.
+
+    Returns a dict: "params" (norm, c1, c2), "shape" (the callable),
+    "k"/"k_err" per bin (the latter the shape-fit and response-MC errors
+    of K in quadrature), "k_fit_rel"/"k_mc_rel"/"k_prior_rel" separately,
+    "k_rel_all"/"k_err_all" (all three in quadrature -- the honest bar),
+    "fold", the "cov" of (c1, c2), "chi2", "ndof" and "at_bound".  A
+    minimum with no positive curvature (a flat or saddle chi2, which
+    "at_bound" usually accompanies) returns "cov" NaN and "k_fit_rel"
+    zero: there is no defensible shape error there, so check them before
+    quoting one.
+    """
+    masks = [b["mask"] for b in bins]
+    x_c = np.array([b["x"] for b in bins], dtype=float)
+    q2_c = np.array([b["q2"] for b in bins], dtype=float)
+    amp = np.array([b["amp"] for b in bins], dtype=float)
+    err = np.array([b["err"] for b in bins], dtype=float)
+    if x_c.size < 4:
+        raise ValueError("fold_shape_fit needs at least 4 bins for a "
+                         "3-parameter shape, got %d" % x_c.size)
+    if x_ref is None:
+        x_ref = float(np.exp(np.mean(np.log(x_c))))
+    f1_c = resp.f1_center(x_c, q2_c)
+    base_c = np.asarray(base(x_c, q2_c, f1_c), dtype=float)
+    # the response MC error of each bin's fold belongs in the chi2 next to
+    # the measurement error: the feed-in bins beyond the plotted range are
+    # exactly the ones with few MC events, and without it they would pull
+    # the shape with a weight their response does not deserve
+    # sparse folding kernels, on the UNION of the cells the bins reach
+    kernels = [resp.fold_kernel(m, category) for m in masks]
+    mc_c = np.zeros_like(x_c)
+    if mc_error:
+        mc_c = np.abs(amp) * np.array(
+            [resp.fold_mc_error(base, m, category)
+             / max(abs(resp.fold(base, m, category, kernel=k)), 1e-300)
+             for m, k in zip(masks, kernels)])
+    wgt = 1.0 / np.maximum(err ** 2 + mc_c ** 2, 1e-300)
+
+    cells = np.unique(np.concatenate([k[0] for k in kernels]))
+    rows = [(np.searchsorted(cells, k[0]), k[1] / k[2]) for k in kernels]
+    smp = resp.sampler
+    base_u = np.asarray(base(smp.x_cells[cells], smp.q2_cells[cells],
+                             smp.tables["f1"][cells]), dtype=float)
+    lx_u = np.log(smp.x_cells[cells] / x_ref)
+    l1x_u = np.log(np.maximum(1.0 - smp.x_cells[cells], 1e-12))
+    lx_c = np.log(x_c / x_ref)
+    l1x_c = np.log(np.maximum(1.0 - x_c, 1e-12))
+
+    def folds(theta):
+        g = base_u * np.exp(theta[0] * lx_u + theta[1] * l1x_u)
+        return np.array([float(v.dot(g[idx])) for idx, v in rows])
+
+    def k_of(theta):
+        f = folds(theta)
+        d = base_c * np.exp(theta[0] * lx_c + theta[1] * l1x_c)
+        return d / f, f
+
+    # grid + zoom: deterministic, and the box is the conditioning guard
+    lo = np.array([bounds[0][0], bounds[1][0]], dtype=float)
+    hi = np.array([bounds[0][1], bounds[1][1]], dtype=float)
+    box = np.array([lo, hi])
+    best = (np.inf, 0.0, np.array([0.0, 0.0]))
+    for _ in range(n_zoom):
+        g1 = np.linspace(box[0, 0], box[1, 0], n_grid)
+        g2 = np.linspace(box[0, 1], box[1, 1], n_grid)
+        for c1 in g1:
+            for c2 in g2:
+                th = np.array([c1, c2])
+                chi2, norm = _profiled_chi2(folds(th), amp, wgt)
+                if chi2 < best[0]:
+                    best = (chi2, norm, th)
+        half = 2.0 * np.array([g1[1] - g1[0], g2[1] - g2[0]])
+        box = np.array([np.maximum(best[2] - half, lo),
+                        np.minimum(best[2] + half, hi)])
+    chi2, norm, theta = best
+    at_bound = bool(np.any(np.abs(theta - lo) < 1e-9)
+                    or np.any(np.abs(theta - hi) < 1e-9))
+
+    # covariance of the shape parameters from the profiled-chi2 curvature
+    # (chi2 = chi2_min + dtheta^T H dtheta / 2 -> C = 2 H^-1), and the
+    # gradient of K, by the same finite difference
+    step = 0.02 * (hi - lo)
+    f0 = _profiled_chi2(folds(theta), amp, wgt)[0]
+    hess = np.zeros((2, 2))
+    kk0, fold0 = k_of(theta)
+    grad = np.zeros((2, kk0.size))
+    for i in range(2):
+        e_i = np.zeros(2)
+        e_i[i] = step[i]
+        fp = _profiled_chi2(folds(theta + e_i), amp, wgt)[0]
+        fm = _profiled_chi2(folds(theta - e_i), amp, wgt)[0]
+        hess[i, i] = (fp - 2.0 * f0 + fm) / step[i] ** 2
+        grad[i] = (k_of(theta + e_i)[0] - k_of(theta - e_i)[0]) \
+            / (2.0 * step[i])
+    e_01 = np.array(step)
+    fpp = _profiled_chi2(folds(theta + e_01), amp, wgt)[0]
+    fmm = _profiled_chi2(folds(theta - e_01), amp, wgt)[0]
+    hess[0, 1] = hess[1, 0] = (fpp + fmm - 2.0 * f0
+                               - hess[0, 0] * step[0] ** 2
+                               - hess[1, 1] * step[1] ** 2) / (2.0 * step[0]
+                                                               * step[1])
+    if np.all(np.linalg.eigvalsh(hess) > 0.0):
+        cov = 2.0 * np.linalg.inv(hess)
+        k_fit = np.sqrt(np.maximum(
+            np.einsum("ib,ij,jb->b", grad, cov, grad), 0.0)) / np.abs(kk0)
+    else:                       # flat or saddle: no defensible shape error
+        cov = np.full((2, 2), np.nan)
+        k_fit = np.zeros_like(kk0)
+    shape = tilted_shape(base, x_ref, (norm, theta[0], theta[1]))
+    k_mc = np.zeros_like(kk0)
+    if mc_error:
+        k_mc = np.array([resp.fold_mc_error(shape, m, category)
+                         for m in masks]) / np.abs(fold0 * norm)
+    # the residual the tilt cannot absorb: refit from every other shape
+    # of the family on the same data (K is what the correction multiplies,
+    # so the spread of K is the spread of the corrected Delta)
+    k_prior = np.zeros_like(kk0)
+    alt_chi2 = []
+    for alt in alt_bases:
+        alt_fit = fold_shape_fit(resp, category, bins, alt, x_ref=x_ref,
+                                 bounds=bounds, n_grid=n_grid,
+                                 n_zoom=n_zoom, mc_error=mc_error)
+        k_prior = np.maximum(k_prior, np.abs(alt_fit["k"] / kk0 - 1.0))
+        alt_chi2.append(alt_fit["chi2"])
+    k_rel_all = np.sqrt(k_fit ** 2 + k_mc ** 2 + k_prior ** 2)
+    return {"params": (norm, float(theta[0]), float(theta[1])),
+            "shape": shape, "x_ref": x_ref, "k": kk0,
+            "k_fit_rel": k_fit, "k_mc_rel": k_mc, "k_prior_rel": k_prior,
+            "k_rel": np.hypot(k_fit, k_mc),
+            "k_err": np.abs(kk0) * np.hypot(k_fit, k_mc),
+            "k_rel_all": k_rel_all, "k_err_all": np.abs(kk0) * k_rel_all,
+            "alt_chi2": alt_chi2,
+            "fold": fold0 * norm, "cov": cov, "chi2": chi2,
+            "ndof": int(x_c.size - 3), "at_bound": at_bound}
 
 
 # --- coherent ------------------------------------------------------------

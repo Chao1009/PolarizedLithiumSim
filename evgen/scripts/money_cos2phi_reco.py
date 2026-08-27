@@ -146,6 +146,28 @@ def main():
                          "electrons are backward, so the headline numbers "
                          "do not move; the amplitude-vs-x panels reach the "
                          "barrel, where --energy best picks the tracker")
+    ap.add_argument("--unfold", default="model", choices=("model", "folded"),
+                    help="7R bin-centering.  'model' (default, the "
+                         "published one): K = Delta_prior(x_c, Q2_c) / "
+                         "A_reco-bin(prior), evaluated with the model that "
+                         "generated the pseudo-data, so the points sit on "
+                         "the injected curve by construction (code review "
+                         "F5).  'folded': a 3-parameter Delta(x) shape "
+                         "FITTED THROUGH THE RESPONSE per Q2 slice "
+                         "(recopseudo.fold_shape_fit), so the shape comes "
+                         "from the data and the shape-fit, response-MC "
+                         "and prior-spread errors of K all enter the "
+                         "error bar (plans/08 A6)")
+    ap.add_argument("--unfold-prior", default=None, choices=dm.available(),
+                    help="model the bin-centering STARTS from (default: "
+                         "the injected one).  With --unfold model this is "
+                         "the F5 model dependence itself; with --unfold "
+                         "folded it is only the starting shape of the fit")
+    ap.add_argument("--unfold-scan", action="store_true",
+                    help="closure scan: correct the SAME pseudo-data with "
+                         "each of the repository's Delta shapes, bin-by-bin "
+                         "K against folded fit, and print the residual bias "
+                         "against the injected truth (plans/08 A6)")
     ap.add_argument("--syst-scan", action="store_true",
                     help="after the money plots, rebuild the response with "
                          "each nuisance varied and print the Delta shift "
@@ -162,6 +184,21 @@ def main():
                             pol_ion_tensor=args.pzz)
     model, q2_ref = build_delta_model(args, config, analysis)
     kern = InclusiveKernel(beams.LI6, b1_func=toy_b1, delta_func=model)
+    # the shape the bin-centering starts from: the injected model unless
+    # asked otherwise (a different prior is the F5 model dependence)
+    prior_name = args.unfold_prior or args.delta_model
+
+    def make_prior(name):
+        """One of the repository's Delta shapes, built with this run's
+        beam configuration and analysis scenario."""
+        if name == args.delta_model:
+            return model
+        return build_delta_model(
+            argparse.Namespace(**dict(vars(args), delta_model=name)),
+            config, analysis)[0]
+
+    prior = model if args.unfold_prior in (None, args.delta_model) else \
+        make_prior(args.unfold_prior)
 
     # analysis grid, sweet spots (identical selection to money plot 5)
     proj = fom.project_rates(config, analysis)
@@ -384,11 +421,19 @@ def main():
     fig, axes = plt.subplots(1, len(q2_slices), figsize=(12.6, 4.5),
                              sharey=True)
     summary7 = []
+    folded = args.unfold == "folded"
     for ax, q2s in zip(np.atleast_1d(axes), q2_slices):
-        pts = []
+        cand = []
         for i0 in range(0, xe.size - 2, 2):
             xc = np.sqrt(xe[i0] * xe[i0 + 2])
-            if not kinematic_mask(xc, q2s, s):
+            # the folded fit also measures the FEED-IN bins on either side
+            # of the plotted range (bins whose CENTRE is outside the
+            # kinematic mask, or that the plot's quality cuts drop): the
+            # edge bins of the plot are fed by true x from there, and a
+            # shape constrained only inside would extrapolate into exactly
+            # the region that feeds them (plans/08 A6)
+            in_range = bool(kinematic_mask(xc, q2s, s))
+            if not (in_range or folded):
                 continue
             mask = resp.mask_reco(xe[i0], xe[i0 + 2], q2s / 1.6, q2s * 1.6)
             if mask.sum() < 50:
@@ -397,18 +442,52 @@ def main():
                                     cat_plus)
             m1 = measure_bin(resp, plan, mask, lumi1_pb, rng, phi_eff,
                              lumi_assumed)
-            if (m1["n"] < 1e3 or m1["err"] > 8e-3
-                    or abs(summ["a_reco_bin"]) < 1e-5):
+            good = in_range and not (m1["n"] < 1e3 or m1["err"] > 8e-3
+                                     or abs(summ["a_reco_bin"]) < 1e-5)
+            if not (good or folded):
                 continue
             m10 = measure_bin(resp, plan, mask, lumi10_pb, rng, phi_eff,
                               lumi_assumed)
+            cand.append({"x": xc, "mask": mask, "summ": summ, "m1": m1,
+                         "m10": m10, "good": good})
+        shape_fit = {}
+        if folded:
+            # the fit is repeated from every OTHER shape the repository
+            # offers, on the same data: the spread of K over that family
+            # is the residual prior dependence the tilt cannot absorb,
+            # and it is the largest of the three K errors (plans/08 A6)
+            alt_names = [nm for nm in dm.available() if nm != prior_name]
+            alts = tuple(make_prior(nm) for nm in alt_names)
+            for key in ("m1", "m10"):
+                shape_fit[key] = rp.fold_shape_fit(
+                    resp, cat_plus,
+                    [{"mask": c["mask"], "x": c["x"], "q2": q2s,
+                      "amp": c[key]["amp"], "err": c[key]["err"]}
+                     for c in cand], prior, alt_bases=alts)
+        pts = []
+        for b, c in enumerate(cand):
+            if not c["good"]:
+                continue
+            xc, summ, mask = c["x"], c["summ"], c["mask"]
             f1c = kern.nf2.f1a(xc, q2s) / kern.ion.A
-            delta_c = float(model(xc, q2s, f1c))
-            d1 = rp.delta_from_amplitude(m1, summ, delta_c)
-            d10 = rp.delta_from_amplitude(m10, summ, delta_c)
+            delta_c = float(prior(xc, q2s, f1c))
+            kw1 = kw10 = {}
+            if folded:
+                kw1 = {"k_conv": shape_fit["m1"]["k"][b],
+                       "k_rel_err": shape_fit["m1"]["k_rel_all"][b]}
+                kw10 = {"k_conv": shape_fit["m10"]["k"][b],
+                        "k_rel_err": shape_fit["m10"]["k_rel_all"][b]}
+            elif prior is not model:
+                kw1 = kw10 = {"k_conv": delta_c / resp.fold(prior, mask,
+                                                            cat_plus)}
+            d1 = rp.delta_from_amplitude(c["m1"], summ, delta_c, **kw1)
+            d10 = rp.delta_from_amplitude(c["m10"], summ, delta_c, **kw10)
             pts.append({"x": xc, "delta_c": delta_c, "d1": d1["delta"],
-                        "e1": d1["err"], "d10": d10["delta"], "e10": d10["err"],
-                        "purity": summ["purity"]})
+                        "e1": d1["err"], "d10": d10["delta"],
+                        "e10": d10["err"], "e1_stat": d1["err_stat"],
+                        "e1_k": d1["err_k"], "e10_stat": d10["err_stat"],
+                        "e10_k": d10["err_k"], "purity": summ["purity"],
+                        "b": b})
         xoff = 1.045
         ax.errorbar([p["x"] for p in pts], [1e3 * p["x"] * p["d1"] for p in pts],
                     yerr=[1e3 * p["x"] * p["e1"] for p in pts], fmt="s",
@@ -427,6 +506,13 @@ def main():
                 color=C_TRUTH, lw=1.6, label="%s (injected)" % args.delta_model)
         ax.plot(xg[ok], 1e3 * (xg * np.asarray(alt(xg, q2g, f1g)))[ok], "-",
                 color=C_ALT, lw=1.4, label=alt_label)
+        if folded:
+            sh = shape_fit["m10"]["shape"](xg, q2g, f1g)
+            ax.plot(xg[ok], 1e3 * (xg * np.asarray(sh))[ok], "--",
+                    color="0.25", lw=1.2,
+                    label=r"folded fit (10 yr), $\chi^2/{\rm ndf}=%.1f/%d$"
+                          % (shape_fit["m10"]["chi2"],
+                             shape_fit["m10"]["ndof"]))
         ax.set_xscale("log")
         ax.set_xlabel(r"$x$ (reconstructed-bin centre)")
         ax.axhline(0, color="0.85", lw=0.6, zorder=0)
@@ -434,26 +520,171 @@ def main():
         ax.tick_params(labelsize=8)
         if pts:
             best = min(pts, key=lambda p: p["e10"])
+            extra = ""
+            if folded:
+                fit10 = shape_fit["m10"]
+                b1, b10 = abs(best["d1"]), abs(best["d10"])
+                bb = best["b"]
+                extra = ("; Delta_hat(10 yr) = %+.4f; folded fit %d bins "
+                         "(%d plotted) tilt (%+.3f, %+.3f) chi2/ndf = "
+                         "%.3g/%d%s; error at that bin [%%]: 1 yr stat "
+                         "%.2f (+) K %.2f = %.2f, 10 yr stat %.2f (+) K "
+                         "%.2f = %.2f; K (10 yr) = shape-fit %.2f (+) "
+                         "response-MC %.2f (+) prior-spread %.2f"
+                         % (best["d10"], len(cand), len(pts),
+                            fit10["params"][1],
+                            fit10["params"][2], fit10["chi2"], fit10["ndof"],
+                            " AT BOUND" if fit10["at_bound"] else "",
+                            100 * best["e1_stat"] / b1,
+                            100 * best["e1_k"] / b1, 100 * best["e1"] / b1,
+                            100 * best["e10_stat"] / b10,
+                            100 * best["e10_k"] / b10,
+                            100 * best["e10"] / b10,
+                            100 * fit10["k_fit_rel"][bb],
+                            100 * fit10["k_mc_rel"][bb],
+                            100 * fit10["k_prior_rel"][bb]))
+                # no goodness-of-fit penalty enters the prior spread, so
+                # say how well each alternative actually fits: where its
+                # chi2 is far worse than the prior's, the spread is an
+                # over-estimate of the residual (recopseudo.fold_shape_fit)
+                extra += ("; prior fits (10 yr) chi2/ndf: %s = %.3g/%d, %s"
+                          % (prior_name, fit10["chi2"], fit10["ndof"],
+                             ", ".join("%s = %.3g/%d" % (nm, c2,
+                                                         fit10["ndof"])
+                                       for nm, c2 in zip(alt_names,
+                                                         fit10["alt_chi2"]))))
             summary7.append(
                 "Q2=%.3g: %d points; best x=%.3g Delta=%+.4f +- %.4f (1yr) "
-                "+- %.4f (10yr), purity %.2f"
+                "+- %.4f (10yr), purity %.2f%s"
                 % (q2s, len(pts), best["x"], best["delta_c"], best["e1"],
-                   best["e10"], best["purity"]))
+                   best["e10"], best["purity"], extra))
     np.atleast_1d(axes)[0].set_ylabel(
         r"$x\,\Delta(x, Q^2)$ per nucleon  $[\times 10^{-3}]$", fontsize=9)
     np.atleast_1d(axes)[0].legend(fontsize=7, loc="lower left")
+    if folded:
+        method = (r"$\hat\Delta=\hat A\,K$, $K$ from a 3-parameter "
+                  r"$\Delta(x)$ shape fitted THROUGH the response "
+                  r"(prior %s)" % prior_name)
+        errs = "stat. (+) shape-fit (+) response-MC (+) prior spread"
+    else:
+        method = (r"$\hat\Delta=\hat A\,K$, $K$ = model bin-centering "
+                  r"with migration")
+        errs = "stat. only"
     fig.suptitle(
         r"Reconstructed-level $\Delta(x,Q^2)$ extraction (7R), %s, "
-        r"$P_{zz}=%.2f$: $\hat\Delta=\hat A\,K$, $K$ = model bin-centering "
-        r"with migration" "\n%s; spin-state ratio estimator; dilution 1/3 incl.; "
-        "stat. only; area = S–S moment $-0.012\\,\\alpha_s/3$"
-        % (config.label(), plan.pzz_true, ymeth), fontsize=9.5)
+        r"$P_{zz}=%.2f$: %s"
+        "\n%s; spin-state ratio estimator; dilution 1/3 incl.; "
+        "%s; area = S–S moment $-0.012\\,\\alpha_s/3$"
+        % (config.label(), plan.pzz_true, method, ymeth, errs), fontsize=9.5)
     fig.tight_layout(rect=(0, 0, 1, 0.88))
     out = outdir / ("money_delta_extracted_reco_6Li%s.png" % suffix)
     fig.savefig(out, dpi=140)
     print("wrote", out)
     for line in summary7:
         print(line)
+
+    # --- bin-centering closure scan (plans/08 A6) --------------------------
+    if args.unfold_scan:
+        print("\nBin-centering closure: the SAME noise-free pseudo-data "
+              "(generated with %s, exact expected counts through the ratio "
+              "fit) corrected with each of the repository's Delta shapes, "
+              "bin-by-bin K against the folded shape fit.  Rows are the "
+              "residual bias of Delta_hat against the injected truth at the "
+              "bin centre; the prior=%s rows are the closure floor of the "
+              "chain itself.  Common random numbers throughout (one "
+              "response, one data set)." % (args.delta_model,
+                                            args.delta_model))
+        priors = {nm: make_prior(nm) for nm in dm.available()}
+        def row(lab, vals, fmt="%+7.2f"):
+            return ("  %-26s" % lab) + "".join((fmt + " ") % v for v in vals)
+
+        spot_k = {}
+        for q2s in q2_slices:
+            sbins, plotted = [], []
+            for i0 in range(0, xe.size - 2, 2):
+                xc = np.sqrt(xe[i0] * xe[i0 + 2])
+                mask = resp.mask_reco(xe[i0], xe[i0 + 2], q2s / 1.6, q2s * 1.6)
+                if mask.sum() < 50:
+                    continue
+                summ = resp.bin_summary(xe[i0], xe[i0 + 2], q2s / 1.6,
+                                        q2s * 1.6, cat_plus)
+                exact = rp.measure_inclusive(resp, plan, lumi1_pb, mask,
+                                             poisson=False, phi_eff=phi_eff,
+                                             lumi_assumed=lumi_assumed)
+                sbins.append({"x": xc, "q2": q2s, "mask": mask,
+                              "amp": exact["amp"], "err": exact["err"],
+                              "summ": summ})
+                plotted.append(bool(kinematic_mask(xc, q2s, s))
+                               and exact["n"] >= 1e3 and exact["err"] <= 8e-3
+                               and abs(summ["a_reco_bin"]) >= 1e-5)
+            xs = np.array([b["x"] for b in sbins])
+            amps = np.array([b["amp"] for b in sbins])
+            e1 = np.array([b["err"] for b in sbins])
+            keep = np.array(plotted)
+            f1s = resp.f1_center(xs, np.full_like(xs, q2s))
+            truth = np.asarray(model(xs, np.full_like(xs, q2s), f1s), float)
+            print("\n Q2 = %.3g GeV^2: %d bins fitted, %d plotted "
+                  "(x = %.2e to %.2e)"
+                  % (q2s, len(sbins), int(keep.sum()), xs.min(), xs.max()))
+            print(row("x centre", xs, "%7.1e"))
+            print(row("plotted", keep.astype(int), "%7d"))
+            print(row("stat err 1 yr [%]", 100 * e1 / np.abs(amps)))
+            print(row("stat err 10 yr [%]", 100 * e1 / np.abs(amps)
+                      * np.sqrt(lumi1_pb / lumi10_pb)))
+            k_folded = {}
+            for nm, pri in sorted(priors.items()):
+                kbin = np.array([np.asarray(pri(b["x"], q2s, f), float)
+                                 / resp.fold(pri, b["mask"], cat_plus)
+                                 for b, f in zip(sbins, f1s)])
+                bias = amps * kbin / truth - 1.0
+                print(row("%-9s K bin-by-bin" % nm, 100 * bias)
+                      + " | max %.1f%% (plotted)"
+                      % (100 * np.max(np.abs(bias[keep]))))
+                fit = rp.fold_shape_fit(resp, cat_plus, sbins, pri)
+                bias = amps * fit["k"] / truth - 1.0
+                print(row("%-9s folded fit" % nm, 100 * bias)
+                      + " | max %.1f%% (plotted), chi2/ndf = %.3g/%d"
+                      % (100 * np.max(np.abs(bias[keep])), fit["chi2"],
+                         fit["ndof"]))
+                if nm == args.delta_model:
+                    print(row("  K response-MC err [%]",
+                              100 * fit["k_mc_rel"]))
+                print(row("  K shape-fit err [%]", 100 * fit["k_fit_rel"]))
+                k_folded[nm] = fit["k"]
+                spot_k[(q2s, nm)] = fit["shape"]
+            # what --unfold folded puts in the bar as the third K error,
+            # printed here against the folded-fit rows it has to cover:
+            # the spread of K over the family, seen from each prior
+            for nm in sorted(priors):
+                sprd = np.max([np.abs(k_folded[o] / k_folded[nm] - 1.0)
+                               for o in priors if o != nm], axis=0)
+                print(row("%-9s K prior-spread [%%]" % nm, 100 * sprd)
+                      + " | max %.1f%% (plotted)"
+                      % (100 * np.max(sprd[keep])))
+        # the F5 comparison: the same K spread at the four sweet spots
+        print("\n Sweet spots (code review F5, same convention): "
+              "K(%s)/K(prior) - 1 [%%], the model dependence of the "
+              "bin-centering itself" % args.delta_model)
+        edges4 = [superbin_edges(proj, i, j) for _x, _q2, i, j in spots]
+        q2c = [round(q2, 3) for _x, q2, _i, _j in spots]
+        xc4 = [xsp for xsp, _q2, _i, _j in spots]
+        f1_4 = resp.f1_center(np.array(xc4), np.array(q2c))
+        for nm in sorted(priors):
+            if nm == args.delta_model:
+                continue
+            for lab, shp in (("K bin-by-bin", None), ("folded fit", "fit")):
+                out = []
+                for e, xsp, q2sp, f1sp in zip(edges4, xc4, q2c, f1_4):
+                    mask = resp.mask_reco(*e)
+                    ref = priors[args.delta_model] if shp is None else \
+                        spot_k[(q2sp, args.delta_model)]
+                    alt_s = priors[nm] if shp is None else spot_k[(q2sp, nm)]
+                    k_ref = (float(ref(xsp, q2sp, f1sp))
+                             / resp.fold(ref, mask, cat_plus))
+                    k_alt = (float(alt_s(xsp, q2sp, f1sp))
+                             / resp.fold(alt_s, mask, cat_plus))
+                    out.append(100 * (k_ref / k_alt - 1.0))
+                print(row("%-9s %s" % (nm, lab), out))
 
     # --- systematics scan --------------------------------------------------
     if args.syst_scan:

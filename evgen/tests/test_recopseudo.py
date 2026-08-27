@@ -480,3 +480,360 @@ def test_t_floor_weights_leave_the_fit_unbiased():
                               a_t_func=a_t, u1=0.05, u2=0.02, poisson=False)
     assert fit["a_t"] == pytest.approx(fit["truth"]["a_t"], rel=1e-4)
     assert fit["a_e"] == pytest.approx(0.010, rel=1e-4)
+
+
+# --- the forward-folded response replaces the bin-by-bin K (plans/08 A6) ----
+
+def _truth_delta(x, q2, f1):
+    """The fixture's injected shape, interpretation A of the repository's
+    ansatz: Delta = scale * F1(x, Q2) * x^0.3 (1-x)^4."""
+    return toy_delta_gluon(x, q2, f1, scale=3e-2)
+
+
+def _prior_delta(x, q2, f1):
+    """Interpretation B of the same ansatz -- the same x shape WITHOUT
+    the F1 factor (delta_models module docstring).  A and B is the
+    repository's own Delta ambiguity, so it is the wrong prior the
+    closure tests below correct with."""
+    x = np.asarray(x, dtype=float)
+    return 1e-2 * x ** 0.3 * (1.0 - x) ** 4
+
+
+def _slice_bins(resp, cat, q2lo, q2hi, n_min=50):
+    """Every x bin of one Q2 slice with enough response MC, as the bin
+    dicts fold_shape_fit consumes (amplitude = the exact reco-bin one)."""
+    xe = resp.sampler.proj.x_edges
+    out = []
+    for i in range(xe.size - 1):
+        mask = resp.mask_reco(xe[i], xe[i + 1], q2lo, q2hi)
+        if mask.sum() < n_min:
+            continue
+        summ = resp.bin_summary(xe[i], xe[i + 1], q2lo, q2hi, cat)
+        if not np.isfinite(summ["a_reco_bin"]):
+            continue
+        out.append({"mask": mask, "x": np.sqrt(xe[i] * xe[i + 1]),
+                    "q2": np.sqrt(q2lo * q2hi), "amp": summ["a_reco_bin"],
+                    "err": 0.02 * abs(summ["a_reco_bin"]), "summ": summ})
+    return out
+
+
+def test_amplitude_is_exactly_linear_in_delta(response):
+    """dA/dDelta against the published master formula, written out here
+    from the paper rather than taken from the code: for the transverse
+    alignment axis of the flip plan,
+
+        A = a_2/P_zz = -[(1-y)/y^2] <c_eff> sin^2(theta_S) Delta / D_phi,
+        D_phi = F1 + (1-y)/(x y^2) F2,  c_eff(m) = 3 m^2 - 2 for J = 1
+
+    (Hoodbhoy-Jaffe-Manohar NPB 312:571 (1989) Eq. (30); the same
+    normalization as polli_fastsim.asymmetries.a_cos2phi).  Delta appears
+    linearly and nowhere else, so the derivative is Delta-independent and
+    the forward fold is exact."""
+    sampler, resp = response
+    cat = bk.tensor_flip_plan(0.6).categories[0]
+    x, q2 = sampler.x_cells, sampler.q2_cells
+    y = q2 / (sampler.s * x)
+    kern = sampler.kernel
+    f1 = kern.nf2.f1a(x, q2) / kern.ion.A
+    f2 = kern.nf2.f2a(x, q2) / kern.ion.A
+    d_phi = f1 + (1.0 - y) / (x * y * y) * f2
+    c_eff = sum(p * (3.0 * m * m - 2.0)
+                for p, m in zip(cat.populations, (-1.0, 0.0, 1.0)))
+    st2 = np.sin(cat.theta_s) ** 2
+    hand = (-(1.0 - y) / (y * y) * c_eff * st2 / d_phi
+            / float(cat.moments()[1]))
+    np.testing.assert_allclose(resp.delta_response(cat), hand, rtol=1e-12)
+    # and the per-event amplitude the response actually uses is that
+    # derivative times the model, to float roundoff
+    model = _truth_delta
+    np.testing.assert_allclose(
+        (resp.delta_response(cat) * resp.delta_cells(model))[resp.cell],
+        resp.amplitude_per_event(cat), rtol=1e-12)
+
+
+def test_fold_reproduces_the_reco_bin_amplitude_of_any_model(response):
+    """The identity that makes `fold` a drop-in for the bin-by-bin K:
+    folding the model the response was built from returns that bin's
+    a_reco_bin, and folding a DIFFERENT model returns what an independent
+    response built with THAT model measures -- the same events, the same
+    smearing, only the structure function changed."""
+    sampler, resp = response
+    cat = bk.tensor_flip_plan(0.6).categories[0]
+    model = _truth_delta
+    for edges in ((0.01, 0.03, 1.0, 3.0), (0.03, 0.1, 2.0, 10.0),
+                  (0.1, 0.3, 5.0, 50.0)):
+        summ = resp.bin_summary(*edges, cat)
+        mask = resp.mask_reco(*edges)
+        assert resp.fold(model, mask, cat) == pytest.approx(
+            summ["a_reco_bin"], rel=1e-12)
+    # an independent response whose kernel carries 3.7 x the same Delta:
+    # identical events (same seed, Delta does not enter the sampling of
+    # the response), so its reco-bin amplitude must be exactly 3.7 x
+    other = InclusiveKernel(
+        beams.LI6, b1_func=toy_b1,
+        delta_func=lambda x, q2, f1: 3.7 * toy_delta_gluon(x, q2, f1,
+                                                           scale=3e-2))
+    smp2 = InclusiveSampler(other, CONFIG, rp.generator_scenario(
+        fom.Scenario(lumi_fb_per_nucleon=10.0, pol_ion_tensor=0.6)),
+        nx=20, nq2=15, x_range=(3e-3, 0.5), q2_range=(0.7, 100.0))
+    resp2 = rp.RecoResponse(smp2, rp.RecoModel(), n_mc_per_cell=300,
+                            rng=np.random.default_rng(1))
+    scaled = lambda x, q2, f1: 3.7 * model(x, q2, f1)  # noqa: E731
+    for edges in ((0.01, 0.03, 1.0, 3.0), (0.03, 0.1, 2.0, 10.0)):
+        assert resp.fold(scaled, resp.mask_reco(*edges), cat) == \
+            pytest.approx(resp2.bin_summary(*edges, cat)["a_reco_bin"],
+                          rel=1e-12)
+
+
+def _stratified_bootstrap_spread(resp, model, mask, cat, nrep=600, seed=99):
+    """sigma of `fold` from resampling the response IN EVERY SAMPLER CELL
+    -- the same variance `fold_mc_error` computes by the delta method,
+    derived instead by resampling, and written here from the definition
+    of the response's sampling (`RecoResponse.__init__`: n_c independent
+    draws in cell c, of which only some reconstruct into the bin) rather
+    than from the estimator under test.
+
+    The n_c draws of a cell are resampled with equal probabilities, the
+    out-of-bin ones included -- that is the whole content of the
+    stratification, and an estimator that resampled only the IN-BIN
+    events would miss the dominant term wherever a bin takes a small
+    fraction of a cell.
+    """
+    rng = np.random.default_rng(seed)
+    ncell = resp.sampler.xsec_flat.size
+    n_c = np.bincount(resp.cell, minlength=ncell)
+    u = (resp.w * resp.eff)[mask]
+    a = resp.delta_response(cat) * resp.delta_cells(model)
+    z = u * resp.dil[mask] * a[resp.cell[mask]]
+    cells = resp.cell[mask]
+    num = np.zeros(nrep)
+    den = np.zeros(nrep)
+    for c in np.unique(cells):
+        j = np.flatnonzero(cells == c)
+        p = np.full(j.size + 1, 1.0 / n_c[c])
+        p[-1] = 1.0 - j.size / n_c[c]           # the draws outside the bin
+        m = rng.multinomial(n_c[c], p, size=nrep)[:, :j.size]
+        den += m.dot(u[j])
+        num += m.dot(z[j])
+    return float((num / den).std(ddof=1))
+
+
+def test_fold_mc_error_is_the_stratified_bootstrap_of_the_same_response(
+        response):
+    """The response MC error is the headline new term in the 7R bars
+    (plans/08 A6), so pin its ALGEBRA, not just its order of magnitude:
+    the delta-method variance must equal a cell-by-cell resampling of the
+    same response to the bootstrap's own precision (600 replicas know a
+    sigma to 2.9%).
+
+    Two bins, one of which takes only ~5% of each cell it touches: there
+    the stratification index matters, and an estimator that used the
+    in-bin count instead of the cell's draw count n_c comes out 11x too
+    small (0.087 of the bootstrap against 0.98 for the shipped one).
+    """
+    sampler, resp = response
+    cat = bk.tensor_flip_plan(0.6).categories[0]
+    model = _truth_delta
+    for edges in ((0.03, 0.1, 2.0, 10.0), (0.03, 0.04, 2.0, 3.0)):
+        mask = resp.mask_reco(*edges)
+        boot = _stratified_bootstrap_spread(resp, model, mask, cat)
+        est = resp.fold_mc_error(model, mask, cat)
+        assert 0.90 < est / boot < 1.12, (edges, est, boot)
+
+
+def test_fold_mc_error_matches_the_spread_over_response_seeds(response):
+    """The same error against an OUTSIDE measurement: the scatter of
+    `fold` over independent response samples.  16 seeds determine that
+    scatter itself only to 18%, so this cannot be tight -- it is the
+    check that the bootstrap above is bootstrapping the right thing, and
+    the window still excludes the factor-two mis-normalizations
+    (est/spread measured 1.07 and 1.12 on the two bins)."""
+    sampler, resp = response
+    cat = bk.tensor_flip_plan(0.6).categories[0]
+    model = _truth_delta
+    reps = [rp.RecoResponse(sampler, rp.RecoModel(), n_mc_per_cell=300,
+                            rng=np.random.default_rng(700 + k))
+            for k in range(16)]
+    for edges in ((0.03, 0.1, 2.0, 10.0), (0.03, 0.04, 2.0, 3.0)):
+        vals = np.array([r.fold(model, r.mask_reco(*edges), cat)
+                         for r in reps])
+        est = np.mean([r.fold_mc_error(model, r.mask_reco(*edges), cat)
+                       for r in reps])
+        spread = vals.std(ddof=1)
+        assert 0.7 < est / spread < 1.5, (edges, est, spread)
+        assert 1e-4 < est / abs(vals.mean()) < 0.05
+
+
+def test_folded_fit_is_the_bin_by_bin_K_when_the_prior_is_the_truth(response):
+    """Opt-in must not move anything: with the injected shape as prior the
+    tilt sits at zero and K is the published bin-by-bin factor."""
+    sampler, resp = response
+    cat = bk.tensor_flip_plan(0.6).categories[0]
+    model = _truth_delta
+    bins = _slice_bins(resp, cat, 2.0, 10.0)
+    assert len(bins) >= 5
+    fit = rp.fold_shape_fit(resp, cat, bins, model)
+    assert abs(fit["params"][1]) < 1e-3 and abs(fit["params"][2]) < 1e-3
+    assert fit["chi2"] < 1e-12
+    for b, k in zip(bins, fit["k"]):
+        f1c = resp.f1_center(b["x"], b["q2"])
+        assert k == pytest.approx(float(model(b["x"], b["q2"], f1c))
+                                  / b["summ"]["a_reco_bin"], rel=2e-3)
+
+
+def test_folded_fit_recovers_the_truth_from_a_wrong_prior(response):
+    """The closure that matters (code review F5): noise-free pseudo-data
+    generated with Delta = scale F1 x^0.3 (1-x)^4 (interpretation A),
+    corrected with a prior that has no F1 factor (interpretation B) --
+    the repository's own ansatz ambiguity.  The bin-by-bin K inherits the
+    prior's shape error; the folded fit measures the shape from the data
+    and must beat it by a large factor."""
+    sampler, resp = response
+    cat = bk.tensor_flip_plan(0.6).categories[0]
+    model = _truth_delta
+    prior = _prior_delta
+    bins = _slice_bins(resp, cat, 2.0, 10.0)
+    xs = np.array([b["x"] for b in bins])
+    q2s = np.array([b["q2"] for b in bins])
+    truth = np.asarray(model(xs, q2s, resp.f1_center(xs, q2s)), dtype=float)
+    amps = np.array([b["amp"] for b in bins])
+
+    k_bin = np.array([float(prior(b["x"], b["q2"], 0.0))
+                      / resp.fold(prior, b["mask"], cat) for b in bins])
+    bias_bin = amps * k_bin / truth - 1.0
+    fit = rp.fold_shape_fit(resp, cat, bins, prior)
+    bias_fit = amps * fit["k"] / truth - 1.0
+    # measured on this fixture (purity 0.32-0.56, 20 x bins): the prior's
+    # K is wrong by -25% at the low-x edge and +82% at the high-x edge,
+    # the fitted shape by -10% / +8%, and by <3% over the bulk
+    assert np.max(np.abs(bias_bin)) > 0.5           # the prior does hurt
+    assert np.max(np.abs(bias_fit)) < 0.25 * np.max(np.abs(bias_bin))
+    assert np.max(np.abs(bias_fit)) < 0.12
+    assert np.median(np.abs(bias_fit)) < 0.4 * np.median(np.abs(bias_bin))
+    # K is a ratio of the shape to its own fold, so the fitted
+    # normalization cannot enter it
+    big = rp.fold_shape_fit(resp, cat, bins,
+                            lambda x, q2, f1: 137.0 * prior(x, q2, f1))
+    np.testing.assert_allclose(big["k"] / fit["k"], 1.0, rtol=1e-6)
+
+
+def test_prior_spread_covers_the_residual_the_tilt_cannot_absorb(response):
+    """The folded fit removes most of the prior dependence but not all of
+    it -- the tilt cannot reproduce the F1(x, Q2) factor that separates
+    interpretations A and B -- so the 7R bar has to carry what is left.
+
+    The claim under test is that refitting from the other shapes of the
+    family and taking the spread of K is a bound on that residual: the
+    bias is measured here against the INJECTED truth, which the fit never
+    sees, and the spread is built from K alone."""
+    sampler, resp = response
+    cat = bk.tensor_flip_plan(0.6).categories[0]
+    model, prior = _truth_delta, _prior_delta
+    bins = _slice_bins(resp, cat, 2.0, 10.0)
+    xs = np.array([b["x"] for b in bins])
+    q2s = np.array([b["q2"] for b in bins])
+    truth = np.asarray(model(xs, q2s, resp.f1_center(xs, q2s)), dtype=float)
+    amps = np.array([b["amp"] for b in bins])
+
+    plain = rp.fold_shape_fit(resp, cat, bins, prior)
+    assert np.all(plain["k_prior_rel"] == 0.0)       # inert by default
+    assert plain["alt_chi2"] == []
+    np.testing.assert_allclose(plain["k_rel_all"], plain["k_rel"], rtol=1e-12)
+
+    fit = rp.fold_shape_fit(resp, cat, bins, prior, alt_bases=(model,))
+    np.testing.assert_array_equal(fit["k"], plain["k"])   # K itself unmoved
+    bias = amps * fit["k"] / truth - 1.0
+    assert np.max(np.abs(bias)) > 0.05               # there IS a residual
+    assert np.all(fit["k_prior_rel"]
+                  >= np.abs(bias) / (1.0 + np.abs(bias)) - 1e-9)
+    assert np.all(fit["k_rel_all"] >= fit["k_rel"])
+    # the alternative here IS the shape that generated the amplitudes, so
+    # its own folded fit is the closure fit and the data prefer it
+    assert len(fit["alt_chi2"]) == 1
+    assert fit["alt_chi2"][0] < 1e-6 * fit["chi2"]
+
+
+def test_folded_fit_does_not_oscillate(response):
+    """The conditioning guard (plans/08 A6 (ii)): a matrix unfolding of
+    this response oscillates to +-30% on noise-free pseudo-data because
+    the migration matrix is ill-conditioned at purity ~0.6.  A bounded
+    two-parameter tilt cannot: the residual must stay smooth in x, with
+    no sign-alternating structure and no excursion beyond the bounds."""
+    sampler, resp = response
+    cat = bk.tensor_flip_plan(0.6).categories[0]
+    model = _truth_delta
+    prior = _prior_delta
+    bins = _slice_bins(resp, cat, 2.0, 10.0)
+    xs = np.array([b["x"] for b in bins])
+    q2s = np.array([b["q2"] for b in bins])
+    truth = np.asarray(model(xs, q2s, resp.f1_center(xs, q2s)), dtype=float)
+    amps = np.array([b["amp"] for b in bins])
+    fit = rp.fold_shape_fit(resp, cat, bins, prior)
+    assert not fit["at_bound"]
+    bias = amps * fit["k"] / truth - 1.0
+    k_bin = np.array([float(prior(b["x"], b["q2"], 0.0))
+                      / resp.fold(prior, b["mask"], cat) for b in bins])
+    rough = np.max(np.abs(np.diff(amps * k_bin / truth - 1.0)))
+    assert np.max(np.abs(np.diff(bias))) < 0.05     # smooth, bin to bin
+    assert np.max(np.abs(np.diff(bias))) < 0.2 * rough
+    signs = np.sign(np.diff(bias))
+    assert np.sum(signs[1:] != signs[:-1]) <= 1     # monotone, not wobbling
+    assert np.all(np.isfinite(fit["k_err"])) and np.all(fit["k_err"] >= 0.0)
+
+
+def test_delta_from_amplitude_keeps_the_published_path(response):
+    """The new keywords must be inert when unused, and additive when
+    used: same K, same error, plus the K error in quadrature."""
+    sampler, resp = response
+    plan = bk.tensor_flip_plan(0.6)
+    mask = resp.mask_reco(0.03, 0.1, 2.0, 10.0)
+    summ = resp.bin_summary(0.03, 0.1, 2.0, 10.0, plan.categories[0])
+    exact = rp.measure_inclusive(resp, plan, 1.0e4, mask, poisson=False)
+    old = rp.delta_from_amplitude(exact, summ, delta_center=-0.05)
+    assert old["delta"] == exact["amp"] * (-0.05 / summ["a_reco_bin"])
+    assert old["err"] == exact["err"] * abs(-0.05 / summ["a_reco_bin"])
+    same = rp.delta_from_amplitude(exact, summ, -0.05,
+                                   k_conv=old["k"], k_rel_err=0.0)
+    assert same["delta"] == old["delta"] and same["err"] == old["err"]
+    with_k = rp.delta_from_amplitude(exact, summ, -0.05, k_conv=old["k"],
+                                     k_rel_err=0.03)
+    assert with_k["delta"] == old["delta"]
+    assert with_k["err"] == pytest.approx(
+        np.hypot(old["err"], 0.03 * abs(with_k["delta"])), rel=1e-12)
+    assert with_k["err"] > old["err"]
+
+
+def test_shape_fit_error_is_the_delta_chi2_band(response):
+    """The K error the folded fit propagates comes from the curvature of
+    the profiled chi2; check it against the textbook definition it stands
+    for -- the spread of K over every shape within Delta chi2 <= 1,
+    scanned by brute force."""
+    sampler, resp = response
+    cat = bk.tensor_flip_plan(0.6).categories[0]
+    prior = _prior_delta
+    bins = _slice_bins(resp, cat, 2.0, 10.0)
+    fit = rp.fold_shape_fit(resp, cat, bins, prior, mc_error=False)
+    n0, c1, c2 = fit["params"]
+    amp = np.array([b["amp"] for b in bins])
+    wgt = 1.0 / np.array([b["err"] for b in bins]) ** 2
+    kers = [resp.fold_kernel(b["mask"], cat) for b in bins]
+    xs = np.array([b["x"] for b in bins])
+    q2s = np.array([b["q2"] for b in bins])
+    base_c = np.asarray(prior(xs, q2s, 0.0), dtype=float)
+    lo, hi = [], []
+    sig = np.sqrt(np.diag(fit["cov"]))       # scan window only; the band
+    for d1 in np.linspace(-2.5 * sig[0], 2.5 * sig[0], 25):   # itself comes
+        for d2 in np.linspace(-2.5 * sig[1], 2.5 * sig[1], 25):  # from chi2
+            shp = rp.tilted_shape(prior, fit["x_ref"], (1.0, c1 + d1, c2 + d2))
+            fold = np.array([resp.fold(shp, b["mask"], cat, kernel=k)
+                             for b, k in zip(bins, kers)])
+            norm = float((amp * fold * wgt).sum() / (fold * fold * wgt).sum())
+            chi2 = float((wgt * (amp - norm * fold) ** 2).sum())
+            if chi2 - fit["chi2"] <= 1.0:
+                k = (base_c * np.exp((c1 + d1) * np.log(xs / fit["x_ref"])
+                                     + (c2 + d2) * np.log(1 - xs)) / fold)
+                lo.append(k)
+                hi.append(k)
+    band = 0.5 * (np.max(hi, axis=0) - np.min(lo, axis=0)) / np.abs(fit["k"])
+    assert len(lo) > 20
+    np.testing.assert_allclose(fit["k_fit_rel"], band, rtol=0.25, atol=1e-4)
