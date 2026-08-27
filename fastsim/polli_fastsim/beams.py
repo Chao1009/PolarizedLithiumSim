@@ -51,6 +51,61 @@ NUCLEUS_MASS = {
 #: Proton beam energies of the three reference EIC configurations [GeV].
 PROTON_CONFIG_ENERGIES = (41.0, 100.0, 275.0)
 
+#: How the ring actually achieves the revolution-frequency match, and the
+#: Lorentz-factor windows it reaches.  EPIOS (arXiv:2510.10794) pp. 12-13,
+#: verbatim: "their revolution frequencies have to be equal.  This
+#: synchronization is accomplished by applying a radial shift of up to
+#: +-20 mm in the arcs, which facilitates a range of the Lorentz factor of
+#: 118 < gamma < 293.  To allow for even lower ion energies, a 'Blue' arc
+#: between IR12 and IR2 will be utilized as a bypass.  The average radius of
+#: this arc is about 90 cm smaller than that of the corresponding 'Yellow'
+#: arc, which reduces the circumference of the HSR by roughly 90 cm.  The
+#: resulting circumference then corresponds to a Lorentz factor of
+#: gamma = 43.5."
+#:
+#: The two numbers are exactly the species menu at TOP energies -- gold at
+#: 110 GeV/u is gamma = 118.1 and a 275 GeV proton is gamma = 293.1 -- so the
+#: window is what the ion programme needs, not a hard reachability bound.
+#: The shift is quoted as "up to" +-20 mm and spending all of it covers
+#: ~200 mm of circumference against the 115 mm that 118 -> 293 requires, so
+#: there is headroom below 118 that EPIOS does not quantify.
+#:
+#: KNOWN CONFLICT: Yellow Report Table 10.1 runs 100 GeV protons, i.e.
+#: gamma = 106.6, which falls in NEITHER stated window.  The 41 GeV
+#: (gamma 43.7) and 275 GeV (gamma 293.1) anchors are both inside them, and
+#: YR Table 10.2's gold at 41 GeV/u (gamma 44.0) sits in the bypass window
+#: with the 41 GeV proton -- which is the independent confirmation that ions
+#: are gamma-matched.  This module stays anchored on the Yellow Report's
+#: three configurations because every beam parameter table is indexed by
+#: them; `tools/consistency_check.py` flags the 100 GeV point rather than
+#: silently choosing between the two documents.
+EPIOS_GAMMA_BYPASS = 43.5              # "Blue" arc bypass, -90 cm
+EPIOS_GAMMA_SHIFT_RANGE = (118.0, 293.0)   # +-20 mm radial shift in the arcs
+
+
+def gamma_of(proton_energy):
+    """Lorentz factor of the ring at the configuration whose proton energy
+    is `proton_energy` [GeV].  Species-independent: it is a property of the
+    revolution frequency, which is why ions are gamma-matched."""
+    return ((proton_energy ** 2 + PROTON_MASS ** 2) ** 0.5) / PROTON_MASS
+
+
+def epios_window_of(proton_energy, shift_gamma=2.7, tol=0.005):
+    """Which EPIOS synchronisation window a configuration falls in:
+    "bypass", "radial-shift", or None if neither (see the note above).
+
+    `tol` is a relative tolerance on the window edges, because EPIOS quotes
+    them rounded: the 275 GeV proton is gamma = 293.1 against a stated 293,
+    and gold's 110 GeV/u top is 118.1 against a stated 118 -- both are the
+    endpoints the window was written to describe."""
+    g = gamma_of(proton_energy)
+    lo, hi = EPIOS_GAMMA_SHIFT_RANGE
+    if abs(g - EPIOS_GAMMA_BYPASS) <= shift_gamma:
+        return "bypass"
+    if lo * (1.0 - tol) <= g <= hi * (1.0 + tol):
+        return "radial-shift"
+    return None
+
 
 @dataclass(frozen=True)
 class Ion:

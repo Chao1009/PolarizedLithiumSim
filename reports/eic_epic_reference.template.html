@@ -124,6 +124,28 @@
     configuration, and therefore a different energy per nucleon than rigidity scaling would give.
   </div>
 
+  <p><b>How the ring actually does it</b>, verbatim from EPIOS pp. 12–13: <i>"their revolution
+  frequencies have to be equal. This synchronization is accomplished by applying a radial shift of
+  up to ±20 mm in the arcs, which facilitates a range of the Lorentz factor of</i> <b>118 &lt; γ &lt;
+  293</b><i>. To allow for even lower ion energies, a 'Blue' arc between IR12 and IR2 will be
+  utilized as a bypass. The average radius of this arc is about 90 cm smaller than that of the
+  corresponding 'Yellow' arc, which reduces the circumference of the HSR by roughly 90 cm. The
+  resulting circumference then corresponds to a Lorentz factor of</i> <b>γ = 43.5</b><i>."</i>
+  Those two numbers are exactly the species menu at <i>top</i> energies — gold at 110 GeV/u is
+  γ = 118.1 and a 275 GeV proton is γ = 293.1 — so the window describes what the ion programme
+  needs rather than a hard bound, and the shift is quoted as "up to".</p>
+
+  <div class="callout warm">
+    <b>A conflict this note records rather than resolves.</b> Yellow Report Table 10.1 runs
+    <b>100 GeV protons</b>, i.e. γ = 106.6, which falls in <i>neither</i> stated window. The 41 GeV
+    (γ = 43.7) and 275 GeV (γ = 293.1) anchors are both inside them, and Table 10.2's gold at
+    41 GeV/u (γ = 44.0) sits in the bypass window alongside the 41 GeV proton — which is the
+    independent confirmation that ions are γ-matched. This programme stays anchored on the Yellow
+    Report's three configurations, because every beam-parameter table is indexed by them, and
+    <code>tools/consistency_check.py</code> flags the 100 GeV point so it stays visible. It is a
+    question for C-AD, not a repository error. <b>Status: unresolved between two EIC documents.</b>
+  </div>
+
   <p><b>The check that settles it.</b> Yellow Report Table 10.2 lists gold at <b>41 GeV/u</b>
   (γ = 44.02) against the 41 GeV proton's γ = 43.70 — equal to 0.7%, which is exactly the u versus
   m<sub>p</sub> mass difference. Rigidity scaling would have put gold at 41 × 79/197 = 16.4 GeV/u.
@@ -196,6 +218,14 @@
   <p style="font-size:8pt;color:var(--ink-2);margin-top:-2pt">Table 3 — YR Table 10.2, gold rows.
   The two cooling scenarios differ by a factor 2.8 horizontally at 110 GeV/u, which is a reminder
   that the cooling choice is worth as much as the optics choice.</p>
+
+  <p><b>Cooling.</b> The baseline is conventional electron cooling <b>at injection</b>, operationally
+  demonstrated at LEReC. EPIOS p. 13 is explicit that store cooling is not in it: <i>"At a later
+  stage, cooling at collision energies could be added"</i>, worth a factor two in average
+  luminosity on a Coherent electron Cooling scheme. <b>So the emittance grows under intrabeam
+  scattering through the fill with nothing fighting it</b>, and any argument that a low-intensity
+  beam settles to a colder <i>equilibrium</i> has no equilibrium to settle to. <b>Status: design
+  value; the store-cooling upgrade is explicitly later-stage.</b></p>
 
   <p><b>Other hadron parameters</b> (EPIOS Table I, EIC column, design values): β* = 80 / 7.2 cm,
   RMS emittance 11 / 1 nm, bunch charge 11.0 nC, 1160 bunches, bunch length 6 cm, √s = 105 GeV,

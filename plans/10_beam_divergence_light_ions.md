@@ -64,6 +64,31 @@ ultrarelativistic, so the hadron **γ** is fixed by the ring circumference and
 the magnets supply whatever rigidity that γ demands, up to the 917.3 T·m cap.
 Ions are therefore **γ-matched**, not rigidity-scaled.
 
+**The mechanism, verbatim** (EPIOS pp. 12–13, added 2026-08-27): *"their
+revolution frequencies have to be equal. This synchronization is accomplished
+by applying a radial shift of up to ±20 mm in the arcs, which facilitates a
+range of the Lorentz factor of **118 < γ < 293**. To allow for even lower ion
+energies, a 'Blue' arc between IR12 and IR2 will be utilized as a bypass. The
+average radius of this arc is about 90 cm smaller than that of the
+corresponding 'Yellow' arc, which reduces the circumference of the HSR by
+roughly 90 cm. The resulting circumference then corresponds to a Lorentz
+factor of **γ = 43.5**."*
+
+Those two numbers are exactly the species menu at *top* energies — gold at
+110 GeV/u is γ = 118.1 and a 275 GeV proton is γ = 293.1 — so the window
+describes what the ion programme needs rather than a hard reachability bound,
+and the shift is quoted as "up to" ±20 mm.
+
+> **A conflict, recorded rather than resolved.** YR Table 10.1 runs 100 GeV
+> protons, i.e. γ = 106.6, which falls in *neither* stated window. The 41 GeV
+> (γ = 43.7) and 275 GeV (γ = 293.1) anchors are both inside them, and YR
+> Table 10.2's gold at 41 GeV/u (γ = 44.0) sits in the bypass window
+> alongside the 41 GeV proton — which is the independent confirmation that
+> ions are γ-matched. `beams.py` stays anchored on the Yellow Report's three
+> configurations because every beam-parameter table is indexed by them, and
+> `tools/consistency_check.py` flags the 100 GeV point so the conflict stays
+> visible. Resolving it is a question for C-AD.
+
 *The decisive check:* YR Table 10.2 lists **gold at 41 GeV/u** (γ = 44.02)
 against the 41 GeV proton's γ = 43.70 — equal to 0.7%, exactly the u vs m_p
 mass difference. Rigidity scaling would have put gold at 41 × 79/197 = 16.4
@@ -201,9 +226,17 @@ What remains to be asked is narrower and sharper than "what is σ_θ":
    species-sensitive number in the problem.
 
 ### D2 — which cooling scenario is the baseline for ion running · **C-AD**
-The two rows of YR Table 8.9 differ by ×47 in coherent acceptance at
-110 GeV/u. Without knowing which is planned, the programme cannot quote a
-projection at all.
+The two rows of YR Table 10.2 differ by a factor 2.8 in horizontal gold
+divergence. **Partly answered 2026-08-27:** EPIOS p. 13 states that the
+baseline is conventional electron cooling **at injection**, and that *"at a
+later stage, cooling at collision energies could be added"* on a Coherent
+electron Cooling scheme, worth a factor two in average luminosity. So the
+baseline has **no cooling at store** — the emittance grows under IBS through
+the fill with nothing fighting it, and any argument that a low-intensity
+lithium beam reaches a colder *equilibrium* has no equilibrium to reach.
+What remains open is the injection-cooler's reach for a light ion: the Low
+Energy Cooler is matched to the proton injection γ, and an A/Z = 2 ion at the
+same injection *rigidity* sits at roughly half of it.
 
 ### D3 — β* for light-ion running · **C-AD**
 The other half of σ_θ = √(ε_N/(βγ β*)), and the one that the

@@ -165,6 +165,29 @@ def _():
     return bad
 
 
+@check("sources: the configurations sit in EPIOS's synchronisation windows")
+def _():
+    """EPIOS pp. 12-13 gives the mechanism -- a +-20 mm radial shift covering
+    118 < gamma < 293, plus a 'Blue' arc bypass at gamma = 43.5.  Two of the
+    three Yellow Report configurations fall inside; the 100 GeV proton does
+    not, and that is a KNOWN CONFLICT between two EIC documents rather than
+    a repository error.  This check exists so the conflict stays visible and
+    so a NEW configuration cannot be added without noticing."""
+    from polli_fastsim import beams
+    bad = []
+    for e in beams.PROTON_CONFIG_ENERGIES:
+        w = beams.epios_window_of(e)
+        if w is None and e != 100.0:
+            bad.append("the %g GeV configuration (gamma %.1f) is in neither "
+                       "EPIOS window and is not the known 100 GeV conflict"
+                       % (e, beams.gamma_of(e)))
+        if w is not None and e == 100.0:
+            bad.append("the 100 GeV conflict has resolved (gamma %.1f now in "
+                       "%s) -- update the note in beams.py and plans/10"
+                       % (beams.gamma_of(e), w))
+    return bad
+
+
 # --- DRIFT -----------------------------------------------------------------
 
 STALE_ENERGY = re.compile(r"(?<![\d.])20\.5(?![\d])")

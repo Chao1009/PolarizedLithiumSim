@@ -509,18 +509,61 @@
     why they are plotted that way; what moves is only the marker labelled "you are here".
   </div>
 
-  <h2>7 · What to ask, and of whom — cheapest first</h2>
+  <h2>7 · Can the tag be recovered by tuning the beam and placing detectors?</h2>
+
+  <p>Asked properly, and answered by a dedicated feasibility study (2026-08-27). <b>The answer is
+  no as this programme is currently projected, and partly-yes only under four conditions that are
+  all open.</b> The corrected baseline is worse than §2 suggests: at the γ-matched energies and the
+  machine's own per-configuration divergence the coherent tagged fraction is <b>8.4×10⁻⁸</b> at
+  5 × 41, and every lever below multiplied together buys back ≈10⁵ against a shortfall of 5×10⁶.</p>
 
   <table>
-    <tr><th>#</th><th>question</th><th>owner</th><th>why it decides something</th></tr>
-    <tr><td>D1</td><td><b>Re-measure the pot aperture on the current <code>epic-main</code></b>, per optics, with the RF shields as they now stand.</td><td>this repository (plans/09 B1)</td><td><b>The highest ratio of conclusion-change to effort anywhere here.</b> One container run. Every aperture-conditional number depends on it, and the correction runs in opposite directions at the two ends (§6).</td></tr>
-    <tr><td>D2</td><td>What actually sets the 10σ retraction at IP6 — sensor survival, or machine protection and the collimation hierarchy? And what is σ<sub>x</sub> at z = 32.5 m for the <i>light-ion</i> optics?</td><td>C-AD / ePIC FF WG</td><td>A conversation, not an experiment. The first part decides whether any "rad-hard ⇒ closer" argument can work at all. The second is worth three orders of magnitude in coherent yield at top energy by itself: the repository's envelope implies 10σ<sub>x</sub> ≈ 22 mm while Jentsch's "1σ ~ 1 mm" implies ~10 mm.</td></tr>
-    <tr><td>D3</td><td>Per-optics R<sub>12</sub> and R<sub>34</sub>.</td><td>ePIC FF WG</td><td>R<sub>12</sub> = 30.6 m was measured for 18 × 275 only, which is why this note works in angle and quotes millimetres for that optics alone.</td></tr>
-    <tr><td>D4</td><td><b>Settle EICROC's input charge dynamic range in fC, and LGAD gain suppression at ~9 MIP.</b> A ⁶Li deposits ≈67 fC at gain 20; the chip is characterised at 12.5 fC. Then: can the existing AC-LGAD stack do Z-ID? A Geant4 study through all four layers with an EICROC front-end model, plus two numbers: the chip's <b>input charge dynamic range in fC</b>, and the sensor's <b>gain-suppression curve</b> at ~9 MIP.</td><td>ePIC FF WG / OMEGA-IJCLab / BNL AC-LGAD group</td><td><b>If the pot front end is MIP-ranged the ⁶Li clips and the incumbent's Z-ID is gone</b> — a far larger risk to the programme than any sensor comparison here. Then one person-month of Geant4 closes #19 either way (§4.1). Ask this before anything about nanowires.</td></tr>
-    <tr><td>D5</td><td>Two-hit topology for α + d: what fraction of breakup events put both fragments in acceptance, and how well does multiplicity separate them from an intact ⁶Li?</td><td>this repository</td><td>Free, already instrumented, 13–90 pixels of separation, and unexamined (§4.3).</td></tr>
-    <tr><td>D6</td><td>The x-moving layer and a staircase retraction near x = 0.</td><td>ePIC FF WG (A. Jentsch)</td><td>Where the ×60–×330 actually lives, and already being designed — <i>"Expect to have this finalized in the next 6-8 weeks"</i> (July 2025).</td></tr>
-    <tr><td>D7</td><td><i>Only if D4 says the LGAD cannot do it:</i> the α-versus-proton turn-on bias on the same wires.</td><td>ANL MEP</td><td>Costs them one plot from data they already hold, and kills the concept at zero cost if the α curve is not where √Q predicts. Be precise that it tests the √Q law, <b>not</b> z² at fixed β — the experiment that would test that is a relativistic light-ion beam on a 1–2 μm microwire, and this study should not be what motivates it.</td></tr>
+    <tr><th>lever</th><th>gain at 5 × 41</th><th>cost</th><th>confidence</th></tr>
+    <tr><td><b>Pot standoff 10σ → 8σ</b> (active edge)</td><td class="mono">×216</td><td>no luminosity; halo rate and an aperture hierarchy that does not exist yet</td><td><span class="status-part">medium</span> — RHIC ran pot 8σ / <i>active edge</i> 10σ; an 8σ active edge is 2σ beyond anything demonstrated</td></tr>
+    <tr><td><b>Two-ring β* de-squeeze</b>, factor F</td><td class="mono">×1.6×10⁵ at F = 3<br>×1.8×10⁶ at F = 25</td><td>L ∝ 1/F, <i>and</i> an equal ESR de-squeeze — a hadron-only raise multiplies ξ_p by F against a limit already at 0.015</td><td><span class="status-no">low</span> above F ≈ 10</td></tr>
+    <tr><td><b>Shrink the 16 mm blind block</b></td><td class="mono">×1 today; ×4.2 once F ≳ 5</td><td>a layout change already on ePIC's roadmap</td><td><span class="status-part">medium</span>, premise unresolved</td></tr>
+    <tr><td>Detector relocation along the FF line</td><td class="mono">≤ ×1.75, provably</td><td>—</td><td><span class="status-no">negligible</span></td></tr>
+    <tr><td>Lower beam energy</td><td class="mono">×1 — already exhausted</td><td>—</td><td>γ = 43.5 is the lowest the machine can collide at</td></tr>
+    <tr><td>Colder beam from low intensity</td><td class="mono"><b>negative</b></td><td>—</td><td><span class="status-no">drop it</span> — see below</td></tr>
+    <tr><td>Dispersive (rigidity) tagging at IP6</td><td class="mono"><b>unavailable</b></td><td>—</td><td><span class="status-no">drop it</span></td></tr>
   </table>
+
+  <div class="callout warm">
+    <b>Three levers that look promising and are not.</b>
+    <b>(i) The cold-beam argument is backwards.</b> HSR injection is at fixed <i>rigidity</i>, so an
+    A/Z = 2 ion injects at roughly half the proton's γ and carries ≈2.5× <i>more</i> space charge;
+    and EPIOS p. 13 says store cooling is a later-stage addition, so there is no cooling/IBS
+    equilibrium to settle into at all.
+    <b>(ii) Dispersive tagging at IP6 is 30–60× short.</b> The minimum detectable Δ(Bρ)/(Bρ) for a
+    p_T ≈ 0 fragment is 0.1 (Gamage <i>et al.</i>, arXiv:2105.13564, Table 1) against a coherent
+    signal at δ ≤ 1.7×10⁻³ — and YR §8.5.7 says <i>"it is not possible to instrument the beam pipe
+    further downstream than around 30 m in the current EIC design due to the crab cavities"</i>.
+    <b>(iii) The LHC 3σ precedent does not transfer.</b> TOTEM/ALFA's "3σ" is the pot <i>window</i>;
+    the silicon sat 4.8–5.4σ out, and those fills ran at ~3×10¹¹ protons total. The EIC's 10σ is
+    the sensor's inner edge. The right precedent is RHIC, in this tunnel: β* = 22 m with Roman Pots
+    in four dedicated stores in 2009, and a pot approach no closer than 8σ.
+  </div>
+
+  <p><b>The one column that closes</b> is not 5 × 41. At the top rigidity mode against a
+  1160-bunch 275 GeV electron fill, with F = 25 and an 8σ standoff, the projection reaches
+  δa_e ≈ 8×10⁻⁴ — a 12σ measurement of a 1% amplitude. Four conditions gate it and all four are
+  open: a ×25 two-ring de-squeeze; an 8σ active-edge standoff; proton-equivalent <i>lithium</i>
+  luminosity in a 1160-bunch fill, which nobody has published; and ⁶Li polarization survived to
+  γ = 147 with a species for which Siberian snakes do not work. At 5 × 41, even F = 25 with 8σ
+  gives 1.4σ — the configuration is luminosity-starved at 0.44×10³³.</p>
+
+  <p><b>And the energy ordering should not be bet on.</b> At published optics 5 × 41 beats the top
+  mode by five orders; the ordering crosses over near F ≈ 4–5, exactly where the evidence runs out,
+  and it is carried entirely by <i>proton</i> luminosities applied to a lithium beam. With a
+  species-limited luminosity the advantage vanishes.</p>
+
+  <p>The two questions for C-AD, in one email: <b>can IR6 be matched to a hadron β* raised ×3, ×10
+  and ×25 in both planes — with the ESR co-de-squeezed so ξ_p stays ≤ 0.015 — and what are the
+  resulting IP→pot phase advances?</b> And <b>what physically sets the 10σ retraction: the
+  collimation hierarchy, halo lifetime, or convention?</b> The published CDR high-acceptance β*
+  factors shrink monotonically toward low energy — ×5.21 at 18 × 275, ×1.49 at 10 × 100, and
+  <b>×1.00 at 5 × 41</b>, where Tables 3.3 and 3.4 are identical — so the headroom the designers
+  found runs out exactly where this programme needs it.</p>
 
   <h2>8 · Conclusion</h2>
 
@@ -567,6 +610,7 @@
 
   <table>
     <tr><th>Date</th><th>Revision</th></tr>
+    <tr><td class="mono">2026-08-27 (later)</td><td>§7 replaced by the outcome of a dedicated recovery study. The corrected baseline at the γ-matched energies is <b>8.4×10⁻⁸</b> at 5 × 41, and the levers together buy ≈10⁵ against a 5×10⁶ shortfall. Three levers that looked promising are dropped with reasons: the cold-beam argument is <i>backwards</i> (fixed-rigidity injection puts an A/Z = 2 ion at half the proton's γ with ≈2.5× more space charge, and EPIOS says store cooling is later-stage, so there is no equilibrium to reach); dispersive tagging at IP6 is 30–60× short of the 0.1 rigidity threshold and the beam pipe cannot be instrumented past ~30 m because of the crab cavities; and the LHC 3σ precedent is a pot <i>window</i>, not an active edge — the right precedent is RHIC's β* = 22 m stores in this tunnel, which approached no closer than 8σ. The β* lever survives but is a <b>two-ring</b> change, since a hadron-only de-squeeze multiplies ξ_p by the same factor.</td></tr>
     <tr><td class="mono">2026-08-27</td><td><b>The charge argument is corrected, and it was overstated.</b> "4.8σ per plane" is neither a PID separation power nor a fake rate; restated as a sampled-Landau fake rate at matched efficiency, <b>one bit per plane costs a factor 1.4 against the Neyman-Pearson optimum</b>, and a truncated mean costs a factor 86 <i>to</i> one bit (§4.1, Figure 4, <code>nearbeam_zid_power.py</code>). The nanowire loses on <b>geometric fill factor</b> — 50% fill cannot reach 95% ⁶Li efficiency over four planes — not on bit depth. Also corrected: the α+d separation mixed the bound-state scale κ = 60.7 MeV/c with the 3⁺ resonance decay momentum 42.2 MeV/c, and is now quoted from the repository's own density (median 10.9 / 30.1 / 73.4 mm, ≈1.6× the earlier single-k figures, §4.3); the dominant one-hit topology is single-fragment <i>loss</i> (0.9 / 8.8 / 27% per breakup), not merging (≤0.26%); and EICROC's unpublished dynamic range is promoted to the top of §7.</td></tr>
     <tr><td class="mono">2026-08-26</td><td>First version, then revised the same day against an
     adversarial review. <b>The verdict changed sign.</b> As first written, this note concluded that
