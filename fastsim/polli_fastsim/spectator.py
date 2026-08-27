@@ -13,11 +13,24 @@ must eventually pin down; see plans/02 step 1.5.3):
   S-wave (6Li):  psi(k) ∝ 1/(k^2+kappa^2) - 1/(k^2+beta^2)   (Hulthen form)
   P-wave (7Li):  psi(k) ∝ k / [(k^2+kappa^2)(k^2+beta^2)]    (vanishes at 0)
 
-kappa = sqrt(2*mu*S_alpha) from the verified separation energies:
-  6Li -> alpha+d: S = 1.474 MeV  => kappa = 60.7 MeV
-  7Li -> alpha+t: S = 2.467 MeV  => kappa = 88.9 MeV
+kappa = sqrt(2*mu*S_alpha) from the verified separation energies, with
+mu the reduced mass of the two SEPARATED clusters (see m_partner):
+  6Li -> alpha+d: S = 1.474 MeV  => kappa = 60.66 MeV
+  7Li -> alpha+t: S = 2.467 MeV  => kappa = 88.90 MeV
 beta is the short-range scale (default 0.30 GeV, scan 0.20-0.40 to span
 the tail uncertainty; deuteron analogy: beta/kappa ~ 5.7).
+
+Masses are the physical nuclear ones (NUCLEUS_MASS), not A * M_U.  The
+visible consequence is the rigidity: a spectator at rest in the beam
+frame has p_lab = (p_beam / m_beam) * m_spec, so
+    R(k=0) = (m_spec / Z_spec) / (m_beam / Z_beam),
+a ratio of mass-to-charge ratios that A * M_U collapses onto the naive
+(A_spec Z_beam) / (A_beam Z_spec).  The alpha is more bound per nucleon
+than the lithium it comes from, so it sits BELOW beam rigidity:
+R = 0.99813 (not 1.00000) from 6Li and 0.85571 (not 0.85714) from 7Li
+-- 0.19% and 0.17%, entirely inside the +-5% near-beam band, but enough
+to slide the 6Li alpha across the RP window edge at R = 0.95 (plans/08
+C1 measurement, recorded in spectator_lab_kinematics).
 
 Upgrade path: replace n(k) with VMC two-cluster overlap densities
 (R.B. Wiringa et al., tables available from ANL) — same interface.
@@ -30,6 +43,69 @@ import numpy as np
 M_U = 0.93149  # amu [GeV]
 MASSES = {"p": 0.93827, "n": 0.93957, "d": 1.87561, "t": 2.80892,
           "3He": 2.80839, "alpha": 3.72738}
+
+# Ground-state NUCLEAR (not atomic) masses [GeV], keyed by (Z, A) so a
+# ClusterChannel can look up its own beam.  A * M_U is NOT the mass of a
+# nucleus: it drops the mass excess and keeps the electrons, so it is
+# low by (excess - Z m_e) = 12.6 MeV for d, 14.5 for t, 13.9 for 3He,
+# 1.4 for the alpha, 12.6 for 6Li and 13.4 for 7Li.  The beam mass sets
+# the boost gamma and gamma*beta, and with them the lab momentum, theta
+# and the rigidity ratio R of every spectator, so all of those were
+# wrong by 2.0-2.2e-3 for the lithium beams and 6.7e-3 for the deuteron
+# control channel.
+#
+# Built from the AME2020 ATOMIC masses (Wang, Huang, Kondev, Audi, Naimi,
+# Chin. Phys. C 45 (2021) 030003, Table I) [u]
+#     1H  1.00782503190   2H  2.01410177784   3H   3.01604928132
+#     n   1.00866491590   3He 3.01602932197   4He  4.00260325413
+#     6Li 6.01512288742   7Li 7.01600343426
+# by removing the electrons,
+#     M_nuc = M_atomic * u - Z * m_e + B_e(Z),
+# with u = 931.49410242 MeV and m_e = 0.51099895000 MeV (CODATA 2018,
+# Tiesinga, Mohr, Newell, Taylor, Rev. Mod. Phys. 93 (2021) 025010,
+# Table I) and the total atomic electron binding energies B_e =
+# 13.598 / 79.005 / 203.486 eV for Z = 1 / 2 / 3 (sums of the NIST ASD
+# ionization energies; 2e-7 GeV, at the edge of the digits kept here).
+# Before rounding, the recipe reproduces the six CODATA nuclear masses
+# m_p, m_n, m_d, m_t, m_h, m_alpha to <= 1.9e-10 GeV (worst the
+# deuteron).  The entries below are that recipe kept to 1 eV, so as
+# WRITTEN they reproduce those six to <= 5.7e-10 GeV -- the rounding,
+# not the evaluation.  test_spectator.py pins the table as written, at
+# 2e-9 GeV: an external check of these digits, not of this arithmetic.
+NUCLEUS_MASS = {
+    (0, 1): 0.939565420,   # n
+    (1, 1): 0.938272088,   # p
+    (1, 2): 1.875612942,   # d
+    (1, 3): 2.808921133,   # t
+    (2, 3): 2.808391607,   # 3He
+    (2, 4): 3.727379407,   # alpha (4He)
+    (3, 6): 5.601518702,   # 6Li
+    (3, 7): 6.533833028,   # 7Li
+}
+
+# MASSES is the same evaluation rounded to 10 keV: every entry agrees
+# with NUCLEUS_MASS to <= 4.6 keV (worst the neutron, 4.9e-6 relative;
+# the alpha is 0.6 keV, 1.6e-7), i.e. to its own last digit.  It is kept
+# verbatim rather than re-derived from NUCLEUS_MASS because it sets the
+# SPECTATOR mass in every published distribution and 5e-6 relative is
+# far below anything the cluster model resolves.
+
+
+def nucleus_mass(z, a):
+    """Ground-state nuclear mass [GeV] of the nuclide (Z, A).
+
+    Falls back to A * M_U for a nuclide the table does not carry.  That
+    is the mass with the mass excess dropped and the Z electrons left
+    in, so for everything in the table it is LOW -- by 0.04% for the
+    alpha, 0.2% for 6,7Li, 0.7% for the deuteron -- because each of
+    those is less bound per nucleon than the 12C that defines u by more
+    than its electrons weigh.  The sign is not universal: u is one
+    twelfth of the mass of a neutral 12C ATOM, so at (Z, A) = (6, 12)
+    the fallback returns the atomic mass and is HIGH of the nuclear one
+    by 6 m_e - B_e(6) = 3.016 MeV (test_spectator.py).  Extend
+    NUCLEUS_MASS rather than lean on it.
+    """
+    return NUCLEUS_MASS.get((int(z), int(a)), a * M_U)
 
 
 @dataclass(frozen=True)
@@ -49,11 +125,52 @@ class ClusterChannel:
         return MASSES[self.spectator]
 
     @property
+    def m_beam(self):
+        """Ground-state nuclear mass of the beam [GeV] (NUCLEUS_MASS)."""
+        return nucleus_mass(self.beam_Z, self.beam_A)
+
+    @property
+    def m_partner(self):
+        """Mass of the FREE struck cluster [GeV].
+
+        kappa is a two-body bound-state scale, so the reduced mass it
+        needs is the one of the two SEPARATED fragments.  Inside the
+        nucleus the partner is worth only m_beam - m_spec, which is
+        m_partner - S: the separation energy is exactly the difference.
+        Either the table (used here) or m_beam - m_spec + S is the free
+        mass; m_beam - m_spec alone is low by S, and that -- not the
+        beam mass -- is what the pre-2026-08-26 kappa used.  The table
+        is preferred because it does not propagate the rounding of
+        `separation_energy`; the two routes agree to <= 3.6 keV, which
+        test_spectator.py pins.  Every partner of every channel defined
+        below is in the table, so the fallback is reached only by a
+        channel a caller builds; it is written to keep the DEFINITION
+        of the separation energy, S = m_spec + m_partner - m_beam,
+        exact off the table too, and test_spectator.py exercises it on
+        a 12C -> alpha + 8Be channel because nothing here does.
+        """
+        z = self.beam_Z - self.spectator_Z
+        a = self.beam_A - self.spectator_A
+        if (z, a) in NUCLEUS_MASS:
+            return NUCLEUS_MASS[(z, a)]
+        return self.m_beam - self.m_spec + self.separation_energy
+
+    @property
     def kappa(self):
-        """Bound-state momentum scale sqrt(2 mu S) [GeV]."""
-        m_beam = self.beam_A * M_U  # adequate for mu at this precision
-        m_other = m_beam - self.m_spec
-        mu = self.m_spec * m_other / (self.m_spec + m_other)
+        """Bound-state momentum scale sqrt(2 mu S) [GeV].
+
+        mu is the reduced mass of the two FREE clusters: kappa is the
+        asymptotic decay constant of the relative wave function
+        psi ~ exp(-kappa r) / r of two fragments separated by S, so the
+        Schroedinger problem it comes from is the one of the separated
+        fragments (m_spec, m_partner).  Before 2026-08-26 the beam mass
+        was beam_A * M_U and the partner was m_beam - m_spec; those two
+        errors partly cancelled in mu, leaving kappa 0.06-0.25% low and
+        -- the symptom -- DIFFERENT for the two channels of the same
+        beam (60.50 vs 60.62 MeV for 6Li), which the two-body scale
+        cannot be (plans/08 C1).
+        """
+        mu = self.m_spec * self.m_partner / (self.m_spec + self.m_partner)
         return np.sqrt(2.0 * mu * self.separation_energy)
 
 
@@ -112,12 +229,36 @@ def spectator_lab_kinematics(channel, p_per_nucleon, n=200_000, beta=0.30,
                              rng=None):
     """Boost spectator (rest-frame momentum -k of the struck cluster) to the
     lab. Returns dict of arrays: pT, theta [rad], p_lab, R (rigidity ratio
-    vs beam), xL (= p_lab / (A_spec * p_per_nucleon))."""
+    vs beam), xL (= p_lab / (A_spec * p_per_nucleon)).
+
+    What the physical beam mass buys (measured 2026-08-26 against
+    beam_A * M_U, 2e6 events, beta = 0.30, seed 7, plans/08 C1).  It is
+    a 2e-3 effect on the kinematics -- R low by 2.0-2.3e-3, theta high
+    by 2.2-4.2e-3, pT and |k| high by 1.3e-4 to 2.0e-3 (those two come
+    from kappa, which the same masses fix) at every quantile from 5% to
+    99% and at every documented energy (6Li 20.5/50/137.5, 7Li
+    17.6/42.9/117.9 GeV/u) -- but NOT a 2e-3 effect on the acceptance,
+    because the R window edges are hard.  Sliding the 6Li alpha, which
+    sits at R ~ 1, down by 0.0022 moves events across the RP/near-beam
+    boundary at R = 0.95, where the density is high: the Roman-Pot
+    fraction rises 1.31% -> 1.51% (+15% relative) and the total alpha
+    tag 1.65% -> 1.85% (high-acceptance) and 1.31% -> 1.51% (high-
+    divergence) at 137.5 GeV/u; 13.2% -> 13.5% at 50 GeV/u.  The 7Li
+    alpha, off rigidity at R = 0.856 with no nearby edge, moves by
+    +0.13% relative (97.7% -> 97.9%).  Splitting the two changes shows
+    the acceptance shift is the mass alone: at 137.5 GeV/u the new
+    kappa moves the 6Li tag 1.645% -> 1.652% and the new beam mass
+    1.645% -> 1.839%.
+    """
     kx, ky, kz = sample_k(channel, n, beta=beta, rng=rng)
     m = channel.m_spec
     e_rest = np.sqrt(m * m + kx * kx + ky * ky + kz * kz)
-    # beam boost (per-nucleon momentum sets the velocity of the nucleus)
-    m_beam = channel.beam_A * M_U
+    # beam boost (per-nucleon momentum sets the velocity of the nucleus).
+    # The beam mass is the physical nuclear mass: with beam_A * M_U the
+    # boost gamma*beta = p_beam / m_beam, and with it p_lab, theta and R,
+    # is high by the relative mass excess (2.2e-3 for 6Li, 2.1e-3 for
+    # 7Li) -- see NUCLEUS_MASS.
+    m_beam = channel.m_beam
     p_beam = channel.beam_A * p_per_nucleon
     e_beam = np.sqrt(p_beam**2 + m_beam**2)
     gamma = e_beam / m_beam

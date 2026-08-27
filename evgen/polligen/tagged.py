@@ -323,7 +323,12 @@ def boost_spectator(channel, k, c, phi_k, p_per_nucleon,
         kx, ky = cp * kx - sp * ky, sp * kx + cp * ky
     m = base.m_spec
     e_rest = np.sqrt(m * m + kx * kx + ky * ky + kz * kz)
-    m_beam = base.beam_A * spectator.M_U
+    # the physical nuclear mass, not beam_A * M_U: the docstring promises
+    # the same boost algebra as spectator.spectator_lab_kinematics, and
+    # that function moved to NUCLEUS_MASS on 2026-08-26 (plans/08 C1).
+    # Leaving A * M_U here would have given the same beam two masses in
+    # two modules, 2.2e-3 apart for 6Li.
+    m_beam = base.m_beam
     p_beam = base.beam_A * p_per_nucleon
     e_beam = np.sqrt(p_beam**2 + m_beam**2)
     gamma = e_beam / m_beam
