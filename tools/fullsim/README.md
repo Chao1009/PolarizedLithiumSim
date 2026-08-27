@@ -1,5 +1,9 @@
 # Full-simulation runbook (Phase 2)
 
+*Reproducing the far-forward scans rather than extending them?
+[docs/reproduction_manual.md](../../docs/reproduction_manual.md) §5.3 has the
+commands and what they should return.*
+
 Local ePIC chain status and recipes. Versions matter — record them in
 every output directory.
 
@@ -7,11 +11,12 @@ every output directory.
 
 | container | state |
 |---|---|
-| `~/Projects/eic/local/lib/jug_xl-nightly.sif` | legacy (frozen ~Sep 2024); detector configs `/opt/detector/epic-24.0{5,6,7}.0`; works — used for the first gun scan |
-| `~/Projects/eic/local/lib/eic_xl-nightly.sif` | **current** (installed 2026-06-12): EICrecon v1.38.0, detector configs epic-26.03.0…26.06.0 + `epic-main`; source `/opt/detector/epic-main/bin/thisepic.sh` |
+| `~/Projects/eic/local/lib/jug_xl-nightly.sif` | legacy (frozen ~Sep 2024); detector configs `/opt/detector/epic-24.0{5,6,7,8}.0` **and** `epic-main` at git 5a7dd057; ships npsim, eicrecon, uproot, pyHepMC3, xrdcp — the container everything below was run in |
+| `~/Projects/eic/local/lib/eic_xl-nightly.sif` | **not present on the analysis box** (checked 2026-08-26). The row is the recipe: EICrecon v1.38.0, detector configs epic-26.03.0…26.06.0 + `epic-main`; source `/opt/detector/epic-main/bin/thisepic.sh` |
 
-`./eic-shell` now starts the new container. Re-run the gun scan in it
-(epic-26.06 far-forward geometry) before quoting acceptance numbers.
+`./eic-shell` starts `jug_xl`. Everything below therefore uses the
+**September-2024 `epic-main`** far-forward geometry; re-run in the current
+container (epic-26.06) before quoting acceptance numbers in the letter.
 
 **Known issue (found 2026-06-12):** the `eic_xl-nightly` pyHepMC3
 `rootIO.ReaderRootTree` **segfaults** on files the legacy container reads
@@ -85,6 +90,140 @@ Findings beyond the table:
 Caveats: single-particle, fixed vertex/direction (no beam envelope —
 real pots retract to 10σ), hit-level only. This validates *routing
 logic*, not final acceptances (plans/03 step 2.2 proper).
+
+## The intact-⁶Li far-forward scan (2026-08-26) — the pot aperture, measured
+
+The coherent channel's whole acceptance rests on one assumption: where the
+Roman Pots stop seeing a nucleus at beam rigidity (plans/04 #20).  It is
+now measured rather than assumed.
+
+**npsim cannot shoot a nucleus.** `--gun.particle Li6`, `ion(3,6)` and
+every other spelling come back *"Geant4ParticleGenerator: Bad particle
+type"* — DD4hep looks the name up in the G4 particle table, where generic
+ions are not pre-instantiated.  `tools/fullsim/ion_gun_hepmc.py` writes a
+one-particle HepMC3 event per scan point instead, which also buys what a
+gun cannot do: a scan in **both** p_T and azimuth about the ion axis.
+(Two format traps, both recorded in the script: DD4hep sends a `.hepmc`
+file to HepMC3's `ReaderAscii`, so a HepMC2 `IO_GenEvent` file gives an
+immediate EOF; and a vertex at the origin with nothing incoming must be
+left out of the record entirely, with the E-line vertex count 0.)
+
+```bash
+python3 tools/fullsim/ion_gun_hepmc.py --out li6.hepmc --pdg 1000030060 \
+    --a 6 --p-per-nucleon 137.5 --pt 0.78 0.87 1.24 1.65 2.06 2.48 3.30 --nphi 12 > li6.index
+singularity exec $SIF bash -lc 'source /opt/detector/epic-main/bin/thisepic.sh
+  npsim --compactFile $DETECTOR_PATH/epic_craterlake_18x275.xml --inputFiles li6.hepmc \
+        --numberOfEvents 84 --physics.list FTFP_BERT --part.minimalKineticEnergy "100*MeV" \
+        --outputFile gun_li6_map.edm4hep.root'
+singularity exec $SIF python3 tools/fullsim/ff_gun_hits.py gun_li6_map.edm4hep.root \
+        --per-event --index li6.index --positions
+```
+
+**Result — the acceptance boundary is HORIZONTAL, and the ⁶Li and the α
+agree at the same angle.** Roman-Pot hit / no hit for an intact ⁶Li at
+137.5 GeV/u (825 GeV, rigidity ratio 1.000 — beam-blind by construction),
+by transverse angle at the IP and azimuth about the ion axis (φ = 0 is
+the horizontal bend plane, 90° is up):
+
+| θ [mrad] | 0 | 30 | 60 | 90 | 120 | 150 | 180 | 210 | 240 | 270 | 300 | 330 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 0.95 | ● | | | | | | | | | | | |
+| 1.05 | ● | | | | | | ● | | | | | |
+| 1.50 | ● | ● | | | | ● | ● | ● | | | | ● |
+| 2.00 | ● | ● | | ● | ● | ● | ● | ● | | | ● | ● |
+| 2.50 | ● | ● | ● | ● | ● | ● | ● | ● | ● | | ● | ● |
+| 3.00 | ● | ● | ● | ● | ● | ● | ● | ● | ● | ● | ● | ● |
+| 4.00 | | | ● | ● | ● | ● | ● | ● | ● | ● | | ● |
+
+Reading it: the boundary is **|θ_x| ≳ 1.0 mrad**, or |θ_y| ≳ 1.8 mrad up
+and ≳ 2.8 mrad down; the last row is the far edge, where a horizontal
+track overshoots the outermost module (|Δx| ≈ 112 mm) and is lost again,
+so the horizontal window is roughly 1.0 < θ_x < 3.5 mrad.  A separate
+1-D scan puts the horizontal edge between 0.970 and 1.091 mrad for the
+⁶Li and between 0.909 and 1.091 mrad for an α at the same rigidity
+(550 GeV) — the same *angle*, which is the check that the scan is
+measuring rigidity-driven optics and not the species.
+
+**Why horizontal, when the geometry inserts the pots vertically.**
+`compact/far_forward/roman_pots_eRD24_design.xml` builds top and bottom
+assemblies at y = ±insertion, each 2×2-module array spanning 64 mm from
+its centre, so the silicon covers |Δx| ≤ 112 mm continuously and reaches
+down to y = 0 except under the central |Δx| < 32 mm block, which the
+high-acceptance insertion holds off to |y| ≥ 7 mm.  The open aperture is
+therefore a **horizontal slot ≈ 64 mm wide and ≈ 14 mm tall** at the pot
+plane — and the reason a 2 mrad *vertical* kick still fits through it is
+the optics.  Reading the first-crossing hit positions at station 1
+(z = 32.55 m) straight off the scan: a horizontal IP angle arrives with a
+lever of **R₁₂ ≈ 30.6 m** (Δx = 77.1 mm at θ = 2.5 mrad, 91.5 mm at 3.0,
+−112 mm at 2.5 on the other side), while a vertical one arrives at only
+**y = 8.0 / 8.6 / 9.0 / 10.6 mm for θ_y = 2.0 / 2.5 / 3.0 / 4.0 mrad**.
+The far-forward transport is about ten times stiffer in x than in y, and
+that, not the pot orientation, is what sets the near-beam boundary.  The
+same reading gives the outer edge: horizontal coverage runs to Δx ≈ −120
+and +112 mm, which is why θ = 4 mrad at φ = 0 is lost again.
+
+The two readings close on each other, which is the check that this is a
+measurement and not an artefact: the slot's half-widths are 32 mm in x
+and 7 mm in y, and the observed edges are θ_x ≈ 1.03 mrad → Δx = 31 mm
+with R₁₂ = 30.6 m, and θ_y ≈ 2.0 mrad → y = 8.0 mm, the first value above
+7 mm.  Aperture and optics reproduce each other to a millimetre.
+
+**Each energy configuration has its own optics, and its own edge.**  The
+scan was repeated with `epic_craterlake_5x41.xml` and
+`epic_craterlake_10x100.xml`, each with the ⁶Li momentum that puts it at
+that ring's reference rigidity (123 and 300 GeV):
+
+| configuration | ⁶Li p_u [GeV/u] | p [GeV] | horizontal edge | as p_T |
+|---|---|---|---|---|
+| 5 × 41 | 20.5 | 123 | ≈ 2.0 mrad | 0.25 GeV |
+| 10 × 100 | 50 | 300 | ≈ 1.35 mrad | 0.41 GeV |
+| 18 × 275 | 137.5 | 825 | ≈ 1.03 mrad | 0.85 GeV |
+
+The angle tightens with energy but not as fast as the momentum grows, so
+in p_T — which is what the physics delivers — the low-energy
+configuration is 3.4× more permissive.  Against the fast simulation's
+angular envelope (10 σ_θ, p_T = 0.089 / 0.218 / 0.60 GeV for high
+acceptance and 0.18 / 0.45 / 1.23 for high divergence) the measured
+aperture is 2.8× / 1.9× / 1.4× the high-acceptance number, i.e. it sits
+between the two optics assumptions and closer to high divergence.
+
+**What it changes.**  `polligen.reco.rp_measure` models the cutout as a
+slot *wide in x and tight in y* — its docstring says so and
+`cut_scale_xy = (2.5, 1.0)` encodes it, i.e. acceptance opened by the
+VERTICAL displacement.  The measurement inverts that: (c_x, c_y) ≈ (1.0,
+2.3) mrad at 18 × 275, an aspect the wrong way round by a factor ≈ 5.8.
+Two consequences, both computed with the repository's own
+`reco.rp_hole_acceptance` at B = 50 GeV⁻² with the per-optics edges above
+(c_y taken as 3.0 mrad at 5 × 41 and 10 × 100, where the 30° scan only
+bounds it between 2 and 3):
+
+| p_u [GeV/u] | tagged fraction, measured aperture | assumed HA slot | ⟨cos 2φ_t⟩ measured | assumed |
+|---|---|---|---|---|
+| 20.5 | 1.4×10⁻² | 0.824 | **+0.78** | −0.09 |
+| 50 | 5.1×10⁻⁵ | 0.401 | **+0.90** | −0.42 |
+| 137.5 | 1.9×10⁻¹⁷ | 1.6×10⁻² | **+0.97** | −0.80 |
+
+(Both columns are `rp_hole_acceptance`'s own convention, φ measured from
+**x**; the analysis's β is measured from the *vertical* spin axis, so
+⟨cos 2β⟩ is the negative of each — the assumed slot gives the "large and
+positive" ⟨cos 2β⟩ that plans/04 #20 records, and the measured aperture
+gives a large NEGATIVE one.)
+
+The coherent tag is far more restrictive than assumed and survives only
+at the low-energy configuration, and the acceptance-induced fake cos 2φ_t
+**changes sign** — which is exactly the harmonic the coherent fit
+templates (report §7, `reco.basis_2d`).  The magnitude is what the
+template absorbs; the sign is what a mis-specified template gets wrong.
+
+**Caveats before this is quoted as a correction.** One event per scan
+point, 30° azimuthal steps, no beam divergence or vertex spread, and the
+`jug_xl-nightly` geometry is `epic-main` at git 5a7dd057 (≈ September
+2024) — the same file this README already flags as having moved the pot
+stations from the published 26/28 m to 32.5/34.3 m.  The high-divergence
+insertion is present in the XML but commented out, so the scan measures
+the **high-acceptance** configuration only.  Repeat on the current
+release, with a beam envelope, before the letter quotes it; the item is
+raised in plans/04 #20.
 
 ## e+d control inputs (plan 1.5.3)
 
