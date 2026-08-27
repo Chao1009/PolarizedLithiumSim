@@ -100,9 +100,17 @@ at **48 fastsim + 183 evgen**, from 25 + 143.
   horizontal lever is R₁₂ ≈ 30.6 m against a vertical few metres.  This
   **inverts** `rp_measure`'s assumed slot (`cut_scale_xy = (2.5, 1)`
   against a measured ≈ (1, 2.3)) and therefore flips the sign of the
-  acceptance-induced ⟨cos 2β⟩, and it cuts the coherent tagged fraction
-  hard: 1.4×10⁻² at 20.5 GeV/u against the assumed 0.82.  Caveats and
-  the follow-on work in plans/08 §8.4 and plans/04 #20.
+  acceptance-induced ⟨cos 2β⟩.  Carried through the chain the same day:
+  at the low configuration the coherent measurement survives — acceptance
+  37.7% → 1.42%, the fake ⟨cos 2β⟩ **+0.426 → −0.772**, two of the four
+  |t| bins, δa_t worse by 6–34× and a_e still recovered — and at mid and
+  top the aperture leaves nothing in the binned window, so the coherent
+  programme is a low-energy programme.  The measured edge is
+  2.8× / 1.9× / 1.4× the 10σ envelope, so the envelope is never the
+  binding constraint; it is marked on all three WP5 curves.  Two latent
+  defects surfaced with it — a tight cutout made the two-azimuth fit
+  raise a bare "Singular matrix", and one dead |t| bin aborted the whole
+  figure.  Caveats and what is left in plans/08 §8.4 and plans/04 #20.
 - ☑ **The e+d control, second pass** (plans/02 step 1.5.3), on the
   official BeAGLE 1.03.02-3.1 sample over xrootd.  Routing agrees to
   better than two points; the p_T tail does not, and restricting to the

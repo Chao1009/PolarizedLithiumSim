@@ -18,7 +18,11 @@
 > **6.2–12.9**, falling to 4.45 at the fit's Q² = 0.5 support edge.  The
 > qualitative point — Θ is large where the sensitivity is, so multiplying
 > it into every term saturates the sum — is exactly right, which is why
-> the item was worth implementing.
+> the item was worth implementing.  (iv) §6 G2's Δ_fake = γ²b₁/6 is the
+> Eq. (17e) term alone; the full Cosyn combination is ≈ 6.9× it (plans/08
+> D2), so every leakage number in G2 and in report §2 scales up by that
+> factor.  It stays ≤ 0.15% of everything published, and the exposure is
+> the Δ/F₁ ~ 10⁻³ scenario at x ≳ 0.2, Q² ≈ 1.
 
 
 Scope: the whole simulation code (`evgen/polligen`, `evgen/scripts`,

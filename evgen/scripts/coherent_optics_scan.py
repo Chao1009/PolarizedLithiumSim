@@ -110,6 +110,16 @@ def main():
           % (config.label(), args.lumi_1yr, n_produced))
     print("angular envelope at this energy: %.3f GeV (10 sigma_theta x A p_u)"
           % cut_here)
+    # The pots' own GEOMETRIC aperture, measured in the ePIC geometry
+    # (reco.RP_APERTURE_MEASURED, tools/fullsim).  It is a second, larger
+    # constraint at every configuration, and the curves below are read at
+    # it rather than at the envelope wherever it is the binding one.
+    ap = reco.rp_aperture_for(config.ion_momentum_per_nucleon)
+    cut_meas = None if ap is None else float(ap[0]) * p_ion
+    if cut_meas is not None:
+        print("measured pot aperture at this energy: %.3f GeV in p_T "
+              "(|theta_x| > %.2f mrad), i.e. %.1fx the envelope"
+              % (cut_meas, 1e3 * ap[0], cut_meas / cut_here))
 
     cuts = np.linspace(0.05, 0.70, 140)
     fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(11.8, 8.4))
@@ -132,6 +142,10 @@ def main():
         ax1.axvline(c, color="0.75", lw=0.9, ls="-", zorder=0)
         ax1.text(c, 1.4e-3, " " + lab, fontsize=6.6, rotation=90,
                  color="0.35", va="bottom")
+    if cut_meas is not None:
+        ax1.axvline(cut_meas, color=C_ALT, lw=1.3, ls="-.")
+        ax1.text(cut_meas, 1.4e-3, " measured pot aperture", fontsize=6.6,
+                 rotation=90, color=C_ALT, va="bottom")
     ax1.set_yscale("log")
     ax1.set_ylim(1e-3, 1.2)
     ax1.set_xlim(cuts[0], cuts[-1])
@@ -166,6 +180,8 @@ def main():
                          for k, v in IR8_PUBLISHED.items()),
              fontsize=6.2, color=C_ALT, va="bottom")
     ax2.axvline(cut_here, color="0.6", lw=1.0)
+    if cut_meas is not None:
+        ax2.axvline(cut_meas, color=C_ALT, lw=1.3, ls="-.")
     ax2.set_yscale("log")
     ax2.set_xlim(cuts[0], cuts[-1])
     ax2.set_xlabel("near-beam envelope [GeV]")
@@ -205,6 +221,8 @@ def main():
              lw=1.3, label=r"$\delta a_e / a_e$ (gluon transversity)")
     ax3.axhline(1.0, color="0.8", lw=0.8, zorder=0)
     ax3.axvline(cut_here, color="0.6", lw=1.0)
+    if cut_meas is not None:
+        ax3.axvline(cut_meas, color=C_ALT, lw=1.3, ls="-.")
     ax3.set_yscale("log")
     ax3.set_xlabel("near-beam envelope [GeV]")
     ax3.set_ylabel("relative statistical error, 1 yr")

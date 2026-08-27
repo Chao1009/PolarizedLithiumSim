@@ -411,9 +411,11 @@ index, and the numbers are in `plans/00` run 8.
    weight), and one dead |t| bin aborted the whole figure (it is now
    reported and skipped).  **What is left:** a harmonic basis that works
    under a strongly anisotropic acceptance — fewer columns, wider bins,
-   or |t| re-binned inside the window the cutout leaves — and the WP5
-   optics scan re-run against the measured edge rather than the 10σ
-   envelope.
+   or |t| re-binned inside the window the cutout leaves.  The WP5 optics
+   scan now carries the measured edge as a marked line on all three of
+   its curves: it is 2.8× / 1.9× / 1.4× the 10σ envelope at
+   5×41 / 10×100 / 18×275, so the envelope is never the binding
+   constraint.
 5. **The e+d control calibrates the cluster tail** — and says no β in
    the two-parameter Hulthén reproduces BeAGLE's shape (plans/02 step
    1.5.3).  Since the ⁶Li α tag is entirely a p_T-tail measurement, its
