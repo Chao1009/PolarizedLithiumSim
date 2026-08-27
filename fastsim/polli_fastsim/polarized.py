@@ -16,10 +16,21 @@ from .structure import ToyF2, r_sigma_lt, _safe_xfx
 
 
 class ToyG1:
-    """g1 = A1 * F1 with toy A1(x) shapes (TOY; replace with JAM/DSSV)."""
+    """g1 = A1 * F1 with toy A1(x) shapes (TOY; replace with JAM/DSSV).
 
-    def __init__(self, base=None):
+    `r_func(x, q2) -> R = sigma_L/sigma_T` is the R used to turn F2 into
+    F1; None (the default) uses this module's `r_sigma_lt` global.  This
+    is the fourth R consumer, and the one the dated money scripts'
+    `r_override` context manager does NOT reach: it rebinds
+    `structure.r_sigma_lt` and `asymmetries.r_sigma_lt` only, so every
+    g1/F1 those scripts compute still carries the toy R (code review
+    2026-08-25 S1, plans/08 C2).  The hook is the fix for new code; the
+    scripts stay as they are.
+    """
+
+    def __init__(self, base=None, r_func=None):
         self.base = base or ToyF2()
+        self.r_func = r_func
 
     def a1p(self, x):
         # x^0.7 tracks moderate/high-x world data; saturates below 1
@@ -31,7 +42,8 @@ class ToyG1:
         return -0.07 * np.power(1.0 - x, 2.0) + 0.8 * np.power(x, 2.2)
 
     def _f1(self, f2, x, q2):
-        return f2 / (2.0 * x * (1.0 + r_sigma_lt(x, q2)))
+        r = (r_sigma_lt if self.r_func is None else self.r_func)(x, q2)
+        return f2 / (2.0 * x * (1.0 + r))
 
     def g1p(self, x, q2):
         return self.a1p(x) * self._f1(self.base.f2p(x, q2), x, q2)
@@ -60,8 +72,11 @@ class PartonG1(ToyG1):
 
     _E2 = {1: 1 / 9, 2: 4 / 9, 3: 1 / 9}
 
-    def __init__(self, base=None, setname="NNPDFpol11_100", member=0):
-        super().__init__(base=base)
+    def __init__(self, base=None, setname="NNPDFpol11_100", member=0,
+                 r_func=None):
+        # r_func is inherited for interface uniformity only: g1p/g1n come
+        # straight from the polarized grid here and never divide by F1.
+        super().__init__(base=base, r_func=r_func)
         from parton import mkPDF  # lazy: optional dependency
         self._pol = mkPDF(setname, member)
 

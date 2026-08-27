@@ -1,6 +1,6 @@
 {
   "_about": "Reference dictionary of the PolarizedLithiumSim program: the paper copies committed in refs/ (PDFs tracked in git since 2026-08-25; the EIC Yellow Report as four parts) and the few references without a free copy. Each entry: identifiers, title, where the local file is (';'-separated list for multi-part files; null = no free copy), the important content with equation/figure/page pointers, and where the reference is used in the repository. Search it with `python refs/find_ref.py <keyword>`; `--check` lists the local-copy status, `--fetch` re-downloads missing arXiv PDFs. Facts marked (repo-verified) were checked against the primary source during the dated fact-check passes recorded in plans/01 section 6, plans/06 section 6.5 and the reconstruction-chain report.",
-  "_updated": "2026-08-25",
+  "_updated": "2026-08-26",
   "entries": {
     "cosyn2025-tensor-polarization-options": {
       "file": "refs/2410.12764v1.pdf",
@@ -861,6 +861,46 @@
       ],
       "used_in": [
         "refs/README.md (where to look next for ePIC inclusive-DIS performance)"
+      ]
+    },
+    "abe1999-r1998-world-fit": {
+      "file": "refs/hep-ex_9808028.pdf",
+      "arxiv": "hep-ex/9808028",
+      "journal": "Phys. Lett. B 452 (1999) 194 (SLAC-PUB-7927)",
+      "title": "Measurements of R = sigma_L/sigma_T for 0.03 < x < 0.1 and Fit to World Data",
+      "authors": [
+        "K. Abe et al. (E143 Collaboration)"
+      ],
+      "year": 1999,
+      "keywords": [
+        "R1998",
+        "R1990",
+        "sigma_L/sigma_T",
+        "R",
+        "longitudinal cross section",
+        "Theta",
+        "E143",
+        "SLAC",
+        "world fit",
+        "F_L",
+        "Callan-Gross",
+        "depolarization",
+        "Whitlow"
+      ],
+      "key_content": [
+        "Eq. (2): THREE six-parameter forms, R1998 = their average ('As in the case of R1990, we define R1998 to be the average of the three fits'). R_a = a1 Theta/log(Q2/0.04) + a2 (Q^8 + a3^4)^(-1/4) [1 + a4 x + a5 x^2] x^a6; R_b = b1 Theta/log(Q2/0.04) + [b2/Q2 + b3/(Q^4 + 0.3^2)] [1 + b4 x + b5 x^2] x^b6; R_c = c1 Theta/log(Q2/0.04) + c2 [(Q2 - Q2thr)^2 + c3^2]^(-1/2) with Q2thr = c4 x + c5 x^2 + c6 x^3.  In the paper's notation Q^4 = (Q2)^2 and Q^8 = (Q2)^4; log is natural and 0.04 GeV2 = Lambda^2 (verified against the arXiv LaTeX source, 2026-08-26).",
+        "Eq. (3): Theta(x, Q2) = 1 + 12 [Q2/(Q2+1)] [0.125^2/(0.125^2 + x^2)].  Theta multiplies the log term of Eq. (2) and NOTHING ELSE.  Theta is 6.2-12.9 over x <= 0.05, 1 <= Q2 <= 130 (repo-measured; the code review's '6.5-9.5' is low), so putting it on all three terms saturates the sum: code review 2026-08-25 item S1, where the fast-sim money scripts' r1998 returns R = 1.000 over the whole low-x region.",
+        "Table II (coefficients, chi2/df for 231 dof): a = 0.0485, 0.5470, 2.0621, -0.3804, 0.5090, -0.0285 (0.9); b = 0.0481, 0.6114, -0.3509, -0.4611, 0.7172, -0.0317 (0.9); c = 0.0577, 0.4644, 1.8288, 12.3708, -43.1043, 41.7415 (1.0).",
+        "Fit support: 237 points, 0.005 <= x <= 0.86 and 0.5 <= Q2 <= 130 GeV2 (paragraph above Eq. 2); confidence level 73% for all the data, 38% for x <= 0.07.",
+        "Fitting error, unnumbered equation below Eq. (3): delta-R(x,Q2) = 0.0078 - 0.013 x + (0.070 - 0.39 x + 0.70 x^2)/(1.7 + Q2).  The functional-form systematic is the spread of the three fits.  The paper's sentence 'This error is largest at low Q2, reaching a maximum value for x ~ 0.04' does not follow from that formula: d(delta-R)/dx = 0 at 1.4 x = 0.39 + 0.013 (1.7 + Q2), a MINIMUM at x = 0.299 for Q2 = 0.5 and x = 0.3408 for Q2 = 5, with no maximum anywhere in 0.005 <= x <= 0.86. At Q2 = 0.5 (repo-measured 2026-08-26) delta-R = 0.03867 at x = 0.005, 0.03252 at x = 0.04, 0.01117 at the x = 0.299 minimum and 0.11131 at x = 0.86. The formula is implemented as published; only the sentence is disputed.",
+        "Table I: E143 carbon cross sections and nine extracted values of R with stat and sys errors -- x, Q2 [GeV2], R: 0.0325, 1.32, 0.45 +- 0.01 +- 0.07; 0.0375, 1.47, 0.51 +- 0.02 +- 0.09; 0.0450, 1.67, 0.40 +- 0.01 +- 0.10; 0.0550, 1.90, 0.28 +- 0.01 +- 0.09; 0.0650, 2.11, 0.29 +- 0.02 +- 0.10; 0.0750, 2.29, 0.18 +- 0.02 +- 0.11; 0.0850, 2.46, 0.26 +- 0.03 +- 0.10; 0.0950, 2.60, 0.25 +- 0.03 +- 0.14; 0.1050, 2.73, 0.17 +- 0.03 +- 0.13.  This is the external anchor of fastsim/tests/test_structure_r.py: R1998 reproduces all nine within 1.6 sigma (max |pull| 1.562, mean pull^2 0.647), while the Theta-everywhere form of the fast-sim money scripts overshoots every one of them by 5.2-8.0 sigma even after being clipped to R = 1 (repo-measured 2026-08-26).",
+        "Eq. (1): dsigma/dE'dOmega = sigma_Mott [eps Q2/(2 M x F2)]^-1 form, i.e. the definition R = sigma_L/sigma_T with eps^-1 = 1 + 2(1 + Q2/4M^2x^2) tan^2(theta/2); R relates F1 and F2 by F1 = F2 (1 + gamma^2)/(2x(1+R)) (massless limit F1 = F2/(2x(1+R)) is what the repo uses)."
+      ],
+      "used_in": [
+        "fastsim/polli_fastsim/structure.py (r1998, r1998_forms, r1998_spread, r1998_fit_error, R1998_PARAMS)",
+        "fastsim/tests/test_structure_r.py (Table I and Table II anchors)",
+        "fastsim/scripts/money_delta_realistic.py and money_delta_20260729.py (their local r1998, the defect of code review S1; frozen)",
+        "docs/code_review_2026-08-25.md item S1; plans/08 C2"
       ]
     }
   }

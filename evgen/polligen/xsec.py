@@ -99,16 +99,27 @@ class InclusiveKernel:
     b1/b2/Delta enter as callables (x, q2, f1) -> SF like polarized.py's
     scenario curves; b2 defaults to 2*x*b1 (asymmetries.azz convention).
     Spin-3/2 rank-2 slots (b1_32/delta_32) default to None -> zero.
+
+    `r_func(x, q2) -> R = sigma_L/sigma_T` is threaded to ALL FOUR places
+    the kernel needs R -- F1 = F2/(2x(1+R)) in `NuclearF2.f1a`, F_L in
+    `dsigma_dx_dq2`, D(y) in `depolarization_d`, and the g1/F1 of the
+    default `ToyG1` -- so that one argument moves R consistently instead
+    of the three-of-four monkey-patch of the dated fast-sim scripts
+    (plans/08 C2).  None (the default) is `structure.r_sigma_lt`
+    everywhere, i.e. bit-for-bit every published polligen number.  An
+    EXPLICIT `g1_model` keeps whatever R it was built with: r_func only
+    fills the default one.
     """
 
     def __init__(self, ion, f2_source=None, g1_model=None,
                  b1_func=None, b2_func=None, delta_func=None,
                  b1_32_func=None, b2_32_func=None, delta_32_func=None,
-                 g2_mode="ww", emc_ratio=None):
+                 g2_mode="ww", emc_ratio=None, r_func=None):
         self.ion = ion
+        self.r_func = r_func
         self.nf2 = NuclearF2(ion, base=f2_source or ToyF2(),
-                             emc_ratio=emc_ratio)
-        self.g1_model = g1_model or ToyG1(base=self.nf2.base)
+                             emc_ratio=emc_ratio, r_func=r_func)
+        self.g1_model = g1_model or ToyG1(base=self.nf2.base, r_func=r_func)
         self.b1_func = b1_func
         self.b2_func = b2_func
         self.delta_func = delta_func
@@ -163,8 +174,8 @@ class InclusiveKernel:
 
     def a_parallel(self, t, x, q2, y):
         """A_par(x,y) = D(y) g1/F1 (identical to asymmetries.a_parallel)."""
-        return depolarization_d(y, x, q2) * t["g1"] / np.maximum(t["f1"],
-                                                                 1e-30)
+        return (depolarization_d(y, x, q2, r_func=self.r_func)
+                * t["g1"] / np.maximum(t["f1"], 1e-30))
 
     def a_perp(self, t, x, q2, y):
         """gamma-suppressed transverse-vector amplitude d(y)*(A2 - xi*A1).
@@ -176,7 +187,7 @@ class InclusiveKernel:
         if "g2" not in t:
             raise KeyError("tables(..., with_g2=True) required for a_perp")
         eps = (1.0 - y) / (1.0 - y + 0.5 * y * y)
-        d = depolarization_d(y, x, q2) * np.sqrt(
+        d = depolarization_d(y, x, q2, r_func=self.r_func) * np.sqrt(
             np.maximum(2.0 * eps / (1.0 + eps), 0.0))
         gamma = 2.0 * M_NUCLEON * x / np.sqrt(q2)
         amp = gamma * (0.5 * y * t["g1"] + t["g2"]) / np.maximum(t["f1"],
@@ -258,7 +269,7 @@ class InclusiveKernel:
     def dsigma_unpol(self, x, q2, s):
         """Unpolarized per-nucleon d2sigma/dxdQ2 [pb/GeV^2] (fastsim's)."""
         f2 = self.nf2.f2a(x, q2) / self.ion.A
-        return dsigma_dx_dq2(x, q2, s, f2)
+        return dsigma_dx_dq2(x, q2, s, f2, r_func=self.r_func)
 
     def dsigma(self, x, q2, phi, s, state, with_perp=False):
         """Doubly polarized d3sigma/dxdQ2dphi [pb/GeV^2/rad]."""

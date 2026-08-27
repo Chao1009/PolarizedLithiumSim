@@ -75,7 +75,12 @@ def project_rates(config, scenario, nx=40, nq2=30, x_range=(1e-4, 1.0),
 
     nf2 = nuclear_f2 or NuclearF2(config.ion)
     f2_per_nucleon = nf2.f2a(X, Q2) / config.ion.A
-    xsec = dsigma_dx_dq2(X, Q2, s, f2_per_nucleon)  # pb/GeV^2 per nucleon
+    # F_L needs the same R that turned F2 into F1 in `nf2`: carrying it on
+    # the structure-function object is what stops the two going out of
+    # step, which is the whole point of the r_func hook (plans/08 C2).
+    # getattr, not nf2.r_func, because `nuclear_f2` is an interface.
+    xsec = dsigma_dx_dq2(X, Q2, s, f2_per_nucleon,
+                         r_func=getattr(nf2, "r_func", None))
 
     dx = np.diff(x_edges)[:, None]
     dq2 = np.diff(q2_edges)[None, :]
@@ -93,13 +98,14 @@ def project_observables(config, scenario, proj, g1_model, b1_func, delta_func):
     nf2 = proj.extras["nf2"]
     f2 = nf2.f2a(X, Q2) / config.ion.A
     f1 = nf2.f1a(X, Q2) / config.ion.A
+    r_func = getattr(nf2, "r_func", None)   # see project_rates
 
     out = {}
     # (1) polarized EMC: A_par and delta(g1A/F1A)
     g1 = g1_model.g1_nucleus(config.ion, X, Q2) / config.ion.A
-    apar = a_parallel(g1, f1, y, X, Q2)
+    apar = a_parallel(g1, f1, y, X, Q2, r_func=r_func)
     dapar = err_a_parallel(N, scenario.pol_electron, scenario.pol_ion_vector)
-    d_g1f1 = dapar / depolarization_d(y, X, Q2)
+    d_g1f1 = dapar / depolarization_d(y, X, Q2, r_func=r_func)
     out["a_par"] = apar
     out["err_a_par"] = dapar
     out["err_g1_over_f1"] = d_g1f1

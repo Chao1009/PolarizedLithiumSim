@@ -41,15 +41,25 @@ from .structure import r_sigma_lt
 TENSOR_LL_SIGN = +1.0
 
 
-def depolarization_d(y, x, q2):
-    """Virtual-photon depolarization factor D for A_par ~= D * A1."""
-    r = r_sigma_lt(x, q2)
+def depolarization_d(y, x, q2, r_func=None):
+    """Virtual-photon depolarization factor D for A_par ~= D * A1.
+
+    `r_func(x, q2) -> R = sigma_L/sigma_T`; None (the default) uses THIS
+    module's `r_sigma_lt` global, resolved at call time.  The lookup has
+    to stay in this module: the dated money scripts rebind
+    `asymmetries.r_sigma_lt` and `structure.r_sigma_lt` separately
+    (fastsim/scripts/money_delta_*.py `r_override`), and they are frozen
+    reproductions of dated notes.  With r_func=None the value is
+    bit-for-bit what it was before the hook existed.
+    """
+    r = (r_sigma_lt if r_func is None else r_func)(x, q2)
     return y * (2.0 - y) / (y * y + 2.0 * (1.0 - y) * (1.0 + r))
 
 
-def a_parallel(g1, f1, y, x, q2):
+def a_parallel(g1, f1, y, x, q2, r_func=None):
     """Longitudinal double-spin asymmetry, A1 ~= g1/F1 approximation."""
-    return depolarization_d(y, x, q2) * g1 / np.maximum(f1, 1e-30)
+    d = depolarization_d(y, x, q2, r_func=r_func)
+    return d * g1 / np.maximum(f1, 1e-30)
 
 
 def phi_averaged_density(f1, f2, x, y):
