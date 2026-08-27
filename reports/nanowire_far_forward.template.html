@@ -78,7 +78,7 @@
 <body>
 <div class="page">
 
-  <p class="eyebrow">Polarized ⁶,⁷Li @ EIC · Detector study · reports/</p>
+  <p class="eyebrow">Polarized ⁶,⁷Li @ EIC · <b>Report 3</b> · Detector study</p>
   <h1>Superconducting nanowires at the ePIC far-forward: what a closer approach would buy the polarized-lithium tags</h1>
   <p class="dateline">2026-08-26 · companion to plans/09 and to open questions #19 and #20 · computed with <code>evgen/scripts/nearbeam_aperture_scan.py</code>, <code>nearbeam_reach_gain.py</code> and <code>nearbeam_sensor_budget.py</code> on <code>polligen.reco</code>, <code>polligen.recopseudo</code> and <code>polli_fastsim.spectator</code> · primary sources in <code>refs/</code></p>
 
@@ -101,10 +101,13 @@
     the 10σ rule, and a nanowire's advantage over slim-edge silicon is its dead edge — worth
     <i>0.005 mrad</i> against a 0.5–3 mrad gap. The 10σ rule is machine protection and halo, not
     sensor survival, so radiation hardness does not relax it either (§3).
-    (2) <b>The charge-ID role.</b> A nanowire latches and delivers <i>one bit</i> per plane. The
-    incumbent AC-LGAD digitises an 8-bit charge over a 30 μm active layer, which separates ⁶Li from
-    α at ≈ 4.8σ per plane — and ePIC has four planes. A nanowire cannot beat that observable; at
-    best it matches it (§4).
+    (2) <b>The charge-ID role.</b> A nanowire latches and delivers <i>one bit</i> per plane — and
+    that turns out to be <i>almost enough</i>: against the Neyman-Pearson optimum a one-bit,
+    four-plane threshold loses a factor 1.4, while the standard analogue estimator (a truncated
+    mean) loses a factor 86 <i>to</i> one bit. Bits are not the issue. What kills the nanowire is
+    <b>geometric fill factor</b>: the coincidence that makes one bit sufficient needs every plane to
+    record the track, and at the ANL device's 50% fill a four-plane array cannot reach 95% ⁶Li
+    efficiency at any working point (§4.1).
     (3) <b>Open question #19 has been asked of the wrong technology.</b> Better still, the α + d
     breakup that #19 exists to reject is <i>two hits</i>, and at beam rigidity they land 6.7 to
     45 mm apart — 13 to 90 pixels of the existing 500 μm pitch. Topology, not dE/dx (§4.3).
@@ -343,61 +346,107 @@
     linear in z rather than z² from dE/dx.
   </div>
 
-  <h3>4.1 · And the incumbent already carries more information</h3>
+  <h3>4.1 · The incumbent carries more information — but far less decisively than a σ suggests</h3>
 
-  <p>This is what closes the question. EICROC provides, per channel, a slow shaper path into an
-  <b>8-bit 40 MHz successive-approximation ADC</b> for charge alongside its 10-bit 25 ps time-of-arrival
-  TDC — the ToT of ALTIROC was replaced by that ADC specifically to handle dynamic range. Behind it
-  sits an AC-LGAD with a <b>30 μm active thickness</b> at 500 μm pitch [11]. That is an analogue
-  charge over a thicker and better-behaved sample, against a nanowire's single bit:</p>
+  <p>EICROC provides, per channel, a slow shaper path into an <b>8-bit 40 MHz successive-approximation
+  ADC</b> for charge alongside its 10-bit 25 ps time-of-arrival TDC — the ToT of ALTIROC was replaced
+  by that ADC specifically to handle dynamic range. Behind it sits an AC-LGAD with a <b>30 μm active
+  thickness</b> at 500 μm pitch [11].</p>
+
+  <div class="callout warm">
+    <b>A σ is the wrong figure of merit, and this note said so with one.</b> Gap over the quadrature
+    sum of two Landau core widths is neither a PID separation power nor a fake rate. What puts an α
+    inside a ⁶Li's acceptance window is the Landau <i>upper tail</i>, which falls as 1/λ — nothing
+    like a Gaussian. Restated as a fake rate at a matched efficiency, with the Landau sampled rather
+    than approximated (<code>nearbeam_zid_power.py</code>, 4 planes, 95% ⁶Li efficiency, 1.5×10⁶
+    events, 6.7×10⁻⁷ statistical floor):
+  </div>
 
   <table>
-    <tr><th>discriminant</th><th>MPV, d / α / ⁶Li</th><th>α ↔ ⁶Li separation, per plane</th><th>planes ePIC has</th></tr>
-    <tr><td>ePIC AC-LGAD, 30 μm Si, 8-bit charge</td><td class="mono">7.2 / 31.7 / 75.2 keV</td><td class="mono"><b>4.8σ</b></td><td class="mono">4 (2 stations × 2 layers)</td></tr>
-    <tr><td>nanowire, 12 nm NbN, firing threshold</td><td>—</td><td class="mono">1 bit</td><td class="mono">0</td></tr>
+    <tr><th>readout</th><th>α fake rate</th><th>efficiency reached</th></tr>
+    <tr><td>8-bit charge, per-plane likelihood ratio — <b>the Neyman-Pearson optimum</b></td><td class="mono">2.3×10⁻⁵</td><td class="mono">0.950</td></tr>
+    <tr><td><b>one bit per plane</b>, majority-of-<i>k</i>, 99% efficient planes</td><td class="mono"><b>3.1×10⁻⁵</b></td><td class="mono">0.950</td></tr>
+    <tr><td>truncated mean — the standard analogue dE/dx estimator</td><td class="mono">2.7×10⁻³</td><td class="mono">0.950</td></tr>
+    <tr><td>plain sum of the four planes</td><td class="mono">5.3×10⁻²</td><td class="mono">0.950</td></tr>
   </table>
-  <p style="font-size:8pt;color:var(--ink-2);margin-top:-2pt">Landau in 30 μm of silicon at
-  βγ = 147.6, δ = 5.60; the Gaussian-equivalent core width is FWHM/2.355 = 4.02ξ/2.355. The Landau
-  tail makes the true confusion worse than 4.8σ implies and the escape of δ-rays from 30 μm makes it
-  better; both effects apply to any threshold or amplitude dE/dx device alike.</p>
 
-  <p><b>A nanowire cannot beat this observable; at best it matches it.</b> The one honest caveat in
-  its favour: <i>if</i> EICROC's ADC turns out to be ranged for MIPs and clips at z = 3, and
-  <i>if</i> LGAD gain suppression flattens the α/⁶Li ratio badly, an independent Z tag becomes
-  necessary — and even then the cheap answers are a second sensor at a different gain, or the
-  documented z² Cherenkov at the IR-8 secondary focus, before a cryostat.</p>
+  <p><b>One bit costs a factor 1.4, not orders of magnitude.</b> The species are far apart (MPV 31.7
+  against 75.2 keV) and the discriminating power comes from requiring <i>coincidence</i> across
+  planes, not from precision within one. Note also that a truncated mean is <b>86× worse than one
+  bit</b>, and a plain sum worse still: a Landau has no mean, so a single δ ray drags it. More bits
+  does not automatically mean better Z-ID.</p>
+
+  <h3>4.1a · Where the nanowire actually loses: fill factor</h3>
+
+  <figure>
+    <div class="panel"><img src="data:image/png;base64,__NB4__" alt="Best reachable 6Li efficiency for a four-plane threshold array against per-plane geometric fill factor, with the ANL and SMSPD devices marked against a silicon pixel plane"></div>
+    <figcaption><b>Figure 4 · Fill factor, not bits.</b> The coincidence that makes one bit
+    sufficient needs every plane to record the track. A silicon pixel plane does so ~99% of the time;
+    a superconducting wire comb only over its geometric fill — 25% (SMSPD, [7]), 40% ([8]), 50% (the
+    ANL EIC-targeted device, [4]). At 50% a four-plane array tops out at 93.7% ⁶Li efficiency and
+    <i>cannot reach 95% at any working point</i>. <code>nearbeam_zid_power.py</code>.</figcaption>
+  </figure>
+
+  <p>This is a <b>fabrication</b> number, not an information-theoretic one — which makes it a fairer
+  and more actionable thing to put to the MEP group than "you only have one bit", and it is the one
+  item on this list they could straightforwardly change.</p>
+
+  <p><b>The unknown that outranks all of it.</b> EICROC's 8-bit full-scale range is not published
+  anywhere we could reach. A ⁶Li deposits 75 keV = 3.34 fC unamplified, <b>≈67 fC at LGAD gain 20</b>
+  (α: 28 fC), while EICROC0 is documented as "sensitive to low charge (2 fC)" and characterised at
+  12.5 fC. <i>If the pot front end is MIP-ranged, the ⁶Li clips, α and ⁶Li pile up at full scale, and
+  the incumbent's Z-ID — the load-bearing rejection in this whole programme — is gone.</i> Compounding
+  it, LGAD gain suppression for highly ionising particles is measured and reaches ~×2.5, compressing
+  α and ⁶Li toward each other in <i>collected</i> charge. That is §7 D4, and it should outrank every
+  sensor comparison in this note.</p>
 
   <h3>4.2 · The honest limit on any dE/dx scheme</h3>
 
-  <p>One plane is a one-bit or one-sample measurement on a straggling distribution, and the α → ⁶Li
-  confusion is set by the <b>δ-ray upper tail</b>, which falls as 1/λ and is therefore nearly
-  independent of sample thickness — 30 μm of silicon and a 1 μm substrate volume give 4.8σ and 3.8σ
-  respectively. Thickening does not rescue it. Four independent planes with a majority vote do:
-  a 5–6% single-plane fake becomes ~10⁻³. <b>ePIC already has four planes.</b></p>
+  <p>The limit is the <b>δ-ray upper tail</b>, and it is the same for every technology: it falls as
+  1/λ and is therefore nearly independent of sample thickness. Thickening does not rescue it;
+  independent planes do, because an α needs four upward fluctuations rather than one. That is why the
+  four-plane numbers above sit at 10⁻⁵ while any single plane is at the percent level — and why the
+  <i>estimator</i> matters more than the bit depth.</p>
+
+  <p>One caveat runs the other way and makes every fake rate here conservative: the Landau is sampled
+  untruncated, but a δ ray above ~50 keV escapes a 30 μm layer and never deposits. The more
+  tail-sensitive the estimator, the more its quoted fake rate is an overestimate.</p>
 
   <h3>4.3 · The handle that is better than either, and free</h3>
 
   <p>The background #19 exists to reject is ⁶Li → α + d. Both fragments sit at beam rigidity, so
-  neither is separated by dispersion — but the relative momentum of the breakup, k<sub>rel</sub> ≈
-  √(2μQ) ≈ 40 MeV/c (plans/06 §6.2), is <i>transverse</i> and is therefore not boosted. The α at
-  4p<sub>u</sub> and the d at 2p<sub>u</sub> take opposite kicks of the same k<sub>rel</sub>, so they
-  land on opposite sides of where the intact nucleus would have gone:</p>
+  neither is separated by dispersion — but the breakup's relative momentum is <i>transverse</i> and is
+  therefore not boosted. The α at 4p<sub>u</sub> and the d at 2p<sub>u</sub> take opposite kicks of
+  the same k<sub>T</sub>.</p>
+
+  <div class="callout warm">
+    <b>Two momentum scales, and this note first mixed them.</b> √(2μQ) with μ = 1247.7 MeV gives
+    <b>60.7 MeV/c</b> for Q = the α+d separation energy 1.4743 MeV — the <i>bound-state</i> scale κ,
+    which is what <code>spectator.sample_k</code> samples — and <b>42.2 MeV/c</b> for Q = 0.712 MeV,
+    the decay momentum of the 2.186 MeV 3⁺ resonance. Both are physical, for different production
+    mechanisms. The table is now quoted from the repository's own density rather than a single k; the
+    earlier 6.7 / 18.4 / 44.8 mm used k = 40 MeV/c and were ≈1.6× low.
+  </div>
 
   <table>
-    <tr><th>optics</th><th>α displacement</th><th>d displacement</th><th>separation</th><th>in 500 μm pixels</th></tr>
-    <tr><td>18 × 275</td><td class="mono">2.2 mm</td><td class="mono">4.5 mm</td><td class="mono">6.7 mm</td><td class="mono"><b>13</b></td></tr>
-    <tr><td>10 × 100</td><td class="mono">6.1 mm</td><td class="mono">12.2 mm</td><td class="mono">18.4 mm</td><td class="mono"><b>37</b></td></tr>
-    <tr><td>5 × 41</td><td class="mono">14.9 mm</td><td class="mono">29.9 mm</td><td class="mono">44.8 mm</td><td class="mono"><b>90</b></td></tr>
+    <tr><th>optics</th><th>median separation</th><th>16–84%</th><th>in 500 μm pixels</th></tr>
+    <tr><td>18 × 275</td><td class="mono"><b>10.9 mm</b></td><td class="mono">4.9–22.7</td><td class="mono">22</td></tr>
+    <tr><td>10 × 100</td><td class="mono"><b>30.1 mm</b></td><td class="mono">13.4–62.3</td><td class="mono">60</td></tr>
+    <tr><td>5 × 41</td><td class="mono"><b>73.4 mm</b></td><td class="mono">32.6–152</td><td class="mono">147</td></tr>
   </table>
-  <p style="font-size:8pt;color:var(--ink-2);margin-top:-2pt">k<sub>rel</sub> = 40 MeV/c at
-  R<sub>12</sub> = 30.6 m, which was measured for 18 × 275; the other two rows carry that lever arm
-  for want of the per-optics value (§7 D3), so read them as scaling, not as geometry. Events at very
-  small k<sub>rel</sub> put both fragments near the beam and may lose both — the tail of the
-  distribution is where this handle weakens, and quantifying that is the study, not this table.</p>
+  <p style="font-size:8pt;color:var(--ink-2);margin-top:-2pt">R₁₂ = 30.6 m, measured at 18 × 275; the
+  other rows carry that lever arm for want of the per-optics value (§7 D3), so read them as scaling.</p>
+
+  <p><b>But the merge is not the dominant one-hit topology.</b> At 5 × 41 the median separation
+  exceeds the pot half-height, so the commoner failure is the partner flying <i>past the outer edge</i>
+  or into the beam hole: single-fragment loss is of order <b>0.9 / 8.8 / 27% per breakup</b>, against a
+  merge probability bounded by 0.26 / 0.035 / 0.006%. Neither pitch nor momentum resolution recovers a
+  fragment that was never on the sensor. A merged pair, when it happens, deposits Σz² = 5 against 9 and
+  the charge readout separates it at ≈4σ per plane wherever it sits.</p>
 
   <p><b>An intact ⁶Li is one hit; the breakup is two, tens of pixels apart, in sensors that already
-  exist.</b> Topology is a stronger discriminant than dE/dx for exactly the background #19 was
-  written about, and nobody in this programme had looked at it.</p>
+  exist.</b> Topology is a stronger discriminant than dE/dx for exactly the background #19 was written
+  about, and nobody in this programme had looked at it.</p>
 
   <h2>5 · What stands in the way</h2>
 
@@ -467,7 +516,7 @@
     <tr><td>D1</td><td><b>Re-measure the pot aperture on the current <code>epic-main</code></b>, per optics, with the RF shields as they now stand.</td><td>this repository (plans/09 B1)</td><td><b>The highest ratio of conclusion-change to effort anywhere here.</b> One container run. Every aperture-conditional number depends on it, and the correction runs in opposite directions at the two ends (§6).</td></tr>
     <tr><td>D2</td><td>What actually sets the 10σ retraction at IP6 — sensor survival, or machine protection and the collimation hierarchy? And what is σ<sub>x</sub> at z = 32.5 m for the <i>light-ion</i> optics?</td><td>C-AD / ePIC FF WG</td><td>A conversation, not an experiment. The first part decides whether any "rad-hard ⇒ closer" argument can work at all. The second is worth three orders of magnitude in coherent yield at top energy by itself: the repository's envelope implies 10σ<sub>x</sub> ≈ 22 mm while Jentsch's "1σ ~ 1 mm" implies ~10 mm.</td></tr>
     <tr><td>D3</td><td>Per-optics R<sub>12</sub> and R<sub>34</sub>.</td><td>ePIC FF WG</td><td>R<sub>12</sub> = 30.6 m was measured for 18 × 275 only, which is why this note works in angle and quotes millimetres for that optics alone.</td></tr>
-    <tr><td>D4</td><td>Can the existing AC-LGAD stack do Z-ID? A Geant4 study through all four layers with an EICROC front-end model, plus two numbers: the chip's <b>input charge dynamic range in fC</b>, and the sensor's <b>gain-suppression curve</b> at ~9 MIP.</td><td>ePIC FF WG / OMEGA-IJCLab / BNL AC-LGAD group</td><td>One person-month, no hardware, and it closes #19 either way (§4.1). Ask this before anything about nanowires.</td></tr>
+    <tr><td>D4</td><td><b>Settle EICROC's input charge dynamic range in fC, and LGAD gain suppression at ~9 MIP.</b> A ⁶Li deposits ≈67 fC at gain 20; the chip is characterised at 12.5 fC. Then: can the existing AC-LGAD stack do Z-ID? A Geant4 study through all four layers with an EICROC front-end model, plus two numbers: the chip's <b>input charge dynamic range in fC</b>, and the sensor's <b>gain-suppression curve</b> at ~9 MIP.</td><td>ePIC FF WG / OMEGA-IJCLab / BNL AC-LGAD group</td><td><b>If the pot front end is MIP-ranged the ⁶Li clips and the incumbent's Z-ID is gone</b> — a far larger risk to the programme than any sensor comparison here. Then one person-month of Geant4 closes #19 either way (§4.1). Ask this before anything about nanowires.</td></tr>
     <tr><td>D5</td><td>Two-hit topology for α + d: what fraction of breakup events put both fragments in acceptance, and how well does multiplicity separate them from an intact ⁶Li?</td><td>this repository</td><td>Free, already instrumented, 13–90 pixels of separation, and unexamined (§4.3).</td></tr>
     <tr><td>D6</td><td>The x-moving layer and a staircase retraction near x = 0.</td><td>ePIC FF WG (A. Jentsch)</td><td>Where the ×60–×330 actually lives, and already being designed — <i>"Expect to have this finalized in the next 6-8 weeks"</i> (July 2025).</td></tr>
     <tr><td>D7</td><td><i>Only if D4 says the LGAD cannot do it:</i> the α-versus-proton turn-on bias on the same wires.</td><td>ANL MEP</td><td>Costs them one plot from data they already hold, and kills the concept at zero cost if the α curve is not where √Q predicts. Be precise that it tests the √Q law, <b>not</b> z² at fixed β — the experiment that would test that is a relativistic light-ion beam on a 1–2 μm microwire, and this study should not be what motivates it.</td></tr>
@@ -518,6 +567,7 @@
 
   <table>
     <tr><th>Date</th><th>Revision</th></tr>
+    <tr><td class="mono">2026-08-27</td><td><b>The charge argument is corrected, and it was overstated.</b> "4.8σ per plane" is neither a PID separation power nor a fake rate; restated as a sampled-Landau fake rate at matched efficiency, <b>one bit per plane costs a factor 1.4 against the Neyman-Pearson optimum</b>, and a truncated mean costs a factor 86 <i>to</i> one bit (§4.1, Figure 4, <code>nearbeam_zid_power.py</code>). The nanowire loses on <b>geometric fill factor</b> — 50% fill cannot reach 95% ⁶Li efficiency over four planes — not on bit depth. Also corrected: the α+d separation mixed the bound-state scale κ = 60.7 MeV/c with the 3⁺ resonance decay momentum 42.2 MeV/c, and is now quoted from the repository's own density (median 10.9 / 30.1 / 73.4 mm, ≈1.6× the earlier single-k figures, §4.3); the dominant one-hit topology is single-fragment <i>loss</i> (0.9 / 8.8 / 27% per breakup), not merging (≤0.26%); and EICROC's unpublished dynamic range is promoted to the top of §7.</td></tr>
     <tr><td class="mono">2026-08-26</td><td>First version, then revised the same day against an
     adversarial review. <b>The verdict changed sign.</b> As first written, this note concluded that
     charge identification was the strong half of the case; the review established that the incumbent

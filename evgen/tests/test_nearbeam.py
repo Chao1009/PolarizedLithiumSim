@@ -16,13 +16,17 @@ The published anchors themselves (134 nm; the ~250 nm optimum; the
 0.8 I_c dark-count wall; the ~1 um hot spot of a 5.5 MeV alpha) are
 checked against the numbers the papers state.
 
-One test here exists to pin a NEGATIVE result: the ePIC AC-LGAD stack
-carries more charge information per plane than a threshold nanowire, and
-that is what decides open question #19 against this technology.
+Several tests here exist to pin NEGATIVE results, including one that
+corrects an earlier version of this study: the ePIC AC-LGAD stack does
+NOT beat a threshold device by orders of magnitude on charge information
+-- one bit per plane is worth a factor 1.4 against the Neyman-Pearson
+optimum.  What actually decides open question #19 against a nanowire is
+its GEOMETRIC FILL FACTOR, which is a fabrication number.
 """
 
 import math
 
+import numpy as np
 import pytest
 
 from polligen import nearbeam as nb
@@ -183,17 +187,31 @@ def test_the_incumbent_ac_lgad_carries_more_information_per_plane():
     which separates 6Li from alpha well enough that a nanowire can at
     best match it.  Landau in silicon, Gaussian-equivalent core width
     FWHM/2.355 = 4.02 xi / 2.355."""
-    si = nb.Film(thickness_nm=30e3, density=2.33, z_over_a=0.4993,
-                 i_ev=173.0, delta=5.604, name="Si 30 um")
-    mpv = {z: nb.bethe_mean_ev(z, BG_6LI_TOP, si) for z in (1, 2, 3)}
-    xi = {z: nb.landau_xi_ev(z, 1.0, si) for z in (1, 2, 3)}
+    si = nb.SI_ACLGAD
     # the AC-LGAD active layer is thick enough for Landau to apply here,
-    # unlike the 12 nm film
+    # unlike the 12 nm superconducting film -- and the module refuses to
+    # quote an MPV where it does not
     assert si.xi_over_i() > 1.0
-    sig = math.hypot(4.02 * xi[3] / 2.355, 4.02 * xi[2] / 2.355)
-    separation = (mpv[3] - mpv[2]) / sig
+    assert nb.NBN.xi_over_i() < 1e-2
+    with pytest.raises(ValueError):
+        nb.landau_mpv_ev(3, BG_6LI_TOP, nb.NBN)
+
+    mpv = {z: nb.landau_mpv_ev(z, BG_6LI_TOP, si) for z in (1, 2, 3)}
+    sg = {z: nb.landau_core_sigma_ev(z, si) for z in (1, 2, 3)}
+    assert mpv[1] == pytest.approx(7.1e3, rel=0.05)     # ~1 MIP in 30 um Si
+    assert mpv[3] / mpv[1] == pytest.approx(10.5, rel=0.05)
+    separation = (mpv[3] - mpv[2]) / math.hypot(sg[3], sg[2])
     assert separation > 4.0                      # against a nanowire's 1 bit
-    assert mpv[3] / mpv[1] == pytest.approx(9.0)  # z^2, as everywhere
+
+    # even a MERGED alpha + d pair in one 500 um pixel -- the only way the
+    # breakup fakes a single hit -- stays separable, because charges add:
+    # 4 + 1 = 5 MIP against the 6Li's 9
+    xi_pair = nb.landau_xi_ev(2, 1.0, si) + nb.landau_xi_ev(1, 1.0, si)
+    sig_pair = nb.LANDAU_FWHM_OVER_XI * xi_pair / 2.355
+    mpv_pair = xi_pair * (math.log(2.0 * nb.M_E_EV * BG_6LI_TOP ** 2 / si.i_ev)
+                          + math.log(xi_pair / si.i_ev) + 0.200 - 1.0
+                          - si.delta)
+    assert (mpv[3] - mpv_pair) / math.hypot(sg[3], sig_pair) > 3.0
 
 
 def test_alpha_deuteron_breakup_is_two_hits_tens_of_pixels_apart():
@@ -207,3 +225,85 @@ def test_alpha_deuteron_breakup_is_two_hits_tens_of_pixels_apart():
         sep_mm = 1e3 * r12_m * k_gev * (1.0 / (4.0 * p_u) + 1.0 / (2.0 * p_u))
         assert sep_mm == pytest.approx(expect_mm, rel=0.02)
         assert sep_mm / pitch_mm > 13.0          # resolvable at every optics
+
+
+# --- the Landau itself, and what the 6Li/alpha separation really needs ---
+
+def test_landau_density_reproduces_its_reference_values():
+    """The sampler underneath every fake rate below.  If these move, the
+    fake rates are meaningless."""
+    lam = np.linspace(-1.0, 1.0, 81)
+    dens = nb.landau_density(lam)
+    assert lam[int(np.argmax(dens))] == pytest.approx(nb.LANDAU_MODE, abs=0.03)
+    assert float(nb.landau_density(0.0)[0]) == pytest.approx(0.17805, rel=0.01)
+    # exact FWHM of the Landau is 4.02 xi
+    i = int(np.argmax(dens))
+    wide = np.linspace(-2.0, 6.0, 400)
+    d2 = nb.landau_density(wide)
+    j = int(np.argmax(d2))
+    half = 0.5 * d2[j]
+    lo = float(np.interp(half, d2[:j + 1], wide[:j + 1]))
+    hi = float(np.interp(-half, -d2[j:], wide[j:]))
+    assert hi - lo == pytest.approx(nb.LANDAU_FWHM_OVER_XI, rel=0.02)
+
+
+def test_landau_sampler_matches_the_density_it_came_from():
+    lam = nb.landau_sample(200000, np.random.default_rng(3))
+    assert float(np.median(lam)) == pytest.approx(1.3557, abs=0.05)
+    # the tail falls as ~1/lambda, nothing like a Gaussian -- which is the
+    # whole reason a "sigma" is the wrong figure of merit here
+    assert 0.05 < float((lam > 10).mean()) < 0.20
+    assert float((lam > 100).mean()) > 1e-3
+
+
+def test_one_bit_per_plane_is_nearly_as_good_as_the_optimum():
+    """The correction to the first version of reports/nanowire_far_forward.
+    Against the Neyman-Pearson optimum (per-plane Landau log-likelihood
+    ratio), a one-bit threshold with a majority-of-k decision loses a small
+    factor, NOT the orders of magnitude an '8 bits versus 1 bit' framing
+    implies.  The power comes from coincidence across planes, not from
+    precision within one."""
+    kw = dict(efficiency=0.95, n_planes=4, n_mc=400000, plane_efficiency=0.99)
+    opt, _ = nb.zid_fake_rate(3, 2, readout="llr",
+                              rng=np.random.default_rng(7), **kw)
+    bit, _ = nb.zid_fake_rate(3, 2, readout="threshold",
+                              rng=np.random.default_rng(7), **kw)
+    assert opt > 0.0 and bit > 0.0
+    assert 1.0 <= bit / opt < 4.0
+
+
+def test_the_naive_analogue_estimators_lose_to_one_bit():
+    """A Landau has no mean, so a plain sum is dragged by a single delta
+    ray and a truncated mean is far behind a coincidence.  This is why
+    'more bits' does not automatically mean 'better Z-ID'."""
+    kw = dict(efficiency=0.95, n_planes=4, n_mc=400000, plane_efficiency=0.99)
+    bit, _ = nb.zid_fake_rate(3, 2, readout="threshold",
+                              rng=np.random.default_rng(7), **kw)
+    trunc, _ = nb.zid_fake_rate(3, 2, readout="trunc",
+                                rng=np.random.default_rng(7), **kw)
+    tot, _ = nb.zid_fake_rate(3, 2, readout="sum",
+                              rng=np.random.default_rng(7), **kw)
+    assert trunc > 10.0 * bit
+    assert tot > trunc
+
+
+def test_the_nanowire_loses_on_fill_factor_not_on_bits():
+    """Where the two technologies actually part company.  The coincidence
+    that makes one bit sufficient needs every plane to record the track; a
+    wire comb only does so over its fill factor.  At the ANL device's 50%
+    a four-plane array cannot reach 95% 6Li efficiency at all."""
+    kw = dict(efficiency=0.95, n_planes=4, n_mc=300000, readout="threshold")
+    ok, e_ok = nb.zid_fake_rate(3, 2, plane_efficiency=0.99,
+                                rng=np.random.default_rng(7), **kw)
+    assert ok == ok and e_ok >= 0.95            # silicon reaches it
+    for fill in (0.50, 0.40, 0.25):
+        f, reach = nb.zid_fake_rate(3, 2, plane_efficiency=fill,
+                                    rng=np.random.default_rng(7), **kw)
+        assert math.isnan(f)                    # cannot reach 95% at all
+        assert reach < 0.95
+    # and the reach falls monotonically with fill
+    reaches = [nb.zid_fake_rate(3, 2, plane_efficiency=fl, efficiency=0.999,
+                                n_planes=4, n_mc=120000, readout="threshold",
+                                rng=np.random.default_rng(7))[1]
+               for fl in (0.25, 0.50, 0.99)]
+    assert reaches[0] < reaches[1] < reaches[2]

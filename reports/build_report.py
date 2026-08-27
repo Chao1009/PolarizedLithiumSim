@@ -11,11 +11,11 @@ Two build steps per page:
    A4 print layout agree.  No JavaScript, no external fonts -- the
    output stays fully self-contained.  Inline math stays as HTML.
 
-Pages built (template -> html):
-  cos2phi_money_plots_report.template.html   projection report
-  polarized_li_primer.template.html          educational physics primer
-  reconstruction_chain_report.template.html  the reconstruction chain
-  nanowire_far_forward.template.html         the near-beam nanowire study
+Pages built (template -> html), in report-number order:
+  0  polarized_li_primer.template.html          educational physics primer
+  1  cos2phi_money_plots_report.template.html   the projected measurements
+  2  reconstruction_chain_report.template.html  the reconstruction chain
+  3  nanowire_far_forward.template.html         the near-beam detector study
 
 With --pdf each page is also print-rendered through headless
 Edge/Chrome (the templates carry the @page A4 setup).
@@ -48,6 +48,7 @@ NANOWIRE_FIGS = {
     "__NB1__": "evgen/nearbeam_aperture_6Li.png",
     "__NB2__": "evgen/nearbeam_reach_gain_6Li.png",
     "__NB3__": "evgen/nearbeam_zid_threshold.png",
+    "__NB4__": "evgen/nearbeam_zid_power.png",
 }
 
 RECO_FIGS = {
@@ -59,12 +60,15 @@ RECO_FIGS = {
     "__RC6__": "evgen/hfs_resolution_6Li.png",
 }
 
+# In report-number order, which is also the order reports/index.html lists
+# them and the order they are meant to be read: primer -> projections ->
+# reconstruction -> detector study.
 PAGES = (
-    {"stem": "cos2phi_money_plots_report", "figures": MONEY_FIGS},
-    {"stem": "polarized_li_primer",
+    {"stem": "polarized_li_primer", "number": 0,
      "figures": {k: MONEY_FIGS[k] for k in ("__PS__", "__M5__")}},
-    {"stem": "reconstruction_chain_report", "figures": RECO_FIGS},
-    {"stem": "nanowire_far_forward", "figures": NANOWIRE_FIGS},
+    {"stem": "cos2phi_money_plots_report", "number": 1, "figures": MONEY_FIGS},
+    {"stem": "reconstruction_chain_report", "number": 2, "figures": RECO_FIGS},
+    {"stem": "nanowire_far_forward", "number": 3, "figures": NANOWIRE_FIGS},
 )
 
 BROWSERS = (

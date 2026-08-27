@@ -331,5 +331,5 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
 | 17 | HepMC3 ion-spin convention | scheduled | plans/05 step 5.D → ePIC MC group |
 | 18 | coherent-⁶Li diffractive model (plans/06) | open | small-x theory engagement; scenario bands until then |
 | 19 | RP Z-ID for A/Z = 2 (plans/06) | **redirected** | ask the incumbent: EICROC's 8-bit charge over 4 AC-LGAD planes gives 4.8σ/plane vs a nanowire's 1 bit (plans/09 D1); and α + d is two hits 13–90 pixels apart (plans/09 B4) |
-| 20 | RP cutout geometry + Li divergence (reco note) | **re-measure** | the ePIC pot geometry moved after the Sep-2024 snapshot (plans/09 §9.4, B1); then ePIC FF WG / C-AD for the light-ion optics |
+| 20 | RP cutout geometry + Li divergence (reco note) | **re-measure**; optics half → plans/10 | the ePIC pot geometry moved after the Sep-2024 snapshot (plans/09 §9.4, B1); then ePIC FF WG / C-AD for the light-ion optics |
 | 21 | hadronic-method δy/y at y ≈ 0.01–0.05 (reco note) | open | ePIC inclusive WG; e+Li sample through eic-smear |

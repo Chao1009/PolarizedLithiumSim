@@ -167,11 +167,11 @@ automatically.
 ## 2 · The five-minute check: the test suites
 
 ```bash
-cd evgen   && python3 -m pytest tests/ -q     # 197 passed, ~35 s
+cd evgen   && python3 -m pytest tests/ -q     # 202 passed, ~35 s
 cd fastsim && python3 -m pytest tests/ -q     # 48 passed, ~3 s
 ```
 
-245 tests, all of which run without the PDF grids except the two in
+250 tests, all of which run without the PDF grids except the two in
 `fastsim/tests/test_grids.py`, which skip.  These are not smoke tests:
 they pin physics identities against independent constructions — the
 spin-1 cross section against an explicit density-matrix trace, the
@@ -377,6 +377,7 @@ they disagree, and that disagreement is an open item (plans/04 #20).
 python3 scripts/nearbeam_aperture_scan.py --outdir .   # 3 s
 python3 scripts/nearbeam_reach_gain.py    --outdir .   # 2 s
 python3 scripts/nearbeam_sensor_budget.py --outdir .   # 1 s
+python3 scripts/nearbeam_zid_power.py     --outdir .   # 48 s
 ```
 
 Three questions, three scripts. The first prices *every* near-beam
@@ -566,7 +567,8 @@ a current container before quoting an acceptance in a paper.
 ## 6 · The reports
 
 ```bash
-python3 reports/build_report.py          # four self-contained HTML pages
+python3 reports/build_report.py          # four self-contained HTML pages,
+                                         # numbered 0-3 in reading order
 python3 reports/build_report.py --pdf    # and their PDFs (needs §1.6)
 ```
 
@@ -613,7 +615,8 @@ trust anything downstream of it.
 | near-beam gain, coherent | `scripts/nearbeam_aperture_scan.py` | silicon → 10σ: 1.41×10⁻² → 3.71×10⁻¹ (×26), 5.12×10⁻⁵ → 2.91×10⁻² (×569), 1.94×10⁻¹⁷ → 1.97×10⁻⁹ (dead either way) |
 | near-beam gain, α tag | same | 0.103 → 0.550, 0.024 → 0.137, 0.0012 → 0.0054 |
 | near-beam gain, through the chain | `scripts/nearbeam_reach_gain.py` | 5 × 41: acc 1.43×10⁻² → 3.62×10⁻¹, 2 → 3 \|t\| bins; 10 × 100: 1.02×10⁻⁴ → 3.25×10⁻², 2 → 4 bins and δa_t 1.45 → 0.0069 |
-| hot-spot Z-ID thresholds | `scripts/nearbeam_sensor_budget.py` | r_s = 134 / 268 / 402 nm for p,d / α / ⁶Li; at w = 1 µm, I_th/I_c = 0.73 / 0.46 / 0.20 — but see the report §4.1: the incumbent AC-LGAD gives 4.8σ/plane against this one bit |
+| hot-spot Z-ID thresholds | `scripts/nearbeam_sensor_budget.py` | r_s = 134 / 268 / 402 nm for p,d / α / ⁶Li; at w = 1 µm, I_th/I_c = 0.73 / 0.46 / 0.20 |
+| Z-ID fake rate, 4 planes at 95% eff | `scripts/nearbeam_zid_power.py` | 2.3×10⁻⁵ (8-bit LLR) / 3.1×10⁻⁵ (one bit) / 2.7×10⁻³ (truncated mean) / 5.3×10⁻² (plain sum); 50% fill cannot reach 95% |
 
 ### Third-party
 
@@ -694,7 +697,7 @@ about eleven minutes.
 | `fastsim/diag_sig2_grid` | 1 | `evgen/tagged_polarimetry_7li` | 3 |
 | `fastsim/coverage_and_stat_maps` | 7 | `evgen/coherent_optics_scan` | 3 |
 | `evgen/nearbeam_aperture_scan` | 3 | `evgen/nearbeam_reach_gain` | 2 |
-| `evgen/nearbeam_sensor_budget` | 1 | | |
+| `evgen/nearbeam_sensor_budget` | 1 | `evgen/nearbeam_zid_power` | 48 |
 | `fastsim/_check_reco_mask_invariants` | <1 | `evgen/reco_chain_figures` | 13 |
 | `fastsim/money_delta_realistic` | 36 | `evgen/money_cos2phi_reco` | 4 |
 | `fastsim/money_delta_pdfgrid` | **293** | `evgen/money_cos2phi_coherent_reco` | 3 |

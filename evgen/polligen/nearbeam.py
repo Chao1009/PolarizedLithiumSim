@@ -68,12 +68,18 @@ recording; it is not kept because the design won.
 
 import math
 
-__all__ = ["NBN", "Film", "bethe_mean_ev", "hot_spot_nm", "threshold_ratio",
+import numpy as np
+
+__all__ = ["NBN", "SI_ACLGAD", "Film", "bethe_mean_ev", "landau_mpv_ev",
+           "landau_core_sigma_ev", "hot_spot_nm", "threshold_ratio",
            "saturation_width_nm", "R_S_PROTON_NM", "W_MIP_OPTIMAL_NM",
-           "DARK_COUNT_WALL", "SNSPD_THRESHOLD_EV", "landau_xi_ev"]
+           "DARK_COUNT_WALL", "SNSPD_THRESHOLD_EV", "landau_xi_ev",
+           "landau_density", "landau_sample", "zid_fake_rate",
+           "LANDAU_MODE"]
 
 K_MEV = 0.307075                 # MeV mol^-1 cm^2
 M_E_EV = 0.510998e6
+LANDAU_FWHM_OVER_XI = 4.02       # exact for the Landau distribution
 
 R_S_PROTON_NM = 134.0            # EXTRAPOLATED, 120 GeV p in 12 nm NbN
                                  # -- a fit parameter, not a datum: see the
@@ -123,6 +129,14 @@ NBN = Film(thickness_nm=12.0, density=8.47,
            name="NbN 12 nm")
 
 
+# The ePIC Roman-Pot incumbent: an AC-LGAD with a 30 um active layer at
+# 500 um pitch, read out by EICROC's 8-bit charge ADC.  It is the thing a
+# near-beam nanowire would have to beat, and it does not (plans/09 9.2).
+SI_ACLGAD = Film(thickness_nm=30e3, density=2.33, z_over_a=0.4993,
+                 i_ev=173.0, delta=5.604,   # Sternheimer, Si at beta*gamma 148
+                 name="Si 30 um (ePIC AC-LGAD active)")
+
+
 def landau_xi_ev(z, beta, film=NBN):
     """Landau width parameter xi = (K/2)(Z/A)(z/beta)^2 x, in eV.  Kept
     for the validity check only -- see the module docstring."""
@@ -144,6 +158,204 @@ def bethe_mean_ev(z, beta_gamma, film=NBN):
     return coeff * (0.5 * math.log(2.0 * M_E_EV * beta_gamma ** 2 * t_max
                                    / film.i_ev ** 2)
                     - beta2 - 0.5 * film.delta)
+
+
+def landau_mpv_ev(z, beta_gamma, film=NBN):
+    """Most probable energy loss in the film [eV], PDG Eq. 34.12.
+
+    ONLY valid where xi >> I.  A nanometre superconducting film is not
+    (NBN.xi_over_i() ~ 2e-3), which is why the near-beam study quotes the
+    Bethe mean there; the 30 um active layer of an ePIC AC-LGAD is
+    (SI_ACLGAD.xi_over_i() ~ 3), which is why the incumbent comparison
+    quotes the MPV.  Raises if asked outside the regime."""
+    if film.xi_over_i(1, 1.0) < 1.0:
+        raise ValueError(
+            "Landau MPV is not defined for %s: xi/I = %.2e, far below the "
+            "xi >> I regime the formalism needs.  Use bethe_mean_ev."
+            % (film.name or "this film", film.xi_over_i(1, 1.0)))
+    beta_gamma = float(beta_gamma)
+    beta2 = beta_gamma ** 2 / (1.0 + beta_gamma ** 2)
+    xi = landau_xi_ev(z, math.sqrt(beta2), film)
+    return xi * (math.log(2.0 * M_E_EV * beta_gamma ** 2 / film.i_ev)
+                 + math.log(xi / film.i_ev) + 0.200 - beta2 - film.delta)
+
+
+def landau_core_sigma_ev(z, film=NBN):
+    """Gaussian-equivalent core width of the Landau: FWHM/2.355 with the
+    exact FWHM = 4.02 xi.  The Landau's upper tail is heavier than
+    Gaussian, so a separation quoted in these sigmas OVERSTATES how well
+    a light species is kept out of a heavy one's peak."""
+    return LANDAU_FWHM_OVER_XI * landau_xi_ev(z, 1.0, film) / 2.355
+
+
+# --- the Landau itself, because a sigma is the wrong figure of merit -----
+#
+# A separation quoted as "gap / quadrature sum of core widths" is not a PID
+# separation power and is not a fake rate: the Landau's upper tail is what
+# puts an alpha inside a 6Li's acceptance window, and the tail falls as
+# 1/lambda, not as a Gaussian.  What follows samples the real distribution
+# so that the comparison between a THRESHOLD device (one bit per plane) and
+# an ADC (many bits) can be stated as a fake rate at a matched efficiency,
+# which is unambiguous.
+
+LANDAU_MODE = -0.2228            # argmax of the Landau density, reference
+
+
+def landau_density(lam):
+    """Landau density phi(lambda) = (1/pi) Int_0^inf exp(-u ln u - lambda u)
+    sin(pi u) du, integrated half-period by half-period so the oscillating
+    integrand converges.  Reproduces the reference mode (-0.2228), FWHM
+    (4.02) and phi(0) = 0.17805."""
+    from scipy import integrate
+    lam = np.atleast_1d(np.asarray(lam, dtype=float))
+    out = np.empty_like(lam)
+    for i, l in enumerate(lam):
+        tot = 0.0
+        for a in range(0, 60):
+            v, _ = integrate.quad(
+                lambda u: math.exp(-u * math.log(u) - l * u) * math.sin(math.pi * u)
+                if u > 0 else 0.0, a, a + 1, limit=200)
+            tot += v
+            if a > 5 and abs(v) < 1e-15:
+                break
+        out[i] = tot / math.pi
+    return out
+
+
+def _landau_cdf_grid(lam_lo=-4.0, lam_hi=400.0, n=3000):
+    """(lambda, CDF) on a log-stretched grid.  Cached: building it costs a
+    few seconds of quadrature and the result is universal."""
+    global _LANDAU_GRID
+    try:
+        return _LANDAU_GRID
+    except NameError:
+        pass
+    lam = np.concatenate([np.linspace(lam_lo, 20.0, n),
+                          np.geomspace(20.0, lam_hi, n // 4)[1:]])
+    dens = landau_density(lam)
+    dens = np.clip(dens, 0.0, None)
+    cdf = np.concatenate([[0.0], np.cumsum(0.5 * (dens[1:] + dens[:-1])
+                                           * np.diff(lam))])
+    cdf /= cdf[-1]
+    _LANDAU_GRID = (lam, cdf)
+    return _LANDAU_GRID
+
+
+def landau_pdf(lam):
+    """Landau density, interpolated off the cached grid.  Fast enough for a
+    per-event likelihood; landau_density() is the slow exact version."""
+    g_lam, _ = _landau_cdf_grid()
+    global _LANDAU_PDF
+    try:
+        dens = _LANDAU_PDF
+    except NameError:
+        dens = np.clip(landau_density(g_lam), 0.0, None)
+        _LANDAU_PDF = dens
+    return np.interp(np.asarray(lam, dtype=float), g_lam, dens,
+                     left=0.0, right=0.0)
+
+
+def landau_sample(n, rng=None):
+    """n draws of the Landau variable lambda, by inverse CDF."""
+    rng = rng or np.random.default_rng(20260827)
+    lam, cdf = _landau_cdf_grid()
+    return np.interp(rng.uniform(size=n), cdf, lam)
+
+
+def zid_fake_rate(z_signal, z_background, film=SI_ACLGAD, beta_gamma=147.6,
+                  n_planes=4, efficiency=0.95, readout="llr", n_mc=300000,
+                  plane_efficiency=1.0, rng=None):
+    """Fake rate of `z_background` faking `z_signal`, at a MATCHED signal
+    efficiency, over `n_planes` independent samples of `film`.
+
+    `readout` picks the estimator, which matters far more here than the
+    number of bits:
+      "llr"       per-plane Landau log-likelihood ratio, summed.  The
+                  Neyman-Pearson optimum, and therefore the ceiling any
+                  readout can reach.
+      "threshold" ONE BIT per plane -- each plane fires or does not -- with
+                  a majority-of-k decision, k and the threshold chosen
+                  together to minimise the fake at the stated efficiency.
+                  This is what a superconducting nanowire can deliver.
+      "sum"       the plain sum of the plane deposits.  Included because it
+                  is the naive choice and it is BAD: a Landau has no mean,
+                  so one delta ray in one plane drags the sum, and the sum
+                  loses to a one-bit coincidence.
+      "trunc"     truncated mean, dropping the largest plane.  The standard
+                  dE/dx estimator, and the reason the naive comparison
+                  "8 bits beats 1 bit" does not hold.
+
+    `plane_efficiency` is the probability that a plane records the track at
+    all -- ~0.99 for a silicon pixel plane, but only the GEOMETRIC FILL
+    FACTOR for a superconducting wire comb: 0.25 (arXiv:2510.11725), 0.40
+    (arXiv:2410.00251), 0.50 (the ANL EIC-targeted device, arXiv:2312.13405).
+    This is where the two technologies actually part company, and it is a
+    fabrication number rather than an information-theoretic one.
+
+    Returns (fake_rate, efficiency_achieved).  If the device cannot reach
+    the requested efficiency at any working point, returns (nan, best_eff).
+
+    CAVEAT: the Landau is used untruncated, so the background's upper tail
+    is OVERSTATED -- a delta ray above ~50 keV escapes a 30 um layer and
+    never deposits.  Every fake rate here is therefore a conservative upper
+    bound, and the more tail-sensitive the estimator, the more conservative.
+    """
+    rng = rng or np.random.default_rng(20260827)
+    par = {z: (landau_xi_ev(z, 1.0, film),
+               landau_mpv_ev(z, beta_gamma, film))
+           for z in (z_signal, z_background)}
+
+    def draw(z):
+        xi, mpv = par[z]
+        lam = landau_sample(n_mc * n_planes, rng).reshape(n_mc, n_planes)
+        return mpv + xi * (lam - LANDAU_MODE)
+
+    sig, bkg = draw(z_signal), draw(z_background)
+    if plane_efficiency < 1.0:
+        # a plane that does not record the track can never be above threshold
+        sig = np.where(rng.uniform(size=sig.shape) < plane_efficiency,
+                       sig, -np.inf)
+        bkg = np.where(rng.uniform(size=bkg.shape) < plane_efficiency,
+                       bkg, -np.inf)
+
+    if readout == "threshold":
+        best, reach = (1.0, 0.0), 0.0
+        for k in range(1, n_planes + 1):
+            lo, hi = 0.0, float(sig.max())
+            for _ in range(60):
+                t = 0.5 * (lo + hi)
+                if float(((sig > t).sum(axis=1) >= k).mean()) >= efficiency:
+                    lo = t
+                else:
+                    hi = t
+            eff = float(((sig > lo).sum(axis=1) >= k).mean())
+            reach = max(reach, eff)
+            if eff + 1e-9 < efficiency:
+                continue
+            fake = float(((bkg > lo).sum(axis=1) >= k).mean())
+            if fake < best[0]:
+                best = (fake, eff)
+        if best[1] == 0.0:
+            return float("nan"), reach
+        return best
+
+    def statistic(e):
+        if readout == "sum":
+            return e.sum(axis=1)
+        if readout == "trunc":
+            return np.sort(e, axis=1)[:, :-1].sum(axis=1)
+        if readout == "llr":
+            tot = np.zeros(e.shape[0])
+            for z, sign in ((z_signal, 1.0), (z_background, -1.0)):
+                xi, mpv = par[z]
+                pdf = landau_pdf((e - mpv) / xi + LANDAU_MODE) / xi
+                tot += sign * np.log(np.clip(pdf, 1e-300, None)).sum(axis=1)
+            return tot
+        raise ValueError("unknown readout %r" % (readout,))
+
+    s_stat, b_stat = statistic(sig), statistic(bkg)
+    cut = float(np.quantile(s_stat, 1.0 - efficiency))
+    return float((b_stat > cut).mean()), float((s_stat > cut).mean())
 
 
 def hot_spot_nm(z, r_s_proton=R_S_PROTON_NM):

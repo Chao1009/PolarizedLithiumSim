@@ -31,11 +31,13 @@ python3 scripts/coherent_optics_scan.py   # WP5: the coherent tag vs the near-be
 python3 scripts/nearbeam_aperture_scan.py # plans/09: what every near-beam aperture is worth
 python3 scripts/nearbeam_reach_gain.py    # plans/09: the coherent chain at both apertures
 python3 scripts/nearbeam_sensor_budget.py # plans/09: hot-spot Z-ID, sizing, channel count
+python3 scripts/nearbeam_zid_power.py     # plans/09: how much charge information Z-ID needs
 python3 ../reports/build_report.py --pdf  # assemble reports/ pages
-#   -> cos2phi_money_plots_report.html/pdf (projection report)
-#   -> polarized_li_primer.html/pdf (educational physics primer)
-#   -> reconstruction_chain_report.html/pdf (measurement + reco audit)
-#   -> nanowire_far_forward.html/pdf (the near-beam nanowire study)
+#   reports are numbered in reading order:
+#   -> 0 polarized_li_primer.html/pdf (educational physics primer)
+#   -> 1 cos2phi_money_plots_report.html/pdf (the projected measurements)
+#   -> 2 reconstruction_chain_report.html/pdf (measurement + reco audit)
+#   -> 3 nanowire_far_forward.html/pdf (the near-beam detector study)
 #   figures embedded from the PNGs above; display math typeset at
 #   build time (matplotlib mathtext, no JS/fonts in the output)
 ```
@@ -44,7 +46,7 @@ python3 ../reports/build_report.py --pdf  # assemble reports/ pages
 
 | module | content |
 |---|---|
-| `polligen/nearbeam.py` | plans/09: thin-film energy deposit and the hot-spot firing threshold I_th/I_c = 1 − 2r_s/w with r_s ∝ z — how a superconducting nanowire carries charge information, since its pulse amplitude does not. Anchored on Argonne's measured 134 nm for a 120 GeV proton (arXiv:2312.13405) |
+| `polligen/nearbeam.py` | plans/09: thin-film energy deposit; the hot-spot firing threshold I_th/I_c = 1 − 2r_s/w with r_s ∝ z (anchored on Argonne's *extrapolated* 134 nm, arXiv:2312.13405); and a sampled Landau with `zid_fake_rate`, which says how much charge information the ⁶Li/α separation actually needs — one bit per plane costs a factor 1.4 against the Neyman-Pearson optimum, and the nanowire loses on fill factor instead |
 | `polligen/spin.py` | ρ(m,m′) for J = 1, 3/2: Wigner-d/CG, populations ↔ normalized (vector, tensor, octupole) moments, arbitrary quantization axis, spin-temperature (max-entropy) fills |
 | `polligen/xsec.py` | doubly polarized inclusive master formula: HJM spin-1 tensor sector (b₁/b₂, Δ cos 2φ), vector sector A∥ = D·g1/F1 (+ γ-suppressed g_T term, g₂ = g₂^WW), spin-3/2 rank-0/1 exact + rank-2 scenario slots |
 | `polligen/bookkeeping.py` | run plans (helicity flips, tensor thirds, transverse fills), relative-luminosity offsets + first-order bias formulas, polarimetry smearing, per-(run,bunch) rng streams |
