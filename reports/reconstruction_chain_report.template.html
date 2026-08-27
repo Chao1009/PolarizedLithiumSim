@@ -1043,6 +1043,86 @@
   3×10⁻⁵, and 10⁻³ moves a<sub>t</sub> by 0.08%.</p>
 
 
+  <h2>8 · What the chain assumes, and what it needs</h2>
+
+  <p>Everything above rests on inputs that belong to the accelerator, to the detector, or to a
+  measurement nobody has designed yet. This section is the consolidated list, split by <em class="k">who
+  owns each</em>, because the response differs: an accelerator input is something to ask for
+  precisely; a detector requirement is something to hold ePIC to; and a property of <i>this</i>
+  measurement is something we have to specify ourselves and then meet. Report 3 carries the machine
+  and detector specification in full; this is what the chain actually consumes.</p>
+
+  <h3>8.1 · What the chain assumes</h3>
+
+  <table>
+    <tr><th>input</th><th>value used</th><th>status</th><th>if it is wrong</th></tr>
+    <tr><td colspan="4" style="padding-top:7pt"><b>Beam</b></td></tr>
+    <tr><td>⁶Li energies</td><td class="mono">40.8 / 99.5 / 137.5 GeV/u</td><td>derived — γ-matched, then rigidity-capped (plans/10)</td><td>everything: p_ion sets every far-forward cut</td></tr>
+    <tr><td>σ_θ h/v, high acceptance</td><td class="mono">220/380, 180/180, 92/92 μrad</td><td>YR Table 10.1 + the species step</td><td>far-forward acceptance, exponentially</td></tr>
+    <tr><td>Δp/p</td><td class="mono">7–10 ×10⁻⁴</td><td>YR Tables 10.1/10.2; species-insensitive</td><td>little — no observable here uses it</td></tr>
+    <tr><td>P_zz (projections)</td><td class="mono">0.60</td><td><b>conservative</b> — the ANL source target is ≥ 0.80</td><td>statistical error only; 0.80 would improve it 33%</td></tr>
+    <tr><td>tensor flip states</td><td class="mono">+0.6 / −1.2, equal luminosity</td><td>derived; the equal split is exactly optimal</td><td>statistical error</td></tr>
+    <tr><td>electron / ion vector polarization</td><td class="mono">0.70 / 0.70</td><td>YR assumption for physics studies</td><td>not used by the tensor observable</td></tr>
+    <tr><td>integrated luminosity</td><td class="mono">10 / 100 fb⁻¹ per nucleon</td><td>YR convention (1 yr / 10 yr)</td><td>statistical error</td></tr>
+    <tr><td colspan="4" style="padding-top:7pt"><b>Detector</b></td></tr>
+    <tr><td>EMCal σ_E/E</td><td class="mono">2%/√E ⊕ 1% (backward)</td><td>YR <b>requirement</b>, correctly sourced backward</td><td>δQ²/Q² at the sweet spots</td></tr>
+    <tr><td>tracking σ_p/p</td><td class="mono">√((a p)² + b²), η-piecewise</td><td>YR <b>requirement</b> (Fig. 8.3 / Table 11.2) — <i>not</i> a placeholder</td><td>≈±20% against ePIC full simulation</td></tr>
+    <tr><td>tracking σ_θ</td><td class="mono">3 mrad at the sweet spots</td><td><span class="status-no">PLACEHOLDER</span> — no YR angular requirement exists</td><td>δQ²/Q²; but it is also the model's only stand-in for the 81–211 μrad beam-divergence floor, so the honest bracket is a factor ≲ 3</td></tr>
+    <tr><td>electron-ID efficiency</td><td class="mono">0.70–0.95 by η</td><td>constructed; sources disagree by ≈25 points in the barrel</td><td><b>nothing</b> — a fill-independent efficiency cancels in the ratio</td></tr>
+    <tr><td>hadronic y resolution</td><td class="mono">Σ method on the PYTHIA 8 HFS</td><td>measured on 8 M events at the corrected energies</td><td>bin purity and the amplitude dilution D</td></tr>
+    <tr><td>Roman-Pot aperture</td><td class="mono">2.00 / 1.35 / 1.03 mrad</td><td><span class="status-part">measured in a superseded (Sept-2024) geometry</span></td><td>coherent acceptance; re-measurement is plans/09 B1</td></tr>
+    <tr><td colspan="4" style="padding-top:7pt"><b>Physics</b></td></tr>
+    <tr><td>coherent t-slope B</td><td class="mono">50 GeV⁻²</td><td>model, ≈ R²/4 for ⁶Li</td><td>coherent acceptance, exponentially</td></tr>
+    <tr><td>nuisance harmonics u₁, u₂</td><td class="mono">0.05, 0.02</td><td>ZEUS LPS 1σ edge (NPB 816:1)</td><td>u₂ leaks into a_e at first order through ⟨cos 2β⟩</td></tr>
+    <tr><td>diffractive fraction f₀</td><td class="mono">0.04</td><td>model bracket (plans/06)</td><td>coherent rate, linearly</td></tr>
+    <tr><td>R = σ_L/σ_T</td><td class="mono">toy 0.157–0.171</td><td>the published R1998 fit is transcribed but not the default</td><td>Δ/F₁ by +16.6 / +18.0 / +4.7 / −4.4%</td></tr>
+  </table>
+
+  <h3>8.2 · The target specifications this measurement needs</h3>
+
+  <p>Two of these are <b>ours to specify</b>, because they are properties of a measurement that does
+  not exist yet and no EIC document addresses them: the tensor-polarization scale and the
+  relative luminosity between tensor states. The rest are asks, with owners.</p>
+
+  <table>
+    <tr><th>#</th><th>what must be achieved</th><th>target</th><th>why that number</th><th>owner</th></tr>
+    <tr><td>T1</td><td><b>Tensor-polarization scale, δP_zz/P_zz</b></td><td class="mono">see §8.3</td><td>a pure normalisation on Δ, propagating as (1+d)² − 1 ≈ 2d — the <b>dominant</b> systematic of the two we specify</td><td><b>ours</b> + ANL source / BNL polarimetry</td></tr>
+    <tr><td>T2</td><td><b>Relative luminosity between P_zz states</b></td><td class="mono">≤ 10⁻³</td><td>the induced bias is ≈1.4 × δ, so 10⁻³ costs 0.14% — two orders below T1. <b>Bunch-by-bunch alternation, if the source allows it, inherits the 10⁻⁴ RHIC achieves and makes this negligible.</b></td><td><b>ours</b> + C-AD / source</td></tr>
+    <tr><td>T3</td><td>Source tensor polarization</td><td class="mono">P_zz ≥ 0.80</td><td>the ANL ECRP target; the projections use 0.60, so meeting it improves the statistical error by 33%</td><td>ANL source</td></tr>
+    <tr><td>T4</td><td>Polarization survived to store</td><td class="mono">—</td><td>⁶Li cannot use Siberian snakes (G = −0.178); 81 resonances to cross</td><td>C-AD / EPIOS</td></tr>
+    <tr><td>T5</td><td>Far-forward aperture, for the coherent tag</td><td class="mono">10σ envelope, and a pot that reaches it</td><td>the tag is exp(−B(10σ_θ·A·p_u)²); at published optics it does not survive (report 4 §7)</td><td>C-AD (β*) + ePIC FF (granularity)</td></tr>
+    <tr><td>T6</td><td>Charge identification in the pots</td><td class="mono">α↔⁶Li fake ≲ 10⁻³</td><td>⁶Li → α + d puts both fragments at beam rigidity; four AC-LGAD planes reach it <i>if</i> EICROC's charge range does not clip at 9 MIP</td><td>ePIC FF / OMEGA-IJCLab</td></tr>
+    <tr><td>T7</td><td>Hadronic-method y resolution at y ≈ 0.01</td><td class="mono">δy/y ≲ 0.3</td><td>three of four sweet spots sit there and the electron method gives 0.9–2.3; the Σ method on PYTHIA gives 0.28–0.55</td><td>achieved in simulation; needs ePIC full sim</td></tr>
+    <tr><td>T8</td><td>A far-forward reconstruction that knows what lithium is</td><td class="mono">—</td><td>EICrecon selects its transfer matrix by matching the beam <i>proton</i> PDG code. <b>This is what the development is for, not a gap in the specification.</b></td><td><b>this programme</b></td></tr>
+  </table>
+
+  <h3>8.3 · The two we specify, and what they cost</h3>
+
+  <p>Both are pinned as tests (<code>evgen/tests/test_recopseudo.py</code>) so the propagation cannot
+  drift even before the values are settled.</p>
+
+  <table>
+    <tr><th>δP_zz/P_zz</th><th>amplitude scale error</th><th></th><th>δR (relative luminosity)</th><th>bias on the amplitude</th></tr>
+    <tr><td class="mono">2%</td><td class="mono">4.0%</td><td></td><td class="mono">10⁻⁴ (bunch-by-bunch)</td><td class="mono">0.014%</td></tr>
+    <tr><td class="mono">5%</td><td class="mono">10.3%</td><td></td><td class="mono">10⁻³ (fill-to-fill)</td><td class="mono">0.14%</td></tr>
+    <tr><td class="mono">10%</td><td class="mono">21.0%</td><td></td><td class="mono">10⁻²</td><td class="mono">1.4%</td></tr>
+  </table>
+
+  <div class="callout">
+    <b>What this means for what we can claim.</b> A P_zz scale error multiplies every bin
+    identically, so it is a pure <b>normalisation</b> on Δ(x,Q²). <i>Every shape claim in this
+    programme is immune to it</i> — the x and Q² dependence, the sign, the ratio between sweet
+    spots, and the discrimination between the two Δ ansätze of §7 all survive a wrong P_zz scale
+    untouched. What it moves is the <b>absolute magnitude</b> of Δ, and hence any statement of the
+    form "Δ is this big". Design the claims accordingly: lead with shape, quote magnitude with the
+    P_zz scale attached.
+    <br><br>
+    And relative luminosity, at ≈1.4 × δ, is <b>not</b> a leading systematic at any plausible value —
+    it is two orders below the polarimetry. If the source can alternate the tensor state
+    bunch-by-bunch, it stops mattering at all. That is a design choice this programme should make
+    early and state, rather than a number to be measured later.
+  </div>
+
   <h2>References</h2>
   <div class="refs">
     <p>[1] R. L. Jaffe, A. Manohar, <i>Nuclear gluonometry</i>, Phys. Lett. B 223 (1989) 218.</p>
@@ -1072,6 +1152,7 @@
 
   <table>
     <tr><th>Date</th><th>Revision</th></tr>
+    <tr><td class="mono">2026-08-27 (later)</td><td><b>New §8: what the chain assumes, and what it needs.</b> The consolidated list of every input the chain consumes, split by who owns each — accelerator, detector, physics model — with its status and what moves if it is wrong; then the target specifications the measurement needs, with owners. Two of those are <b>ours to specify</b>, because they are properties of a measurement that does not exist yet and no EIC document addresses them: <b>δP_zz/P_zz</b>, which is a pure normalisation propagating as (1+d)² − 1 (4.0 / 10.3 / 21.0% at d = 2 / 5 / 10%), and the <b>relative luminosity between tensor states</b>, whose induced bias is ≈1.4 × δ and which is therefore two orders less important. Both propagations are pinned as tests. The consequence for what we claim: <b>every shape claim is immune to a P_zz scale error</b> — it moves only the absolute magnitude of Δ — so the claims should lead with shape and quote magnitude with the scale attached.</td></tr>
     <tr><td class="mono">2026-08-27</td><td><b>The beam energies were wrong at two of the three configurations, and everything conditioned on them is re-run.</b> The HSR and ESR must share a revolution period and the electrons are ultrarelativistic, so the hadron γ is fixed by the ring circumference: EIC ions are <b>γ-matched</b>, not rigidity-scaled. ⁶Li therefore sits at <b>40.8 / 99.5 / 137.5 GeV/u</b>, not 20.5 / 50 / 137.5 (plans/10; the decisive check is that YR Table 10.2 lists gold at 41 GeV/u, not the 16.4 rigidity-scaling gives). The PYTHIA 8 hadronic final state was regenerated at the corrected energies for the two lower configurations — 8 M events, 80.4 M particles — and every figure and number derived from them re-run. What moved: Table 1's y values halve and δy/y at the mid configuration doubles (1.2 / 0.46 / 1.1 / 0.23 → 2.3 / 0.93 / 2.1 / 0.46), Σ-method δy/y goes 0.32 / 0.22 / 0.28 / 0.11 → 0.55 / 0.28 / 0.50 / 0.15 at mid and 0.21 / 0.12 / 0.17 / 0.10 → 0.28 / 0.21 / 0.24 / 0.11 at low, purity 0.40 / 0.53 / 0.44 / 0.73 → 0.43 / 0.54 / 0.47 / 0.69 and D 0.79 / 0.84 / 0.86 / 0.96 → 0.79 / 0.85 / 0.82 / 0.95. <b>The top configuration is rigidity-capped and did not move</b>, and neither did any number derived from it — which is the check that nothing else drifted. Finding (1) is strengthened, not weakened: the electron method is worse at the corrected energies, so x must come from the hadronic final state by a wider margin. Separately, the far-forward near-beam envelope is now per-configuration (<code>reco.sigma_theta_for</code>) rather than a single proton-derived 72.7 μrad, which is what plans/10 is about.</td></tr>
     <tr><td class="mono">2026-08-24</td><td>First version: what is measured, the covariant azimuth and the head-on frame, the inclusive and coherent chains, the audit of the simulation and the recommendations (Figures 1–2, Schematics 1–3, <code>polligen.reco</code>). Same day: §7, the reconstructed-level pseudo-experiments of WP3 (money plots 5R, 7R, 6R from <code>polligen.recopseudo</code>, the acceptance-weighted template basis, the anchor's 2a₂ convention).</td></tr>
     <tr><td class="mono">2026-08-25</td><td>Revised against the reference copies in refs/: the ePIC Roman-Pot slot geometry and beam-effect resolution [17], the ZEUS bounds on the diffractive harmonics [13,14], the exact spin-1 harmonics at finite γ [12], the anchor's frame and convention [9]; the hadronic-y resolution set to the documented 25% [18–20] and 5R/7R rerun; the limits of §7.1 from the code review. Then the hadronic final state itself (WP3-HFS): <code>polligen.hfs</code>, the hadron-side response and the (x, Q²) event library; §3, Figure 3 and the §7 cross-check.</td></tr>
