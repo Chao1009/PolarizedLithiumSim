@@ -95,7 +95,7 @@
     (1) Three of the four inclusive sweet-spot bins of money plot 5 sit at y = 0.010–0.026,
     where the electron method gives δy/y = 46–118% even with a 1.2% calorimeter: x must come
     from the hadronic final state. On the PYTHIA 8 final state with 50 MeV of calorimeter
-    noise the Σ method gives δy/y = 0.32 / 0.22 / 0.29 / 0.15 at the four spots; the reconstructed bins keep 43–69% purity and their amplitude sits 7–23% below the true-bin value, a response worth fitting rather than assuming (§7).
+    noise the Σ method gives δy/y = 0.32 / 0.22 / 0.29 / 0.15 at the four spots; the reconstructed bins keep 43–69% purity (52–76% once the hadronic scale is calibrated) and their amplitude sits 5–21% below the true-bin value uncalibrated, a response worth fitting rather than assuming (§7).
     (2) The single-fill cos 2φ′ fit measures the detector's own cos 2φ′ acceptance harmonic
     divided by P<sub>zz</sub>: a 3% harmonic aligned with the vertical spin axis — the symmetry
     axis of the crossing angle and of the Roman-Pot cutout alike — fakes an amplitude four
@@ -321,9 +321,7 @@
   calorimeter objects within |η| ≤ 3.7 (EMCal photons above 0.1 GeV, neutral and untracked
   charged hadrons in the HCal above 0.5 GeV at 90%), Yellow Report resolutions per region, and
   Gaussian noise on Σ and on each p<sub>T</sub> component — 50 MeV by default, the magnitude
-  Arratia et al. needed to reproduce the H1 full simulation at low y [20]. Figure 3: 0.90 of Σ
-  is captured (0.51 tracks, 0.28 EMCal photons and electrons, 0.11 neutral hadrons, the rest
-  below threshold or beyond |η| = 3.7); without noise the Σ method resolves y to 19–22% throughout 0.005 &lt; y &lt; 0.05, and with 50 MeV of noise the four sweet spots give 0.32 / 0.22 / 0.29 / 0.15 (Σ and JB alike; DA 0.51 / 0.40 / 0.45 / 0.22; the electron method 1.18 / 0.46 / 1.06 / 0.46). The noise floor, not the fragmentation, decides the lowest bins:
+  Arratia et al. needed to reproduce the H1 full simulation at low y [20]. Figure 4 and Table 1b: 78–91% of Σ is within the acceptance and above threshold at the four sweet spots (tracks 0.44–0.55, photons 0.25–0.27, HCal objects 0.09–0.10), the rest escaping forward beyond |η| = 3.7 (7–19%) or lying below threshold (1–6%), and 69–85% is captured through the full response; without noise the Σ method resolves y to 19–22% throughout 0.005 &lt; y &lt; 0.05, and with 50 MeV of noise the four sweet spots give 0.32 / 0.22 / 0.29 / 0.15 (Σ and JB alike; DA 0.51 / 0.40 / 0.45 / 0.22; the electron method 1.18 / 0.46 / 1.06 / 0.46). The noise floor, not the fragmentation, decides the lowest bins:
   at y = 0.005 the Σ resolution runs 0.22 / 0.33 / 0.54 / 1.01 for 0 / 25 / 50 / 100 MeV of noise and at y = 0.0125 0.19 / 0.21 / 0.28 / 0.44, so the ePIC noise and threshold floor at
   Σ<sub>h</sub> ≈ 0.2–0.5 GeV sets the y ≈ 0.01 bins (plans/04 #21). Each configuration selects its own sweet spots, which move to lower y as s grows: they resolve to 0.38 / 0.23 / 0.24 / 0.11 at the low configuration and 0.23 / 0.19 / 0.21 / 0.18 at the top, so the x ≈ 0.14 bins are best measured at the low-energy configuration (0.24 at Q² = 3.1 and 0.11 at 14 GeV²) (<code>hfs_resolution.py --config 0/1/2</code>).</p>
 
@@ -334,9 +332,60 @@
     (e10 × ⁶Li99.5, <b>PYTHIA 8</b>, 4 M e + p and e + n events, <code>hfs_resolution.py</code>).
     <b>(a)</b> δy/y (68% half-width; dotted: rms) of the Σ, Jacquet–Blondel and double-angle
     methods at Q² &lt; 3 GeV² with the default response and 50 MeV noise, against the electron
-    method and the 25% stand-in. <b>(b)</b> Captured fraction of Σ by detector object, no
-    noise. <b>(c)</b> The four sweet spots. <b>(d)</b> The Σ-method resolution for 0, 25, 50
+    method and the 25% stand-in. <b>(b)</b> Captured fraction of Σ by particle species, rate-weighted at Q² &lt; 3 GeV² and through the full response, no noise (0.66–0.75 across the sweet-spot y range; Table 1b is the Σ-weighted decomposition at the spots themselves). <b>(c)</b> The four sweet spots. <b>(d)</b> The Σ-method resolution for 0, 25, 50
     and 100 MeV of calorimeter noise.</figcaption>
+  </figure>
+
+  <p><b>Where the hadronic E − p<sub>z</sub> sum goes.</b> Each particle contributes
+  E − p<sub>z</sub> = m<sub>T</sub>e<sup>−y</sup> to Σ<sub>h</sub> (p<sub>T</sub>e<sup>−η</sup> for a massless one), an
+  exponentially falling share of what goes forward — except the mass term of forward baryons, which is what the
+  target remnant carries — so whether the hadronic final state is "in acceptance" is a question about where Σ is
+  carried, not about where the particles are. Figure 4 and Table 1b answer it at the four sweet spots on the
+  PYTHIA 8 sample (<code>hfs_acceptance.py</code>). The struck-quark direction, the double-angle hadronic angle
+  γ<sub>h</sub>, sits at η = 0.7–2.1, inside the tracker; but Σ is carried by particles whose Σ-weighted median
+  η is 1.7–2.6 and, at the y ≈ 0.01 spots — a low-mass system, W ≈ 6 GeV with five charged particles — whose
+  84th percentile reaches the calorimeter edge at 3.7–3.9. Geometry and thresholds alone leave 78–91% of Σ
+  within the acceptance and above threshold: 16–19% escapes forward beyond |η| = 3.7 at y ≈ 0.01 (7–8% at the
+  y ≈ 0.025 spots), 60% of it remnant nucleons whose E − p<sub>z</sub> is the mass term, thresholds cost 1–6%,
+  and nothing is lost backward. Through the full response — efficiencies, the track turn-on, the pion-mass
+  hypothesis on tracks and massless clusters — the captured fraction is 0.69 / 0.74 / 0.73 / 0.85 (Σ-weighted;
+  per-event median 0.72 / 0.78 / 0.76 / 0.87), and the median y<sub>Σ</sub>/y is the same 0.72–0.87. The
+  far-forward lithium fragments do not enter: a beam-rapidity α, deuteron or intact recoil carries
+  E − p<sub>z</sub> = m²/(2p) — 4.4 MeV per nucleon, 17 MeV for an α, 26 MeV for an intact ⁶Li — a per-event
+  constant at η ≈ 8 that never reaches the measured Σ<sub>h</sub> whether it is tagged or not, which is why this
+  method is independent of the tagging question. Two consequences follow. The loss is a <i>scale bias</i> on
+  y<sub>Σ</sub>, 13–28% through the response, and the response's (x, Q²) library reproduces it in the
+  pseudo-experiments — each pseudo-event takes the captured fraction of a library event from its cell — rather
+  than correcting it; the migration-inclusive bin-centering factor K of §7 absorbs it to the extent the response
+  is right, and an analysis would calibrate it from the same simulation, which <code>HFSResponse(calibrate=True)</code>
+  now does with the library's per-cell mean (§7 gives the calibrated 5R numbers, and a residual 1% scale error
+  moves Δ̂ by 0.2–0.7%). And the loss is not what sets the resolution. Extending the calorimeters to the ePIC
+  nominal |η| = 4.0 recovers about a quarter of the forward loss (19 → 14% at the first spot) and moves the
+  median y<sub>Σ</sub>/y from 0.72 to 0.74, but leaves δy/y unchanged: the forward share is a nearly constant
+  fraction of Σ<sub>h</sub> event to event, so removing it entirely moves the median, not the width. What sets
+  the width is the 50 MeV noise at the y ≈ 0.01 spots (0.25 / 0.23 of the 0.32 / 0.29) and, at the y ≈ 0.025
+  spots where Σ<sub>h</sub> = 0.5 GeV, the within-acceptance fluctuation of the captured share — thresholds,
+  efficiencies and the massless treatment of hadrons (0.19 of the 0.22 at zero noise at the second spot,
+  comparable to the noise at the fourth). The B0 region (η ≈ 4.6–5.9) is not in the response and would catch
+  part of the remainder.</p>
+
+  <table>
+    <tr><th>Sweet spot (x, Q²)</th><th>y</th><th>W [GeV]</th><th>⟨n<sub>ch</sub>⟩</th><th>γ<sub>h</sub> as η · Σ-weighted particle η (16 / 50 / 84%)</th><th>within acceptance and above threshold, |η| ≤ 3.7 (tracks / photons / HCal)</th><th>lost forward</th><th>below threshold</th><th>same, |η| ≤ 4.0</th><th>captured through the response, 3.7 (mean · median)</th><th>δy/y (Σ), 3.7 / 4.0</th></tr>
+    <tr><td class="mono">0.028, 1.14</td><td class="mono">0.010</td><td class="mono">6.3</td><td class="mono">4.6</td><td class="mono">1.6 · 1.8 / 2.6 / 3.9</td><td class="mono">0.78 (0.44 / 0.25 / 0.10)</td><td class="mono">0.19</td><td class="mono">0.03</td><td class="mono">0.83</td><td class="mono">0.69 · 0.72</td><td class="mono">0.32 / 0.32</td></tr>
+    <tr><td class="mono">0.011, 1.14</td><td class="mono">0.025</td><td class="mono">10.0</td><td class="mono">5.9</td><td class="mono">0.7 · 0.8 / 1.7 / 2.9</td><td class="mono">0.86 (0.51 / 0.26 / 0.10)</td><td class="mono">0.08</td><td class="mono">0.06</td><td class="mono">0.88</td><td class="mono">0.74 · 0.78</td><td class="mono">0.22 / 0.22</td></tr>
+    <tr><td class="mono">0.071, 3.13</td><td class="mono">0.011</td><td class="mono">6.5</td><td class="mono">4.6</td><td class="mono">2.1 · 1.9 / 2.6 / 3.7</td><td class="mono">0.82 (0.47 / 0.25 / 0.09)</td><td class="mono">0.16</td><td class="mono">0.02</td><td class="mono">0.86</td><td class="mono">0.73 · 0.76</td><td class="mono">0.29 / 0.28</td></tr>
+    <tr><td class="mono">0.141, 14.3</td><td class="mono">0.025</td><td class="mono">9.4</td><td class="mono">5.6</td><td class="mono">2.0 · 1.7 / 2.2 / 2.9</td><td class="mono">0.91 (0.55 / 0.27 / 0.09)</td><td class="mono">0.07</td><td class="mono">0.01</td><td class="mono">0.93</td><td class="mono">0.85 · 0.87</td><td class="mono">0.14 / 0.14</td></tr>
+  </table>
+  <p style="font-size:8pt;color:var(--ink-2);margin-top:-2pt">Table 1b — the true Σ<sub>h</sub> at the four sweet spots of money plot 5 (mid configuration, PYTHIA 8, e + p and e + n merged) by fate. The acceptance columns are geometry and thresholds only — tracker |η| ≤ 3.5, p<sub>T</sub> &gt; 0.2 GeV; photons &gt; 0.1 GeV, HCal objects &gt; 0.5 GeV, "HCal" including charged particles the tracker does not see; no efficiencies, smearing or mass hypotheses — for the response's calorimeter reach and for the ePIC nominal 4.0; "lost backward" is below 0.1% everywhere. The "captured through the response" column applies the full <code>HadronResponse</code> (95% / 90% efficiencies, the track turn-on, the pion-mass hypothesis on tracks and massless clusters; noise off) and equals the median y<sub>Σ</sub>/y. The Σ-method δy/y is through the full response with 50 MeV of noise; the electron method gives 1.2 / 0.46 / 1.1 / 0.46. Differences of 0.01 between this table, Figure 3 and the two calorimeter reaches are Monte-Carlo noise.</p>
+
+  <figure>
+    <div class="panel"><img src="data:image/png;base64,__RC7__" alt="Where the hadronic E minus p_z sum goes at the four sweet spots: captured by tracks, photons and neutral hadrons, lost forward beyond the calorimeters or below thresholds, for calorimeter reach 3.7 and 4.0; and the Sigma-method resolution for both"></div>
+    <figcaption><b>Figure 4 — hadronic-final-state acceptance at the four sweet spots</b>
+    (e10 × ⁶Li99.5, PYTHIA 8, <code>hfs_acceptance.py</code>). <b>(a)</b> The true Σ<sub>h</sub> by
+    fate, geometry and thresholds only (no efficiencies) — within acceptance as tracks, photons and HCal objects; lost forward beyond the calorimeters, below
+    thresholds, or backward — for a calorimeter reach of |η| ≤ 3.7 (full bars) and 4.0 (lighter).
+    <b>(b)</b> The Σ-method δy/y through the full response with 50 MeV of noise for both reaches,
+    against the electron method: the extra reach moves the bias, not the resolution.</figcaption>
   </figure>
 
   <ol class="steps" start="4">
@@ -803,7 +852,7 @@
     <tr><td>R = σ<sub>L</sub>/σ<sub>T</sub></td><td>A placeholder of the right magnitude, and in the fast-simulation line a fit clipped to R = 1 over the region carrying the sensitivity</td><td>The published SLAC/E143 R1998 fit, all three functional forms, behind the <code>r_func</code> hook — transcribed and tested, but not the default</td><td>Of the two structure-function inputs only R moves the answer: F₂ cancels to 2×10⁻¹⁶, and switching to R1998 would move Δ/F₁ by +17.8 / +18.5 / +7.6 / −4.4% at the four sweet spots; every number here is still the placeholder R</td></tr>
     <tr><td>Coherent null test</td><td>The coherent fit was cos-only and had no null test at all</td><td>sin 2α, sin 2β and sin(α + β) columns, exactly forbidden by reflection symmetry</td><td>A spin-axis error shows in both azimuths, a pot roll in β alone; the roll is resolved to 5–8 mrad in year one in the three |t| bins that carry the statistics and 16 mrad in the highest, and Table 3 is unchanged with the columns on</td></tr>
     <tr><td>Assumed u₁, u₂</td><td>The same unpolarized harmonics were handed to the generator and to the fit</td><td>An independent assumed value on the fit side</td><td>δu₂ reaches a<sub>e</sub> at <i>first</i> order through a<sub>t</sub>δu₂⟨cos 2β⟩: a ZEUS-1σ error moves a<sub>e</sub> by 20% in the lowest |t| bin, rising to 35% in the highest as a<sub>t</sub> grows</td></tr>
-    <tr><td>Detector nuisances</td><td>Argued rather than measured</td><td>A scan holding the response fixed and varying one thing, with common random numbers</td><td>Electron energy scale ±1% → 0.3–0.9% on Δ̂; hadronic-resolution mismatch 0.5–1.4%; ε<sub>eID</sub> η tilt ≤ 0.03% — all below the 4–9% model dependence of an <i>assumed</i> K, though the first two exceed the 0.2–1.2% left by the folded bin-centering fit above</td></tr>
+    <tr><td>Detector nuisances</td><td>Argued rather than measured</td><td>A scan holding the response fixed and varying one thing, with common random numbers</td><td>Electron energy scale ±1% → 0.3–0.9% on Δ̂; hadronic-resolution mismatch 0.5–1.4%; a 1% residual hadronic-scale error on the calibrated PYTHIA y (<code>--hfs-scale</code>) 0.2–0.7%; ε<sub>eID</sub> η tilt ≤ 0.03% — all below the 4–9% model dependence of an <i>assumed</i> K, though the first two exceed the 0.2–1.2% left by the folded bin-centering fit above</td></tr>
     <tr><td>The near-beam cut versus the optics</td><td>Two points quoted for a curve the letter needs, and the cut applied as a momentum threshold to a nucleus</td><td>An analytic acceptance curve against the envelope, plus a full-response scan of acceptance and reach at six cuts, with the measured aperture marked on both</td><td>Through the full response, tagged fraction 32% / 3.0% / 4×10⁻⁵ / 2×10⁻⁷ and δa<sub>t</sub>/a<sub>t</sub> = 1.6% / 5.7% / 104% / 540% at envelopes of 0.10 / 0.22 / 0.45 / 0.60 GeV — 6× and 113× the analytic curve at the two largest cuts, where the divergence smearing flattens the slope; the measured aperture is 1.4–2.8× the envelope, so the envelope never binds</td></tr>
     <tr><td>η-dependent calorimetry</td><td>One backward specification everywhere</td><td>The Yellow Report table per η region, off by default</td><td>≤ 0.1% on Δ̂ at all four sweet spots</td></tr>
   </table>
@@ -896,17 +945,24 @@
   over the priors the tilt family cannot absorb, measured to cover the residual bias at every
   plotted bin of every slice.</p>
 
-  <p><b>Cross-check with the hadronic final state.</b> Rerunning 5R with the hadronic y from
-  the <b>PYTHIA 8</b> final state through the hadron-side response (Σ method, 50 MeV noise;
+  <p><b>Cross-check with the hadronic final state.</b> Rerunning 5R with the hadronic y from the
+  PYTHIA 8 final state through the hadron-side response (Σ method, 50 MeV noise;
   <code>money_cos2phi_reco.py --y-source hfs --hfs-sample …</code>) gives purities
-  0.43 / 0.54 / 0.47 / 0.69, efficiencies 0.26 / 0.48 / 0.26 / 0.68,
-  D = 0.79 / 0.85 / 0.82 / 0.95 and δÂ = 1.2 / 1.0 / 1.6 / 2.9 × 10⁻⁴, the fit unbiased and the
-  median captured Σ fraction 0.92 for the selected events. <b>The errors are the Table 2
-  errors; what moves is the purity and the dilution</b> — the real final state puts 0.11 of Σ
-  into neutral hadrons, and those are the HCal's, whose resolution is four to ten times the
-  tracker's. Table 2 is therefore the optimistic end: the amplitude sits 7–23% below the true-bin value rather than 1–10%, so more of the answer passes through the bin-centering
-  factor. It stands as long as the calorimeter noise floor is ≈ 50 MeV, degrades in proportion
-  to it, and the x ≈ 0.14 bins are better resolved at the low-energy configuration (§3).</p>
+  0.43 / 0.54 / 0.47 / 0.69, efficiencies 0.26 / 0.48 / 0.26 / 0.68, D = 0.79 / 0.85 / 0.82 / 0.95 and
+  δÂ = 1.2 / 1.0 / 1.6 / 2.9 × 10⁻⁴, the fit closing on the response-folded truth; the median captured Σ
+  fraction is 0.92 (16–84%: 0.79–0.99) over the whole analysis acceptance, dominated by high y, and
+  0.72–0.87 at the four spots. The errors are the Table 2 errors; what moves is the purity and the dilution,
+  because the real final state is only partly captured — 69–85% of Σ at the four spots through the response,
+  the rest escaping forward beyond the calorimeters or lying below threshold (§3, Table 1b) — and these numbers
+  carry that scale bias <i>uncalibrated</i>: the reconstructed-bin amplitude sits 5–21% below the true-bin value
+  rather than 1–10%, so more of the answer passes through the bin-centering factor. With the analysis's own
+  hadronic-scale calibration — the library's rate-weighted mean captured fraction per (x, Q²) cell,
+  <code>--hfs-calibrate</code> — the purities are 0.52 / 0.59 / 0.59 / 0.76, the efficiencies
+  0.35 / 0.56 / 0.34 / 0.73 and D = 1.01 / 1.03 / 0.95 / 0.98 at unchanged errors (7R: δΔ = 2.2 / 1.1 / 0.3 × 10⁻³
+  at purities 0.44–0.57), so the uncalibrated case is what the scale bias costs on top of its event-by-event
+  fluctuation and the noise; a residual scale error of ±2% then moves Â by 0.3–1.5%, i.e. 0.2–0.7% per per cent.
+  It stands as long as the calorimeter noise floor is ≈ 50 MeV, degrades in proportion to it, and the x ≈ 0.14
+  bins are better resolved at the low-energy configuration (§3).</p>
 
   <p><b>Coherent channel (money plot 6R).</b> The coherent response samples recoils from the
   exponential spectrum with x<sub>P</sub> ∈ [10⁻³, 10⁻²], builds the exact four-vector and
@@ -1033,6 +1089,7 @@
     <tr><td>tracking σ_θ</td><td class="mono">3 mrad at the sweet spots</td><td><span class="status-no">PLACEHOLDER</span> — no YR angular requirement exists</td><td>δQ²/Q²; but it is also the model's only stand-in for the 81–211 μrad beam-divergence floor, so the honest bracket is a factor ≲ 3</td></tr>
     <tr><td>electron-ID efficiency</td><td class="mono">0.70–0.95 by η</td><td>constructed; sources disagree by ≈25 points in the barrel</td><td><b>nothing</b> — a fill-independent efficiency cancels in the ratio</td></tr>
     <tr><td>hadronic y resolution</td><td class="mono">Σ method on the PYTHIA 8 HFS</td><td>measured on 8 M events at the corrected energies</td><td>bin purity and the amplitude dilution D</td></tr>
+    <tr><td>hadron-side calorimetric reach and capture</td><td class="mono">|η| ≤ 3.7 (tracker 3.5)</td><td>response default; the ePIC nominal is 4.0</td><td>69–85% of Σ<sub>h</sub> captured at the sweet spots through the response (§3, Table 1b): a scale bias on y<sub>Σ</sub> that the pseudo-experiments carry uncalibrated (Table 2) or calibrate per cell (§7, <code>--hfs-calibrate</code>); 4.0 recovers a quarter of the forward loss with δy/y unchanged</td></tr>
     <tr><td>Roman-Pot aperture</td><td class="mono">2.00 / 1.35 / 1.03 mrad</td><td><span class="status-part">measured in a superseded (Sept-2024) geometry</span></td><td>coherent acceptance; re-measurement is plans/09 B1</td></tr>
     <tr><td colspan="4" style="padding-top:7pt"><b>Physics</b></td></tr>
     <tr><td>coherent t-slope B</td><td class="mono">50 GeV⁻²</td><td>model, ≈ R²/4 for ⁶Li</td><td>coherent acceptance, exponentially</td></tr>
@@ -1166,7 +1223,7 @@
 
   <table>
     <tr><th>Date</th><th>Revision</th></tr>
-    <tr><td class="mono">2026-08-27</td><td>Numbers restated at the γ-matched beam energies (⁶Li at 40.8 / 99.5 / 137.5 GeV/u, plans/10) from the current scripts: the sweet spots (x = 0.011–0.14) and Table 2, the hadronic-y resolutions at the corrected spots (<code>hfs_resolution.py</code> now selects them per configuration instead of a constant), the bin-centering and nuisance scans, the R-model shifts. Money plot 6R and Table 3 re-derived: with the measured aperture and any published divergence no recoil survives at any configuration, so 6R is shown at the low-energy configuration with a 0.73 mrad near-beam approach; the pre-2026-08-27 measured-aperture result at the superseded 20.5 GeV/u is withdrawn. Companion papers: Reports 0 and 1 rewritten the same day.</td></tr>
+    <tr><td class="mono">2026-08-27</td><td>Numbers restated at the γ-matched beam energies (⁶Li at 40.8 / 99.5 / 137.5 GeV/u, plans/10) from the current scripts: the sweet spots (x = 0.011–0.14) and Table 2, the hadronic-y resolutions at the corrected spots (<code>hfs_resolution.py</code> now selects them per configuration instead of a constant), the bin-centering and nuisance scans, the R-model shifts. Money plot 6R and Table 3 re-derived: with the measured aperture and any published divergence no recoil survives at any configuration, so 6R is shown at the low-energy configuration with a 0.73 mrad near-beam approach; the pre-2026-08-27 measured-aperture result at the superseded 20.5 GeV/u is withdrawn. Companion papers: Reports 0 and 1 rewritten the same day. Later: §3 gains Figure 4 and Table 1b (<code>hfs_acceptance.py</code>) — where the hadronic E − p<sub>z</sub> sum goes at the four sweet spots: 78–91% within acceptance and above threshold, 69–85% captured through the response, 7–19% escaping forward beyond |η| = 3.7 — a scale bias on y<sub>Σ</sub> that the library reproduces and the bin-centering factor absorbs, not the resolution driver; <code>HFSResponse(calibrate=True)</code> added as the analysis's own per-cell hadronic-scale calibration, with the calibrated 5R numbers in §7; the pre-correction "0.90 captured, 0.11 neutral hadrons" statement replaced.</td></tr>
     <tr><td class="mono">2026-08-27 (later still)</td><td><b>Corrected the δP_zz propagation, and set T1 from precedent.</b> The row above published (1+d)² − 1 = 4.0 / 10.3 / 21.0% at δP_zz/P_zz = 2 / 5 / 10%. <b>That is 2× too pessimistic: the propagation is 1:1</b>, so the costs are 2.0 / 5.0 / 10.0%. The estimator's weights are built from the <i>assumed</i> polarizations, so the ratio carries one power of the assumed scale against σ_P²'s two and one cancels — Â/A = P_zz(true)/P_zz(assumed) exactly, verified to machine precision. The quadratic belongs to <i>reach</i> (δA ∝ 1/σ_P) not to bias. The relative-luminosity coefficient was likewise wrong: it is <b>1/3 per unit error on the ratio</b>, not ≈1.4 × δ — the earlier number conflated the scripts' <code>--rel-lumi-offset</code> convention (assumed shares [0.5(1±d)], a ratio error of ≈2d) with the ratio error itself. The test that was supposed to pin the first checked only that σ_P² ∝ (1+d)² and never ran the estimator; both tests are rewritten to run it. New <b>§8.4</b> sets T1 = <b>≤ 5%</b> from precedent, since no EIC document states one and nothing exists for ⁶Li at all: 2.1% (JINR Nuclotron) and ≈4% (COSY/ANKE) on stored deuteron beams, 3.0% on the HERMES storage cell, 8–10% for solid targets and the JLab b₁ budget.</td></tr>
     <tr><td class="mono">2026-08-27 (later)</td><td><b>New §8: what the chain assumes, and what it needs.</b> The consolidated list of every input the chain consumes, split by who owns each — accelerator, detector, physics model — with its status and what moves if it is wrong; then the target specifications the measurement needs, with owners. Two of those are <b>ours to specify</b>, because they are properties of a measurement that does not exist yet and no EIC document addresses them: <b>δP_zz/P_zz</b>, which is a pure normalisation, and the <b>relative luminosity between tensor states</b>, which is two orders less important. <i>(The propagation quoted in this revision was wrong by 2× and was corrected the same day — see the row below.)</i> Both propagations are pinned as tests. The consequence for what we claim: <b>every shape claim is immune to a P_zz scale error</b> — it moves only the absolute magnitude of Δ — so the claims should lead with shape and quote magnitude with the scale attached.</td></tr>
     <tr><td class="mono">2026-08-27</td><td><b>The beam energies were wrong at two of the three configurations, and everything conditioned on them is re-run.</b> The HSR and ESR must share a revolution period and the electrons are ultrarelativistic, so the hadron γ is fixed by the ring circumference: EIC ions are <b>γ-matched</b>, not rigidity-scaled. ⁶Li therefore sits at <b>40.8 / 99.5 / 137.5 GeV/u</b>, not 20.5 / 50 / 137.5 (plans/10; the decisive check is that YR Table 10.2 lists gold at 41 GeV/u, not the 16.4 rigidity-scaling gives). The PYTHIA 8 hadronic final state was regenerated at the corrected energies for the two lower configurations — 8 M events, 80.4 M particles — and every figure and number derived from them re-run. What moved: Table 1's y values halve and δy/y at the mid configuration doubles (1.2 / 0.46 / 1.1 / 0.23 → 2.3 / 0.93 / 2.1 / 0.46), Σ-method δy/y goes 0.32 / 0.22 / 0.28 / 0.11 → 0.55 / 0.28 / 0.50 / 0.15 at mid and 0.21 / 0.12 / 0.17 / 0.10 → 0.28 / 0.21 / 0.24 / 0.11 at low, purity 0.40 / 0.53 / 0.44 / 0.73 → 0.43 / 0.54 / 0.47 / 0.69 and D 0.79 / 0.84 / 0.86 / 0.96 → 0.79 / 0.85 / 0.82 / 0.95. <b>The top configuration is rigidity-capped and did not move</b>, and neither did any number derived from it — which is the check that nothing else drifted. Finding (1) is strengthened, not weakened: the electron method is worse at the corrected energies, so x must come from the hadronic final state by a wider margin. Separately, the far-forward near-beam envelope is now per-configuration (<code>reco.sigma_theta_for</code>) rather than a single proton-derived 72.7 μrad, which is what plans/10 is about.</td></tr>

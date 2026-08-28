@@ -301,12 +301,28 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
     δy/y = **0.55 / 0.28 / 0.50 / 0.15** at the sweet spots with the 50 MeV
     floor — the toy was optimistic by 0.04–0.05 absolute at every one,
     because it put 0.03 of Σ into neutral hadrons where PYTHIA puts 0.11 —
+    *(superseded 2026-08-27: at the corrected spots HCal objects — neutral
+    hadrons plus untracked charged particles — carry 0.09–0.10 of Σ within
+    acceptance; see the acceptance entry below)* —
     and 0.28 / 0.21 / 0.24 / 0.11 at LOW against 0.74 / 0.34 / 0.69 / 0.18
     at TOP. **Half of this question is therefore answered**: what remains
     is only the ePIC noise/threshold floor, which is what the scan
     0 → 25 → 50 → 100 MeV turns into 0.20 → 0.32 → 0.54 → 1.01 at y = 0.005.
     Reco purity at the sweet spots falls from 0.64–0.68 to 0.40–0.73 with
     the real final state.
+    *2026-08-27 (acceptance, `hfs_acceptance.py`, Report 2 §3 Figure 4):*
+    78 / 86 / 82 / 91% of Σ_h is captured at the four mid sweet spots;
+    19 / 8 / 16 / 7% escapes forward beyond |η| = 3.7 (the target-
+    fragmentation side of a W ≈ 6–10 GeV system), 1–6% is below threshold.
+    Through the full response 69 / 74 / 73 / 85% is captured: a 13–28% scale
+    bias on y_Σ that the library *reproduces* in the pseudo-events and the
+    bin-centering factor absorbs; `--hfs-calibrate` (per-cell mean captured
+    fraction, the analysis's own calibration) takes the 5R purities to
+    0.52–0.76 at unchanged errors, and a residual 1% scale error moves Δ̂ by
+    0.2–0.7%.  Not the resolution driver: the ePIC nominal reach of 4.0
+    recovers a quarter of the escape with δy/y unchanged.  What the ePIC
+    inclusive WG could settle: the forward calorimeter reach and thresholds
+    at Σ_h ≈ 0.2–0.5 GeV, alongside the noise floor.
     *2026-08-25 (web search, refs/README.md):* now bracketed by documents —
     ATHENA proposal JINST 17:P10019 Sec. 3.1/Fig. 22 (e−Σ or DA for
     y ≲ 0.1; ≈ 25% y resolution at y ≈ 0.01 → ≈ 10% at y ≈ 0.1; JB 20–30%);

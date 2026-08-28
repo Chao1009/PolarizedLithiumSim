@@ -241,7 +241,11 @@ efficiency explicitly.
   80.4 M particles, 2.8 GB, manifest in `evgen/samples/README.md`.
 - Results **with PYTHIA** (the toy's, kept for contrast, in brackets):
   captured Σ fraction 0.90 (tracks 0.51 [0.60], EMCal 0.28 [0.30], neutral
-  hadrons 0.11 [0.03]); Σ-method δy/y at the four sweet spots with 50 MeV
+  hadrons 0.11 [0.03]) *(superseded 2026-08-27 — pre-correction energies and
+  spots; at the corrected mid spots 69–85% is captured through the response
+  and HCal objects — neutral hadrons plus the charged particles the tracker
+  does not see — carry 0.09–0.10 of Σ within acceptance, Report 2 §3 Figure 4
+  and Table 1b)*; Σ-method δy/y at the four sweet spots with 50 MeV
   noise **0.55 / 0.28 / 0.50 / 0.15** [0.28 / 0.17 / 0.24 / 0.07], i.e. the
   toy was optimistic by 0.04–0.05 absolute everywhere; 0.21 / 0.12 / 0.17 /
   0.10 at LOW and 0.74 / 0.34 / 0.69 / 0.18 at TOP, so **the x ≈ 0.1 bins

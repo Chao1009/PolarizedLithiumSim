@@ -570,6 +570,17 @@ class HFSLibrary:
         self.start = np.concatenate([[0], np.cumsum(counts)[:-1]])
         # nearest populated cell for every cell
         self.redirect = self._nearest_populated(counts >= min_per_cell)
+        # rate-weighted mean captured fraction and p_T ratio per cell: the
+        # hadronic-scale calibration an analysis derives from its own
+        # simulation, <Sigma_reco>/<Sigma_true> cell by cell (HFSResponse
+        # `calibrate`)
+        with np.errstate(invalid="ignore", divide="ignore"):
+            self.f_cell = (np.bincount(ci, weights=r["sigma"], minlength=nx * nq2)
+                           / np.maximum(np.bincount(ci, weights=st, minlength=nx * nq2), 1e-30))
+            self.r_cell = (np.bincount(ci, weights=pt_r, minlength=nx * nq2)
+                           / np.maximum(np.bincount(ci, weights=pt_t, minlength=nx * nq2), 1e-30))
+        self.f_cell = np.where(counts > 0, self.f_cell, 1.0)
+        self.r_cell = np.where(counts > 0, self.r_cell, 1.0)
 
     def _cell(self, x, q2):
         i = np.clip(np.searchsorted(self.lx, np.log(x), side="right") - 1, 0, self.nx - 1)
@@ -600,6 +611,11 @@ class HFSLibrary:
     def transfer(self, x, q2, rng):
         k = self.draw(x, q2, rng)
         return self.f_sigma[k], self.r_pt[k], self.dphi_pt[k]
+    def cell_means(self, x, q2):
+        """(<f_sigma>, <r_pT>) of the (redirected) cell of each (x, q2):
+        the calibration factors of HFSResponse(calibrate=True)."""
+        c = self.redirect[self._cell(np.asarray(x, float), np.asarray(q2, float))]
+        return self.f_cell[c], self.r_cell[c]
 
     def coverage(self):
         """Fraction of grid cells populated and the median count."""
@@ -610,18 +626,28 @@ class HFSResponse:
     """Front end used by recopseudo: hadronic y (and x) of a pseudo-event
     from the library transfer plus per-event noise."""
 
-    def __init__(self, library, method="sigma", scale=1.0):
+    def __init__(self, library, method="sigma", scale=1.0, calibrate=False):
         """`scale`: a post-calibration multiplier on the MEASURED hadronic
         sums, i.e. a hadronic energy-scale error unknown to the analysis.
         It belongs here and not in HadronResponse, whose parameters are
         re-used (with the noise switched off) to build the library's
         captured fraction f_sigma -- a scale there would be baked into f
-        and applied twice."""
+        and applied twice.
+
+        `calibrate`: divide the measured sums by the library's rate-weighted
+        mean captured fraction of the pseudo-event's (x, Q2) cell (and the
+        p_T by the mean p_T ratio) -- the hadronic-scale calibration an
+        analysis derives from its own simulation.  Off, the pseudo-events
+        carry the capture bias uncorrected (the 2026-08-26 published 5R/7R
+        numbers); on, only its event-by-event fluctuation and the noise
+        remain, which is what a calibrated analysis sees.  The library's
+        own mean is the ideal calibration; `scale` then models its residual."""
         if method not in ("sigma", "jb", "da"):
             raise ValueError("method must be 'sigma', 'jb' or 'da'")
         self.library = library
         self.method = method
         self.scale = float(scale)
+        self.calibrate = bool(calibrate)
         self.noise_sigma = library.response.noise_sigma
 
     def hadronic(self, x, q2, y_true, e_prime_reco, theta_e_reco, e_energy, s,
@@ -643,6 +669,10 @@ class HFSResponse:
             sig = sig + self.noise_sigma * rng.standard_normal(n)
             ptx = ptx + self.noise_sigma * rng.standard_normal(n)
             pty = pty + self.noise_sigma * rng.standard_normal(n)
+        if self.calibrate:               # the analysis's own scale calibration
+            f_mean, r_mean = self.library.cell_means(x, q2)
+            sig = sig / np.maximum(f_mean, 1e-6)
+            ptx, pty = ptx / np.maximum(r_mean, 1e-6), pty / np.maximum(r_mean, 1e-6)
         if self.scale != 1.0:            # calibration error, noise included
             sig, ptx, pty = self.scale * sig, self.scale * ptx, self.scale * pty
         out = hadronic_kinematics(sig, ptx, pty, e_prime_reco, theta_e_reco,

@@ -334,7 +334,14 @@ Three switches change what these mean.
 
 **`--y-source hfs --hfs-sample <p.npz> <n.npz>`** replaces the 25%
 Gaussian stand-in for the hadronic y by a real hadronic final state
-through the hadron-side detector response.  Needs §5.1.
+through the hadron-side detector response.  Needs §5.1.  Without
+`--hfs-calibrate` the pseudo-events carry the response's capture bias on
+y_Σ uncalibrated (the published 0.43 / 0.54 / 0.47 / 0.69 purities); with
+it the transferred sums are divided by the library's per-cell mean
+captured fraction — the hadronic-scale calibration an analysis derives
+from its own simulation — and the purities are 0.52 / 0.59 / 0.59 / 0.76
+at unchanged errors (2026-08-27).  `--hfs-scale` then models a residual
+scale error: ±2% moves Â by 0.3–1.5%.
 
 **`--unfold folded`** replaces the model bin-centering factor K by a Δ(x)
 shape fitted *through the response* per Q² slice, and puts the shape-fit,
@@ -367,6 +374,24 @@ lower configurations, plans/10).  Without `--sample` the
 toy string-fragmentation generator is used and every output is labelled
 "toy"; its numbers are illustrative and, measured against PYTHIA,
 optimistic (§7).
+
+### 4.4b Where the hadronic E − p_z sum goes (Report 2 §3, Figure 4)
+
+```bash
+python3 scripts/hfs_acceptance.py --config 1 \
+    --sample samples/pythia8_e10_p99.5_dis.npz samples/pythia8_e10_n99.5_dis.npz --outdir .
+```
+
+The true Σ_h at the four sweet spots by fate (captured by tracks / photons /
+HCal objects; lost forward beyond the calorimeters, below thresholds, or
+backward) for the response's calorimeter reach |η| ≤ 3.7 and the ePIC
+nominal 4.0, with the Σ-method δy/y through the full response for both.
+Expected (16 s): within acceptance and above threshold 0.78 / 0.86 /
+0.82 / 0.91 at 3.7 (forward loss 0.19 / 0.08 / 0.16 / 0.07, thresholds
+0.03 / 0.06 / 0.02 / 0.01) and 0.83 / 0.88 / 0.86 / 0.93 at 4.0; captured
+through the full response 0.69 / 0.74 / 0.73 / 0.85 (median y_Σ/y
+0.72 / 0.78 / 0.76 / 0.87); δy/y 0.32 / 0.22 / 0.29 / 0.14 at both reaches
+— the forward escape is a scale bias, not the resolution driver.
 
 ### 4.5 The coherent optics scan (WP5)
 
@@ -640,8 +665,11 @@ trust anything downstream of it.
 |---|---|---|
 | 5R sweet spots (x, Q²) | `scripts/money_cos2phi.py` | (0.028, 1.14), (0.011, 1.14), (0.071, 3.13), (0.141, 14.3); A = 7.4 / 4.4 / 9.5 / 9.5 ×10⁻³, δA = 1.7 / 1.4 / 2.8 / 4.5 ×10⁻⁴ (1 yr) |
 | 5R sweet-spot purity, 25% stand-in | `scripts/money_cos2phi_reco.py` | 0.66 / 0.63 / 0.69 / 0.69 (D = 0.92 / 0.99 / 0.90 / 0.96); δÂ = 1.2 / 0.9 / 1.6 / 3.0 ×10⁻⁴ |
-| 5R sweet-spot purity, PYTHIA HFS | `… --y-source hfs --hfs-sample …` | 0.43 / 0.54 / 0.47 / 0.69 |
-| 5R amplitude dilution D, PYTHIA HFS | same | 0.79 / 0.85 / 0.82 / 0.95 |
+| 5R sweet-spot purity, PYTHIA HFS, uncalibrated | `… --y-source hfs --hfs-sample …` | 0.43 / 0.54 / 0.47 / 0.69 |
+| 5R amplitude dilution D, PYTHIA HFS, uncalibrated | same | 0.79 / 0.85 / 0.82 / 0.95 |
+| 5R with the hadronic scale calibrated per cell | `… --y-source hfs --hfs-sample … --hfs-calibrate` | purity 0.52 / 0.59 / 0.59 / 0.76, D = 1.01 / 1.03 / 0.95 / 0.98, δÂ = 1.1 / 0.9 / 1.6 / 2.9 ×10⁻⁴ |
+| residual hadronic scale ±2% (calibrated) | `… --hfs-calibrate --hfs-scale 1.02` | Â moves 0.3–1.5% |
+| Σ at the mid sweet spots | `scripts/hfs_acceptance.py --config 1 --sample …` | within acceptance and above threshold 0.78 / 0.86 / 0.82 / 0.91 at |η| ≤ 3.7 (forward loss 0.19 / 0.08 / 0.16 / 0.07), 0.83 / 0.88 / 0.86 / 0.93 at 4.0; captured through the response 0.69 / 0.74 / 0.73 / 0.85; δy/y unchanged between reaches |
 | Σ-method δy/y, PYTHIA, mid config (its own sweet spots) | `scripts/hfs_resolution.py --config 1 --sample …` | 0.32 / 0.22 / 0.29 / 0.15 |
 | … low config | `--config 0` | 0.38 / 0.23 / 0.24 / 0.11 |
 | … top config | `--config 2` | 0.23 / 0.19 / 0.21 / 0.18 |
@@ -734,7 +762,7 @@ about eleven minutes.
 | `fastsim/diag_sig2_grid` | 1 | `evgen/tagged_polarimetry_7li` | 3 |
 | `fastsim/coverage_and_stat_maps` | 7 | `evgen/coherent_optics_scan` | 3 |
 | `evgen/nearbeam_aperture_scan` | 3 | `evgen/nearbeam_reach_gain` | 2 |
-| `evgen/tagging_optics` | 3 | | |
+| `evgen/tagging_optics` | 3 | `evgen/hfs_acceptance` (PYTHIA) | 16 |
 | `evgen/nearbeam_sensor_budget` | 1 | `evgen/nearbeam_zid_power` | 48 |
 | `fastsim/_check_reco_mask_invariants` | <1 | `evgen/reco_chain_figures` | 13 |
 | `fastsim/money_delta_realistic` | 36 | `evgen/money_cos2phi_reco` | 4 |

@@ -65,6 +65,7 @@ RECO_FIGS = {
     "__RC4__": "evgen/money_delta_extracted_reco_6Li.png",
     "__RC5__": "evgen/money_cos2phi_coherent_reco_6Li.png",
     "__RC6__": "evgen/hfs_resolution_6Li.png",
+    "__RC7__": "evgen/hfs_acceptance_6Li.png",
 }
 
 # In report-number order, which is also the order reports/index.html lists

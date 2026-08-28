@@ -29,6 +29,7 @@ python3 scripts/money_cos2phi_reco.py          # money plots 5R + 7R (reco level
 python3 scripts/money_cos2phi_coherent_reco.py # money plot 6R (reco level)
 python3 scripts/coherent_optics_scan.py   # WP5: the coherent tag vs the near-beam envelope
 python3 scripts/tagging_optics.py         # report 1 §6.1: a lithium tagging optics at IP6, priced in luminosity
+python3 scripts/hfs_acceptance.py --config 1 --sample samples/pythia8_e10_p99.5_dis.npz samples/pythia8_e10_n99.5_dis.npz  # report 2 §3: where the hadronic E - p_z sum goes
 python3 scripts/eic_beam_figures.py       # report 3: the ion energy menu and the divergence
 python3 scripts/nearbeam_aperture_scan.py # plans/09: what every near-beam aperture is worth
 python3 scripts/nearbeam_reach_gain.py    # plans/09: the coherent chain at both apertures
@@ -181,6 +182,17 @@ sample both scripts fall back to the toy and label it.
 python3 scripts/hfs_resolution.py --config 1     --sample samples/pythia8_e10_p99.5_dis.npz samples/pythia8_e10_n99.5_dis.npz --outdir .
 python3 scripts/money_cos2phi_reco.py --y-source hfs --hfs-sample <the same pair> --outdir .
 ```
+
+**Where Σ_h goes (2026-08-27, `hfs_acceptance.py`, Report 2 §3 Figure 4):** at the mid
+sweet spots 78 / 86 / 82 / 91% of the true Σ_h is within the acceptance and
+above threshold, 69 / 74 / 73 / 85% is captured through the full response, 19 /
+8 / 16 / 7% escapes forward beyond |η| = 3.7 (the target-fragmentation side of
+a W ≈ 6–10 GeV system; the lithium fragments at η ≈ 8 never enter).  The
+library *reproduces* that capture bias in the pseudo-events;
+`HFSResponse(calibrate=True)` / `money_cos2phi_reco.py --hfs-calibrate`
+divides by the library's per-cell mean, the analysis's own hadronic-scale
+calibration, and the 5R purities go from 0.43 / 0.54 / 0.47 / 0.69 to
+0.52 / 0.59 / 0.59 / 0.76 at unchanged errors.
 
 **Measured with PYTHIA (2026-08-27, γ-matched energies), Σ method, 50 MeV calorimeter noise, at the four money-plot-5 sweet spots — which each configuration selects for itself (`hfs_resolution.py` takes them from the same selection as `money_cos2phi.py`):**
 

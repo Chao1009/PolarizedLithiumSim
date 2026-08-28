@@ -170,6 +170,32 @@ morning of 2026-08-27 but the prose still carried the 50 GeV/u numbers.
   configuration (18 × 137.5, β*_x × 90, pots at 0.12 mrad; or 5 × 40.8,
   × 50, 0.33 mrad; a separate running configuration) is stated in Report 1
   §6.1 with that cost.
+- ☑ **Is the hadronic final state in acceptance at the sweet spots?**
+  (`evgen/scripts/hfs_acceptance.py`, Report 2 §3 Figure 4 / Table 1b,
+  same day, at the user's question.)  Mostly: the hadronic system sits at
+  η_h = 0.7–2.1, but at y ≈ 0.01 it is a W ≈ 6 GeV, five-charged-particle
+  system whose target-fragmentation side reaches the calorimeter edge —
+  78 / 86 / 82 / 91% of Σ_h is captured at the four mid spots, 19 / 8 / 16 /
+  7% escapes forward beyond |η| = 3.7 (geometry and thresholds; 69 / 74 /
+  73 / 85% captured through the full response), 1–6% is below threshold,
+  nothing is lost backward, and the lithium fragments carry
+  E − p_z = m²/(2p) — 4.4 MeV per nucleon, 26 MeV for an intact recoil — at
+  η ≈ 8, never in the measured Σ_h whether tagged or not.  The escape is a
+  13–28% scale bias on y_Σ: the library *reproduces* it in the
+  pseudo-events (the adversarial review's catch — the reports had said
+  "corrects"), the bin-centering factor absorbs it, and an analysis would
+  calibrate it — `HFSResponse(calibrate=True)` now does, per cell, taking
+  the 5R PYTHIA purities from 0.43 / 0.54 / 0.47 / 0.69 to
+  0.52 / 0.59 / 0.59 / 0.76 and D from 0.79–0.95 to 0.95–1.03 at unchanged
+  errors; a residual 1% scale error moves Δ̂ by 0.2–0.7%.  It is not the
+  resolution driver: the ePIC nominal reach of 4.0 recovers a quarter of it
+  (19 → 14%) with δy/y unchanged (0.32 / 0.22 / 0.29 / 0.14) — the width is
+  the noise at the y ≈ 0.01 spots and the within-acceptance capture
+  fluctuation at y ≈ 0.025.  Report 1 §5.2 and Table 1 now quote the
+  calibrated numbers with the uncalibrated ones alongside; the purity loss
+  is the partial, fluctuating capture plus the noise floor, not "neutral
+  hadrons" (the 0.11 neutral-hadron share was a pre-correction number; it
+  is 0.09–0.10 of Σ as HCal objects including untracked charged particles).
 - ☐ Left: Report 2 as prose is still the 2026-08-24 analysis note with
   patched numbers, not a paper; the coherent a_e template bias at a
   strongly anisotropic aperture is unexplained.
@@ -205,7 +231,11 @@ at **48 fastsim + 183 evgen**, from 25 + 143.
   toy's 0.28 / 0.17 / 0.24 / 0.07 — optimistic by 0.04–0.05 absolute at
   every spot, because the toy put 0.60 of Σ in tracks and 0.03 in neutral
   hadrons where PYTHIA puts 0.51 and 0.11, and neutral hadrons are the
-  HCal's problem.  It degrades monotonically with beam energy
+  HCal's problem.  *(Superseded 2026-08-27, run 9: at the corrected spots
+  HCal objects — neutral hadrons plus the charged particles the tracker does
+  not see — carry 0.09–0.10 of Σ within acceptance, and the purity loss is
+  the partial, uncalibrated capture of Σ_h, not neutral hadrons — Report 2
+  §3 Figure 4 and Table 1b.)*  It degrades monotonically with beam energy
   (0.28 / 0.21 / 0.24 / 0.11 low, 0.74 / 0.34 / 0.69 / 0.18 top), which
   settles the x ≈ 0.1 bins on the **low-energy** configuration — the open
   item the reconstruction note lists.  Sweet-spot purity falls from

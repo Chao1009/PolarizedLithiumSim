@@ -131,6 +131,10 @@ def main():
                          "levers: d ln x / d ln E' = 2 - y with the Sigma "
                          "method (only 1 with the Gaussian y stand-in, "
                          "which never sees E')")
+    ap.add_argument("--hfs-calibrate", action="store_true",
+                    help="divide the transferred hadronic sums by the library's per-cell "
+                         "mean captured fraction (the analysis's own hadronic-scale "
+                         "calibration); off reproduces the 2026-08-26 published numbers")
     ap.add_argument("--hfs-scale", type=float, default=1.0,
                     help="hadronic energy-scale calibration error "
                          "(--y-source hfs only): d ln x / d ln scale "
@@ -233,7 +237,7 @@ def main():
             src = "TOY string fragmentation (%d events)" % smp.n_events
         lib = hfs.HFSLibrary(smp, hresp, nx=48, nq2=36, rng=rng)
         hfs_resp = hfs.HFSResponse(lib, method=args.hfs_method,
-                                   scale=args.hfs_scale)
+                                   scale=args.hfs_scale, calibrate=args.hfs_calibrate)
         print("HFS library: %s; %s method; %s | coverage %s"
               % (src, args.hfs_method.upper(), hresp.describe(), lib.coverage()))
     resp = rp.RecoResponse(sampler, rmodel, n_mc_per_cell=args.n_mc_per_cell,

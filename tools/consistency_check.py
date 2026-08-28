@@ -323,7 +323,10 @@ def _():
         stem = png.stem
         for script in glob.glob(str(ROOT / "evgen/scripts/*.py")):
             body = pathlib.Path(script).read_text()
-            if stem in body or stem.replace("_6Li", "") in body:
+            # the stem as a figure-file name, not as the prefix of a longer
+            # one: money_cos2phi must not claim money_cos2phi_reco_6Li.png
+            short = re.escape(stem.replace("_6Li", ""))
+            if re.search(short + r"(?![A-Za-z0-9]|_[A-Za-z])[^\"'\s]*\.png", body):
                 if png.stat().st_mtime < pathlib.Path(script).stat().st_mtime:
                     bad.append("%s is older than %s -- rerun it"
                                % (rel, pathlib.Path(script).name))
