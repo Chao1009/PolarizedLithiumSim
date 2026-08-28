@@ -2,12 +2,17 @@
 """Money plot 6R: the coherent intact-6Li channel at the RECONSTRUCTED
 level (plans/07 WP3 -> WP5) -- money plot 6 re-derived with
 
-  * the ANGULAR near-beam cut, pT_cut = 10 sigma_theta A p_u (proton-
-    derived sigma_theta = 73 microrad, high-acceptance optics), and a
-    slot-like Roman-Pot cutout (the ePIC sensor planes surround a
-    horizontal slot for the beam's momentum spread and dispersion,
-    Jentsch DIS 2023: default half-widths 2.5 x 10 sigma in x, 1 x 10
-    sigma in y) whose sides are parallel to the vertical spin axis;
+  * the ANGULAR near-beam cut, pT_cut = 10 sigma_theta A p_u, and the
+    Roman-Pot cutout.  The PUBLISHED configuration (2026-08-28) is
+    `--optics tagging`: the lithium tagging optics of Report 1 Section
+    6.1 (reco.tagging_optics_point) -- the horizontal beta* de-squeezed
+    to the optimum of acceptance x luminosity, the vertical plane at the
+    Yellow Report high-acceptance divergence, the pots following the
+    10 sigma envelope in both planes (0.33 x 3.8 mrad at 5 x 40.8) --
+    because with the Yellow Report optics and the measured pot aperture
+    no recoil survives at any configuration (plans/10).  The legacy
+    defaults (proton-derived 73 microrad, a 2.5 : 1 slot) reproduce the
+    pre-2026-08-27 figure and are kept only for that;
   * the Roman-Pot emulation: divergence smearing of the recoil angle,
     |t| = pT^2 reconstructed with x_L = 1, reco t bins;
   * the TWO azimuths: alpha = phi_e - phi_S (electron) and beta =
@@ -75,12 +80,33 @@ def main():
                     help="unpolarized cos 2(alpha-beta) coefficient (T-T' "
                          "interference).  ZEUS LPS: A_TT = -0.030 +- 0.037, "
                          "-0.010 +- 0.024; default inside the 1-sigma band")
+    ap.add_argument("--optics", default="legacy",
+                    choices=("legacy", "tagging", "high-acceptance"),
+                    help="beam optics.  'tagging': the lithium tagging "
+                         "optics of Report 1 Section 6.1 -- horizontal "
+                         "beta* at the optimum of acceptance x luminosity, "
+                         "vertical at high acceptance, pots following the "
+                         "10 sigma envelope in both planes -- the "
+                         "PUBLISHED 6R (sets --sigma-theta, --aspect, "
+                         "--cut-scale-x/y = 1, --rp-aperture measured and "
+                         "--near-beam-mrad from reco.tagging_optics_point); "
+                         "'high-acceptance': the Yellow Report divergence "
+                         "per configuration (reco.sigma_theta_for), under "
+                         "which the tag is dead; 'legacy': the pre-2026-08-27 "
+                         "proton-derived 73 microrad")
     ap.add_argument("--sigma-theta", type=float, default=reco.SIGMA_THETA_HA,
-                    help="beam angular divergence [rad] (proton-derived)")
+                    help="horizontal beam angular divergence [rad] "
+                         "(legacy default: proton-derived 73 microrad)")
     ap.add_argument("--aspect", type=float, default=1.0,
                     help="beam-divergence anisotropy sigma_y/sigma_x "
                          "(HERA: 100/45 MeV vertical/horizontal pT spread, "
-                         "ZEUS NPB 816:1; Li optics undocumented, #20)")
+                         "ZEUS NPB 816:1); set by --optics tagging")
+    ap.add_argument("--ensemble", type=int, default=0,
+                    help="repeat the one-year pseudo-experiment this many "
+                         "times with fresh seeds and print the mean and "
+                         "spread of the fitted coefficients against the "
+                         "injected values -- the bias test of the template "
+                         "basis (2026-08-28)")
     ap.add_argument("--cut-scale-x", type=float, default=2.5,
                     help="cutout half-width in x in units of 10 sigma_x: "
                          "the ePIC pots surround a horizontal SLOT (beam "
@@ -106,13 +132,16 @@ def main():
                          "high-acceptance optics).  Needs --rp-aperture "
                          "measured")
     ap.add_argument("--envelope-split", type=float, default=0.0,
-                    help="RELATIVE difference of the Roman-Pot vertical "
-                         "half-height between the m=+-1-rich and m=0-rich "
-                         "fills.  The spin-state ratio cancels a COMMON "
-                         "cutout exactly; a difference is the one "
-                         "systematic it cannot cancel (code review F1), "
-                         "and the slot amplifies it far beyond the naive "
-                         "d<cos 2beta>/(P+ - P0).  0 = common")
+                    help="RELATIVE difference of the Roman-Pot cutout "
+                         "half-width (along --split-axis) between the "
+                         "m=+-1-rich and m=0-rich fills.  The spin-state "
+                         "ratio cancels a COMMON cutout exactly; a "
+                         "difference is the one systematic it cannot cancel "
+                         "(code review F1).  0 = common")
+    ap.add_argument("--split-axis", default="x", choices=("x", "y"),
+                    help="axis of --envelope-split: x is the binding plane "
+                         "under the tagging optics (the recoils escape "
+                         "horizontally), y was the slot's (2026-08-28)")
     ap.add_argument("--u1-assumed", type=float, default=None,
                     help="u1 the ANALYSIS subtracts (default: the "
                          "generated value, i.e. exactly known)")
@@ -139,7 +168,21 @@ def main():
                     help="inject a Roman-Pot azimuthal roll [rad]: rotates "
                          "only the RECOIL harmonic, so sin 2alpha stays "
                          "null -- the signature that separates the two")
-    ap.add_argument("--n-mc", type=int, default=600000)
+    ap.add_argument("--exact", action="store_true",
+                    help="use the exact expected counts instead of a Poisson "
+                         "draw: the systematic shifts (--envelope-split, "
+                         "--u2-assumed, --rel-lumi-offset) then come out "
+                         "free of statistical noise")
+    ap.add_argument("--n-alpha", type=int, default=12)
+    ap.add_argument("--n-beta", type=int, default=24,
+                    help="(alpha, beta) binning of the two-azimuth fit; the "
+                         "bin-wise ratio of Poisson counts is biased below "
+                         "~30 counts per bin, so low-count |t| bins want "
+                         "coarser bins (2026-08-28)")
+    ap.add_argument("--n-mc", type=int, default=600000,
+                    help="response recoils; the published Table 3 uses "
+                         "6e6 so that the template basis's own MC "
+                         "statistics stay below the ten-year errors")
     ap.add_argument("--seed", type=int, default=20260824)
     ap.add_argument("--outdir", default=".")
     args = ap.parse_args()
@@ -150,12 +193,42 @@ def main():
     scenario = fom.Scenario(lumi_fb_per_nucleon=args.lumi_1yr,
                             pol_ion_tensor=args.pzz)
     lumi_ratio = args.lumi_10yr / args.lumi_1yr
+    lumi_scale = 1.0                        # luminosity of the optics vs HA
+    optics_note = "proton-derived 73 microrad (legacy)"
+    if args.optics == "tagging":
+        top = reco.tagging_optics_point(config, slope_b=sc.slope_b)
+        args.sigma_theta = top["sigma_x_eff"]
+        args.aspect = top["sigma_y"] / top["sigma_x_eff"]
+        args.cut_scale_x = args.cut_scale_y = 1.0
+        # the pots FOLLOW the envelope in both planes (Report 1 Section
+        # 6.1): the geometric aperture is the envelope itself, so the
+        # measured silicon aperture is not applied
+        args.rp_aperture = "none"
+        args.near_beam_mrad = None
+        lumi_scale = top["lumi_fraction"]
+        optics_note = ("tagging optics: horizontal beta* x %.0f, sigma_x "
+                       "%.0f (eff. %.0f with dispersion) / sigma_y %.0f "
+                       "microrad, L/L_HA = 1/%.1f, pots follow the 10 sigma "
+                       "envelope %.2f x %.2f mrad"
+                       % (top["r_h"], 1e6 * top["sigma_x"],
+                          1e6 * top["sigma_x_eff"], 1e6 * top["sigma_y"],
+                          1.0 / top["lumi_fraction"], 1e3 * top["env_x"],
+                          1e3 * top["env_y"]))
+    elif args.optics == "high-acceptance":
+        sx, sy = reco.sigma_theta_for(config, "high-acceptance")
+        args.sigma_theta, args.aspect = sx, sy / sx
+        optics_note = ("Yellow Report high-acceptance divergence %.0f/%.0f "
+                       "microrad" % (1e6 * sx, 1e6 * sy))
+    print("optics:", optics_note)
     proj, n_coh, tagged = coh.project_coherent(
         config, scenario, sc, optics_list=(HIGH_ACCEPTANCE,),
         sigma_theta_list=(args.sigma_theta,))
-    n_produced = float(n_coh.sum())          # coherent recoils, 1 yr
+    # coherent recoils produced in one year AT THIS OPTICS' luminosity
+    n_produced = float(n_coh.sum()) * lumi_scale
     aperture = (reco.rp_aperture_for(config.ion_momentum_per_nucleon)
                 if args.rp_aperture == "measured" else None)
+    if args.optics == "tagging":
+        aperture = (top["env_x"], top["env_y"])
     if args.rp_aperture == "measured" and aperture is None:
         raise SystemExit("no measured aperture for %g GeV/u: it is tabulated "
                          "per optics at the three machine configurations (reco."
@@ -186,15 +259,19 @@ def main():
     # what the analysis ASSUMES, where that differs from the truth
     responses = None
     if args.envelope_split:
-        responses = [cresp.with_cut((args.cut_scale_x,
-                                     args.cut_scale_y
-                                     * (1.0 + args.envelope_split))),
-                     cresp]
-        print("fill-dependent Roman-Pot envelope: vertical half-height "
-              "%+.2e relative on the +Pzz fill (%.4f vs %.4f GeV); the "
-              "ratio cancels only a COMMON cutout"
-              % (args.envelope_split, responses[0].cut_pt_xy[1],
-                 cresp.cut_pt_xy[1]))
+        # the perturbation acts on the BINDING vertical half-height
+        # (envelope or measured aperture, whichever the cut is), so it is
+        # never a silent no-op (2026-08-28)
+        k = 0 if args.split_axis == "x" else 1
+        scl = [1.0, 1.0]
+        scl[k] = 1.0 + args.envelope_split
+        responses = [cresp.with_cut(eff_scale_xy=tuple(scl)), cresp]
+        print("fill-dependent Roman-Pot cutout: %s half-width %+.2e relative "
+              "on the +Pzz fill (%.4f vs %.4f GeV), acceptance %.5f vs %.5f; "
+              "the ratio cancels only a COMMON cutout"
+              % ("horizontal" if k == 0 else "vertical", args.envelope_split,
+                 responses[0].cut_pt_xy[k], cresp.cut_pt_xy[k],
+                 responses[0].acceptance, cresp.acceptance))
     u_assumed = None
     if args.u1_assumed is not None or args.u2_assumed is not None:
         u_assumed = (args.u1 if args.u1_assumed is None else args.u1_assumed,
@@ -239,12 +316,14 @@ def main():
                 cresp, n_produced, plan, tlo, thi, amp_c, a_t_rot,
                 a_m=args.a_m, u1=args.u1, u2=args.u2, rng=rng,
                 responses=responses, u_coeffs_assumed=u_assumed,
-                lumi_assumed=lumi_assumed, **kw_sin)
+                lumi_assumed=lumi_assumed, poisson=not args.exact,
+                n_alpha=args.n_alpha, n_beta=args.n_beta, **kw_sin)
             f10 = rp.measure_coherent(
                 cresp, n_produced * lumi_ratio, plan, tlo, thi, amp_c,
                 a_t_rot, a_m=args.a_m, u1=args.u1, u2=args.u2, rng=rng,
                 responses=responses, u_coeffs_assumed=u_assumed,
-                lumi_assumed=lumi_assumed, **kw_sin)
+                lumi_assumed=lumi_assumed, poisson=not args.exact,
+                n_alpha=args.n_alpha, n_beta=args.n_beta, **kw_sin)
         except np.linalg.LinAlgError as exc:
             n_acc = int(((cresp.t_reco >= tlo)
                          & (cresp.t_reco < thi)).sum())
@@ -270,11 +349,42 @@ def main():
             "reason." % window)
     t_edges = [e[0] for e in kept_edges] + [kept_edges[-1][1]]
 
+    # --- ensemble: is the template basis unbiased? ------------------------
+    if args.ensemble > 0:
+        print("ensemble of %d one-year pseudo-experiments per |t| bin "
+              "(same response, fresh Poisson draws): mean fit - injected, "
+              "the spread, and the pull of the mean" % args.ensemble)
+        for (tlo, thi) in kept_edges:
+            at, ae_, dt, de = [], [], [], []
+            for k in range(args.ensemble):
+                rk = np.random.default_rng(args.seed + 1000 + k)
+                f = rp.measure_coherent(
+                    cresp, n_produced, plan, tlo, thi, amp_c, a_t_rot,
+                    a_m=args.a_m, u1=args.u1, u2=args.u2, rng=rk,
+                    responses=responses, u_coeffs_assumed=u_assumed,
+                    lumi_assumed=lumi_assumed, n_alpha=args.n_alpha,
+                    n_beta=args.n_beta, **kw_sin)
+                at.append(f["a_t"]); ae_.append(f["a_e"])
+                dt.append(f["err_t"]); de.append(f["err_e"])
+            tr = f["truth"]
+            at, ae_, dt, de = map(np.array, (at, ae_, dt, de))
+            print("  t in [%.2f,%.2f): a_t mean %.4f (inj %.4f) spread %.4f "
+                  "quoted err %.4f pull-of-mean %+.1f | a_e mean %.4f "
+                  "(inj %.4f) spread %.4f quoted err %.4f pull-of-mean %+.1f"
+                  % (tlo, thi, at.mean(), tr["a_t"], at.std(), dt.mean(),
+                     (at.mean() - tr["a_t"]) / (at.std() / np.sqrt(len(at))),
+                     ae_.mean(), tr["a_e"], ae_.std(), de.mean(),
+                     (ae_.mean() - tr["a_e"]) / (ae_.std() / np.sqrt(len(ae_)))))
+
     fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(11.8, 8.6))
     f0 = fits1[0]
     ae, be = f0["alpha_edges"], f0["beta_edges"]
     bc = 0.5 * (be[:-1] + be[1:])
     ac = 0.5 * (ae[:-1] + ae[1:])
+    # the displayed modulation uses what the ANALYSIS assumes (u, shares)
+    u1_shown, u2_shown = (u_assumed if u_assumed is not None
+                          else (args.u1, args.u2))
+    lum_shown = lumi_assumed if lumi_assumed is not None else [0.5, 0.5]
 
     # --- (a) raw yields per fill vs beta --------------------------------
     for f, (col, lab) in enumerate(((C_TRUTH, r"$P_{zz}=+%.1f$ fill" % args.pzz),
@@ -283,7 +393,7 @@ def main():
         ax1.errorbar(bc, yb / yb.mean(), yerr=np.sqrt(yb) / yb.mean(), fmt="o-",
                      color=col, ms=3.5, lw=1, capsize=2, label=lab)
     fake = np.mean(np.cos(2.0 * cresp.beta_reco))
-    ax1.annotate(r"slot cutout $|p_x|<%.2f$, $|p_y|<%.2f$ GeV: "
+    ax1.annotate(r"cutout $|p_x|<%.2f$, $|p_y|<%.2f$ GeV: "
                  r"$\langle\cos2\beta\rangle=%.2f$ of the tagged sample" "\n"
                  r"(a single-fill fit would report $a_t\approx%.2f$ vs "
                  r"truth %.3f)"
@@ -302,10 +412,10 @@ def main():
 
     # --- (b) acceptance-free modulation, projections -------------------
     r, var, sig2, pbar = reco.spin_state_ratio(
-        f0["counts"].reshape(2, -1), [0.5, 0.5], pzz_list)
+        f0["counts"].reshape(2, -1), lum_shown, pzz_list)
     aa, bb = np.meshgrid(ac, bc, indexing="ij")
     bm = f0["beta_means"]
-    u = reco.unpolarized_modulation_2d(ae, be, args.u1, args.u2, beta_means=bm)
+    u = reco.unpolarized_modulation_2d(ae, be, u1_shown, u2_shown, beta_means=bm)
     t2d, var2d = reco._ratio_to_modulation(r, var, sig2, pbar, u=u)
     t2d = t2d.reshape(aa.shape)
     var2d = var2d.reshape(aa.shape)
@@ -347,7 +457,7 @@ def main():
 
     # --- (c) expected 2-D modulation map -------------------------------
     mu = f0["expected"]
-    r0, v0, s0, p0 = reco.spin_state_ratio(mu.reshape(2, -1), [0.5, 0.5],
+    r0, v0, s0, p0 = reco.spin_state_ratio(mu.reshape(2, -1), lum_shown,
                                            pzz_list)
     t0, _ = reco._ratio_to_modulation(r0, v0, s0, p0, u=u)
     im = ax3.imshow(t0.reshape(aa.shape).T, origin="lower",
@@ -395,15 +505,16 @@ def main():
 
     fig.suptitle(
         r"Coherent $e\,^6$Li$\to e'X\,^6$Li(g.s.) at the reconstructed level "
-        r"(6R), %s, $P_{zz}=%.2f$: $\sigma_\theta=%.0f\,\mu$rad "
-        r"($10\sigma_\theta A p_u=%.2f$ GeV), slot-like %s cutout "
-        r"$|p_x|<%.2f$, $|p_y|<%.2f$ GeV"
-        "\n" r"$N_{\rm tag}$ = %.2g (1 yr) vs %.2g with the constant 0.20 GeV cut; "
+        r"(6R), %s, $P_{zz}=%.2f$: $\sigma_\theta$ = %.0f / %.0f $\mu$rad (h / v), "
+        r"%s cutout $|p_x|<%.2f$, $|p_y|<%.2f$ GeV [%s]"
+        "\n" r"$N_{\rm tag}$ = %.2g (1 yr) vs %.2g with the constant 0.20 GeV cut at $L_{HA}$; "
         r"deformation $c_2=2a_2$ (Eq. 9 convention), $a_e=%.3f$"
         "\n" r"$u_1=%.2f$, $u_2=%.2f$ (ZEUS LPS $1\sigma$ bounds); "
         r"two-fill ratio fit with the MC template basis; statistical errors only"
-        % (config.label(), args.pzz, 1e6 * args.sigma_theta, cresp.pt_cut,
-           args.shape, cresp.cut_pt_xy[0], cresp.cut_pt_xy[1], n_tag,
+        % (config.label(), args.pzz, 1e6 * args.sigma_theta,
+           1e6 * args.sigma_theta * args.aspect,
+           args.shape, cresp.cut_pt_xy[0], cresp.cut_pt_xy[1],
+           args.optics + " optics", n_tag,
            tagged[HIGH_ACCEPTANCE.name].sum(), args.amp, args.u1, args.u2),
         fontsize=9)
     fig.tight_layout(rect=(0, 0, 1, 0.905))
@@ -412,11 +523,14 @@ def main():
     out = outdir / "money_cos2phi_coherent_reco_6Li.png"
     fig.savefig(out, dpi=140)
     print("wrote", out)
-    print("coherent produced (1 yr): %.3g; tagged: %s cutout |px|<%.3f, "
-          "|py|<%.3f GeV (divergence aspect %.2f) -> acc %.4f, N_tag %.3g; "
-          "constant-cut reference %.3g"
-          % (n_produced, args.shape, cresp.cut_pt_xy[0], cresp.cut_pt_xy[1],
-             args.aspect, cresp.acceptance, n_tag,
+    print("coherent produced (1 yr at this optics' luminosity, L/L_HA = %.3f): "
+          "%.3g; tagged: %s cutout |px|<%.3f, |py|<%.3f GeV = %.2f x %.2f mrad "
+          "(sigma_theta h/v %.0f/%.0f microrad) -> acc %.4f, N_tag %.3g; "
+          "constant-cut reference at L_HA %.3g"
+          % (lumi_scale, n_produced, args.shape, cresp.cut_pt_xy[0],
+             cresp.cut_pt_xy[1], 1e3 * cresp.cut_theta_eff[0],
+             1e3 * cresp.cut_theta_eff[1], 1e6 * args.sigma_theta,
+             1e6 * args.sigma_theta * args.aspect, cresp.acceptance, n_tag,
              tagged[HIGH_ACCEPTANCE.name].sum()))
     print("cutout fake <cos 2beta> = %.3f" % fake)
     for (tlo, thi), f1, f10 in zip(zip(t_edges[:-1], t_edges[1:]), fits1, fits10):

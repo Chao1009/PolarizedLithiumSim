@@ -167,12 +167,12 @@ automatically.
 ## 2 · The five-minute check: the test suites
 
 ```bash
-cd evgen   && python3 -m pytest tests/ -q     # 209 passed, ~35 s
+cd evgen   && python3 -m pytest tests/ -q     # 225 passed, ~40 s
 cd fastsim && python3 -m pytest tests/ -q     # 57 passed, ~3 s
-python3 tools/consistency_check.py --verbose  # 20 checks, whole repository
+python3 tools/consistency_check.py --verbose  # 22 checks, whole repository
 ```
 
-266 tests, all of which run without the PDF grids except the two in
+282 tests, all of which run without the PDF grids except the two in
 `fastsim/tests/test_grids.py`, which skip.  These are not smoke tests:
 they pin physics identities against independent constructions — the
 spin-1 cross section against an explicit density-matrix trace, the
@@ -327,8 +327,18 @@ python3 scripts/money_delta_extraction.py   --outdir .   # money plot 7
 ```bash
 python3 scripts/reco_chain_figures.py       --outdir .   # chain schematics + acceptance curves
 python3 scripts/money_cos2phi_reco.py       --outdir .   # 5R and 7R
-python3 scripts/money_cos2phi_coherent_reco.py --outdir . # 6R
+python3 scripts/money_cos2phi_coherent_reco.py --config 0 --optics tagging --n-mc 6000000 --outdir .  # 6R
 ```
+
+The 6R command is the published one (2026-08-28): the lithium tagging
+optics of Report 1 §6.1 at the low configuration, with the pots following
+the 10σ envelope in both planes (`--optics tagging` sets the divergence,
+the cutout and the luminosity from `reco.tagging_optics_point`).  Without
+it the script runs the pre-2026-08-27 legacy geometry, which is kept for
+reproduction only.  `--ensemble 20` repeats the one-year pseudo-experiment
+and prints the bias test of Table 5; `--exact` switches the Poisson draw
+off for the systematic scans; `--config 1/2` gives the other two
+configurations.
 
 Three switches change what these mean.
 
@@ -336,12 +346,15 @@ Three switches change what these mean.
 Gaussian stand-in for the hadronic y by a real hadronic final state
 through the hadron-side detector response.  Needs §5.1.  Without
 `--hfs-calibrate` the pseudo-events carry the response's capture bias on
-y_Σ uncalibrated (the published 0.43 / 0.54 / 0.47 / 0.69 purities); with
-it the transferred sums are divided by the library's per-cell mean
-captured fraction — the hadronic-scale calibration an analysis derives
-from its own simulation — and the purities are 0.52 / 0.59 / 0.59 / 0.76
-at unchanged errors (2026-08-27).  `--hfs-scale` then models a residual
-scale error: ±2% moves Â by 0.3–1.5%.
+y_Σ uncalibrated (purities 0.42 / 0.53 / 0.49 / 0.68); with it the
+transferred sums are divided by the library's ⟨Σ_reco⟩/⟨Σ_true⟩ in bins
+of the *reconstructed* (x_mixed, Q²_e) — the hadronic-scale calibration an
+analysis derives from its own simulation and applies at the measured
+point (until 2026-08-28 the factor was looked up at the event's true
+cell, which no experiment can do) — and the purities are
+0.56 / 0.59 / 0.64 / 0.75 at unchanged errors.  `--hfs-scale` then models
+a residual scale error: +2% moves Â by 0.2–1.2%.  The published 5R/7R
+figures are this run with `--unfold folded --tag _hfscal`.
 
 **`--unfold folded`** replaces the model bin-centering factor K by a Δ(x)
 shape fitted *through the response* per Q² slice, and puts the shape-fit,
@@ -365,7 +378,7 @@ the Yellow Report EMCal table) and prints their effect on Δ̂.
 
 ```bash
 python3 scripts/hfs_resolution.py --config 1 \
-    --sample samples/pythia8_e10_p50_dis.npz samples/pythia8_e10_n50_dis.npz --outdir .
+    --sample samples/pythia8_e10_p99.5_dis.npz samples/pythia8_e10_n99.5_dis.npz --outdir .
 ```
 
 `--config 0/1/2` selects the low / mid / top beam configuration
@@ -386,12 +399,14 @@ The true Σ_h at the four sweet spots by fate (captured by tracks / photons /
 HCal objects; lost forward beyond the calorimeters, below thresholds, or
 backward) for the response's calorimeter reach |η| ≤ 3.7 and the ePIC
 nominal 4.0, with the Σ-method δy/y through the full response for both.
-Expected (16 s): within acceptance and above threshold 0.78 / 0.86 /
-0.82 / 0.91 at 3.7 (forward loss 0.19 / 0.08 / 0.16 / 0.07, thresholds
-0.03 / 0.06 / 0.02 / 0.01) and 0.83 / 0.88 / 0.86 / 0.93 at 4.0; captured
-through the full response 0.69 / 0.74 / 0.73 / 0.85 (median y_Σ/y
-0.72 / 0.78 / 0.76 / 0.87); δy/y 0.32 / 0.22 / 0.29 / 0.14 at both reaches
-— the forward escape is a scale bias, not the resolution driver.
+Expected (16 s): within acceptance and above threshold 0.80 / 0.87 /
+0.83 / 0.92 at 3.7 (forward loss 0.17 / 0.08 / 0.15 / 0.07, thresholds
+0.03 / 0.06 / 0.02 / 0.02) and 0.85 / 0.89 / 0.88 / 0.94 at 4.0; captured
+through the full response 0.70 / 0.74 / 0.74 / 0.85 (median y_Σ/y
+0.73 / 0.78 / 0.77 / 0.87); δy/y 0.32 / 0.22 / 0.29 / 0.14 at both reaches
+— the forward escape is a scale bias, not the resolution driver.  The
+acceptance is applied in the detector frame (25 mrad crossing) since
+2026-08-28, worth +0.01 on the captured fractions.
 
 ### 4.5 The coherent optics scan (WP5)
 
@@ -456,7 +471,8 @@ python3 scripts/money_cos2phi_coherent_reco.py --config 1 \
         --rp-aperture measured --cut-scale-x 1.0 --near-beam-mrad 0.727
 ```
 
-`--cut-scale-x 1.0` matters. The default 2.5 comes from the
+(This is the near-beam study's geometry on the legacy 73 μrad divergence;
+the published 6R is `--optics tagging`, §4.3.)  `--cut-scale-x 1.0` matters. The default 2.5 comes from the
 pre-measurement belief in a wide horizontal slot, and on top of a
 measured geometric aperture it imposes a 25σ horizontal retraction that
 binds *before* the geometry does — hiding the whole effect.
@@ -482,26 +498,36 @@ With §1.4 done:
 export PYTHONPATH=$HOME/Apps/pythia8311/lib
 export PYTHIA8DATA=$HOME/Apps/pythia8311/share/Pythia8/xmldoc
 python3 tools/pythia8/gen_dis_hfs.py --target p --n-events 2000000 \
-    --electron-energy 10 --p-per-nucleon 50 --seed 101 --quiet \
-    --out evgen/samples/pythia8_e10_p50_dis.npz
+    --electron-energy 10 --p-per-nucleon 99.5 --seed 101 --quiet \
+    --out evgen/samples/pythia8_e10_p99.5_dis.npz
 python3 tools/pythia8/gen_dis_hfs.py --target n --n-events 2000000 \
-    --electron-energy 10 --p-per-nucleon 50 --seed 102 --quiet \
-    --out evgen/samples/pythia8_e10_n50_dis.npz
+    --electron-energy 10 --p-per-nucleon 99.5 --seed 102 --quiet \
+    --out evgen/samples/pythia8_e10_n99.5_dis.npz
 ```
 
-9 000–13 000 events/s, 330 MB and ~115 s per million events at 10 × 99.5.
+7 000–8 500 events/s, 450 MB and ~140 s per million events at 10 × 99.5.
 The standing production is six files (p and n at each of the three
-configurations, 8 M events, 2.7 GB); `evgen/samples/README.md` is the
-manifest with each file's cross section and seed, and the whole set takes
-twelve minutes with three jobs in parallel on eight cores.
+configurations, 8 M events, 3.7 GB; regenerated 2026-08-28 with
+`mHatMin = 0.5`, below); `evgen/samples/README.md` is the manifest with
+each file's cross section and seed, and the whole set takes five minutes
+with six jobs in parallel on eight cores.
 
-The files are git-ignored.  The p and n files are merged by event count,
-which is what Z = N = 3 asks for in ⁶Li — but the two cross sections are
-not equal (0.6661 against 0.5761 μb at 10 × 99.5), so equal event counts
-are a *choice of weighting*, right for a library of hadronic shapes and
-wrong for anything that reads the sample as a rate.
+The files are git-ignored.  `HFSSample.concatenate` merges the p and n
+files with per-event weights σ_gen/n_events, so the library samples the
+two targets in the ratio of their cross sections (0.947 against 0.855 μb
+at 10 × 99.5) — the per-nucleon luminosity weighting Z = N = 3 asks for
+(until 2026-08-28 the merge was by event count).
 
-**Two traps, both already handled in the script, both worth knowing.**
+**Three traps, all handled in the script, all worth knowing.**
+
+*`PhaseSpace:mHatMin` defaults to 4 GeV and applies to DIS.*  The hard
+2 → 2 system's invariant mass is m̂² = x s, so the default silently removed
+everything below x = 16/s — 0.004 at 10 × 99.5 — which is 39% of the
+selected rate of the pseudo-experiments (the sweet spots at x ≥ 0.011 sit
+above it; the low-x half of the Q² = 1.14 GeV² slice does not).  The
+script now sets `mHatMin = 0.5` (`--mhat-min`); the cross section rose
+from 0.666 to 0.947 μb at 10 × 99.5 (p) and the sample's x spectrum
+follows the generator's rate map to ±25% down to x = 3×10⁻⁴.
 
 *`PhaseSpace:Q2Min` does nothing on its own.*  PYTHIA applies it only
 when `Q2Min ≥ pTHatMinDiverge²`, and `pTHatMinDiverge` defaults to 1 GeV,
@@ -517,11 +543,12 @@ pseudo-experiments loosen their generator window to populate.
 *The massless Σ identity does not hold for a massive target.*
 `hfs.truth_kinematics_check` pins Σ over the final state = 2 E_e y, which
 the toy satisfies exactly.  PYTHIA does not: the target nucleon carries
-E − p_z = 8.8 MeV at 50 GeV/u, so Σ − 2 E_e y = 9.4 MeV — 0.14% of Σ at
-y = 1 but 2% at y = 0.01 and 7.7% at y = 0.004.  Nothing downstream is
-affected, because `HFSLibrary` transfers the *ratio* of the library
-event's own sums, in which the offset cancels; but do not apply the check
-to a PYTHIA sample below y ≈ 0.2.  The p_T identity is exact (≤ 5×10⁻¹¹).
+E − p_z = m²/(E + p) = 4.4 MeV at 99.5 GeV/u, so Σ − 2 E_e y = 4.5 MeV —
+2% of Σ at y = 0.01.  `HFSLibrary` transfers the *ratio* of the library
+event's sums, and since 2026-08-28 `HFSResponse` applies it to the
+pseudo-event's Σ *including* the same mass term, so the transfer is
+consistent; pass `target_mass=0.938` to the check for a PYTHIA sample.
+The p_T identity is exact (≤ 5×10⁻¹¹).
 
 ### 5.2 BeAGLE — nuclear breakup, and the e+d control
 
@@ -665,13 +692,14 @@ trust anything downstream of it.
 |---|---|---|
 | 5R sweet spots (x, Q²) | `scripts/money_cos2phi.py` | (0.028, 1.14), (0.011, 1.14), (0.071, 3.13), (0.141, 14.3); A = 7.4 / 4.4 / 9.5 / 9.5 ×10⁻³, δA = 1.7 / 1.4 / 2.8 / 4.5 ×10⁻⁴ (1 yr) |
 | 5R sweet-spot purity, 25% stand-in | `scripts/money_cos2phi_reco.py` | 0.66 / 0.63 / 0.69 / 0.69 (D = 0.92 / 0.99 / 0.90 / 0.96); δÂ = 1.2 / 0.9 / 1.6 / 3.0 ×10⁻⁴ |
-| 5R sweet-spot purity, PYTHIA HFS, uncalibrated | `… --y-source hfs --hfs-sample …` | 0.43 / 0.54 / 0.47 / 0.69 |
-| 5R amplitude dilution D, PYTHIA HFS, uncalibrated | same | 0.79 / 0.85 / 0.82 / 0.95 |
-| 5R with the hadronic scale calibrated per cell | `… --y-source hfs --hfs-sample … --hfs-calibrate` | purity 0.52 / 0.59 / 0.59 / 0.76, D = 1.01 / 1.03 / 0.95 / 0.98, δÂ = 1.1 / 0.9 / 1.6 / 2.9 ×10⁻⁴ |
-| residual hadronic scale ±2% (calibrated) | `… --hfs-calibrate --hfs-scale 1.02` | Â moves 0.3–1.5% |
-| Σ at the mid sweet spots | `scripts/hfs_acceptance.py --config 1 --sample …` | within acceptance and above threshold 0.78 / 0.86 / 0.82 / 0.91 at |η| ≤ 3.7 (forward loss 0.19 / 0.08 / 0.16 / 0.07), 0.83 / 0.88 / 0.86 / 0.93 at 4.0; captured through the response 0.69 / 0.74 / 0.73 / 0.85; δy/y unchanged between reaches |
+| 5R sweet-spot purity, PYTHIA HFS, uncalibrated | `… --y-source hfs --hfs-sample …` | 0.42 / 0.53 / 0.49 / 0.68 |
+| 5R amplitude dilution D, PYTHIA HFS, uncalibrated | same | 0.79 / 0.84 / 0.83 / 0.95 |
+| 5R with the hadronic scale calibrated in reconstructed bins | `… --y-source hfs --hfs-sample … --hfs-calibrate` | purity 0.56 / 0.59 / 0.64 / 0.75, D = 1.00 / 1.06 / 0.95 / 0.98, δÂ = 1.3 / 0.9 / 1.7 / 3.0 ×10⁻⁴ |
+| 7R folded-fit bars at the best bins, PYTHIA calibrated | `… --hfs-calibrate --unfold folded` | 4.2 / 2.6 / 7.0% (1 yr), 3.8 / 2.2 / 2.6% (10 yr) at Q² = 1.14 / 3.13 / 14.3; prior spread 3.7 / 2.1 / 1.3% |
+| residual hadronic scale +2% (calibrated) | `… --hfs-calibrate --hfs-scale 1.02` | Â moves +0.2 to +1.2% |
+| Σ at the mid sweet spots | `scripts/hfs_acceptance.py --config 1 --sample …` | within acceptance and above threshold 0.80 / 0.87 / 0.83 / 0.92 at |η| ≤ 3.7 (forward loss 0.17 / 0.08 / 0.15 / 0.07), 0.85 / 0.89 / 0.88 / 0.94 at 4.0; captured through the response 0.70 / 0.74 / 0.74 / 0.85; δy/y unchanged between reaches |
 | Σ-method δy/y, PYTHIA, mid config (its own sweet spots) | `scripts/hfs_resolution.py --config 1 --sample …` | 0.32 / 0.22 / 0.29 / 0.15 |
-| … low config | `--config 0` | 0.38 / 0.23 / 0.24 / 0.11 |
+| … low config | `--config 0` | 0.39 / 0.23 / 0.24 / 0.11 |
 | … top config | `--config 2` | 0.23 / 0.19 / 0.21 / 0.18 |
 | unfolding model dependence (moment_B prior) | `scripts/money_cos2phi_reco.py --unfold-scan` | bin-by-bin (−4.1, +8.0, −5.5, +4.9)% → folded (−1.5, −1.8, −0.3, +0.5)% |
 | coherent tagged fraction | `scripts/coherent_optics_scan.py` | 32% / 3.0% / 4×10⁻⁵ / 2×10⁻⁷ at 0.10 / 0.22 / 0.45 / 0.60 GeV |
@@ -679,7 +707,9 @@ trust anything downstream of it.
 | near-beam gain, α tag | same | 0.012 → 0.21, 0.0016 → 0.019, 0.0012 → 0.0054 |
 | near-beam gain, through the chain | `scripts/nearbeam_reach_gain.py` | 5 × 41: acc 3.3×10⁻⁶ → 7.8×10⁻², 0 → 4 \|t\| bins (a_t ± 0.003–0.02); 10 × 100: 0 → 9.2×10⁻⁵, 0 → 1 bin |
 | tagging optics, priced | `scripts/tagging_optics.py` | horizontal-only optimum β*_x/β*_x,HA = 49.7 / 175.6 / 89.3, ε = 0.422 / 0.322 / 0.332, L/L_HA = 1/7.1 / 1/13.3 / 1/9.5, N_tag/yr = 2.6×10⁶ / 3.0×10⁶ / 6.1×10⁶, 5σ floor/yr = 1.7 / 2.1 / 1.6% per unit P_zz, shape term 9.3 / 8.3 / 10.7σ/yr |
-| 6R at the low configuration with a 0.727 mrad approach | `scripts/money_cos2phi_coherent_reco.py --config 0 --rp-aperture measured --cut-scale-x 1.0 --near-beam-mrad 0.727` | acc 0.078, N_tag 3.35×10⁶, ⟨cos 2β⟩ = −0.71, three \|t\| bins; a_t 0.1165 ± 0.0034 / 0.174 ± 0.004 / 0.262 ± 0.008 |
+| 6R at the tagging optics, 5 × 40.8 | `scripts/money_cos2phi_coherent_reco.py --config 0 --optics tagging --n-mc 6000000 [--ensemble 20]` | σ_θ = 33/380 μrad, cutout 0.33 × 3.8 mrad, acc 0.411, N_tag 2.52×10⁶/yr at L/L_HA = 1/7.1, ⟨cos 2β⟩ = −0.27; a_t 0.0899 ± 0.0035 / 0.118 ± 0.005 / 0.131 ± 0.009 / 0.104 ± 0.018 (1 yr; inj. 0.090 / 0.118 / 0.147 / 0.180), 0.0892 / 0.1202 / 0.1465 / 0.183 at 10 yr; ensemble means 0.0899 / 0.1170 / 0.139 / 0.114 |
+| 6R at the tagging optics, 18 × 137.5 | `… --config 2 --optics tagging --n-mc 6000000` | acc 0.324, N_tag 5.99×10⁶/yr; a_t 0.1005 ± 0.0023 / 0.133 ± 0.003 / 0.177 ± 0.006 / 0.221 ± 0.015 (inj. 0.100 / 0.137 / 0.179 / 0.228) |
+| 6R systematics at 5 × 40.8, exact counts | `… --exact --no-sin --envelope-split 1e-3 / --u2-assumed 0.044 / --rel-lumi-offset 1e-3` | a_t −0.8 / −0.5 / −0.1 / −0.3%; a_e +0.0007 to +0.0009; a_t 0.1% |
 | hot-spot Z-ID thresholds | `scripts/nearbeam_sensor_budget.py` | r_s = 134 / 268 / 402 nm for p,d / α / ⁶Li; at w = 1 µm, I_th/I_c = 0.73 / 0.46 / 0.20 |
 | Z-ID fake rate, 4 planes at 95% eff | `scripts/nearbeam_zid_power.py` | 2.3×10⁻⁵ (8-bit LLR) / 3.1×10⁻⁵ (one bit) / 2.7×10⁻³ (truncated mean) / 5.3×10⁻² (plain sum); 50% fill cannot reach 95% |
 
@@ -687,8 +717,8 @@ trust anything downstream of it.
 
 | what | expected |
 |---|---|
-| PYTHIA σ_gen, e+p at 10 × 99.5 | 0.6661 μb (n: 0.5761) |
-| PYTHIA sample, 2 M events | 17.5 M particles, 662 MB, ~190 s |
+| PYTHIA σ_gen, e+p at 10 × 99.5 | 0.9473 μb (n: 0.8551), with mHatMin = 0.5 |
+| PYTHIA sample, 2 M events | 25.3 M particles, 910 MB, ~270 s |
 | BeAGLE e+d, P(p_T > 0.3) in the x_L peak | 0.0261, against the Hulthén model's 0.0037 |
 | ⁶Li Roman-Pot edge, 18 × 275 optics | between 0.970 and 1.091 mrad, horizontal |
 

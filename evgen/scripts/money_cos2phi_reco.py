@@ -335,7 +335,12 @@ def main():
             continue
         summ = resp.bin_summary(xe[i0], xe[i0 + 2], q2lo, q2hi, cat_plus)
         m1 = measure_bin(resp, plan, mask, lumi1_pb, rng, phi_eff, lumi_assumed)
-        if m1["n"] < 1e3 or m1["err"] > 8e-3 or abs(summ["a_reco_bin"]) < 1e-5:
+        # the bins shown are chosen on MEASURABLE quantities only: the
+        # expected count and the statistical error (an earlier version also
+        # required the reco-bin truth amplitude to be non-zero, which is
+        # inert for every registry model but is not a criterion an
+        # experiment has; code review 2026-08-28)
+        if m1["n"] < 1e3 or m1["err"] > 8e-3:
             continue
         m10 = measure_bin(resp, plan, mask, lumi10_pb, rng, phi_eff,
                           lumi_assumed)
@@ -446,8 +451,7 @@ def main():
                                     cat_plus)
             m1 = measure_bin(resp, plan, mask, lumi1_pb, rng, phi_eff,
                              lumi_assumed)
-            good = in_range and not (m1["n"] < 1e3 or m1["err"] > 8e-3
-                                     or abs(summ["a_reco_bin"]) < 1e-5)
+            good = in_range and not (m1["n"] < 1e3 or m1["err"] > 8e-3)
             if not (good or folded):
                 continue
             m10 = measure_bin(resp, plan, mask, lumi10_pb, rng, phi_eff,
@@ -619,8 +623,7 @@ def main():
                               "amp": exact["amp"], "err": exact["err"],
                               "summ": summ})
                 plotted.append(bool(kinematic_mask(xc, q2s, s))
-                               and exact["n"] >= 1e3 and exact["err"] <= 8e-3
-                               and abs(summ["a_reco_bin"]) >= 1e-5)
+                               and exact["n"] >= 1e3 and exact["err"] <= 8e-3)
             xs = np.array([b["x"] for b in sbins])
             amps = np.array([b["amp"] for b in sbins])
             e1 = np.array([b["err"] for b in sbins])

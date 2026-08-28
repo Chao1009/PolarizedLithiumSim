@@ -323,6 +323,13 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
     recovers a quarter of the escape with δy/y unchanged.  What the ePIC
     inclusive WG could settle: the forward calorimeter reach and thresholds
     at Σ_h ≈ 0.2–0.5 GeV, alongside the noise floor.
+    *2026-08-28 (review):* the calibration is now keyed on the reconstructed
+    (x_mixed, Q²_e) rather than the true cell (purities 0.56 / 0.59 / 0.64 /
+    0.75), the acceptance is applied in the detector frame (+0.01 on the
+    captured fractions: 0.80 / 0.87 / 0.83 / 0.92), and the PYTHIA library
+    was regenerated without the m̂ ≥ 4 GeV floor that had removed x < 16/s.
+    The 50 MeV noise is labelled as this programme's stand-in; the ePIC
+    floor at Σ_h ≈ 0.2–0.5 GeV remains the one number to obtain.
     *2026-08-25 (web search, refs/README.md):* now bracketed by documents —
     ATHENA proposal JINST 17:P10019 Sec. 3.1/Fig. 22 (e−Σ or DA for
     y ≲ 0.1; ≈ 25% y resolution at y ≈ 0.01 → ≈ 10% at y ≈ 0.1; JB 20–30%);

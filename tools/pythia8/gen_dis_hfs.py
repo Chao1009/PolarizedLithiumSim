@@ -27,6 +27,11 @@ Physics setup (PYTHIA 8.3 DIS, cf. examples/main36 and the EIC tutorials):
   nucleon by an equal mixture of e+p and e+n runs (nuclear effects on the
   HFS are a Phase-2 item).
 
+  PhaseSpace:mHatMin = 0.5 (--mhat-min) removes PYTHIA's default 4 GeV
+  floor on the hard-process invariant mass, which for DIS is mHat^2 = x s
+  and had silently removed everything below x = 16/s (2026-08-28; the
+  standing production of evgen/samples was regenerated with it).
+
   PhaseSpace:pTHatMinDiverge = 0.5 is what MAKES the Q2 cut real, and it
   has to be set explicitly.  PYTHIA applies PhaseSpace:Q2Min only when
   Q2Min >= pTHatMinDiverge^2 (PhaseSpace.cc: hasQ2Min = (Q2GlobalMin >=
@@ -146,6 +151,10 @@ def main():
     ap.add_argument("--electron-energy", type=float, default=10.0)
     ap.add_argument("--p-per-nucleon", type=float, default=50.0)
     ap.add_argument("--q2min", type=float, default=0.7)
+    ap.add_argument("--mhat-min", type=float, default=0.5,
+                    help="PhaseSpace:mHatMin [GeV], the invariant mass of the "
+                         "hard 2 -> 2 system; for DIS mHat^2 = x s, so PYTHIA's "
+                         "default of 4 GeV silently removes x < 16/s (2026-08-28)")
     ap.add_argument("--seed", type=int, default=1)
     ap.add_argument("--out", default="pythia8_dis_hfs.npz")
     ap.add_argument("--report-every", type=int, default=50000)
@@ -164,6 +173,13 @@ def main():
         # without this the line above does nothing: the cut is applied only
         # for Q2Min >= pTHatMinDiverge^2, and the default is 1 GeV
         "PhaseSpace:pTHatMinDiverge = 0.5",
+        # and this is the SECOND silent floor: mHatMin defaults to 4 GeV for
+        # every 2 -> 2 process, DIS included, where mHat^2 = x s -- so with
+        # the default nothing is generated below x = 16/s (0.004 at
+        # 10 x 99.5), 39% of the selected rate of the pseudo-experiments
+        # (code review 2026-08-28).  The loosened window needs
+        # mHat >= sqrt(Q2min / y_max) = 0.84 GeV; 0.5 leaves a margin.
+        "PhaseSpace:mHatMin = %g" % args.mhat_min,
         "SpaceShower:dipoleRecoil = on",
         "PDF:lepton = off",
         "TimeShower:QEDshowerByL = off",

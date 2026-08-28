@@ -19,14 +19,19 @@ reco_chain_inclusive_6Li.png
   (d) the single-fill fit vs the spin-state-sorted ratio estimator under
       a smooth phi-dependent efficiency aligned with the spin axis.
 
-reco_chain_coherent_6Li.png
-  (a) the recoil transverse-momentum plane with the Roman-Pot cutout;
-  (b) fake a_2 of the tagged sample vs cutout aspect ratio against the
-      anchored deformation amplitude and the statistical floors;
-  (c) tag acceptance vs beam momentum per nucleon for an ANGULAR
-      envelope cut (the pT cut scales with A p_u);
-  (d) Roman-Pot emulation: reconstructed vs true |t| and the phi_t
-      resolution from the beam divergence.
+reco_chain_coherent_6Li.png  (at the lithium tagging optics, 5 x 40.8)
+  (a) the recoil transverse-momentum plane with the three cutouts: the
+      Yellow Report high-acceptance 10 sigma envelope, the pot aperture
+      measured in the ePIC geometry, and the tagging optics with the
+      pots following the envelope (0.33 x 3.8 mrad);
+  (b) the fake <cos 2beta> about the vertical spin axis and the tagged
+      fraction versus the horizontal half-width of the cutout, against
+      the anchored deformation band;
+  (c) tagged fraction versus the horizontal half-angle per configuration,
+      with the three cutouts marked -- the tag is an angle, so the pots
+      must reach the envelope and the optics must shrink it;
+  (d) Roman-Pot emulation at the tagging optics: reconstructed vs true
+      |t| and the phi_t resolution from the anisotropic divergence.
 
 Usage:  python3 scripts/reco_chain_figures.py
 """
@@ -310,113 +315,118 @@ def inclusive_figure(outdir):
 
 
 def coherent_figure(outdir):
-    config = beams.default_configs("6Li")[1]
+    """The coherent measurement at the tagging optics of Report 1 Section
+    6.1 (5 x 40.8: horizontal beta* x 50, pots following the 10 sigma
+    envelope 0.33 x 3.8 mrad), against the Yellow Report high-acceptance
+    optics and the pot aperture measured in the ePIC geometry
+    (2026-08-28; the earlier version drew the legacy 73 microrad isotropic
+    envelope and a 1.5-aspect slot at the mid configuration, where the tag
+    has 8e-5 acceptance and panel (d) was empty)."""
+    cfgs = beams.default_configs("6Li")
+    config = cfgs[0]
     p_u = config.ion_momentum_per_nucleon
+    p_ion = config.ion.A * p_u
     slope_b = 50.0
-    sig = reco.SIGMA_THETA_HA
-    cut = reco.tag_pt_cut(sig, p_u)
+    top = reco.tagging_optics_point(config, slope_b=slope_b)
+    sx, sy = top["sigma_x_eff"], top["sigma_y"]
+    cx, cy = top["env_x"] * p_ion, top["env_y"] * p_ion          # GeV
+    apx, apy = reco.rp_aperture_for(p_u)
+    ha_x, ha_y = reco.sigma_theta_for(config, "high-acceptance")
     fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(12.4, 8.8))
 
-    # --- (a) recoil pT plane with the cutout -------------------------------
-    g = np.linspace(-0.5, 0.5, 400)
+    # --- (a) recoil pT plane with the three cutouts --------------------------
+    g = np.linspace(-0.7, 0.7, 500)
     px, py = np.meshgrid(g, g)
     dens = np.exp(-slope_b * (px ** 2 + py ** 2))
-    ax1.imshow(dens, extent=(-0.5, 0.5, -0.5, 0.5), origin="lower",
+    ax1.imshow(dens, extent=(-0.7, 0.7, -0.7, 0.7), origin="lower",
                cmap="Blues", vmin=0, vmax=1.2, zorder=0)
-    r_asp = 1.5
-    ax1.add_patch(Rectangle((-cut, -cut * r_asp), 2 * cut, 2 * cut * r_asp,
-                            fill=True, fc="white", ec=C_VERM, lw=1.8,
-                            zorder=2, alpha=0.85))
-    ax1.add_patch(Ellipse((0, 0), 2 * cut, 2 * cut, fill=False, ec="0.3",
-                          ls=":", lw=1.3, zorder=3))
-    ax1.annotate("", xy=(0.0, 0.46), xytext=(0.0, -0.46),
-                 arrowprops=dict(arrowstyle="<->", color=C_GREEN, lw=1.6),
-                 zorder=4)
-    ax1.annotate(r"alignment axis $\hat n$ (vertical, headless)",
-                 xy=(0.015, 0.42), color=C_GREEN, fontsize=7)
-    phi_ex = 0.62
-    pt_ex = 0.33
-    ax1.annotate("", xy=(pt_ex * np.cos(phi_ex), pt_ex * np.sin(phi_ex)),
-                 xytext=(0, 0), arrowprops=dict(arrowstyle="->",
-                                                color="black", lw=1.4),
-                 zorder=4)
-    ax1.annotate(r"$\vec p_T(^6$Li$)$, $|t|\simeq p_T^2$, azimuth $\phi_t$",
-                 xy=(0.24, 0.25), fontsize=7)
-    ax1.annotate("cutout: $10\\sigma$ envelope\n$|p_x|<%.2f$, $|p_y|<%.2f$ GeV "
-                 "($r=%.1f$)\nbeam-blind" % (cut, cut * r_asp, r_asp),
-                 xy=(0, -0.14), fontsize=6.8, ha="center", va="center",
-                 color=C_VERM, zorder=5)
-    ax1.annotate("circular $p_T>%.2f$ GeV\n(routing-code cut)" % cut,
-                 xy=(-0.47, -0.45), fontsize=6.8, color="0.3")
+    for (hx, hy), col, ls, lab in (
+            ((10 * ha_x * p_ion, 10 * ha_y * p_ion), "0.3", ":",
+             "10σ envelope, YR high-acceptance optics (%.0f/%.0f μrad): %.2f × %.2f GeV"
+             % (1e6 * ha_x, 1e6 * ha_y, 10 * ha_x * p_ion, 10 * ha_y * p_ion)),
+            ((apx * p_ion, apy * p_ion), C_PURPLE, "--",
+             "pot aperture measured in the ePIC geometry: %.2f × %.2f GeV"
+             % (apx * p_ion, apy * p_ion)),
+            ((cx, cy), C_VERM, "-",
+             "tagging optics, pots following the 10σ envelope: %.2f × %.2f GeV" % (cx, cy))):
+        ax1.add_patch(Rectangle((-hx, -hy), 2 * hx, 2 * hy, fill=False, ec=col,
+                                ls=ls, lw=1.8, zorder=3, label=lab))
+    ax1.add_patch(Rectangle((-cx, -cy), 2 * cx, 2 * cy, fill=True, fc="white",
+                            ec="none", zorder=2, alpha=0.85))
+    ax1.annotate("", xy=(0.0, 0.66), xytext=(0.0, -0.66),
+                 arrowprops=dict(arrowstyle="<->", color=C_GREEN, lw=1.6), zorder=4)
+    ax1.annotate(r"alignment axis $\hat n$ (vertical, headless)", xy=(0.02, 0.60),
+                 color=C_GREEN, fontsize=7)
     ax1.annotate(r"tagged: $e^{-B p_T^2}$ tail, $B=%g$ GeV$^{-2}$" % slope_b,
-                 xy=(-0.47, 0.42), fontsize=7, color=C_BLUE)
+                 xy=(-0.68, 0.62), fontsize=7, color=C_BLUE)
+    ax1.set_xlim(-0.7, 0.7)
+    ax1.set_ylim(-0.7, 0.7)
     ax1.set_xlabel(r"$p_x$ [GeV]  (horizontal, crossing-angle plane)")
-    ax1.set_ylabel(r"$p_y$ [GeV]  (vertical)")
-    ax1.set_title(r"(a) recoil $\vec p_T$ plane at the Roman Pots, "
-                  r"%s, $\sigma_\theta=%.0f\,\mu$rad" % (config.label(),
-                                                         1e6 * sig),
+    ax1.set_ylabel(r"$p_y$ [GeV]  (vertical, along $\hat n$)")
+    ax1.set_title(r"(a) recoil $\vec p_T$ plane at the Roman Pots, %s" % config.label(),
                   fontsize=9)
+    ax1.legend(fontsize=6.4, loc="lower left")
     ax1.tick_params(labelsize=8)
 
-    # --- (b) fake a2 vs aspect ratio ---------------------------------------
-    rr = np.linspace(0.3, 2.0, 171)
-    for shape, ls, lab in (("rectangle", "-", "rectangular cutout"),
-                           ("ellipse", "--", "elliptical cutout")):
-        a2 = [reco.rp_hole_acceptance(slope_b, cut, cut * r, shape)["a2"]
-              for r in rr]
-        ax2.plot(rr, a2, ls, color=C_VERM, lw=1.8, label=lab)
-    a4 = [reco.rp_hole_acceptance(slope_b, cut, cut * r)["a4"] for r in rr]
-    ax2.plot(rr, a4, "-", color=C_GREY, lw=1.2,
-             label=r"rectangle, $\cos4\phi_t$ coefficient")
-    ax2.axhspan(0.018, 0.059, color=C_BLUE, alpha=0.18, lw=0,
-                label=r"anchored $\langle a_2\rangle$ band, $P_{zz}=0.6$")
-    ax2.axhline(0.036, color=C_BLUE, lw=1.2)
-    for lvl, lab in ((5 * 0.6 * 1.9e-3, r"$5\sigma$ floor, 1 yr"),
-                     (5 * 0.6 * 6e-4, r"$5\sigma$ floor, 10 yr")):
-        ax2.axhline(lvl, color="black", lw=0.7, ls=":")
-        ax2.annotate(lab, xy=(1.92, lvl * 1.1), fontsize=6.5, ha="right")
-    ax2.axhline(0, color="0.8", lw=0.6)
-    ax2.axvspan(0.3, 0.6, color="0.5", alpha=0.10, lw=0)
-    ax2.annotate("ePIC slot-like cutout\n(wide in $x$, tight in $y$)",
-                 xy=(0.45, 2e-3), fontsize=6.6, ha="center", color="0.3")
-    ax2.set_yscale("symlog", linthresh=1e-3)
-    ax2.set_xlabel(r"cutout aspect ratio $r=c_y/c_x$ ($c_x=%.2f$ GeV)" % cut)
-    ax2.set_ylabel(r"$\langle\cos2\phi_t\rangle$ of the tagged sample")
-    ax2.set_title(r"(b) fake $\cos2(\phi_t-\phi_S)$ from the cutout "
-                  r"geometry vs the physics amplitude", fontsize=9)
-    ax2.legend(fontsize=6.8, loc="lower right")
+    # --- (b) fake <cos 2beta> vs the horizontal half-width ------------------
+    hx_gev = np.logspace(np.log10(0.03), np.log10(1.0), 160)
+    acc_b, a2_b = [], []
+    for h in hx_gev:
+        r = reco.rp_hole_acceptance(slope_b, h, cy)
+        acc_b.append(r["acc"])
+        a2_b.append(-r["a2"])          # about the VERTICAL spin axis
+    ax2.plot(hx_gev, a2_b, "-", color=C_VERM, lw=1.8,
+             label=r"$\langle\cos 2\beta\rangle$ of the tagged sample "
+                   r"($c_y$ = %.2f GeV, vertical at high acceptance)" % cy)
+    ax2.plot(hx_gev, acc_b, "-", color=C_BLUE, lw=1.4, label="tagged fraction")
+    ax2.axhspan(0.018, 0.059, color=C_GREEN, alpha=0.18, lw=0,
+                label=r"anchored deformation term $a_t$ band at $P_{zz}=0.6$")
+    ax2.axhline(0.0, color="0.8", lw=0.6)
+    for h, col, lab in ((cx, C_VERM, "tagging optics"), (apx * p_ion, C_PURPLE, "pot aperture"),
+                        (10 * ha_x * p_ion, "0.3", "YR HA envelope")):
+        ax2.axvline(h, color=col, lw=0.9, ls="--")
+        ax2.annotate(lab, xy=(h, 0.92), xytext=(3, 0), textcoords="offset points",
+                     fontsize=6.6, color=col, rotation=90, va="top")
+    ax2.set_xscale("log")
+    ax2.set_ylim(-1.0, 1.0)
+    ax2.set_xlabel(r"horizontal half-width of the cutout $c_x$ [GeV]")
+    ax2.set_ylabel("coefficient / fraction")
+    ax2.set_title(r"(b) what the cutout fakes in the recoil azimuth, and what it leaves",
+                  fontsize=9)
+    ax2.legend(fontsize=6.6, loc="lower right")
     ax2.tick_params(labelsize=8)
 
-    # --- (c) acceptance vs beam momentum per nucleon -----------------------
-    pu = np.linspace(15.0, 140.0, 300)
-    for sg, col, lab in ((reco.SIGMA_THETA_HA, C_BLUE,
-                          r"$\sigma_\theta=73\,\mu$rad (0.20 GeV at 275 GeV p)"),
-                         (reco.SIGMA_THETA_HD, C_VERM,
-                          r"$\sigma_\theta=149\,\mu$rad (0.41 GeV at 275 GeV p)")):
-        c = reco.tag_pt_cut(sg, pu)
-        ax3.plot(pu, np.exp(-slope_b * c * c), "-", color=col, lw=1.8,
-                 label=lab)
-        ax3.fill_between(pu, np.exp(-60.0 * c * c), np.exp(-40.0 * c * c),
-                         color=col, alpha=0.15, lw=0)
-    ax3.axhline(np.exp(-slope_b * 0.04), color="0.3", ls=":", lw=1.0,
-                label="constant 0.20 GeV cut (13.5%, current code)")
-    for cfg_i, mk in zip(beams.default_configs("6Li"), ("s", "o", "^")):
-        pi = cfg_i.ion_momentum_per_nucleon
-        ci = reco.tag_pt_cut(reco.SIGMA_THETA_HA, pi)
-        ax3.plot(pi, np.exp(-slope_b * ci * ci), mk, color="black", ms=6,
-                 mfc="white" if cfg_i is not config else "black")
-        ax3.annotate(cfg_i.label(), xy=(pi, np.exp(-slope_b * ci * ci)),
-                     xytext=(6, 4), textcoords="offset points", fontsize=6.8)
+    # --- (c) acceptance vs the horizontal envelope, per configuration -------
+    thx = np.logspace(np.log10(0.05), np.log10(3.0), 200)      # mrad
+    for cfg_i, col, mk in zip(cfgs, (C_BLUE, C_VERM, C_GREEN), ("s", "o", "^")):
+        pi = cfg_i.ion.A * cfg_i.ion_momentum_per_nucleon
+        t_i = reco.tagging_optics_point(cfg_i, slope_b=slope_b)
+        hx_i, hy_i = reco.sigma_theta_for(cfg_i, "high-acceptance")
+        ax_i, ay_i = reco.rp_aperture_for(cfg_i.ion_momentum_per_nucleon)
+        acc = [reco.rp_hole_acceptance(slope_b, 1e-3 * th * pi, t_i["env_y"] * pi)["acc"]
+               for th in thx]
+        ax3.plot(thx, acc, "-", color=col, lw=1.6,
+                 label="%s, vertical envelope %.2f mrad" % (cfg_i.label(), 1e3 * t_i["env_y"]))
+        ax3.plot([1e3 * t_i["env_x"]], [t_i["acceptance"]], mk, color=col, ms=7,
+                 mfc="white", mew=1.6)
+        ax3.plot([1e3 * ax_i], [reco.rp_hole_acceptance(slope_b, ax_i * pi, t_i["env_y"] * pi)["acc"]],
+                 mk, color=col, ms=6)
+        ax3.plot([1e4 * hx_i], [reco.rp_hole_acceptance(slope_b, 10 * hx_i * pi, t_i["env_y"] * pi)["acc"]],
+                 mk, color=col, ms=6, alpha=0.45)
+    ax3.plot([], [], "k", marker="o", mfc="white", ls="none", label="tagging optics (pots follow)")
+    ax3.plot([], [], "k", marker="o", ls="none", label="pot aperture measured in the ePIC geometry")
+    ax3.plot([], [], "k", marker="o", ls="none", alpha=0.45, label="10σ envelope of the YR high-acceptance optics")
+    ax3.set_xscale("log")
     ax3.set_yscale("log")
-    ax3.set_ylim(1e-8, 1.5)
-    ax3.set_xlabel(r"$^6$Li beam momentum per nucleon $p_u$ [GeV]")
-    ax3.set_ylabel(r"tag acceptance $\exp[-B\,(10\sigma_\theta\,6p_u)^2]$")
-    ax3.set_title(r"(c) the near-beam cut is ANGULAR: $p_T^{\rm cut}="
-                  r"10\sigma_\theta\,A\,p_u$ (bands: $B=40$–$60$)", fontsize=9)
-    ax3.legend(fontsize=6.8, loc="lower left")
+    ax3.set_ylim(1e-9, 1.5)
+    ax3.set_xlabel(r"horizontal half-width of the cutout at the IP, $\theta_x$ [mrad]")
+    ax3.set_ylabel(r"tagged fraction (rectangle, $B=50$ GeV$^{-2}$)")
+    ax3.set_title(r"(c) the tag is an angle: pots must reach the envelope, and the envelope must shrink",
+                  fontsize=9)
+    ax3.legend(fontsize=6.4, loc="lower left")
     ax3.tick_params(labelsize=8)
 
-    # --- (d) RP emulation: t_reco vs t_true, phi_t resolution --------------
+    # --- (d) RP emulation at the tagging optics ------------------------------
     _, p4 = reco.beam_fourvectors(config)
     rng = np.random.default_rng(20260824)
     n = 400000
@@ -427,55 +437,67 @@ def coherent_figure(outdir):
     t_true, x_pom = t_true[ok], x_pom[ok]
     phi_t = rng.uniform(0, 2 * np.pi, t_true.size)
     pp = reco.recoil_fourvector(t_true, phi_t, x_pom, p4)
-    m = reco.rp_measure(pp, p4, (sig, sig), rng=rng)
+    m = reco.rp_measure(pp, p4, (sx, sy), rng=rng, cut_theta_xy=(top["env_x"], top["env_y"]))
     acc = m["accepted"]
     tb = np.linspace(0.0, 0.3, 61)
     ax4.hist(-t_true, bins=tb, histtype="step", color="0.3", lw=1.2,
              label=r"true $|t|$, all coherent recoils")
     ax4.hist(-t_true[acc], bins=tb, histtype="step", color=C_BLUE, lw=1.6,
-             label=r"true $|t|$, RP-accepted (%.1f%%)" % (100 * acc.mean()))
+             label=r"true $|t|$, tagged (%.1f%%)" % (100 * acc.mean()))
     ax4.hist(-m["t_reco"][acc], bins=tb, histtype="stepfilled",
              color=C_VERM, alpha=0.35, lw=1.2, ec=C_VERM,
              label=r"reconstructed $|t|=p_T^2$ (divergence-smeared)")
     ax4.set_yscale("log")
     ax4.set_xlabel(r"$|t|$ [GeV$^2$]")
     ax4.set_ylabel("recoils")
-    ax4.set_title(r"(d) Roman-Pot emulation: $10\sigma$ square cutout, "
-                  r"$\delta p_T=6p_u\sigma_\theta=%.0f$ MeV" % (
-                      1e3 * 6 * p_u * sig), fontsize=9)
+    ax4.set_title(r"(d) Roman-Pot emulation at the tagging optics: $\sigma_\theta$ = %.0f / %.0f μrad, "
+                  r"$\delta p_T$ = %.0f / %.0f MeV (h / v)"
+                  % (1e6 * sx, 1e6 * sy, 1e3 * p_ion * sx, 1e3 * p_ion * sy), fontsize=8.6)
     ax4.legend(fontsize=7, loc="upper right")
     ax4.tick_params(labelsize=8)
     ins = ax4.inset_axes([0.47, 0.40, 0.50, 0.28])
     dphi = np.angle(np.exp(1j * (m["phi_t"][acc] - phi_t[acc])))
-    ptb = np.linspace(cut, 0.5, 9)
+    ptb = np.linspace(0.08, 0.6, 12)
     ptc = 0.5 * (ptb[:-1] + ptb[1:])
     sd = [np.std(dphi[(m["pT_true"][acc] >= lo) & (m["pT_true"][acc] < hi)])
           for lo, hi in zip(ptb[:-1], ptb[1:])]
-    ins.plot(ptc, sd, "o-", color=C_BLUE, ms=3, lw=1.2)
-    ins.plot(ptc, 6 * p_u * sig / ptc, "--", color="0.4", lw=1.0)
+    ins.plot(ptc, sd, "o-", color=C_BLUE, ms=3, lw=1.2, label="measured")
+    ins.plot(ptc, p_ion * sy / ptc, "--", color="0.4", lw=1.0, label=r"$\delta p_{T,y}/p_T$")
     ins.set_xlabel(r"$p_T$ [GeV]", fontsize=6.5, labelpad=1)
     ins.set_ylabel(r"$\sigma(\phi_t)$ [rad]", fontsize=6.5, labelpad=1)
     ins.tick_params(labelsize=6)
-    ins.set_title(r"$\phi_t$ resolution ($\langle\cos2\delta\phi\rangle"
-                  r"\approx e^{-2\sigma^2}$)", fontsize=6.5)
+    ins.legend(fontsize=5.8, loc="upper right")
+    ins.set_title(r"$\phi_t$ resolution of the tagged recoils", fontsize=6.5)
 
-    fig.suptitle("Coherent intact-⁶Li channel: the recoil measurement, its "
-                 "acceptance geometry, and the angular near-beam cut",
-                 fontsize=11)
+    fig.suptitle("Coherent intact-⁶Li channel: the recoil measurement, the cutout geometry and "
+                 "the angular near-beam envelope, at the lithium tagging optics", fontsize=10.5)
     fig.tight_layout(rect=(0, 0, 1, 0.96))
     out = pathlib.Path(outdir) / "reco_chain_coherent_6Li.png"
     fig.savefig(out, dpi=140)
     print("wrote", out)
-    for r in (1.0, 1.25, 1.5):
-        h = reco.rp_hole_acceptance(slope_b, cut, cut * r)
-        print("rectangle r=%.2f: acc=%.3f a2=%.3f a4=%.3f" % (r, h["acc"],
-                                                              h["a2"], h["a4"]))
-    for cfg_i in beams.default_configs("6Li"):
-        c = reco.tag_pt_cut(reco.SIGMA_THETA_HA, cfg_i.ion_momentum_per_nucleon)
-        print("%s: pT_cut(HA) = %.3f GeV, acc = %.3g" % (
-            cfg_i.label(), c, np.exp(-slope_b * c * c)))
-    print("RP emulation acceptance (square, isotropic): %.4f; phi_t sigma "
-          "at pT=0.25: %.3f rad" % (acc.mean(), 6 * p_u * sig / 0.25))
+    print("tagging optics at %s: r_h = %.1f, sigma h/v = %.0f/%.0f microrad, envelope %.2f x %.2f mrad "
+          "= %.3f x %.3f GeV, acceptance %.3f, L/L_HA = 1/%.1f"
+          % (config.label(), top["r_h"], 1e6 * sx, 1e6 * sy, 1e3 * top["env_x"], 1e3 * top["env_y"],
+             cx, cy, top["acceptance"], 1.0 / top["lumi_fraction"]))
+    h = reco.rp_hole_acceptance(slope_b, cx, cy)
+    print("fake <cos 2beta> about the vertical axis at the tagging cutout: %.3f (a4 %.3f); "
+          "at the measured aperture: %.3f" % (-h["a2"], h["a4"],
+                                             -reco.rp_hole_acceptance(slope_b, apx * p_ion, apy * p_ion)["a2"]))
+    for cfg_i in cfgs:
+        pi = cfg_i.ion.A * cfg_i.ion_momentum_per_nucleon
+        t_i = reco.tagging_optics_point(cfg_i, slope_b=slope_b)
+        hx_i, hy_i = reco.sigma_theta_for(cfg_i, "high-acceptance")
+        ax_i, ay_i = reco.rp_aperture_for(cfg_i.ion_momentum_per_nucleon)
+        print("%s: YR-HA 10 sigma envelope %.2f x %.2f mrad -> acc %.2e; measured aperture %.2f x %.2f mrad "
+              "-> acc %.2e; tagging optics %.2f x %.2f mrad -> acc %.3f"
+              % (cfg_i.label(), 1e4 * hx_i, 1e4 * hy_i,
+                 reco.rp_hole_acceptance(slope_b, 10 * hx_i * pi, 10 * hy_i * pi)["acc"],
+                 1e3 * ax_i, 1e3 * ay_i,
+                 reco.rp_hole_acceptance(slope_b, max(ax_i, 10 * hx_i) * pi, max(ay_i, 10 * hy_i) * pi)["acc"],
+                 1e3 * t_i["env_x"], 1e3 * t_i["env_y"], t_i["acceptance"]))
+    print("RP emulation at the tagging optics: acceptance %.4f; phi_t sigma at pT = 0.15 / 0.30 GeV: "
+          "%.3f / %.3f rad (measured), %.3f / %.3f (delta p_T,y / p_T)"
+          % (acc.mean(), sd[1], sd[5], p_ion * sy / ptc[1], p_ion * sy / ptc[5]))
 
 
 def main():

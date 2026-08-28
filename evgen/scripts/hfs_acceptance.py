@@ -70,9 +70,11 @@ def decompose(p4, pid, charge, local, n_ev, resp):
     parameters of `resp` (no efficiencies, no smearing: pure geometry and
     thresholds)."""
     E, px, py, pz = p4[:, 0], p4[:, 1], p4[:, 2], p4[:, 3]
-    pabs = np.sqrt(px ** 2 + py ** 2 + pz ** 2)
-    eta = np.arctanh(np.clip(pz / np.maximum(pabs, 1e-12), -0.999999999, 0.999999999))
-    pt = np.hypot(px, py)
+    # acceptance edges live in the detector frame (25 mrad crossing), the
+    # E - p_z shares in the head-on frame -- as in HadronResponse
+    eta = resp.lab_eta(p4)
+    lab = reco.head_on_to_lab(p4, resp.xing) if resp.xing else p4
+    pt = np.hypot(lab[:, 1], lab[:, 2])
     emz = E - pz
     apid = np.abs(pid)
     nu = np.isin(apid, hfs.NEUTRINOS)

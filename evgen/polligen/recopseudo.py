@@ -189,8 +189,15 @@ class RecoResponse:
 
         # 3. kinematic reconstruction and selection -----------------------
         q2_e, y_e, x_e = reco.electron_method(e_r, th_r, e_e, s)
+        # electron-beam energy spread: the event was made at E_e (1 + d) but
+        # the analysis reconstructs with the nominal E_e, so
+        # Q2_e = 2 E_e E'(1 + cos) is LOW by (1 + d) and 1 - y_e =
+        # E'(1 - cos)/(2 E_e) HIGH by it.  (The two carried the same sign
+        # until 2026-08-28; with the Sigma-method y the mixed x is then
+        # exactly beam-energy independent, as it should be, instead of
+        # picking up a fake 2d.)
         spread = m.beam_e_spread * rng.standard_normal(n)
-        q2_e = q2_e * (1.0 + spread)
+        q2_e = q2_e / (1.0 + spread)
         y_e = 1.0 - (1.0 - y_e) * (1.0 + spread)
         if m.y_method == "mixed":
             if m.y_source == "hfs":
@@ -454,9 +461,16 @@ def measure_inclusive(resp, plan, lumi_pb, mask, rng=None, nbins=24,
     spin-sorted phi' counts -> Poisson draw -> spin-state ratio fit.
     `phi_eff`: None, one efficiency common to every fill, or one per
     fill (reco.per_fill_acceptance).  `lumi_assumed`: luminosity
-    fractions the ANALYSIS believes (default: the plan's true shares;
-    pass biased values to emulate a relative-luminosity error).  Returns the fit dict plus counts and the truth
-    references of `bin_summary` (computed by the caller)."""
+    fractions the ANALYSIS believes.  The default is the plan's shares,
+    which is the right thing only for a plan WITHOUT a relative-luminosity
+    offset; a plan built with `rel_lumi_offset != 0` carries the offset in
+    its shares, and the published scripts pass the nominal [0.5, 0.5]
+    explicitly so that the analysis does not know the truth.  The fill
+    polarizations are taken from the plan exactly: the polarimetry scale
+    is a normalisation on the amplitude (1:1, pinned by a test) and is
+    quoted as a systematic rather than emulated here.  Returns the fit
+    dict plus counts and the truth references of `bin_summary` (computed
+    by the caller)."""
     rng = rng or np.random.default_rng(20260824)
     edges = np.linspace(0.0, 2.0 * np.pi, nbins + 1)
     mu = resp.expected_counts(plan.categories, lumi_pb, mask, edges,
@@ -745,15 +759,19 @@ class CoherentResponse:
                  t_max=0.5, phi_s=np.pi / 2.0, n_sigma=10.0, rng=None,
                  cut_scale_xy=(1.0, 1.0), t_floor=0.0,
                  cut_theta_xy=None):
-        """`aspect` = sigma_theta_y / sigma_theta_x (beam divergence
-        anisotropy; HERA's proton beam had 45 vs 100 MeV horizontal vs
-        vertical pT spread at the IP, ZEUS NPB 816:1); `cut_scale_xy`
-        scales the cutout half-widths (n_sigma sigma_x, n_sigma sigma_y):
-        the ePIC pots surround a horizontal slot, cut_scale_xy = (2.5, 1)
-        (see reco.rp_measure).  `cut_theta_xy` adds the pots' measured
-        GEOMETRIC aperture in absolute angle and takes the larger of the
-        two per axis (reco.RP_APERTURE_MEASURED); it dominates the
-        envelope at every configuration and inverts its aspect.
+        """`sigma_theta` is the horizontal RMS divergence [rad], or a pair
+        (sigma_x, sigma_y) -- the per-configuration values of
+        reco.sigma_theta_for / reco.tagging_optics_point are anisotropic
+        (2026-08-28); with a scalar, `aspect` = sigma_theta_y /
+        sigma_theta_x (HERA's proton beam had 45 vs 100 MeV horizontal vs
+        vertical pT spread at the IP, ZEUS NPB 816:1).  `cut_scale_xy`
+        scales the cutout half-widths (n_sigma sigma_x, n_sigma sigma_y).
+        `cut_theta_xy` adds the pots' measured GEOMETRIC aperture in
+        absolute angle and takes the larger of the two per axis
+        (reco.RP_APERTURE_MEASURED); at the Yellow Report optics it
+        dominates the envelope at every configuration and inverts its
+        aspect, under a tagging optics with pots that follow the envelope
+        it is the envelope that binds.
 
         `t_floor` [GeV^2] importance-samples the recoil above |t| = t_floor
         instead of from |t| = 0.  The spectrum is exponential, so a shifted
@@ -765,6 +783,9 @@ class CoherentResponse:
         curve could not be produced."""
         rng = rng or np.random.default_rng(20260824)
         self.scenario, self.config = scenario, config
+        if np.ndim(sigma_theta) == 1:
+            sigma_theta, aspect = (float(sigma_theta[0]),
+                                   float(sigma_theta[1]) / float(sigma_theta[0]))
         self.sigma_theta, self.aspect, self.shape = sigma_theta, aspect, shape
         self.n_sigma, self.phi_s = n_sigma, phi_s
         _k, p_ion = reco.beam_fourvectors(config)
@@ -799,10 +820,14 @@ class CoherentResponse:
                              else tuple(float(v) for v in cut_theta_xy))
         self._apply_cut(cut_scale_xy)
 
-    def _apply_cut(self, cut_scale_xy):
+    def _apply_cut(self, cut_scale_xy, eff_scale_xy=(1.0, 1.0)):
         """(Re)select the tagged sample for a cutout of half-widths
-        (n_sigma sigma_x, n_sigma sigma_y) * cut_scale_xy, from the
-        already-smeared angle pair."""
+        (n_sigma sigma_x, n_sigma sigma_y) * cut_scale_xy, or the measured
+        aperture where that is larger, from the already-smeared angle
+        pair.  `eff_scale_xy` scales the EFFECTIVE (binding) half-widths
+        after that comparison -- the per-fill perturbation of `with_cut`,
+        which therefore acts whichever constraint binds (2026-08-28; scaling
+        the envelope alone was a no-op wherever the aperture bound)."""
         self.cut_scale_xy = tuple(float(v) for v in cut_scale_xy)
         m, n_mc = self._m, self.n_produced_mc
         sx, sy = self.sigma_theta, self.sigma_theta * self.aspect
@@ -811,6 +836,8 @@ class CoherentResponse:
         if self.cut_theta_xy is not None:
             cx = max(cx, self.cut_theta_xy[0])
             cy = max(cy, self.cut_theta_xy[1])
+        cx, cy = cx * float(eff_scale_xy[0]), cy * float(eff_scale_xy[1])
+        self.cut_theta_eff = (cx, cy)
         thx, thy = m["theta_x"], m["theta_y"]
         if self.shape == "rectangle":
             acc = (np.abs(thx) > cx) | (np.abs(thy) > cy)
@@ -829,11 +856,16 @@ class CoherentResponse:
         self.w = np.full(self.t_true.size, self._t_weight / n_mc)
         return self
 
-    def with_cut(self, cut_scale_xy):
+    def with_cut(self, cut_scale_xy=None, eff_scale_xy=(1.0, 1.0)):
         """A view of the SAME recoils behind a perturbed cutout -- the
         fill-dependent acceptance the spin-state ratio cannot cancel
-        (code review F1, coherent half).  Cheap: no resampling."""
-        return copy.copy(self)._apply_cut(cut_scale_xy)
+        (code review F1, coherent half).  `cut_scale_xy` rescales the
+        envelope (the pre-2026-08-28 interface, inert wherever the measured
+        aperture binds); `eff_scale_xy` rescales the binding half-widths
+        themselves, envelope or aperture.  Cheap: no resampling."""
+        if cut_scale_xy is None:
+            cut_scale_xy = self.cut_scale_xy
+        return copy.copy(self)._apply_cut(cut_scale_xy, eff_scale_xy)
 
     def t_bin_fraction(self, tlo, thi):
         sel = (self.t_reco >= tlo) & (self.t_reco < thi)
@@ -904,10 +936,18 @@ class CoherentResponse:
         (default g = t/t_ref, the linear model of plans/06 SS6.4b): the
         cutout correlates beta with |t| inside a reco t bin (the blind
         directions hold the larger-|t| recoils), so the coefficient must
-        be fitted against the template, not against <cos 2beta> alone --
-        the two-component fit a_2(t) = c_def |t| + a_g of plans/06 in
-        MC-response form.  The fitted coefficient is a_t at t_ref (the
-        bin's rate-weighted mean true |t| by default)."""
+        be fitted against the template, not against <cos 2beta> alone.
+        Within one reco t bin this is a ONE-coefficient fit of the
+        assumed shape (a_t strictly proportional to |t|); the
+        two-component decomposition a_2(t) = c_def |t| + a_g of plans/06
+        is what the bin-to-bin t dependence of the fitted a_t(t_ref)
+        gives, together with the flat a_e of the electron azimuth -- not
+        something this basis fits inside a bin.  The fitted coefficient is
+        a_t at t_ref (the bin's rate-weighted mean true |t| by default),
+        and the basis itself carries the response's Monte-Carlo
+        statistics: keep n_mc large enough that the in-bin means are
+        known better than the data resolve them (6e6 for the ten-year
+        Table 3 of Report 2)."""
         sel = (self.t_reco >= tlo) & (self.t_reco < thi)
         be = np.asarray(beta_edges, dtype=float)
         kb = np.clip(np.digitize(self.beta_reco[sel], be) - 1, 0, be.size - 2)

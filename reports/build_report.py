@@ -61,8 +61,12 @@ NANOWIRE_FIGS = {
 RECO_FIGS = {
     "__RC1__": "evgen/reco_chain_inclusive_6Li.png",
     "__RC2__": "evgen/reco_chain_coherent_6Li.png",
-    "__RC3__": "evgen/money_cos2phi_reco_6Li.png",
-    "__RC4__": "evgen/money_delta_extracted_reco_6Li.png",
+    # 5R / 7R on the PYTHIA 8 final state with the calibrated hadronic
+    # scale and the bin-centering fitted through the response (2026-08-28);
+    # the 25% stand-in figures money_cos2phi_reco_6Li.png and
+    # money_delta_extracted_reco_6Li.png are still produced and quoted
+    "__RC3__": "evgen/money_cos2phi_reco_6Li_hfscal.png",
+    "__RC4__": "evgen/money_delta_extracted_reco_6Li_hfscal.png",
     "__RC5__": "evgen/money_cos2phi_coherent_reco_6Li.png",
     "__RC6__": "evgen/hfs_resolution_6Li.png",
     "__RC7__": "evgen/hfs_acceptance_6Li.png",

@@ -55,9 +55,12 @@ suite so the two lines stay comparable -- is itself a scenario choice,
 on top of which `dilution` restricts the exotic glue to the polarized
 pair.  <Q2>-convention note: the money_delta production solve used
 Scenario(q2_min=2.0)+EPPS21 (<Q2> = 7.4, A = -0.310); our callers use
-their own accepted phase space (q2_min=1.0, toy F1: <Q2> = 3.9,
-A = -0.294) -- the F1 model, not q2_ref, dominates the small
-difference.
+their own accepted phase space (q2_min=1.0, toy F1, e10 x 6Li 99.5 GeV/u:
+<Q2> = 4.47, A = -0.292 with the CT18NLO alpha_s table) -- the F1 model,
+not q2_ref, dominates the small difference.  The alpha_s source matters
+more than either: without the `parton` package the LO analytic form is
+used and A comes out ~14% larger in magnitude, so a warning is printed
+once when that fallback is taken (2026-08-28).
 """
 
 from dataclasses import dataclass, field
@@ -106,6 +109,7 @@ def alpha_s_lo(q2, lambda_qcd=0.22, n_f=4):
 
 
 _ALPHAS_CACHE = {}
+_WARNED_LO = False
 
 
 def alpha_s_table(setname="CT18NLO"):
@@ -141,8 +145,21 @@ def alpha_s_table(setname="CT18NLO"):
 
 def default_alpha_s():
     """Preferred alpha_s: parton table (money_delta production convention,
-    ~14% below the LO analytic at Q2 ~ 2-15 GeV2), LO fallback."""
-    return alpha_s_table() or alpha_s_lo
+    ~14% below the LO analytic at Q2 ~ 2-15 GeV2), LO fallback -- which is
+    announced once on stderr, because it moves the Delta normalisation of
+    every moment-constrained projection by that much."""
+    tab = alpha_s_table()
+    if tab is None:
+        global _WARNED_LO
+        if not _WARNED_LO:
+            import sys as _sys
+            print("delta_models: the `parton` package / CT18NLO table is not "
+                  "available -- alpha_s falls back to the LO analytic form, "
+                  "which makes the moment-constrained Delta ~14% larger than "
+                  "the production (table) convention", file=_sys.stderr)
+            _WARNED_LO = True
+        return alpha_s_lo
+    return tab
 
 
 @dataclass

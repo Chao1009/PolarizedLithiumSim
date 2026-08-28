@@ -53,6 +53,66 @@ brings to the EIC, in support of the ANL polarized ⁶,⁷Li ion-source program
 5. **Calendar anchor**: INT program on polarized ion beams at EIC,
    March 22 – April 2, 2027 — target for Phase-1 money plots.
 
+## Development run 11 (2026-08-28): the toolchain reviewed, and Report 2 rewritten as a paper
+
+Nine independent readings of the reconstruction chain (truth leaks in the
+inclusive and coherent analyses, the hadronic-final-state layer, frames
+and kinematics, estimator statistics, the kernel and sampler, code-versus-
+document consistency, experimental realism, tests and scripts) produced 65
+findings; each code-level finding was re-verified numerically before it
+was acted on.  Record: `docs/code_review_2026-08-28.md`.  What changed:
+
+- ☑ **The hadronic-scale calibration read the truth.**
+  `HFSResponse(calibrate=True)` divided each pseudo-event's measured sums
+  by the library's captured fraction of the event's *true* (x, Q²) cell.
+  It now uses a map in bins of the library's own *reconstructed*
+  (x_mixed, Q²_e), looked up at the pseudo-event's uncalibrated
+  reconstructed point — what an analysis does.  Purities
+  0.56 / 0.59 / 0.64 / 0.75 against 0.52 / 0.59 / 0.59 / 0.76: not
+  optimistic, but not measurable.  A test forbids the truth lookup.
+- ☑ **The PYTHIA library was truncated at x = 16/s.**  PYTHIA's default
+  `PhaseSpace:mHatMin = 4 GeV` applies to DIS (m̂² = x s), so nothing was
+  generated below x = 0.004 at 10 × 99.5 — 39% of the selected generator
+  rate, none of it at the sweet spots, all of the low-x half of the
+  Q² = 1.14 slice.  Regenerated with `mHatMin = 0.5` (8 M events, five
+  minutes): σ_gen +37–48%, the x spectrum follows the rate map to ±25%.
+- ☑ **Two statistical defects of the estimator.**  A bin populated by one
+  spin state had variance zero (R = w_f exactly) and an infinite weight —
+  the "rank-deficient" |t| bins of the earlier Table 3; the variance now
+  uses expected per-state counts.  The ratio inversion's error Jacobian
+  dropped its second-order denominator (0.3%).
+- ☑ **Smaller consistency fixes.**  Hadron acceptance in the detector
+  frame (+0.7–1.5% of Σ_h); the library's target-mass term carried onto
+  the pseudo-events (2% of Σ_h at y = 0.01); p + n merged by cross section
+  rather than count; the beam-energy spread with the analysis sign on
+  Q²_e against 1 − y_e; the physical nuclear mass in `beam_fourvectors`;
+  the two legacy high-divergence constants unified (164 μrad); the 5R
+  panel bins selected on measurable criteria only; the LO α_s fallback
+  announced.
+- ☑ **The coherent closure re-derived at the tagging optics** of Report 1
+  §6.1 (`--optics tagging`: 0.33 × 3.8 mrad at 5 × 40.8, σ_θ = 33/380 μrad,
+  6×10⁶ response recoils), at all three configurations, with a
+  20-experiment ensemble: unbiased in every |t| bin with > 10⁵ recoils,
+  biased low by the bin-wise Poisson ratio below that (−5%, −37% at one
+  year; closes at ten).  The "residual template bias" on a_e was a 2σ
+  fluctuation.  Systematics with exact counts: a 10⁻³ cutout change moves
+  a_t by ≤ 0.8% (it was +19% under the slot), δu₂ = 0.024 moves a_e by
+  7–9% (was 20%).  The per-fill perturbation now acts on the binding cut.
+- ☑ **Report 2 rewritten** as a paper: the chain stage by stage with the
+  truth/measured boundary explicit, the assumptions in one table with
+  provenance and leverage, the methodology, the closure, the measured
+  systematics and the specifications, what is not modelled.  Report 1's
+  Table 1 and §7 restated; Report 4 carries a scope banner (its
+  acceptances are on the legacy divergence; plans/10 A4 stays open).
+- ☑ 16 new tests (225 evgen); the reproduction manual, the READMEs and
+  the sample manifest restated; `plans/08` D3 corrected (the mixed x is
+  ISR-invariant, the Q² label migrates).
+
+What is still open from the review: a likelihood (or coarser-binned) fit
+for the low-count coherent bins; Report 4's absolute acceptances on the
+Yellow Report divergences (plans/10 A4); the ePIC inputs of plans/04 #20
+and #21.
+
 ## Development run 10 (2026-08-27): the P_zz propagation was 2x wrong, and T1 gets a value
 
 Report 2's §8 listed the two specifications that are ours to set but left

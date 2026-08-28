@@ -74,6 +74,20 @@ reconstructed-level pseudo-experiments loosen their generator window to,
 so that events can migrate *into* the analysis bins — it was missing
 entirely from every earlier sample plan.
 
+**And a second silent floor: `PhaseSpace:mHatMin`** (found by the
+2026-08-28 code review).  PYTHIA's default lower limit on the invariant
+mass of the hard 2 → 2 system is 4 GeV, and it applies to the DIS process
+too, where m̂² = x s: nothing was generated below x = 16/s — 0.004 at
+10 × 99.5, 0.020 at 5 × 40.8 — which is 39% of the selected rate of the
+pseudo-experiments (the sweet spots at x ≥ 0.011 sit above it, the low-x
+half of the Q² = 1.14 GeV² slice does not; the 1.8% of events that did
+appear below the floor came from shower and primordial-k_T migration).
+The loosened window needs m̂ ≥ √(Q²_min/y_max) = 0.84 GeV; the script now
+sets `PhaseSpace:mHatMin = 0.5` (`--mhat-min`) and the standing production
+was regenerated with it — the generated cross section rose from 0.666 to
+0.947 μb at 10 × 99.5 (p), and the sample's x spectrum now follows the
+generator's rate map to ±25% down to x = 3×10⁻⁴.
+
 **The massless Σ identity does not hold for a massive target.**
 `hfs.truth_kinematics_check` pins Σ over the final state = 2 E_e y, which
 the toy generator satisfies exactly.  A PYTHIA sample does not: the target

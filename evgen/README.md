@@ -15,7 +15,7 @@ next. Imports `../fastsim/polli_fastsim` — nothing there is duplicated.
 
 ```bash
 cd evgen
-python3 -m pytest tests/ -q            # 183 tests
+python3 -m pytest tests/ -q            # 225 tests
 python3 scripts/closure_fom.py --ion 6Li --events 200000 --trials 200
 python3 scripts/closure_fom.py --ion 7Li --events 200000 --trials 200
 python3 scripts/money_tagged_azz.py --events 400000       # money plot 4
@@ -26,7 +26,7 @@ python3 scripts/money_delta_extraction.py                 # money plot 7
 python3 scripts/phase_space_bins.py       # (x,Q2) rate maps + binning
 python3 scripts/reco_chain_figures.py     # reconstruction-chain figures
 python3 scripts/money_cos2phi_reco.py          # money plots 5R + 7R (reco level)
-python3 scripts/money_cos2phi_coherent_reco.py # money plot 6R (reco level)
+python3 scripts/money_cos2phi_coherent_reco.py --config 0 --optics tagging --n-mc 6000000 # money plot 6R (reco level, tagging optics)
 python3 scripts/coherent_optics_scan.py   # WP5: the coherent tag vs the near-beam envelope
 python3 scripts/tagging_optics.py         # report 1 §6.1: a lithium tagging optics at IP6, priced in luminosity
 python3 scripts/hfs_acceptance.py --config 1 --sample samples/pythia8_e10_p99.5_dis.npz samples/pythia8_e10_n99.5_dis.npz  # report 2 §3: where the hadronic E - p_z sum goes
@@ -155,8 +155,21 @@ mixed method 25%, ε(φ′) harmonic + 10⁻³ rel-lumi offset on):
   reco bins (x = 0.028 / 0.011 / 0.071 / 0.141): purity 0.63–0.69, efficiency 0.38–0.66, D = 0.90–0.99; Â within ≈ 2σ of the reco-bin truth; δÂ = 1.2 / 0.9 / 1.6 / 3.0 ×10⁻⁴ (1 yr) — 0.59–0.69 of money plot 5's single-fill errors (the m = 0-rich
   fill gain beats the efficiency loss);
 - 7R: best bins δΔ = 2.4×10⁻³ (Q² = 1.14) and 1.2×10⁻³ (3.13 GeV²) in year 1, purities 0.54–0.57;
-- 6R (re-derived 2026-08-27): with the measured pot aperture and any published divergence no recoil survives the binned |t| window at any configuration, so 6R runs at the low configuration, e5 × ⁶Li 40.8 GeV/u, with the measured vertical aperture (3.0 mrad) and a 0.73 mrad horizontal near-beam approach (`--config 0 --rp-aperture measured --cut-scale-x 1.0 --near-beam-mrad 0.727`) → acceptance 7.8%, N_tag = 3.4×10⁶ (1 yr); the aperture fakes ⟨cos 2β⟩ = −0.71; the template fit recovers a_t(t_ref) = 0.1165 ± 0.0034 (inj. 0.119), 0.174 ± 0.004 (0.180), 0.262 ± 0.008 (0.258) in the three surviving |t| bins, while a_e in the lowest bin comes out 0.0151 ± 0.0014 here and 0.0102 ± 0.0014 in `nearbeam_reach_gain.py` against 0.010 injected — a residual template bias at this aperture of the order of the one-year error. u₁ = 0.05, u₂ = 0.02 sit at the ZEUS
-  LPS 1σ bounds (NPB 816:1); see `refs/README.md` for the sources.
+- 6R (re-derived 2026-08-28 at the lithium tagging optics of Report 1 §6.1,
+  `--optics tagging`: horizontal β* × 50 at 5 × 40.8, σ_θ = 33/380 μrad,
+  pots following the 10σ envelope 0.33 × 3.8 mrad, L/L_HA = 1/7.1 — with
+  the Yellow Report divergences and the measured pot aperture no recoil
+  survives at any configuration): acceptance 41%, N_tag = 2.5×10⁶/yr, the
+  cutout fakes ⟨cos 2β⟩ = −0.27; the template fit recovers
+  a_t(t_ref) = 0.0899 ± 0.0035 / 0.118 ± 0.005 (inj. 0.090 / 0.118) in the
+  two |t| bins with > 10⁵ recoils and a_e = 0.010 on average (a 20-experiment
+  ensemble: means 0.0092 ± 0.0007 and 0.0097 ± 0.0008 against 0.010 injected;
+  the single-seed 0.0155 ± 0.0026 of the first bin is a 2σ fluctuation, not
+  the "residual template bias" earlier text called it); below 10⁵ recoils the
+  bin-wise ratio of Poisson counts is biased low (−5% and −37% at one year)
+  and closes at ten years.  18 × 137.5 gives 6.0×10⁶ tagged per year and
+  four unbiased bins.  u₁ = 0.05, u₂ = 0.02 sit at the ZEUS LPS 1σ bounds
+  (NPB 816:1); see `refs/README.md` for the sources.
   **Convention (verified in the paper's Eq. 9):** arXiv:2408.13213 expands
   1 + 2Σ a_n cos nΦ with Φ the vector-meson (recoil) azimuth relative to
   the polarization axis, so the deformation modulation coefficient is
@@ -180,7 +193,7 @@ sample both scripts fall back to the toy and label it.
 
 ```bash
 python3 scripts/hfs_resolution.py --config 1     --sample samples/pythia8_e10_p99.5_dis.npz samples/pythia8_e10_n99.5_dis.npz --outdir .
-python3 scripts/money_cos2phi_reco.py --y-source hfs --hfs-sample <the same pair> --outdir .
+python3 scripts/money_cos2phi_reco.py --y-source hfs --hfs-sample <the same pair> --hfs-calibrate --unfold folded --tag _hfscal --outdir .   # the published 5R/7R
 ```
 
 **Where Σ_h goes (2026-08-27, `hfs_acceptance.py`, Report 2 §3 Figure 4):** at the mid
@@ -190,9 +203,11 @@ above threshold, 69 / 74 / 73 / 85% is captured through the full response, 19 /
 a W ≈ 6–10 GeV system; the lithium fragments at η ≈ 8 never enter).  The
 library *reproduces* that capture bias in the pseudo-events;
 `HFSResponse(calibrate=True)` / `money_cos2phi_reco.py --hfs-calibrate`
-divides by the library's per-cell mean, the analysis's own hadronic-scale
-calibration, and the 5R purities go from 0.43 / 0.54 / 0.47 / 0.69 to
-0.52 / 0.59 / 0.59 / 0.76 at unchanged errors.
+divides by the library's ⟨Σ_reco⟩/⟨Σ_true⟩ in bins of the RECONSTRUCTED
+(x_mixed, Q²_e) — the analysis's own hadronic-scale calibration, applied at
+the measured point (the 2026-08-28 review found the first version keyed on
+the event's true cell) — and the 5R purities go from 0.42 / 0.53 / 0.49 / 0.68
+to 0.56 / 0.59 / 0.64 / 0.75 at unchanged errors.
 
 **Measured with PYTHIA (2026-08-27, γ-matched energies), Σ method, 50 MeV calorimeter noise, at the four money-plot-5 sweet spots — which each configuration selects for itself (`hfs_resolution.py` takes them from the same selection as `money_cos2phi.py`):**
 

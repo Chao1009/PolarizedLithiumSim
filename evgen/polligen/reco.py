@@ -59,7 +59,13 @@ XING_IP8 = 35.0e-3   # rad, IP8
 # isotropic.  Table 10.1 (e+p) gives, per configuration and per optics, the
 # RMS divergence h/v that `sigma_theta_for` now returns.  Use that.
 SIGMA_THETA_HA = HIGH_ACCEPTANCE.sigma_theta      # LEGACY  73 microrad
-SIGMA_THETA_HD = 0.41 / (10.0 * 275.0)            # LEGACY 149 microrad
+# The high-divergence legacy value is the SAME constant as farforward's
+# (0.45 GeV / (10 x 275 GeV) = 164 microrad) since 2026-08-28: this module
+# used to derive it from the 0.41 GeV end of the same band (149 microrad),
+# so the two packages disagreed by 10% for one optics (plans/10 A1b).  Both
+# are placeholders that only the pre-2026-08-27 figures used; the published
+# per-configuration values are `sigma_theta_for`.
+SIGMA_THETA_HD = HIGH_DIVERGENCE.sigma_theta      # LEGACY 164 microrad
 
 
 def sigma_theta_tagging(config, slope_b=50.0, n_sigma=10.0):
@@ -115,6 +121,63 @@ def sigma_theta_for(config, optics="high-acceptance"):
     return 1e-6 * h * f, 1e-6 * v * f
 
 
+# Far-forward transport constants read off the ePIC geometry scan
+# (tools/fullsim, 18 x 275): the horizontal lever from an IP angle to the
+# pot-plane position and the dispersion at the pots.  Shared with
+# scripts/tagging_optics.py, which prices the optics these define.
+POT_R12 = 30.6        # m
+POT_DISPERSION = 0.30  # m
+
+
+def tagging_optics_point(config, slope_b=50.0, n_sigma=10.0, r_max=2000.0,
+                         n_grid=400, dispersion=True, optics="high-acceptance"):
+    """The lithium TAGGING OPTICS of Report 1 Section 6.1, as the coherent
+    reconstruction chain needs it: the working point that maximises
+    (tagged fraction) x (luminosity) when the HORIZONTAL beta* alone is
+    raised by r over the high-acceptance value, the vertical plane is held,
+    and the Roman Pots follow the 10 sigma envelope in both planes.
+
+    Returns a dict with r_h (beta*_x / beta*_x,HA), sigma_x (the horizontal
+    RMS angle at the IP that the de-squeeze leaves), sigma_x_eff (the same
+    with the beam's momentum spread through the pot dispersion added in
+    quadrature -- the angular smearing a pot-plane measurement actually
+    sees, and the quantity the envelope is n_sigma of), sigma_y (the
+    vertical divergence, untouched), env_x / env_y (the n_sigma envelope
+    half-widths in angle), acceptance, lumi_fraction (= 1/sqrt(r_h)) and
+    the momentum per nucleus p_ion.  Identical to the scan of
+    scripts/tagging_optics.py (same grid, same acceptance), which is
+    pinned by a test; that script adds the pricing, this function is the
+    geometry the pseudo-experiments consume.
+    """
+    from polli_fastsim import beams as _beams
+    from polli_fastsim import farforward as _ff
+    sh, sv = sigma_theta_for(config, optics)
+    p_ion = config.ion.A * config.ion_momentum_per_nucleon
+    key = {41.0: "5x41", 100.0: "10x100", 275.0: "18x275"}
+    p_e = min(_beams.PROTON_CONFIG_ENERGIES,
+              key=lambda e: abs(config.ion.momentum_per_nucleon_at(e)
+                                - config.ion_momentum_per_nucleon))
+    dpp = 1e-4 * _ff.YR_PROTON_DIVERGENCE[key[p_e]][1]
+    disp = (POT_DISPERSION * dpp / POT_R12) if dispersion else 0.0
+    r = np.logspace(np.log10(0.25), np.log10(r_max), n_grid)
+    best = None
+    for rr in r:
+        sx = sh / rr ** 0.5
+        sx_eff = np.hypot(sx, disp)
+        acc = rp_hole_acceptance(slope_b, n_sigma * sx_eff * p_ion,
+                                 n_sigma * sv * p_ion)["acc"]
+        prod = acc / rr ** 0.5
+        if best is None or prod > best["product"]:
+            best = {"r_h": float(rr), "sigma_x": float(sx),
+                    "sigma_x_eff": float(sx_eff), "sigma_y": float(sv),
+                    "env_x": float(n_sigma * sx_eff),
+                    "env_y": float(n_sigma * sv), "acceptance": float(acc),
+                    "lumi_fraction": float(1.0 / rr ** 0.5),
+                    "product": float(prod), "p_ion": float(p_ion),
+                    "n_sigma": float(n_sigma)}
+    return best
+
+
 # --- Minkowski helpers -----------------------------------------------------
 
 def mdot(a, b):
@@ -143,11 +206,19 @@ def fourvector(e, px, py, pz):
 def beam_fourvectors(config, ion_mass=None):
     """(k, P) in the head-on frame: massless electron along -z with
     energy E_e, whole-nucleus ion along +z with momentum A * p_u and
-    mass ion_mass (default A * M_U; pass 0.0 for the massless-target
-    limit of the master formula)."""
+    mass ion_mass (default: the physical nuclear mass of beams.NUCLEUS_MASS
+    -- the same mass `beams` and `spectator` use, A * M_U being 12.6 MeV
+    high for 6Li; pass 0.0 for the massless-target limit of the master
+    formula).  Only O(gamma^2) terms and t_min feel the difference."""
     ion = config.ion
     p_a = ion.A * config.ion_momentum_per_nucleon
-    m_a = ion.A * M_U if ion_mass is None else float(ion_mass)
+    if ion_mass is None:
+        try:
+            m_a = ion.A * ion.mass_per_nucleon
+        except (KeyError, AttributeError):
+            m_a = ion.A * M_U
+    else:
+        m_a = float(ion_mass)
     k = fourvector(config.electron_energy, 0.0, 0.0, -config.electron_energy)
     p = fourvector(np.hypot(p_a, m_a), 0.0, 0.0, p_a)
     return k, p
@@ -437,23 +508,23 @@ def tracking_angular_resolution(eta):
 
     A genuine PLACEHOLDER -- no angular-resolution requirement exists in
     either Yellow Report table (Fig. 8.3's only angular entry is the low-Q2
-    tagger's dtheta/theta < 1.5%).  It sets the electron-method Q2
-    resolution at the low-y sweet spots (cot(theta'/2) dtheta' = 5% at
-    theta' = 0.1 rad for 3 mrad).
+    tagger's dtheta/theta < 1.5%), and no ePIC full-simulation angular
+    resolution for backward electrons has been published.  It sets the
+    electron-method Q2 resolution at the low-y sweet spots
+    (cot(theta'/2) dtheta' = 5% at theta' = 0.1 rad for 3 mrad).
 
-    DO NOT replace it with the 0.1 mrad seen in some ePIC talks
-    (2026-08-27).  That number is a toy smearing input, superseded three
-    slides later in the same talk by an ePIC full-simulation
-    sigma_theta = 72/pT (+) 2.8 mrad, which at DIS pT is 15-137 mrad --
-    comparable to or worse than this placeholder.  More importantly,
-    `smear_electron` carries NO separate beam-divergence term on theta'
-    (beam_e_spread enters only dy/y), so this table is currently the
-    model's only stand-in for the irreducible IP divergence floor, which
-    the Yellow Report puts at 81-211 microrad h/v depending on energy and
-    optics and states "cannot be corrected on an event-by-event basis".
-    Replacing 3 mrad with 0.1 mrad would DELETE that floor rather than
-    improve on it.  The honest bracket is between the divergence floor
-    (0.08-0.21 mrad) and this table, a factor <~ 3, not 20-30."""
+    Two things bound it.  The 0.1 mrad quoted in some ePIC talks as a
+    smearing input is not a measured resolution and should not replace
+    this table.  And the chain carries NO separate beam-divergence term on
+    theta' (`beam_e_spread` enters only dy/y): the electron beam's
+    angular divergence at the IP, which the Yellow Report puts at
+    81-211 microrad h/v depending on energy and optics and states "cannot
+    be corrected on an event-by-event basis", is an irreducible floor that
+    this table is the only stand-in for.  The defensible bracket is
+    therefore between that floor (0.08-0.21 mrad) and the 3 mrad used
+    here -- a factor <~ 3 on dQ2/Q2 at the sweet spots (5.2% -> ~2%,
+    purity 0.64 -> 0.70 at spot 1 with the table divided by three, code
+    review 2026-08-25 F3), not a factor 30."""
     eta = np.asarray(eta, dtype=float)
     out = np.full_like(eta, 1.0e-3)
     for lo, hi, val in ((-np.inf, -3.5, 5.0e-3), (-3.5, -2.5, 3.0e-3),
@@ -559,7 +630,18 @@ def spin_state_ratio(counts, lumis, pzz):
     only through Pbar, i.e. as a bin-INDEPENDENT offset of R plus a
     second-order rescaling (delta x Pbar/sigma_P^2).  Returns
     (R, var_R, sigma_P2, Pbar) with var_R from linear error propagation
-    of Poisson counts: var(R) = sum_f ((w_f - R)/sum N)^2 N_f.
+    of Poisson counts,
+
+        var(R) = sum_f ((w_f - R)/sum N)^2 E[N_f],
+
+    with the per-fill counts entering through their EXPECTED values
+    E[N_f] = l_f sum N (1 + P_f T)/(1 + Pbar T), T = R/sigma_P^2 to first
+    order, rather than the observed N_f.  The two agree in expectation, but
+    the observed form is degenerate for a bin populated by ONE fill only
+    (there R = w_f exactly, the (w_f - R)^2 N_f term vanishes and the other
+    fill contributes nothing, so var = 0 and the bin gets an infinite
+    weight in the fit -- which is what happened in low-count bins at the
+    edge of a Roman-Pot cutout, code review 2026-08-28).
     """
     n = np.asarray(counts, dtype=float)
     lum = np.asarray(lumis, dtype=float)
@@ -573,8 +655,14 @@ def spin_state_ratio(counts, lumis, pzz):
     live = den > 0                      # empty bins (e.g. inside a
     den_safe = np.where(live, den, 1.0)  # Roman-Pot cutout) get weight 0
     r = np.where(live, num / den_safe, 0.0)
+    # first-order T, clipped so that every expected count stays positive
+    # (a single-fill bin has R = w_f, far outside the physical |T| << 1)
+    t_max = 0.5 / max(float(np.max(np.abs(p))), 1e-12)
+    t_lin = np.clip(r / sig2, -t_max, t_max)
+    n_exp = (lw[:, None] * den_safe[None, :] * (1.0 + p[:, None] * t_lin[None, :])
+             / (1.0 + pbar * t_lin)[None, :])
     var = np.where(live, (((w - r[None, :]) / den_safe[None, :]) ** 2
-                          * n).sum(axis=0), np.inf)
+                          * n_exp).sum(axis=0), np.inf)
     return r, var, sig2, pbar
 
 
@@ -585,7 +673,11 @@ def _ratio_to_modulation(r, var, sig2, pbar, u=0.0, n_iter=4):
     t = r / sig2
     for _ in range(n_iter):
         t = r * (1.0 + u + pbar * t) / sig2
-    scale = (1.0 + u + pbar * t) / sig2
+    # exact Jacobian of the inversion: T = R (1 + u)/(sigma_P^2 - Pbar R),
+    # so dT/dR = (1 + u + Pbar T)/(sigma_P^2 - Pbar R); the earlier
+    # (1 + u + Pbar T)/sigma_P^2 dropped the second-order denominator
+    # (0.3% on the error at |Pbar T| ~ 1e-3, code review 2026-08-28)
+    scale = (1.0 + u + pbar * t) / (sig2 - pbar * r)
     return t, var * scale * scale
 
 
@@ -950,6 +1042,17 @@ def rp_measure(Pprime, P, sigma_theta_xy, n_sigma=10.0, rng=None,
 
     Returns dict with theta_x/y, pT, phi_t, t_reco = -pT^2 (x_L set to 1),
     the acceptance mask and the cut half-widths in GeV.
+
+    Two idealisations are stated rather than modelled.  The pots measure a
+    POSITION at the pot plane, x = R_12 theta_x + D delta, and the recoil
+    is off-momentum by delta = -x_P (x_L = 1 - x_P): at the ePIC dispersion
+    (D ~ 0.3 m against R_12 = 30.6 m, tools/fullsim) an x_P = 0.01 recoil
+    is displaced by the same amount as a 0.1 mrad angle, i.e. below the
+    divergence of every configuration; that degeneracy, and the beam's own
+    momentum spread that enters the same way, are what `sigma_pos_over_l`
+    and the dispersive term of `tagging_optics_point` stand in for.  And
+    the pots see the beam-referenced angle, so the crossing angle and the
+    reference orbit drop out by construction.
     """
     rng = rng or np.random.default_rng(20260824)
     Pp = np.asarray(Pprime, dtype=float)

@@ -356,7 +356,7 @@ fix and left for the author.
 | # | item | blocker |
 |---|---|---|
 | D2 | exact finite-γ kernel (Cosyn Eqs. 9/10/14/24), b₃/b₄ slots, Eqs. 17d/17e | gated on D1 for the subtraction sign. **Correct now, without code:** report §2, code review G2 and the `plans/07` systematics row all quote the leakage as γ²b₁/6 and are ≈ 7× low; the exact ratio a₂(full)/a₂(17e alone) ≈ 6.9. Impact on everything published is ≤ 0.15%; the exposure is the Δ/F₁ ~ 10⁻³ scenario and x ≳ 0.2 at Q² ≈ 1 |
-| D3 | radiative corrections (WP4) | **two of the four planned deliverables are void**: collinear ISR generates exactly zero fake cos φ′/cos 2φ′ (the covariant azimuth is invariant under k → (1−z)k to 2×10⁻¹⁶ rad in the massless-target limit), and the ratio cancellation is already demonstrated. What survives is (a) the migration bound on purity/efficiency/K — the number the ≤5% gate should apply to — and (b) the method comparison: y_Σ and y_DA use no beam energy and are ISR-robust, but the chain's own x = Q²_e/(s y_Σ) is biased by exactly 1/(1−z), so report §3's robustness claim is true for y and false for the x the analysis uses |
+| D3 | radiative corrections (WP4) | **two of the four planned deliverables are void**: collinear ISR generates exactly zero fake cos φ′/cos 2φ′ (the covariant azimuth is invariant under k → (1−z)k to 2×10⁻¹⁶ rad in the massless-target limit), and the ratio cancellation is already demonstrated. What survives is (a) the migration bound on purity/efficiency/K — the number the ≤5% gate should apply to — and (b) the method comparison: y_Σ and y_DA use no beam energy and are ISR-robust, and so is the chain's own x = Q²_e/(s y_Σ): the (1−z) of a collinear photon cancels between Q²_e and s, so x is exact and it is the Q²_e *label* of the bin that migrates by 1/(1−z) (corrected 2026-08-28; the earlier reading here and in Report 2 §3 had x biased) |
 | D4 | PYTHIA 8 HFS samples | ☑ **closed 2026-08-26** — it was never external. PYTHIA 8.311 builds its own Python bindings against the analysis machine's interpreter (`tools/pythia8/README.md`); the eic-shell container has the C++ library but no bindings, which is what had made this look like a container problem. 8 M events over the three beam configurations now stand in `evgen/samples/`, and A5's beam guard makes the merge safe |
 | D5 | incoherent breakup shapes, veto efficiencies, event-level Z-ID | FLUKA licence → BeAGLE. `plans/07` already rules this non-blocking; the m-state-blind dilution argument is algebra, not a simulation gap. *2026-08-26:* the no-FLUKA half is done — the official BeAGLE e+d sample streams over xrootd and the control study is run (`tools/beagle/README.md`), which is what calibrates the cluster model's p_T tail; what FLUKA still gates is A = 6, 7 breakup itself |
 | D6 | ePIC numbers: the calorimeter noise/threshold floor at Σ_h ≈ 0.2–0.5 GeV (#21, the one number the letter cannot do without); the **backward-disk angular resolution** (F3 — worth more than A7); Li ring σ_θ (#20); the RP slot geometry; EICROC Z-ID (#19) | external — except the RP slot geometry, which is now measured rather than assumed: an intact ⁶Li through the ePIC far-forward geometry puts the aperture at \|θ_x\| ≳ 2.0 / 1.35 / 1.03 mrad in the 5×41 / 10×100 / 18×275 optics against \|θ_y\| ≳ 1.8–3 mrad, i.e. **open horizontally**, the opposite aspect to `rp_measure`'s slot (`tools/fullsim/README.md`, plans/04 #20) |
@@ -422,6 +422,24 @@ index, and the numbers are in `plans/00` run 8.
    model uncertainty is one-sided **upward**.
 
 ---
+
+## 8.6 The 2026-08-28 review (development run 11)
+
+A second adversarial pass over the chain, this time with the questions
+"is each step right", "does any analysis step read what an experiment
+cannot", "is every assumption stated".  Findings and their disposition are
+in `docs/code_review_2026-08-28.md`; the repository-level summary is
+plans/00 run 11.  Items that change the plan above:
+
+| # | item | state |
+|---|---|---|
+| A5b | hadronic-scale calibration keyed on the true cell → reconstructed-bin map (`HFSLibrary.cell_means_reco`) | ☑ |
+| A8 | PYTHIA library truncated at x = 16/s (`mHatMin`) → regenerated | ☑ |
+| A9 | `spin_state_ratio` variance for single-state bins; `_ratio_to_modulation` Jacobian | ☑ |
+| A10 | hadron acceptance in the lab frame; target-mass term; σ-weighted p + n merge | ☑ |
+| A11 | 6R at the tagging optics with ensembles; per-fill perturbation on the binding cut; `--exact` systematics | ☑ |
+| A12 | low-count bias of the bin-wise 2-D ratio below ~30 counts per (α, β) bin: a likelihood fit, or adaptive binning | ☐ |
+| D3 | the ISR statement corrected (above) | — |
 
 ## 8.5 Commit sequence
 

@@ -14,11 +14,15 @@ generate.  This module supplies
   3. the hadron-side detector response (`HadronResponse`): tracker
      coverage and thresholds, tracking efficiency and resolution, EMCal
      response for photons and electrons, HCal response for neutral and
-     untracked charged hadrons, calorimeter noise on the sums.  All
-     magnitudes are the Yellow Report requirement values (Nucl. Phys. A
-     1026 (2022) 122447, calorimeter and tracking requirement tables) and
-     the repository's tracking placeholders -- to be replaced by the ePIC
-     design values when available;
+     untracked charged hadrons, calorimeter noise on the sums.  The
+     RESOLUTION tables are the Yellow Report requirement values (Nucl.
+     Phys. A 1026 (2022) 122447, calorimeter and tracking requirement
+     tables); the coverage, thresholds, efficiencies and the noise are
+     this programme's own stand-ins of the right magnitude (documented in
+     the class), to be replaced by ePIC design values when available.
+     Acceptance is applied in the LAB (detector) frame, where the ion beam
+     sits at the 25 mrad crossing angle, and the hadronic sums are formed
+     in the head-on frame, as an ePIC analysis does;
   4. a vectorized toy string-fragmentation generator (`ToyHFS`) so that the
      chain runs and is tested on a machine without PYTHIA -- a stand-in
      whose numbers are illustrative;
@@ -28,13 +32,23 @@ generate.  This module supplies
      for a pseudo-event at (x, Q2) the captured fraction of Sigma and the
      p_T ratio of a library event from the same (x, Q2) cell are applied to
      the pseudo-event's exact truth, and the noise is added per event.
+     That transfer is the DATA-GENERATION model and may use the truth; the
+     hadronic-scale CALIBRATION of `HFSResponse(calibrate=True)` is an
+     analysis step and is keyed on reconstructed variables only -- a map
+     of <Sigma_reco>/<Sigma_true> in bins of the library's own
+     reconstructed (x_mixed, Q2_e), looked up at the pseudo-event's
+     uncalibrated reconstructed point (code review 2026-08-28; the first
+     version keyed it on the true cell).
 
 Conventions: head-on frame (ion along +z with momentum p_u per nucleon,
 electron along -z with energy E_e), four-vectors (E, px, py, pz), per-
 nucleon x, y, Q2 and s = 4 E_e p_u; theta_e is the scattered-electron
 polar angle from the ION direction (so E'(1 - cos theta_e) is the
 electron's E - p_z).  Exact relations used for tests: the total E - p_z
-of the final state is 2 E_e (massless), hence Sigma_true = 2 E_e y.
+of the final state is 2 E_e + m_N^2/(E_N + p_N) -- the massless 2 E_e
+plus the target-mass term, 4.4 MeV per nucleon at 99.5 GeV/u and 2% of
+Sigma_h at y = 0.01 -- hence Sigma_true = 2 E_e y + m_N^2/(E_N + p_N)
+to the accuracy of the massive-target y.
 """
 
 import json
@@ -109,10 +123,17 @@ class HFSSample:
         differing beams are not, and used to be silently replaced by the
         first sample's (code review / plans/08 A5).
 
-        NOTE: HFSLibrary ignores `weight`, so a merged p+n sample mixes the
-        two targets by event COUNT -- correct for Z = N = 3 only if the two
-        runs were generated with the same number of events."""
+        Per-nucleon luminosity weighting (2026-08-28): when every sample
+        carries a generator cross section in `meta["sigma_gen_mb"]` (the
+        PYTHIA writer does), the merged `weight` becomes
+        sigma_gen / n_events per event, so that the library samples the
+        targets in proportion to their cross sections -- for 6Li (Z = N)
+        the p : n mix is sigma_p : sigma_n (1.16 : 1 at 10 x 99.5), not the
+        1 : 1 an equal-count merge gave.  Without the metadata the weights
+        are left as recorded (1 for unweighted generation)."""
         s0 = samples[0]
+        sig = [s.meta.get("sigma_gen_mb") for s in samples]
+        reweight = len(samples) > 1 and all(v is not None and v > 0 for v in sig)
         for k, s in enumerate(samples[1:], start=1):
             if (abs(s.e_energy - s0.e_energy) > 1e-6 * max(s0.e_energy, 1.0)
                     or abs(s.p_per_nucleon - s0.p_per_nucleon)
@@ -130,9 +151,16 @@ class HFSSample:
         meta = dict(s0.meta)
         if len(samples) > 1:
             meta["merged"] = [s.meta for s in samples]
+        if reweight:
+            weight = np.concatenate([s.weight * (v / max(s.n_events, 1))
+                                     for s, v in zip(samples, sig)])
+            weight = weight / weight.mean()
+            meta["weighting"] = "sigma_gen / n_events per sample"
+        else:
+            weight = cat("weight")
         return cls(np.concatenate(offs), cat("pid"), cat("charge"),
                    cat("p4"), cat("x"), cat("q2"), cat("y"), cat("kp"),
-                   cat("weight"), s0.e_energy, s0.p_per_nucleon, meta)
+                   weight, s0.e_energy, s0.p_per_nucleon, meta)
 
 
 # --- exact sums and kinematic methods -----------------------------------------
@@ -210,23 +238,50 @@ def _region_res(eta, table):
 class HadronResponse:
     """Simple ePIC-like response of the hadronic final state.
 
-    Parameters (defaults = Yellow Report requirement magnitudes; tracking
-    from the repository's placeholder tables in `reco`):
-      eta_track      tracker coverage |eta| <= 3.5
-      pt_min_track   track p_T threshold [GeV] (0.2 GeV; the turn-on width
-                     pt_turn = 0.05 GeV)
-      eff_track      plateau tracking efficiency
+    Parameters.  Which are sourced and which are this programme's own
+    stand-ins (labelled on 2026-08-28; the earlier docstring called them
+    all "Yellow Report requirement values", which only the resolution
+    tables are):
+      eta_track      tracker coverage |eta| <= 3.5 -- the Yellow Report's
+                     nominal tracking acceptance (ePIC reaches ~3.5-3.7
+                     forward with the outer disks; stand-in)
+      pt_min_track   track p_T threshold [GeV] (0.2 GeV, with a logistic
+                     turn-on of width pt_turn = 0.05 GeV) -- stand-in of the
+                     right magnitude for a 1.7 T solenoid
+      eff_track      plateau tracking efficiency (0.95, stand-in)
       eta_cal        calorimeter coverage |eta| <= 3.7 (photons, neutral
-                     hadrons, and charged particles without a track)
-      e_min_photon   EMCal cluster threshold [GeV]
+                     hadrons, and charged particles without a track); the
+                     ePIC nominal forward reach is 4.0 and B0 (4.6-5.9) is
+                     not modelled -- both are stated in Report 2
+      e_min_photon   EMCal cluster threshold [GeV] (0.1, stand-in)
       e_min_nhad     HCal cluster threshold [GeV] for neutral hadrons and
-                     untracked charged hadrons
+                     untracked charged hadrons (0.5, stand-in)
       eff_nhad       neutral-hadron detection efficiency above threshold
-      emcal, hcal    resolution tables (eta_lo, eta_hi, stoch, const):
-                     sigma_E/E = stoch/sqrt(E) (+) const
+                     (0.9, stand-in)
+      emcal, hcal    resolution tables (eta_lo, eta_hi, stoch, const),
+                     sigma_E/E = stoch/sqrt(E) (+) const: the Yellow Report
+                     REQUIREMENT magnitudes per region, with the YR's 2%
+                     EMCal constant term (reco.EMCAL_YR_TABLE, used for the
+                     scattered electron, keeps the optimistic 1% of the
+                     backward crystals -- the two tables serve different
+                     purposes and are deliberately not unified)
       noise_sigma    Gaussian noise [GeV] added per event to Sigma and to
-                     each p_T component (the Arratia et al. Sec. 5 effect;
-                     0 switches it off)
+                     each p_T component (0 switches it off).  This is a
+                     one-parameter stand-in for the calorimeter noise and
+                     threshold floor whose importance at low y Arratia et
+                     al. (NIM A 1025 (2022) 166164, Sec. 5) demonstrate for
+                     the H1/ATHENA case; the 50 MeV default is this
+                     programme's choice, not a published ePIC number
+                     (plans/04 #21)
+      xing           the crossing angle [rad] of the detector frame: the
+                     acceptance edges and the smearing are applied in the
+                     LAB frame (electron beam along the detector axis, ion
+                     beam at -xing in x) and the measured four-vectors are
+                     transformed back to the head-on frame before the sums
+                     are formed, as an ePIC analysis does.  0 reproduces
+                     the pre-2026-08-28 head-on-frame acceptance, which
+                     understated the captured Sigma by 0.7-1.5% at the
+                     sweet spots.
     """
 
     EMCAL_YR = ((-4.0, -2.0, 0.02, 0.02), (-2.0, -1.0, 0.07, 0.02),
@@ -237,7 +292,7 @@ class HadronResponse:
     def __init__(self, eta_track=3.5, pt_min_track=0.2, pt_turn=0.05,
                  eff_track=0.95, eta_cal=3.7, e_min_photon=0.1,
                  e_min_nhad=0.5, eff_nhad=0.9, emcal=None, hcal=None,
-                 noise_sigma=0.05, perfect=False):
+                 noise_sigma=0.05, perfect=False, xing=reco.XING_IP6):
         self.eta_track = eta_track
         self.pt_min_track = pt_min_track
         self.pt_turn = pt_turn
@@ -250,6 +305,7 @@ class HadronResponse:
         self.hcal = hcal or self.HCAL_YR
         self.noise_sigma = noise_sigma
         self.perfect = perfect
+        self.xing = float(xing)
 
     def describe(self):
         if self.perfect:
@@ -261,9 +317,21 @@ class HadronResponse:
                    self.eff_nhad, 1e3 * self.noise_sigma))
 
     # per-particle reconstruction ---------------------------------------
+    def lab_eta(self, p4):
+        """Pseudorapidity of head-on-frame four-vectors in the detector
+        frame (about the electron-beam axis, the ion at -xing in x)."""
+        p4 = np.asarray(p4, dtype=float)
+        lab = reco.head_on_to_lab(p4, self.xing) if self.xing else p4
+        p = np.sqrt((lab[:, 1:] ** 2).sum(axis=1))
+        cth = np.clip(lab[:, 3] / np.maximum(p, 1e-12), -1.0, 1.0)
+        return -np.log(np.tan(np.clip(np.arccos(cth), 1e-9, np.pi - 1e-9) / 2.0))
+
     def reconstruct_particles(self, p4, pid, charge, rng):
-        """Measured four-vectors (N, 4) and a detection weight (N,) in
-        {0, 1}; lost particles get weight 0.  Neutrinos are always lost."""
+        """Measured four-vectors (N, 4) IN THE HEAD-ON FRAME and a detection
+        weight (N,) in {0, 1}; lost particles get weight 0.  Neutrinos are
+        always lost.  Acceptance, thresholds and smearing act on the
+        lab-frame four-vectors (the detector's), and the result is
+        transformed back."""
         p4 = np.asarray(p4, dtype=float)
         pid = np.asarray(pid)
         charge = np.asarray(charge, dtype=float)
@@ -272,6 +340,8 @@ class HadronResponse:
             w = np.ones(n)
             w[np.isin(np.abs(pid), NEUTRINOS)] = 0.0
             return p4.copy(), w
+        if self.xing:
+            p4 = reco.head_on_to_lab(p4, self.xing)
         p = np.sqrt((p4[:, 1:] ** 2).sum(axis=1))
         p_safe = np.maximum(p, 1e-12)
         pt = np.hypot(p4[:, 1], p4[:, 2])
@@ -323,6 +393,9 @@ class HadronResponse:
             out[idx, 0] = e_m
             out[idx, 1:] = e_m[:, None] * dirn       # massless cluster
             w[idx] = 1.0
+        if self.xing:
+            out = np.where(w[:, None] > 0,
+                           reco.lab_to_head_on(out, self.xing), 0.0)
         return out, w
 
     def reconstruct_sums(self, sample_or_p4, offsets=None, pid=None,
@@ -540,10 +613,21 @@ class HFSLibrary:
     request, the captured Sigma fraction f = Sigma_reco/Sigma_true (noise
     excluded), the p_T ratio r = |pT_reco|/|pT_true| and the azimuthal
     shift of the reconstructed p_T of a random library event from the
-    same cell (nearest populated cell if empty)."""
+    same cell (nearest populated cell if empty); events are drawn in
+    proportion to `sample.weight` (the per-nucleon cross-section weights
+    of a p + n merge, HFSSample.concatenate).
+
+    Two calibration maps live here.  `cell_means` is the truth-keyed
+    <Sigma_reco>/<Sigma_true> per (x, Q2) cell -- a diagnostic, since no
+    analysis can look a calibration up at an event's true kinematics.
+    `cell_means_reco` is the one the analysis uses: the same ratio in bins
+    of the library's own RECONSTRUCTED (x_mixed, Q2_e), built with the
+    library electron smeared as the chain smears it (`electron_smear`) and
+    the response noise in, and looked up at a pseudo-event's uncalibrated
+    reconstructed point (HFSResponse `calibrate`)."""
 
     def __init__(self, sample, response, nx=48, nq2=36, x_range=None,
-                 q2_range=None, rng=None, min_per_cell=1):
+                 q2_range=None, rng=None, min_per_cell=1, electron_smear=None):
         rng = rng or np.random.default_rng(20260826)
         self.sample = sample
         self.response = response
@@ -556,6 +640,10 @@ class HFSLibrary:
         pt_r = np.hypot(r["ptx"], r["pty"])
         self.r_pt = np.where(pt_t > 1e-9, pt_r / np.maximum(pt_t, 1e-9), 1.0)
         self.dphi_pt = np.arctan2(r["pty"], r["ptx"]) - np.arctan2(r["pty_true"], r["ptx_true"])
+        wgt = np.asarray(sample.weight, dtype=float)
+        if wgt.size != sample.n_events or not np.all(wgt > 0):
+            wgt = np.ones(sample.n_events)
+        self.weight = wgt
         # grid
         x_range = x_range or (sample.x.min(), sample.x.max())
         q2_range = q2_range or (sample.q2.min(), sample.q2.max())
@@ -568,19 +656,73 @@ class HFSLibrary:
         counts = np.bincount(ci, minlength=nx * nq2)
         self.counts = counts
         self.start = np.concatenate([[0], np.cumsum(counts)[:-1]])
+        # weighted draws: a global cumulative weight over the cell-sorted
+        # events, so a draw inside cell c is one searchsorted
+        self.cumw = np.concatenate([[0.0], np.cumsum(wgt[order])])
         # nearest populated cell for every cell
         self.redirect = self._nearest_populated(counts >= min_per_cell)
-        # rate-weighted mean captured fraction and p_T ratio per cell: the
-        # hadronic-scale calibration an analysis derives from its own
-        # simulation, <Sigma_reco>/<Sigma_true> cell by cell (HFSResponse
-        # `calibrate`)
+        # rate-weighted mean captured fraction and p_T ratio per TRUE cell
+        # (diagnostic; see the class docstring)
         with np.errstate(invalid="ignore", divide="ignore"):
-            self.f_cell = (np.bincount(ci, weights=r["sigma"], minlength=nx * nq2)
-                           / np.maximum(np.bincount(ci, weights=st, minlength=nx * nq2), 1e-30))
-            self.r_cell = (np.bincount(ci, weights=pt_r, minlength=nx * nq2)
-                           / np.maximum(np.bincount(ci, weights=pt_t, minlength=nx * nq2), 1e-30))
+            self.f_cell = (np.bincount(ci, weights=wgt * r["sigma"], minlength=nx * nq2)
+                           / np.maximum(np.bincount(ci, weights=wgt * st, minlength=nx * nq2), 1e-30))
+            self.r_cell = (np.bincount(ci, weights=wgt * pt_r, minlength=nx * nq2)
+                           / np.maximum(np.bincount(ci, weights=wgt * pt_t, minlength=nx * nq2), 1e-30))
         self.f_cell = np.where(counts > 0, self.f_cell, 1.0)
         self.r_cell = np.where(counts > 0, self.r_cell, 1.0)
+        # the analysis's calibration map, in RECONSTRUCTED bins of the
+        # library's own events (response noise in, electron smeared)
+        self._build_reco_map(r, st, pt_t, pt_r, wgt, rng, electron_smear)
+
+    def _build_reco_map(self, r, st, pt_t, pt_r, wgt, rng, electron_smear):
+        smp = self.sample
+        e_e, s = smp.e_energy, smp.s
+        kp = smp.kp
+        theta_e = np.arccos(np.clip(kp[:, 3] / np.sqrt((kp[:, 1:] ** 2).sum(axis=1)),
+                                    -1.0, 1.0))
+        e_prime = kp[:, 0]
+        if electron_smear is None:
+            eta = -np.log(np.tan(np.minimum(theta_e, np.pi - 1e-9) / 2.0))
+            de = reco.emcal_resolution(e_prime)
+            sig_ang = reco.tracking_angular_resolution(eta)
+            e_r = e_prime * (1.0 + de * rng.standard_normal(e_prime.size))
+            th_r = np.clip(theta_e + sig_ang * rng.standard_normal(e_prime.size),
+                           1e-9, np.pi - 1e-9)
+        else:
+            e_r, th_r = electron_smear(e_prime, theta_e, rng)
+        noise = self.response.noise_sigma
+        n = smp.n_events
+        sig = r["sigma"] + (noise * rng.standard_normal(n) if noise > 0 else 0.0)
+        ptx = r["ptx"] + (noise * rng.standard_normal(n) if noise > 0 else 0.0)
+        pty = r["pty"] + (noise * rng.standard_normal(n) if noise > 0 else 0.0)
+        kin = hadronic_kinematics(sig, ptx, pty, e_r, th_r, e_e, s)
+        xr, q2r = kin["x_mixed"], kin["q2_e"]
+        ok = np.isfinite(xr) & (xr > 0) & np.isfinite(q2r) & (q2r > 0)
+        cr = self._cell(np.where(ok, xr, 1.0), np.where(ok, q2r, 1.0))
+        nc = self.nx * self.nq2
+        w_ok = np.where(ok, wgt, 0.0)
+        with np.errstate(invalid="ignore", divide="ignore"):
+            f_map = (np.bincount(cr, weights=w_ok * sig, minlength=nc)
+                     / np.maximum(np.bincount(cr, weights=w_ok * st, minlength=nc), 1e-30))
+            r_map = (np.bincount(cr, weights=w_ok * np.hypot(ptx, pty), minlength=nc)
+                     / np.maximum(np.bincount(cr, weights=w_ok * pt_t, minlength=nc), 1e-30))
+        cnt = np.bincount(cr[ok], minlength=nc)
+        self.f_map_reco = np.where(cnt > 0, f_map, 1.0)
+        self.r_map_reco = np.where(cnt > 0, r_map, 1.0)
+        self.counts_reco = cnt
+        self.redirect_reco = self._nearest_populated(cnt > 0)
+
+    def cell_means_reco(self, x_reco, q2_reco):
+        """(<Sigma_reco>/<Sigma_true>, <pT_reco>/<pT_true>) of the
+        RECONSTRUCTED (x_mixed, Q2_e) cell -- the calibration an analysis
+        derives from its simulation and applies at the measured point.
+        Non-finite inputs get the factor 1."""
+        x = np.asarray(x_reco, dtype=float)
+        q = np.asarray(q2_reco, dtype=float)
+        ok = np.isfinite(x) & (x > 0) & np.isfinite(q) & (q > 0)
+        c = self.redirect_reco[self._cell(np.where(ok, x, 1.0), np.where(ok, q, 1.0))]
+        return (np.where(ok, self.f_map_reco[c], 1.0),
+                np.where(ok, self.r_map_reco[c], 1.0))
 
     def _cell(self, x, q2):
         i = np.clip(np.searchsorted(self.lx, np.log(x), side="right") - 1, 0, self.nx - 1)
@@ -603,17 +745,24 @@ class HFSLibrary:
         return red
 
     def draw(self, x, q2, rng):
+        """Index of a weighted random library event from the (redirected)
+        cell of each (x, q2)."""
         c = self.redirect[self._cell(np.asarray(x, float), np.asarray(q2, float))]
         u = rng.uniform(size=c.size)
-        k = self.start[c] + np.floor(u * self.counts[c]).astype(np.int64)
+        lo = self.cumw[self.start[c]]
+        hi = self.cumw[self.start[c] + self.counts[c]]
+        k = np.searchsorted(self.cumw, lo + u * (hi - lo), side="right") - 1
+        k = np.clip(k, self.start[c], self.start[c] + self.counts[c] - 1)
         return self.order[k]
 
     def transfer(self, x, q2, rng):
         k = self.draw(x, q2, rng)
         return self.f_sigma[k], self.r_pt[k], self.dphi_pt[k]
+
     def cell_means(self, x, q2):
-        """(<f_sigma>, <r_pT>) of the (redirected) cell of each (x, q2):
-        the calibration factors of HFSResponse(calibrate=True)."""
+        """(<f_sigma>, <r_pT>) of the (redirected) TRUE cell of each (x, q2)
+        -- a diagnostic of the response, NOT the analysis calibration (that
+        is `cell_means_reco`; a real analysis has no true cell to look up)."""
         c = self.redirect[self._cell(np.asarray(x, float), np.asarray(q2, float))]
         return self.f_cell[c], self.r_cell[c]
 
@@ -634,14 +783,19 @@ class HFSResponse:
         captured fraction f_sigma -- a scale there would be baked into f
         and applied twice.
 
-        `calibrate`: divide the measured sums by the library's rate-weighted
-        mean captured fraction of the pseudo-event's (x, Q2) cell (and the
-        p_T by the mean p_T ratio) -- the hadronic-scale calibration an
-        analysis derives from its own simulation.  Off, the pseudo-events
-        carry the capture bias uncorrected (the 2026-08-26 published 5R/7R
-        numbers); on, only its event-by-event fluctuation and the noise
-        remain, which is what a calibrated analysis sees.  The library's
-        own mean is the ideal calibration; `scale` then models its residual."""
+        `calibrate`: divide the measured sums by the library's
+        <Sigma_reco>/<Sigma_true> (and the p_T by the mean p_T ratio) of the
+        RECONSTRUCTED (x_mixed, Q2_e) cell the event falls in before the
+        correction -- the hadronic-scale calibration an analysis derives
+        from its own simulation and applies at the measured point
+        (HFSLibrary.cell_means_reco).  Off, the pseudo-events carry the
+        capture bias uncorrected; on, only its event-by-event fluctuation
+        and the noise remain, which is what a calibrated analysis sees.
+        Until 2026-08-28 the factor was looked up at the pseudo-event's
+        TRUE cell, which no experiment can do (code review); the
+        reconstructed-bin map gives purities within 0.06 of that and is
+        the only version used now.  `scale` then models the residual of
+        the calibration."""
         if method not in ("sigma", "jb", "da"):
             raise ValueError("method must be 'sigma', 'jb' or 'da'")
         self.library = library
@@ -653,11 +807,19 @@ class HFSResponse:
     def hadronic(self, x, q2, y_true, e_prime_reco, theta_e_reco, e_energy, s,
                  rng):
         """Returns hadronic_kinematics() of the transferred, noisy sums plus
-        the captured fraction 'f_sigma'."""
+        the captured fraction 'f_sigma'.  The true (x, q2, y) enter ONLY the
+        library draw and the event's true Sigma -- the data-generation
+        model; every analysis step below uses reconstructed quantities."""
         x = np.asarray(x, float); q2 = np.asarray(q2, float)
         y_true = np.asarray(y_true, float)
         f, r, dphi = self.library.transfer(x, q2, rng)
-        sig_true = 2.0 * e_energy * y_true
+        # the event's true hadronic E - p_z: the massless 2 E_e y plus the
+        # target-mass term the library's Sigma_true carries (module
+        # docstring), so that the captured FRACTION is applied to the same
+        # quantity it was measured on
+        p_u = self.library.sample.p_per_nucleon
+        m_n = 0.938272
+        sig_true = 2.0 * e_energy * y_true + m_n ** 2 / (np.hypot(p_u, m_n) + p_u)
         pt_true = np.sqrt(np.maximum(q2 * (1.0 - y_true), 0.0))
         # true hadronic p_T is opposite to the electron's; direction irrelevant
         # for the magnitudes used by the methods, keep a fixed axis
@@ -670,7 +832,10 @@ class HFSResponse:
             ptx = ptx + self.noise_sigma * rng.standard_normal(n)
             pty = pty + self.noise_sigma * rng.standard_normal(n)
         if self.calibrate:               # the analysis's own scale calibration
-            f_mean, r_mean = self.library.cell_means(x, q2)
+            first = hadronic_kinematics(sig, ptx, pty, e_prime_reco,
+                                        theta_e_reco, e_energy, s)
+            f_mean, r_mean = self.library.cell_means_reco(first["x_mixed"],
+                                                          first["q2_e"])
             sig = sig / np.maximum(f_mean, 1e-6)
             ptx, pty = ptx / np.maximum(r_mean, 1e-6), pty / np.maximum(r_mean, 1e-6)
         if self.scale != 1.0:            # calibration error, noise included
@@ -705,11 +870,16 @@ class HFSResponse:
         return np.clip(y, floor, 1.0 - 1e-9), out
 
 
-def truth_kinematics_check(sample, tol=1e-6):
-    """Sigma_true = 2 E_e y and pT_h = pT_e for every event (massless
-    kinematics); returns the maximal relative deviations."""
+def truth_kinematics_check(sample, tol=1e-6, target_mass=0.0):
+    """Sigma_true = 2 E_e y (+ the target-mass term m^2/(E_N + p_N) when
+    `target_mass` is given) and pT_h = pT_e for every event; returns the
+    maximal relative deviations.  Exact for the massless toy; for the
+    PYTHIA sample the massive-target y makes it hold to a few 1e-3."""
     sig, px, py = hadronic_sums(sample.p4, sample.offsets)
-    expect = 2.0 * sample.e_energy * sample.y
+    p_u = sample.p_per_nucleon
+    expect = (2.0 * sample.e_energy * sample.y
+              + (target_mass ** 2 / (np.hypot(p_u, target_mass) + p_u)
+                 if target_mass else 0.0))
     d_sig = np.max(np.abs(sig - expect) / np.maximum(expect, 1e-12))
     pt_e = np.hypot(sample.kp[:, 1], sample.kp[:, 2])
     d_pt = np.max(np.abs(np.hypot(px, py) - pt_e) / np.maximum(pt_e, 1e-12))

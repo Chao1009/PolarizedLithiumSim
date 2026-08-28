@@ -133,7 +133,7 @@ class Ion:
     def mass_per_nucleon(self) -> float:
         """Physical nuclear mass / A [GeV].  Not M_U: binding matters at the
         0.5% level, which is what separates a 41 GeV proton (0.9383) from a
-        gamma-matched 6Li at 40.7 GeV/u (0.9336)."""
+        gamma-matched 6Li at 40.8 GeV/u (0.9336)."""
         return NUCLEUS_MASS[(self.name, self.A, self.Z)] / self.A
 
     @property
@@ -189,7 +189,7 @@ def default_configs(ion_name: str = "7Li") -> list:
 
     Each point is GAMMA-MATCHED to its proton configuration and then capped
     by the ring rigidity (see the module docstring).  For 6Li that gives
-    40.7 / 99.3 / 137.5 GeV/u -- the top one rigidity-limited, the other two
+    40.8 / 99.5 / 137.5 GeV/u -- the top one rigidity-limited, the other two
     not.  It gave 20.5 / 50 / 137.5 before 2026-08-27, which put the two
     lower points at energies the machine cannot deliver."""
     ion = IONS[ion_name]

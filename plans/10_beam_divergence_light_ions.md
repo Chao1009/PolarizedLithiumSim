@@ -200,16 +200,18 @@ with the species step applied only where rigidity binds;
 The legacy `SIGMA_THETA_HA` / `_HD` remain, labelled, because every number
 published before 2026-08-27 used them.
 
-### A1b — reconcile the two legacy values ☐
-`farforward.py` says 164 µrad, `reco.py` says 149 µrad, for the same
-"high-divergence" optics. One of them is wrong. Fix, and add a test that
-pins them together.
+### A1b — reconcile the two legacy values ☑
+`farforward.py` said 164 µrad, `reco.py` 149 µrad, for the same
+"high-divergence" optics. `reco.SIGMA_THETA_HD` is now the `farforward`
+constant, pinned by a test (2026-08-28); both are legacy placeholders that
+only the pre-2026-08-27 figures used.
 
-### A2 — make the call sites use the anisotropy ☐
+### A2 — make the call sites use the anisotropy ☑
 `sigma_theta_for` returns (h, v) and the low configuration is genuinely
-anisotropic (220/380). The `aspect` parameter of `reco.rp_measure` and
-`recopseudo.CoherentResponse` exists for this and still defaults to 1.0;
-the scripts pass a single scalar. Thread the pair through.
+anisotropic (220/380). `recopseudo.CoherentResponse` accepts the pair,
+`reco.tagging_optics_point` returns it, and `money_cos2phi_coherent_reco.py
+--optics tagging` / `high-acceptance` thread it through (2026-08-28); the
+legacy scalar remains the script's default for reproduction only.
 
 ### A3 — publish the sensitivity band, not a single number ☐
 Every acceptance and reach figure in the programme should carry the
