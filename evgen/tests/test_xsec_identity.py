@@ -257,7 +257,7 @@ def test_tensor_rate_at_an_intermediate_axis_angle():
     magic = EventSpinState(lam_e=0, pe=0.0, j=1.0, m=1.0,
                            theta_s=np.arccos(1.0 / np.sqrt(3.0)))
     w, _, _ = kern.amplitudes(t, x, q2, s, magic)
-    assert abs(float(w)) < 1e-15
+    assert abs(float(np.asarray(w).item())) < 1e-15
 
 
 # --- R = sigma_L/sigma_T in the cos 2phi channel (plans/08 C2) ---------------
