@@ -74,23 +74,31 @@ how dangerous the background is to the coherent tag.
 
 Diffractive events where the ⁶Li breaks up but the surviving fragment is
 indistinguishable from an intact ⁶Li in the Roman Pots. The rigidity
-table from `coherent.veto_table()` (beam A/Z = 2):
+table from `coherent.veto_table()`, in mass-to-charge ratios against the
+beam's (physical nuclear masses since 2026-08-28, not A/Z: the naive
+ratio said both fragments of the α + d channel sat at exactly 1.000,
+which was also the value the fast simulation's own spectator model
+disagreed with):
 
 | breakup channel | threshold | fragment routing |
 |---|---|---|
-| **α + d** | 1.474 MeV | α: R = 1.000 → RP pT tail only (beam-blind); d: R = 1.000 → same |
-| α + p + n | 3.70 MeV | α beam-blind; p: R = 0.50 → OMD; n → ZDC |
-| ³He + t | 15.79 MeV | ³He: R = 0.75 → RP main window; t: R = 1.50 → lost (over-rigid) |
+| **α + d** | 1.474 MeV | α: R = 0.998 → RP pT tail only (beam-blind); d: R = 1.005 → same |
+| α + p + n | 3.70 MeV | α beam-blind; p: R = 0.503 → OMD; n → ZDC |
+| ³He + t | 15.79 MeV | ³He: R = 0.752 → RP main window; t: R = 1.504 → lost (over-rigid) |
 
-The **α+d channel is the killer**: *both* fragments sit at exactly beam
-rigidity, exactly like the intact ⁶Li — same trajectory for the same
-rigidity, same velocity (so time-of-flight cannot help). The
-lowest-lying strength (direct α+d continuum from 1.47 MeV and the 2.186
-MeV 3⁺ resonance, Γ ≈ 24 keV, which decays ~100% to α+d with only
-Q ≈ 0.7 MeV) produces an α with ~2/3 of the recoil pT plus a small
-breakup smear (k_rel ≈ √(2μQ) ≈ 40 MeV/c) — precisely the events whose
-α can wander above the 0.2 GeV cut while the partner d (∼1/3 of the pT)
-stays invisible.
+The **α+d channel is the killer**: both fragments sit within 0.5% of beam
+rigidity, deep inside the ±5% near-beam band and so undispersed, exactly
+like the intact ⁶Li — same trajectory, same velocity (so time-of-flight
+cannot help). The lowest-lying strength (direct α+d continuum from 1.47
+MeV and the 2.186 MeV 3⁺ resonance, Γ ≈ 24 keV, which decays ~100% to α+d
+with only Q ≈ 0.7 MeV) shares the recoil pT in proportion to mass, ~2/3 to
+the α, and adds a breakup smear k_rel ≈ √(2μQ) ≈ 40 MeV/c — precisely the
+events whose α can wander outside the near-beam envelope and be counted as
+a coherent recoil. What the first version of this plan then assumed, that
+the partner deuteron stays invisible, is the opposite of what the same
+k_rel does: it is *transverse* and unboosted, and the deuteron carries
+half the α's longitudinal momentum, so it opens twice the angle. Handle 3
+below rests on that.
 
 Handles, in order of power:
 
@@ -120,13 +128,31 @@ Handles, in order of power:
    rejects 80–99% of incoherent events vs |t| (~2% residual after all
    far-forward vetoes) — light nuclei are *harder* (fewer emitted
    neutrons/photons), which is exactly why the α+d channel needs Z-ID.
-3. **Partner-fragment veto.** Vetoes kill the channels with a
-   non-beam-rigidity fragment: p → OMD, n → ZDC, ³He → RP main window.
-   These channels are therefore *not* the problem (their veto
-   inefficiency is a second-order correction, quantifiable with the
-   same BeAGLE study). The pure α+d channel is vetoable only when the
-   *second* fragment also fluctuates above the pT cut (rare —
-   correlated small pT) — worth quantifying, not worth relying on.
+3. **Partner-fragment veto — quantified, and stronger than this plan
+   assumed.** Vetoes kill the channels with a non-beam-rigidity
+   fragment: p → OMD, n → ZDC, ³He → RP main window. These channels are
+   therefore *not* the problem (their veto inefficiency is a
+   second-order correction, quantifiable with the same BeAGLE study).
+   For the pure α+d channel the two fragments were measured together
+   for the first time on 2026-08-28 (plans/09 B4,
+   `spectator.breakup_lab_kinematics`, `evgen/scripts/nearbeam_two_hit.py`):
+   they are back to back in azimuth with θ_d = 1.987 θ_α, so the
+   deuteron is *systematically* the wider fragment rather than a rare
+   fluctuation, and the veto is not rare at all where it is needed.
+   Conditioned on the α landing in the near-beam tail — the only
+   configuration in which this channel is a background — the partner
+   deuteron is on a pot in **84–85%** of events at the tagging optics of
+   Report 1 §6.1. At the published Yellow Report optics it is 4–29%, but
+   there the α fakes a coherent tag in only 10⁻³–10⁻⁴ of breakups: the
+   optics that creates the background supplies the veto with it, the
+   same conditional structure as every other number in this study.
+   Two limits: the 84% assumes pot acceptance out to θ = 5 mrad and
+   falls to 0.00 / 0.31 / 0.56 (5 × 41 / 10 × 100 / 18 × 275) against a
+   single 16 mm module, so it is a station-layout question (plans/09 B1,
+   D3); and it is a *veto*, so its inefficiency enters the coherent
+   normalisation and must be folded rather than assumed. Rank: below the
+   |t|-shape fit only because of those two, and above everything after
+   it.
 4. **Central/B0 activity.** Genuine coherent diffraction has a rapidity
    gap and an empty B0/forward region; incoherent DIS breakup (the
    non-diffractive feed-down) mostly does not. A gap/quietness cut
@@ -361,12 +387,21 @@ the arXiv source (now in `coherent.MANTYSAARI_A2_DEUTERON`):
   (d 47%, ³He 32%, ⁴He 29%, ⁷Li 17.8%) interpolate to ≈ 20% for ⁶Li at
   IR-8 — versus our 13.5% RP pT-tail estimate at IP6 (constant 0.20 GeV cut;
   and versus the **measured** aperture of 2026-08-26, |θ_x| ≳ 2.0 / 1.35 /
-  1.03 mrad in the 5×41 / 10×100 / 18×275 optics, which gives a tagged
-  fraction of 1.4×10⁻² / 2.7×10⁻³ / 1.9×10⁻¹⁷ at B = 50 GeV⁻² and inverts
-  the cutout aspect this section assumes — `tools/fullsim/README.md`,
-  plans/04 #20, plans/08 §8.4;
-  9% for the angular envelope at 50 GeV/u, reconstruction-chain report §4), an independent
-  cross-check of the tagging scale.
+  1.03 mrad in the 5×41 / 10×100 / 18×275 optics, which at the γ-matched
+  40.8 / 99.5 / 137.5 GeV/u gives a tagged fraction of
+  **9.8×10⁻⁷ / 7.7×10⁻¹⁶ / 1.9×10⁻¹⁷** at B = 50 GeV⁻² and inverts
+  the cutout aspect this section assumes — `evgen/scripts/nearbeam_aperture_scan.py`,
+  `tools/fullsim/README.md`, plans/04 #20.  The measured edge is
+  0.91× / 0.75× / 1.12× the horizontal half-width of the 10σ Yellow
+  Report high-acceptance envelope, so at the two lower configurations the
+  ENVELOPE binds and the tagged fraction is 7.2×10⁻⁸ / 6.2×10⁻²⁷ /
+  3.9×10⁻¹⁴ instead; the 1.4×10⁻² / 2.7×10⁻³ this bullet carried until
+  2026-08-28 was the measured aperture at the retired rigidity-scaled
+  momenta, and the "envelope is never binding" pricing of plans/08 §8.4
+  went with it.  Nothing published survives at either aperture: the
+  channel exists only under the lithium tagging optics of Report 1 §6.1,
+  which recovers 0.42 / 0.32 / 0.33 at 1/7.1 / 1/13.3 / 1/9.5 of the
+  luminosity), an independent cross-check of the tagging scale.
 
 **Convention check (2026-08-24, full text of arXiv:2408.13213).** Its
 Eq. (9) expands d²σ/(dΦ d|t|) = dσ/d|t| · (1/2π)[1 + 2 Σ_n a_n(|t|) e^{inΦ}]

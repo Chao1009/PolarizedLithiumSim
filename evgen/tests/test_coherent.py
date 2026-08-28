@@ -139,20 +139,32 @@ def test_project_coherent_rates_nested():
 
 
 def test_veto_table_routing():
+    """The routing labels, and the rigidities as PHYSICAL mass-to-charge
+    ratios (2026-08-28): the naive (A/Z)/(A/Z)_beam this pinned until then
+    disagreed with the masses polli_fastsim.spectator boosts the same
+    fragments with.  Every label is unchanged by the correction -- the
+    displacements are 0.2-0.5% and no fragment changes window."""
     table = coh.veto_table()
     frag = {name: {f: (r, dest) for f, r, dest in rows}
             for name, rows in table.items()}
     r_a, dest_a = frag["alpha+d"]["alpha"]
     r_d, dest_d = frag["alpha+d"]["d"]
-    assert r_a == pytest.approx(1.0) and "beam-blind" in dest_a
-    assert r_d == pytest.approx(1.0) and "beam-blind" in dest_d
+    assert r_a == pytest.approx(0.99813, abs=5e-6) and "beam-blind" in dest_a
+    assert r_d == pytest.approx(1.00452, abs=5e-6) and "beam-blind" in dest_d
     r_he3, dest_he3 = frag["3He+t"]["3He"]
-    assert r_he3 == pytest.approx(0.75) and dest_he3 == "RomanPots"
+    assert r_he3 == pytest.approx(0.75204, abs=5e-6) and dest_he3 == "RomanPots"
     r_t, dest_t = frag["3He+t"]["t"]
-    assert r_t == pytest.approx(1.5) and "over-rigid" in dest_t
+    assert r_t == pytest.approx(1.50437, abs=5e-6) and "over-rigid" in dest_t
     assert frag["alpha+p+n"]["n"][1] == "ZDC"
-    assert frag["alpha+p+n"]["p"][0] == pytest.approx(0.5)
+    assert frag["alpha+p+n"]["p"][0] == pytest.approx(0.50251, abs=5e-6)
     assert frag["alpha+p+n"]["p"][1] == "OMD"
+
+    # the same alpha the fast simulation boosts: one rigidity, not two
+    from polli_fastsim import spectator as sp
+    k = sp.spectator_lab_kinematics(sp.LI6_ALPHA_TAG, 137.5, 20000,
+                                    rng=np.random.default_rng(3))
+    at_rest = k["k"] < 0.01
+    assert float(np.median(k["R"][at_rest])) == pytest.approx(r_a, abs=1e-3)
 
 
 # --- binned phi pseudo-experiments (full-luminosity projections) ----------

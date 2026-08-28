@@ -35,24 +35,45 @@ Done in this session: `fastsim/polli_fastsim` (tested, 6/6 passing).
   (2.5–5.7)×10⁹; δ(g₁/F₁) ≈ 2×10⁻² per bin at x ≈ 0.3 at √s_eN ≈ 19–20 GeV;
   δA_zz ≈ 9×10⁻⁴ per bin — to be compared with |A_zz(b₁)| ~ 10⁻³–10⁻².
 
-## Step 1.1 ☐ Pin down scenario inputs (1–2 weeks, mostly reading)
+## Step 1.1 ◐ Pin down scenario inputs (1–2 weeks, mostly reading)
+
+*2026-08-28: items 1 and 4 are done (notes below); item 2's record is in place
+but the value itself is external (plans/04 #6); item 3 is untouched — the
+analysis still runs the generic 40×30 log grid, not the YR ~5 bins/decade. The
+header glyph was ☐ and is set to ◐ here on the audit's own reading — the step
+itself stays open, and no other open item's marker was moved.*
 
 1. Work through the EPIOS white paper (Atoian et al., arXiv:2510.10794,
    PRC 113:060501): verified there — G(⁶Li) = −0.178 / G(⁷Li) = +1.532,
    top energies ~138/~117 GeV/u, partial-snake schemes; **no Li luminosity
    number exists** → adopt and *state* a per-nucleon scaling assumption.
+   ☑ *2026-08-28: done — EPIOS pp. 12–13 are encoded in `beams.py`
+   (`EPIOS_GAMMA_BYPASS`, `EPIOS_GAMMA_SHIFT_RANGE`, `epios_window_of`, guarded
+   by `tools/consistency_check.py`) with the G factors and snake schemes in
+   plans/04 A1; the per-nucleon assumption is adopted as
+   `fom.Scenario.lumi_fb_per_nucleon = 10.0` and stated with its "no Li number
+   exists" premise in Report 1 §3.1 and Report 3 §4 (Reports 0 and 2 carry
+   the placeholder without the premise).*
 2. **Resolve the ⁶Li effective-polarization convention** (factor 2.4 in the
    g₁ FOM!): Cloët slides quote P_p = P_n = 1/3 (per-nucleon-normalized,
    2-of-6 dilution); cluster picture gives ≈ 0.87 (P_d) × 0.93 (D-state)
    ≈ 0.81 per cluster nucleon whole-nucleus. ⁷Li verified: P_p = +0.866,
    P_n = −0.037 (QMC via E12-14-001). Record adopted values + band in
    `beams.py`; cross-check against EPIOS Fig. 4 / I. Cloët directly (ANL).
+   ☐ *2026-08-28: the record exists (`beams.py` adopts 1/3 with the band and
+   provenance) but it was written with this bullet, so what remains is the
+   resolution itself — external, plans/04 #6. And the recorded value is not the
+   operative one: `ToyG1.g1_nucleus` reads the per-nucleon 1/3 as whole-nucleus
+   while callers divide by A, applying the 2-of-6 dilution twice (plans/08 D7);
+   the fix changes a documented convention, so it is the author's call.*
 3. Binning conventions: match HERMES b₁ x-points (zero crossing at x ≈ 0.2,
    b₁ ~ 0.1 at x ~ 0.01), E12-14-001 (0.06 < x < 0.8) and YR inclusive
    binning (~5 bins/decade) so every comparison is one-to-one.
 4. Calendar anchor: aim Phase-1 money plots at the INT program "Towards
    Realizing the Program with Polarized Ion Beams at EIC",
    **March 22 – April 2, 2027**.
+   ☑ *2026-08-28: adopted and propagated — plans/00, plans/04 #2 and the
+   plans/07 milestone table all work back from this date.*
 
 ## Step 1.2 ◐ Replace toy structure functions (1–2 weeks)
 
@@ -82,6 +103,10 @@ polarized-EMC, HERMES-like vs convolution b1. Remaining below.*
    estimate, the LOI12-16-006 reference point) + flat Δ/F₁ ∈
    {10⁻³, 3×10⁻³, 10⁻²} scenarios; lattice φ-meson moment
    (Detmold–Shanahan PRD 94:014507) as the nonzero-existence argument.
+   ☑ *2026-08-28: done in `fastsim/polli_fastsim/delta_models.py` — `C_BAG =
+   −0.012` with `solve_A_interp_a/b` enforcing ∫xΔdx = c·α_s (unit-tested in
+   `test_delta_models.py`), `make_toy(scale)` for the flat scenarios, and the
+   lattice argument carried in plans/06 §6.4b and Report 2.*
 
 **Deliverable:** updated FOM maps with credible central curves and scenario
 bands; a short note fixing the input set.
@@ -109,10 +134,22 @@ For each observable, produce the "money plots":
    integrated luminosity from the cos 2φ fit; required transverse-spin
    running time. Note: needs *transverse* ion polarization at IP6 → flag to
    04_open_questions (spin-rotator configuration for ions).
+   ☑ *2026-08-28: done — `money_delta.py` gives the 5σ reach over the
+   (Δ/F₁, luminosity) plane for all three configurations, the running time is
+   stated in years for both channels — inclusively as L_5σ ÷ 10 fb⁻¹/u per year
+   (`fastsim/notes/money_delta_note_2026-07-24.md`: worst case L_5σ ≈ 0.29 fb⁻¹/u,
+   ≈ 80 hours, all nine cases inside a one-year program), and for the coherent tag
+   by `tagging_optics.py`'s 2.8/4.4/2.6 yr (Report 1) — and the flag is
+   plans/04 #2. The 95% CL band was never drawn: it is the same curve shifted
+   by (1.645/5)².*
 4. Cross-check δA estimators against a toy MC (generate Poisson counts in φ
    bins and spin states, fit, compare pulls) — validates the analytic FOM.
+   ☑ *2026-08-28: done in `fastsim/tests/test_closure.py` and, through the full
+   generator chain, `evgen/tests/test_pseudoexp.py` with
+   `evgen/scripts/closure_fom.py` — pseudo-experiment spreads close on every
+   analytic FOM map (plans/00 run 4).*
 
-## Step 1.4 ☐ Radiative corrections sanity pass (1 week)
+## Step 1.4 ☑ Radiative corrections sanity pass (closed 2026-08-28)
 
 g₁/A∥ at low x and the φ-modulations are RC-sensitive. Run **DJANGOH
 4.6.22** (github.com/spiesber/DJANGOH, maintained, HERACLES full O(α) EW;
@@ -124,6 +161,30 @@ nucleon-level generator, used by Friščić et al. for e+³He). Outcome: a
 multiplicative RC-uncertainty band on the FOMs, and a decision whether
 Phase-2 needs full RC treatment (note: RC on tensor A_zz/cos 2φ is
 uncharted — flag to theory colleagues).
+
+— *superseded and then closed (2026-08-28). plans/08 §8.3 D3 voids two of the
+four deliverables — collinear ISR generates exactly zero fake cos φ′/cos 2φ′ and
+the ratio cancellation is already demonstrated — so an external DJANGOH build on
+an effective nucleon no longer buys what it was chosen for. The two that survive
+are done in this repository instead:* `evgen/polligen/radiative.py` samples the
+exponentiated leading-log photon spectrum D(z, Q²) = (t/2)z^(t/2−1)S(t) −
+(t/4)(2−z), t = (2α/π)[ln(Q²/mₑ²) − 1] (Kuraev–Fadin; Nicrosini–Trentadue;
+∫D = 1 + O(t²), residual 7×10⁻⁴ at t = 0.070) and applies it as the kinematic
+migration this step asked for, through a **default-off** hook
+`recopseudo.RecoResponse(isr=…)` and the driver `money_cos2phi_reco.py --isr`.
+Outcome (mid configuration, four sweet spots, common random numbers, 1600
+pseudo-events per cell, mean ± sem over eight response seeds — one draw of the
+response scatters by 4–14% of the bound, so it is averaged with `--isr-seeds`): the multiplicative RC band on Δ̂ is **+0.62 ± 0.03 / +0.50 ± 0.02
+/ +0.94 ± 0.03 / +1.22 ± 0.02%** with the published generator window, rising to
+a 1.8–2.8% band as the window is opened to Q² ≥ 0.15–0.02 GeV², where the
+truncated low-Q² feed-in saturates, i.e. **≤ 2.9%** — inside the ≤5% gate of
+plans/07 WP4, so **Phase 2 does not need a full RC treatment for the unpolarized
+sector**. A HERA-style E − p_z window would bring it to ≤ 0.25% while keeping
+87% of the non-radiative rate. What remains uncharted and is flagged to
+theory colleagues is unchanged: RC on the tensor observables A_zz / cos 2φ′
+(plans/05 §5.5) — no unpolarized study stands in for it. Written up in Report 2
+§7 and its Table 2 row; 25 tests in `evgen/tests/test_radiative.py` and
+`test_reco.py`.
 
 ## Step 1.5 ◐ BeAGLE e+Li breakup & tagging study (4–6 weeks, core novelty)
 
@@ -198,17 +259,44 @@ need analogous care.
      few-body theory) in the spirit of the deuteron special treatment;
      compare spectator x_L–pT spectra against BeAGLE's evaporation picture.
      The difference spans the model uncertainty on tagging acceptance.
+     ☐ *2026-08-28: the toy is built (`spectator.py`, `tagged.py`); the
+     comparison this bullet asks for is not, and is blocked with the BeAGLE
+     build — the e+d control runs against BeAGLE's special deuteron treatment,
+     not against its A > 4 evaporation machinery.*
 4. **Physics outputs.**
    - Spectator spectra: x_L, pT, θ per fragment species — the far-forward
      acceptance inputs.
+     ☐ *2026-08-28: only the two-body cluster channels (α, d, t) exist
+     (`spectator.py`, `fastsim/out/spectator_*.png`); ³He, p, n and excited
+     residues come from BeAGLE's FLUKA de-excitation and are blocked with the
+     A = 6,7 run itself.*
    - **Rigidity routing** (corrected, R = (A_f·Z_beam)/(A_beam·Z_f); see
      plans/03 §2.2 table): ⁷Li beam → α at R = 0.86 lands **in the Roman
      Pots** (x_L window 0.6–0.95) — the IP6-friendly tag; p → OMD; n → ZDC;
-     t → **no IP6 coverage** (R = 1.29). ⁶Li beam → α/d at R = 1.0 are
+     t → **no IP6 coverage** (R = 1.29; a routing assumption — the fast
+     simulation has no R > 1 branch, and the 2026-06-12 gun scan found an
+     over-rigid path that is unverified with a beam envelope, plans/03
+     §2.2). ⁶Li beam → α/d at R ≈ 1 (0.998 / 1.005) are
      **beam-blind** below the RP pT cutoff (0.2–0.45 GeV/c by optics):
      fold the soft cluster pT(α) spectrum with the 10σ cutoff — this single
      number decides whether ⁶Li d-cluster tagging works at IP6 or needs
      the IR-8 secondary focus; ³He → RP (R = 0.75); p → OMD.
+     ☑ *2026-08-28: the number is in — the ⁶Li α tag is 1.7 / 1.5 / 1.6% at the
+     Yellow Report optics of the three configurations and 35 / 27 / 28% at a
+     lithium tagging optics costing 1/7–1/13 of the luminosity
+     (`fastsim/out/tagging_acceptance.txt`, Report 3 Table 6); the near-beam cut
+     is now the angular 10(σ_h, σ_v) envelope, not the 0.2–0.45 GeV/c p_T cutoff
+     this bullet still words it as. The decision it forces — a tagging optics or
+     the IR-8 secondary focus (≈20%), not any published IP6 optics — is the
+     programme's one machine request (Report 1 §6.1).*
+     — *superseded (2026-08-28): the bullet's formula and its ⁷Li p → OMD cell.
+     Rigidity is `spectator.py`'s mass-based R = (m_spec/Z_spec)/(m_beam/Z_beam),
+     which separates the ⁶Li α (0.99813, under the orbit) from the d (1.00452,
+     over it) where the A·Z arithmetic puts both at exactly 1; and the ⁷Li proton
+     at R = 0.43081 falls below the corrected OMD window R ∈ [0.45, 0.65], i.e.
+     it is lost, not routed (`route_charged`, `fastsim/tests/test_spectator.py`).
+     The plans/03 §2.2 table this bullet cites carries the same note and is no
+     longer the authority.*
    - **Tagging purity/efficiency:** P(tag α | DIS on d/t-cluster) vs
      α from evaporation/INC background; same for n tags (+ de-excitation γ
      in ZDC). Defines the tagged-sample dilution for the tagged FOM.
@@ -218,8 +306,13 @@ need analogous care.
 5. **Output format.** BeAGLE text → eic-smear `BuildTree`/`TreeToHepMC` →
    HepMC3 once, so identical samples feed Phase 2 (then `abconv` adds beam
    effects there).
+   — *superseded (2026-08-28): the chain went another way — the official BeAGLE
+   samples are read as HepMC3 through `pyHepMC3.rootIO`, the hadronic final
+   state arrives as PYTHIA 8 `.npz` (`polligen.hfs`), and Phase-2 input is
+   written by `tools/fullsim/ion_gun_hepmc.py`; eic-smear appears nowhere in
+   the tree.*
 
-## Step 1.6 ☐ Parameterized detector smearing (2 weeks)
+## Step 1.6 ◐ Parameterized detector smearing (2 weeks)
 
 Tool status (verified 2026-06): **eic-smear is alive** (v1.1.17, 05/2026;
 reads BeAGLE natively) with YR-era cards including **"Matrix 0.1 +
@@ -229,6 +322,28 @@ scattered-electron resolution → x–Q² migration matrices → effect on per-b
 FOM and on the cos 2φ amplitude (φ resolution). Verify YR-style binning
 keeps purity ≳ 0.8 per bin; else rebin. Real far-forward acceptances come
 only from Phase-2 full sim — keep the FF parameterization swappable.
+
+☑ *2026-08-28: the smearing itself is delivered, by a home-grown chain rather
+than eic-smear — `polligen/reco.py` (η-dependent EMCal, tracking σ_p/p and σ_θ,
+ε_eID, `smear_electron`) on the electron side and `polligen/hfs.py` on an 8 M-event
+PYTHIA 8 sample on the hadron side, with the (x, Q²) migration measured by
+`recopseudo.RecoResponse.bin_summary` and its cost quoted per bin (reco
+δÂ = (0.9–3.0)×10⁻⁴ against truth-level (1.4–4.5)×10⁻⁴; Report 1 §5.2, Report 2
+§7). The FF parameterization stayed swappable: `farforward.Optics` is an argument
+to `route_charged`/`acceptance_summary` with four interchangeable instances, and
+the measured ePIC pot aperture already substitutes for it (`reco.rp_measure`,
+`--rp-aperture measured`).*
+
+— *superseded (2026-08-28): the eic-smear "Matrix 0.1 + Far-Forward" tool choice
+— the response was built instead on Yellow Report requirements plus sourced ePIC
+design numbers (refs/README.md), and the far-forward went past the fast-sim tier
+to a measurement in the real geometry (`tools/fullsim/ion_gun_hepmc.py`).*
+
+☐ *2026-08-28: still open — "purity ≳ 0.8 per bin, else rebin" is not met
+(measured 0.56–0.75 calibrated, 0.42–0.68 uncalibrated) and nothing was rebinned;
+the project changed the unfolding instead (`recopseudo.fold_shape_fit`,
+plans/08 A6). The gate needs retiring or re-deciding — plans/03 §2.3 still
+carries it as a live Phase-2 requirement.*
 
 ## Step 1.7 ☐ Synthesis & write-up (2 weeks)
 
@@ -250,10 +365,10 @@ with 1.4 → 1.6 → 1.7. Total ≈ 3–4 months of focused effort; BeAGLE acces
 
 | risk | mitigation |
 |---|---|
-| BeAGLE invalid for A=6,7 breakup (C-12 n(k), no cluster geometry, frozen code) | validation step 1.5.3 incl. cluster-IA cross-check; fallback: cluster-model toy fragmenter (α+d / α+t momentum densities + flat E*) good enough for acceptance maps |
+| BeAGLE invalid for A=6,7 breakup (C-12 n(k), no cluster geometry, frozen code) | validation step 1.5.3 incl. cluster-IA cross-check; fallback: cluster-model toy fragmenter (α+d / α+t momentum densities + flat E*) good enough for acceptance maps — *2026-08-28: the fallback carries every published tagging number, but of step 1.5.3 only the e+d control ran; still owed and unblocked are the Tu et al. 2005.14706 comparison and the flat-E\* fragmenter (no E\* code exists)* |
 | BeAGLE access (FLUKA license, "no mere mortal" build) | prebuilt BNL/JLab/CVMFS installs; start access requests immediately |
-| ⁶Li α-tag beam-blind at IP6 (R = 1.0 vs RP pT cutoff) | quantify pT-tail acceptance early (step 1.5.4); lead the tagging story with ⁷Li (α → RP works); document IR-8 secondary-focus case |
-| No nuclear PDF grids at A=6,7 | interpolate EPPS21 in A; or convolution from d/³He/⁴He |
-| Transverse ion polarization at IP unavailable | gluonometry FOM quoted conditional on rotator configuration; raise early with EPIOS/C-AD (04_open_questions) |
-| Tensor (λ=0) bunches operationally undefined | source RF transitions can prepare m=0; needs machine fill-pattern concept — document requirement, don't solve |
+| ⁶Li α-tag beam-blind at IP6 (R = 1.0 vs RP pT cutoff) | quantify pT-tail acceptance early (step 1.5.4); lead the tagging story with ⁷Li (α → RP works); document IR-8 secondary-focus case — *2026-08-28: quantified per configuration and per optics (1.5–1.7% at the YR optics, 27–35% at the tagging optics) and IR-8 priced; Report 0 §5.4/Table 3 still states the number on the retired 73/164 µrad optics and needs re-deriving* |
+| No nuclear PDF grids at A=6,7 | interpolate EPPS21 in A; or convolution from d/³He/⁴He — *superseded (2026-08-28): A = 6 grids exist and are in use (EPPS21nlo_CT18Anlo_Li6, nNNPDF30 A6, compared against each other in the money-Δ line); the risk survives for ⁷Li alone, where LHAPDF has nothing* |
+| Transverse ion polarization at IP unavailable | gluonometry FOM quoted conditional on rotator configuration; raise early with EPIOS/C-AD (04_open_questions) — *2026-08-28: the conditional quoting is done (`money_delta.py` docstring, Report 1 §3.1 and Table 4 #8); the raise itself has not happened — plans/04 #2 records owner and default, no contact yet* |
+| Tensor (λ=0) bunches operationally undefined | source RF transitions can prepare m=0; needs machine fill-pattern concept — document requirement, don't solve — ☑ *2026-08-28: documented past the ask — plans/04 #3 carries the requirement plus the measured consequence (a 10⁻³ inter-fill difference of the cos 2φ′ harmonic fakes 5.6×10⁻⁴), which turns bunch-by-bunch alternation into a requirement of the measurement (Reports 1 and 2)* |
 | ⁶Li effective-polarization convention (1/3 vs 0.81, factor 2.4 in FOM) | resolve in step 1.1 with Cloët before any public plot |

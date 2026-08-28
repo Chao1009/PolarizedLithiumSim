@@ -50,6 +50,24 @@ Verified consequences implemented here (tested in test_tagged.py):
   inclusive polarized-deuteron master formula;
 * deuteron control: the S/D interference tensor structure of n_m(k, theta)
   (the Cosyn-Weiss tagged-Azz mechanism), O(1) at k ~ 300 MeV/c.
+
+RELATION TO `spectator.spectator_lab_kinematics`, which is the OTHER
+sampler of the same 6Li alpha tag (fastsim/scripts/tagging_acceptance.py,
+Report 3 Table 6).  The two give different spectra and neither is wrong:
+`spectator` carries ONE partial wave per channel (`ClusterChannel.l_wave`
+= 0 for the alpha-d system), this module carries the full S+D expansion,
+and the D wave is the whole difference.  Measured on the current tables
+(beta = 0.30, kappa = 60.7 MeV): the S-wave radial here is EXACTLY
+`spectator.momentum_density`, <k> = 0.1071 GeV/c in both; the D wave is
+hard, <k> = 0.2778 GeV/c, and at P_D = 0.0867 it pulls the channel mean
+to <k> = 0.1219 GeV/c and the off-rigidity R < 0.95 slice from 1.5% to
+2.5%.  Set p_d = 0 and the two samplers agree quantile by quantile
+(test_boost_matches_fastsim_spectator).  The D wave is not an optional
+tail: it IS the tensor observable -- with P_D = 0 the alpha-d density is
+m-independent and A_zz^tag vanishes identically -- so the tagged
+observables must be quoted on the S+D spectrum and the pure-model
+acceptance table on the S-wave one, with the 1.5 vs 2.5% gap stated
+wherever both appear (plans/09 B2, docs/reproduction_manual SS7).
 """
 
 from dataclasses import dataclass
@@ -60,7 +78,7 @@ import numpy as np
 _trapezoid = getattr(np, "trapezoid", None) or np.trapz
 
 from polli_fastsim import beams, spectator
-from polli_fastsim.farforward import HIGH_ACCEPTANCE, route_charged
+from polli_fastsim.farforward import route_charged, yr_optics
 
 from . import bookkeeping as bk
 from .sample import InclusiveSampler
@@ -310,7 +328,18 @@ def boost_spectator(channel, k, c, phi_k, p_per_nucleon,
     (k, c, phi_k) are spherical components in the SPIN frame; for a tilted
     quantization axis they are rotated to the lab before the longitudinal
     beam boost (same boost algebra as spectator.spectator_lab_kinematics).
-    Returns dict with pT, theta, p_lab, R, xL, and the lab k components.
+    Returns dict with pT, theta, p_lab, R, xL, the lab k components and
+    `phi_spec`, the spectator's LAB azimuth.
+
+    `phi_spec` is arctan2(ky, kx) evaluated AFTER the spin-frame rotation
+    and is what a planar Roman Pot sees: the boost is longitudinal, so it
+    scales pz and leaves (kx, ky) -- hence the azimuth -- untouched.  It
+    is the argument `farforward.Optics.clears` needs for the rectangular
+    10(sigma_h, sigma_v) envelope of the per-configuration optics; without
+    it the cut degenerates to a circle at n sigma_h and overstates the tag
+    by 1.7x at the tagging optics (plans/09 B2).  The key is deliberately
+    NOT "phi": `TaggedSampler.sample_category` merges this dict into an
+    event record whose "phi" is the DIS azimuth.
     """
     base = channel.base
     s = np.sqrt(np.maximum(1.0 - c * c, 0.0))
@@ -344,7 +373,59 @@ def boost_spectator(channel, k, c, phi_k, p_per_nucleon,
         rig = np.full_like(p_lab, np.nan)
     return {"pT": pt, "theta": theta, "p_lab": p_lab, "R": rig,
             "xL": p_lab / (base.spectator_A * p_per_nucleon),
-            "kx": kx, "ky": ky, "kz": kz}
+            "kx": kx, "ky": ky, "kz": kz,
+            "phi_spec": np.arctan2(ky, kx)}
+
+
+def acceptance_weights(model, config, optics, n_phi=64, theta_s=0.0,
+                       phi_s=0.0):
+    """eps(k, cos theta_k) on a TaggedModel's grid: the fraction of lab
+    azimuths at which a spectator of that (k, c) is Roman-Pot accepted
+    (main window or near-beam tail).
+
+    theta, R and pT depend on (k, c) alone -- the beam boost is
+    longitudinal and does not touch (kx, ky) -- so the azimuth enters only
+    through the rectangular envelope, and a uniform phi average is the
+    exact marginal (the spectator's azimuth is uniform and independent of
+    the DIS azimuth).  Returned shape is (model.k.size, model.c.size).
+    """
+    phi = (np.arange(n_phi) + 0.5) * 2.0 * np.pi / n_phi
+    kk, cc, pp = np.meshgrid(model.k, model.c, phi, indexing="ij")
+    lab = boost_spectator(model.channel, kk.ravel(), cc.ravel(), pp.ravel(),
+                          config.ion_momentum_per_nucleon, theta_s, phi_s)
+    route = route_charged(lab["R"], lab["theta"], lab["pT"], optics,
+                          phi=lab["phi_spec"])
+    return ((route == 1) | (route == 4)).reshape(kk.shape).mean(axis=2)
+
+
+def azz_tensor_curve(model, ic=None, weights=None):
+    """The wave-function tensor asymmetry of a spin-1 channel vs k,
+
+        A_zz^wf = (n_+1 + n_-1 - 2 n_0) / (n_+1 + n_-1 + n_0),
+
+    at one cos theta_k cell (`ic`, e.g. the 90 degree slice the analytic
+    panel of money plot 4 draws) or ACCEPTANCE-WEIGHTED: with `weights` an
+    (nk, nc) table -- `acceptance_weights` -- both sums are integrated over
+    cos theta_k against it, which is the prediction for a sample the
+    far-forward acceptance sculpts in theta_k.
+
+    The distinction is not cosmetic.  The accepted 6Li alpha sample is not
+    at theta_k = 90 degrees: at the Yellow Report optics only the
+    off-rigidity R < 0.95 window slice survives and it is longitudinal
+    (<|cos theta_k|> = 0.71-0.79), while the near-beam tail that the
+    tagging optics opens is transverse (0.40).  Comparing markers from
+    either against the 90 degree curve reads the S/D interference at the
+    wrong angle (plans/09 B2).  A `weights` concentrated in a single c cell
+    returns the `ic` curve exactly.
+    """
+    n = {m: model.n_of_kc(m) for m in (1.0, 0.0, -1.0)}
+    if weights is None:
+        n = {m: v[:, ic] for m, v in n.items()}
+    else:
+        n = {m: (v * weights).sum(axis=1) for m, v in n.items()}
+    num = n[1.0] + n[-1.0] - 2.0 * n[0.0]
+    den = n[1.0] + n[-1.0] + n[0.0]
+    return np.where(den > 0, num / np.where(den > 0, den, 1.0), np.nan)
 
 
 class TaggedSampler:
@@ -358,14 +439,25 @@ class TaggedSampler:
     """
 
     def __init__(self, model, kernel_struck, beam_config, scenario=None,
-                 optics=HIGH_ACCEPTANCE, **sampler_kw):
+                 optics=None, **sampler_kw):
+        """`optics` defaults to the Yellow Report HIGH-ACCEPTANCE optics OF
+        THIS CONFIGURATION (`farforward.yr_optics`), not to the legacy
+        proton-derived 73 microrad: since 2026-08-28 the envelope is
+        per-configuration and anisotropic (plans/10 A3, plans/09 B2), and a
+        module-level default cannot know the beam.  Pass
+        `farforward.HIGH_ACCEPTANCE` / `HIGH_DIVERGENCE` explicitly to
+        reproduce a pre-2026-08-28 number.  The route is only a convenience
+        column on the event record -- every script re-routes with its own
+        optics -- but the default is what a caller that does not think
+        about it gets, so it is the current one."""
         self.model = model
         ch = model.channel
         if kernel_struck.ion is not ch.dis_target:
             raise ValueError("kernel target %r != channel DIS target %r"
                              % (kernel_struck.ion.name, ch.dis_target.name))
         self.config = beam_config
-        self.optics = optics
+        self.optics = (yr_optics(beam_config, "high-acceptance")
+                       if optics is None else optics)
         dis_config = beams.BeamConfig(beam_config.electron_energy,
                                       ch.dis_target,
                                       beam_config.ion_momentum_per_nucleon)
@@ -454,8 +546,11 @@ class TaggedSampler:
         keys = chunks[0].keys() if chunks else ()
         out = {kk: np.concatenate([c[kk] for c in chunks]) for kk in keys}
         if chunks:
+            # the LAB azimuth of the spectator, not the DIS azimuth: the
+            # near-beam envelope is a rectangle (Optics.clears), and
+            # without phi it degenerates to a circle at n sigma_h
             out["route"] = route_charged(out["R"], out["theta"], out["pT"],
-                                         self.optics)
+                                         self.optics, phi=out["phi_spec"])
         out["category"] = category.name
         out["lam_e"] = category.lam_e
         return out

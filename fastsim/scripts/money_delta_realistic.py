@@ -34,9 +34,19 @@ R6. Two P_zz conventions for the same nominal ring P_zz = 0.8:
 Output:
     fastsim/out/money_delta/money_delta_realistic_mid.png   (10 GeV × 50 GeV/u)
     fastsim/out/money_delta/money_delta_realistic_top.png   (18 GeV × 137.5 GeV/u)
+
+FROZEN BEAM MENU.  The three configurations below are 5 × 27.5, 10 × 50 and
+18 × 137.5 GeV/u — the rigidity-scaled menu this programme used before
+2026-08-27.  Ions are γ-matched, not rigidity-scaled (plans/10 A0), so only
+the TOP one is a machine configuration; the ⁶Li menu is 40.8 / 99.5 / 137.5.
+They are kept because the L_5σ numbers of the 2026-07 notes are quoted
+against them and this script is their reproduction — `money_delta.py` is the
+same figure of merit on the corrected menu.  fastsim/tests/test_beams.py
+exempts this file from the stale-energy sweep for that reason, by name.
 """
 
 import argparse
+import importlib.util
 import pathlib
 import sys
 from contextlib import contextmanager
@@ -215,9 +225,26 @@ PZZ_SCENARIOS = [
 # Core significance helper (realistic)
 # ══════════════════════════════════════════════════════════════════════════════
 
-def sig2_per_fb_at_realistic(cfg, scale, pzz, base, variant="mid_x",
-                             min_events=10):
-    """Sig² per fb⁻¹/nucleon with realistic ingredients.
+# The reach solver is money_delta.py's, imported so that the two cannot
+# drift: the min-events floor belongs at the luminosity the reach is quoted
+# at, not at the 1 fb^-1/u the sig^2 is normalised to (2026-08-28).  It
+# leaves every published number of this script unchanged -- the bins it
+# recovers, holding 0.08 to 10 events per fb^-1/u, carry a part in 10^13 of
+# sig^2 -- which is why the frozen July reproduction still reproduces.
+def _reach_solver():
+    path = pathlib.Path(__file__).resolve().parent / "money_delta.py"
+    spec = importlib.util.spec_from_file_location("_money_delta", path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod.reach_from_terms
+
+
+reach_from_terms = _reach_solver()
+
+
+def bin_terms_realistic(cfg, scale, pzz, base, variant="mid_x"):
+    """Per-bin (sig² contribution, event count) at 1 fb⁻¹/nucleon, with the
+    realistic ingredients.
 
     Parameters
     ----------
@@ -226,12 +253,13 @@ def sig2_per_fb_at_realistic(cfg, scale, pzz, base, variant="mid_x",
     pzz       : float  effective P_zz per nucleon
     base      : PartonF2  CT18NLO base for NuclearF2
     variant   : str    Δ shape variant ('low_x', 'mid_x', 'high_x')
-    min_events   : int  minimum events to include a bin
 
     The R-override must be active in the calling context (R4).
     EMC ratio is applied via NuclearF2 constructor (R3).
     Electron-ID efficiency is uniform inside the |η| ≤ 3.5 acceptance (R5
-    placeholder removed 2026-07-16).
+    placeholder removed 2026-07-16).  Bins whose CT18NLO evaluation is
+    non-finite are dropped explicitly (they used to fall out of the
+    min-events comparison by accident).
     """
     sc = fom.Scenario(lumi_fb_per_nucleon=1.0, pol_ion_tensor=pzz, q2_min=2.0)
     # R3: apply EMC ratio hook
@@ -247,16 +275,29 @@ def sig2_per_fb_at_realistic(cfg, scale, pzz, base, variant="mid_x",
     delta = delta_shape(proj.x, proj.q2, f1, scale=scale, variant=variant)
     amp   = a_cos2phi(delta, f1, f2, proj.x, y)
 
-    n_events = proj.n_events
-    use = proj.accepted & (n_events >= min_events)
-    return np.where(use, amp**2 * pzz**2 * n_events / 2.0, 0.0).sum()
+    terms = amp**2 * pzz**2 * proj.n_events / 2.0
+    ok = proj.accepted & np.isfinite(terms) & np.isfinite(proj.n_events)
+    return terms[ok].ravel(), proj.n_events[ok].ravel()
 
 
-def sig2_per_fb_toy(cfg, scale, pzz, base, min_events=10):
-    """Toy-backend sig² for comparison (no EMC, no η eff, toy R, toy Δ shape).
+def sig2_per_fb_at_realistic(cfg, scale, pzz, base, variant="mid_x",
+                             min_events=10, lumi_fb=None):
+    """Sig² per fb⁻¹/nucleon with realistic ingredients, with the
+    min-events floor applied at `lumi_fb` (None = the self-consistent
+    reach)."""
+    terms, n_events = bin_terms_realistic(cfg, scale, pzz, base,
+                                          variant=variant)
+    if lumi_fb is None:
+        lumi_fb = reach_from_terms(terms, n_events, min_events=min_events)
+    return float(terms[n_events * lumi_fb >= min_events].sum())
 
-    Mirrors money_delta_pdfgrid.py sig2_per_fb_at but uses the original
-    (toy) r_sigma_lt and toy_delta_gluon shape.  The `base` here may be
+
+def bin_terms_toy(cfg, scale, pzz, base):
+    """Toy-backend per-bin terms for comparison (no EMC, no η eff, toy R,
+    toy Δ shape).
+
+    Mirrors money_delta.py bin_terms but uses the original (toy)
+    r_sigma_lt and toy_delta_gluon shape.  The `base` here may be
     CT18NLO; we only skip the EMC ratio and η efficiency.
     """
     sc = fom.Scenario(lumi_fb_per_nucleon=1.0, pol_ion_tensor=pzz, q2_min=2.0)
@@ -271,8 +312,17 @@ def sig2_per_fb_toy(cfg, scale, pzz, base, min_events=10):
     delta = toy_delta_gluon(proj.x, proj.q2, f1, scale=scale)
     amp   = a_cos2phi(delta, f1, f2, proj.x, y)
 
-    use = proj.accepted & (proj.n_events >= min_events)
-    return np.where(use, amp**2 * pzz**2 * proj.n_events / 2.0, 0.0).sum()
+    terms = amp**2 * pzz**2 * proj.n_events / 2.0
+    ok = proj.accepted & np.isfinite(terms) & np.isfinite(proj.n_events)
+    return terms[ok].ravel(), proj.n_events[ok].ravel()
+
+
+def sig2_per_fb_toy(cfg, scale, pzz, base, min_events=10, lumi_fb=None):
+    """Toy-backend sig² for comparison, floor at `lumi_fb`."""
+    terms, n_events = bin_terms_toy(cfg, scale, pzz, base)
+    if lumi_fb is None:
+        lumi_fb = reach_from_terms(terms, n_events, min_events=min_events)
+    return float(terms[n_events * lumi_fb >= min_events].sum())
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -346,7 +396,8 @@ def build_realistic_plot(cfg, base, outdir, tag, title_beam, r_funcs=None,
     # Total: 3 variants × 2 R-funcs × 2 Pzz = 12 combinations.
     # Then L_5σ(s) = 25 / (sig2_at_s0 × (s/s0)²) for any scale s.
 
-    combo_sig2 = {}   # key: (variant, r_name, pzz_label) → sig2 at S0
+    combo_terms = {}  # key: (variant, r_name, pzz_label) → per-bin terms at S0
+    combo_l5 = {}     # the same keys → L_5σ at S0
 
     r_funcs = R_FUNCS if r_funcs is None else r_funcs
     n_combos = len(VARIANT_NAMES) * len(r_funcs) * len(PZZ_SCENARIOS)
@@ -358,36 +409,35 @@ def build_realistic_plot(cfg, base, outdir, tag, title_beam, r_funcs=None,
                     done += 1
                     print(f"    [{done}/{n_combos}] variant={variant}, R={r_name}, "
                           f"Pzz={pzz_label}({pzz:.3f}) …", end=" ", flush=True)
-                    s2 = sig2_per_fb_at_realistic(
-                        cfg, S0, pzz, base,
-                        variant=variant,
-                    )
-                    combo_sig2[(variant, r_name, pzz_label)] = s2
-                    l5 = 25.0 / max(s2, 1e-30)
+                    terms, n_ev = bin_terms_realistic(
+                        cfg, S0, pzz, base, variant=variant)
+                    combo_terms[(variant, r_name, pzz_label)] = (terms, n_ev)
+                    l5 = reach_from_terms(terms, n_ev)
+                    combo_l5[(variant, r_name, pzz_label)] = l5
                     print(f"L_5σ(1e-3) = {l5:.2f} fb⁻¹/u")
 
     # Central curve (mid_x, R1998, Cloet 1/3)
     central_key = (CENTRAL_VARIANT, CENTRAL_R_NAME, "Cloet 1/3")
-    sig2_central = combo_sig2[central_key]
 
     # ── Step 2: toy-backend comparison (original toy R, no EMC, no η eff) ──
     print(f"    [toy] toy_delta_gluon, original R, P_zz={TOY_PZZ} …", end=" ", flush=True)
     # Use original r (not overridden)
-    sig2_toy = sig2_per_fb_toy(cfg, S0, TOY_PZZ, base)
-    print(f"L_5σ(1e-3) = {25.0 / max(sig2_toy, 1e-30):.2f} fb⁻¹/u")
+    terms_toy, n_ev_toy = bin_terms_toy(cfg, S0, TOY_PZZ, base)
+    print(f"L_5σ(1e-3) = {reach_from_terms(terms_toy, n_ev_toy):.2f} fb⁻¹/u")
 
     # ── Step 3: build reach curves for all 12 combos ──
-    all_curves = []   # list of L_5σ arrays (one per combination)
-    for key, s2 in combo_sig2.items():
-        reach = 25.0 / np.maximum(s2 * (SCALES / S0) ** 2, 1e-30)
-        all_curves.append(reach)
+    # the amplitude is linear in the Δ/F₁ scale, so the per-bin terms scale
+    # as (s/S0)² and only the min-events floor is re-solved per point
+    def _curve(terms, n_ev):
+        return np.array([reach_from_terms(terms * (s / S0) ** 2, n_ev)
+                         for s in SCALES])
 
-    all_curves = np.array(all_curves)  # shape (12, 15)
+    all_curves = np.array([_curve(t, n) for t, n in combo_terms.values()])
     band_min = all_curves.min(axis=0)
     band_max = all_curves.max(axis=0)
 
-    reach_central = 25.0 / np.maximum(sig2_central * (SCALES / S0) ** 2, 1e-30)
-    reach_toy     = 25.0 / np.maximum(sig2_toy     * (SCALES / S0) ** 2, 1e-30)
+    reach_central = _curve(*combo_terms[central_key])
+    reach_toy     = _curve(terms_toy, n_ev_toy)
 
     # ── Step 4: draw the plot ──────────────────────────────────────────────
     fig, ax = plt.subplots(figsize=(8, 6))
@@ -436,10 +486,10 @@ def build_realistic_plot(cfg, base, outdir, tag, title_beam, r_funcs=None,
     print(f"  wrote {outpath}")
 
     # ── Step 5: summary numbers at Δ/F₁ = 1e-3 ──────────────────────────
-    l5_central = 25.0 / max(sig2_central, 1e-30)
-    l5_band_lo = 25.0 / max(combo_sig2[max(combo_sig2, key=lambda k: combo_sig2[k])], 1e-30)
-    l5_band_hi = 25.0 / max(combo_sig2[min(combo_sig2, key=lambda k: combo_sig2[k])], 1e-30)
-    l5_toy     = 25.0 / max(sig2_toy, 1e-30)
+    l5_central = combo_l5[central_key]
+    l5_band_lo = min(combo_l5.values())
+    l5_band_hi = max(combo_l5.values())
+    l5_toy     = reach_from_terms(terms_toy, n_ev_toy)
 
     summary = {
         "tag":        tag,

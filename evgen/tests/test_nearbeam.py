@@ -216,12 +216,22 @@ def test_the_incumbent_ac_lgad_carries_more_information_per_plane():
 
 def test_alpha_deuteron_breakup_is_two_hits_tens_of_pixels_apart():
     """The handle that beats any dE/dx scheme for the background #19 was
-    written about.  Both fragments sit at beam rigidity so neither is
-    dispersed, but k_rel is TRANSVERSE and therefore unboosted: the alpha
-    at 4 p_u and the deuteron at 2 p_u take opposite kicks of the same
-    k_rel and land far apart against a 500 um pitch."""
+    written about.  Both fragments sit within 0.5% of beam rigidity, but
+    k_rel is TRANSVERSE and therefore unboosted: the alpha at 4 p_u and the
+    deuteron at 2 p_u take opposite kicks of the same k_rel and land far
+    apart against a 500 um pitch.
+
+    This is the back-of-envelope version, kept because it is the one line
+    of arithmetic behind the claim: a single k = 40 MeV/c, the angular
+    lever alone, no dispersion.  It is a LOWER bound and it is NOT what the
+    documents quote.  The measurement draws both fragments from one
+    relative momentum at kappa = 60.7 MeV/c and adds the pot dispersion,
+    giving medians of 15.1 / 18.5 / 38.4 mm at 18 x 275 / 10 x 100 / 5 x 41
+    (fastsim/tests/test_two_hit.py, plans/09 B4).  Until 2026-08-28 this
+    test was evaluated at the retired rigidity-scaled 50 and 20.5 GeV/u,
+    and plans/04 #19 quoted its output as the answer."""
     k_gev, r12_m, pitch_mm = 0.040, 30.6, 0.5
-    for p_u, expect_mm in ((137.5, 6.7), (50.0, 18.4), (20.5, 44.8)):
+    for p_u, expect_mm in ((137.5, 6.7), (99.5, 9.2), (40.8, 22.5)):
         sep_mm = 1e3 * r12_m * k_gev * (1.0 / (4.0 * p_u) + 1.0 / (2.0 * p_u))
         assert sep_mm == pytest.approx(expect_mm, rel=0.02)
         assert sep_mm / pitch_mm > 13.0          # resolvable at every optics
@@ -307,3 +317,69 @@ def test_the_nanowire_loses_on_fill_factor_not_on_bits():
                                 rng=np.random.default_rng(7))[1]
                for fl in (0.25, 0.50, 0.99)]
     assert reaches[0] < reaches[1] < reaches[2]
+
+
+# --- the aperture lookup must serve both isotopes (plans/09 B3) ------------
+
+
+def test_rp_aperture_resolves_for_both_isotopes_at_every_configuration():
+    """`reco.rp_aperture_for` used to key on a MOMENTUM matched against the
+    6Li configurations, so it returned None for 7Li at the top energy
+    (117.9 GeV/u against 6Li's 137.5) and the near-beam scans could not be
+    run for 7Li at all.  It is keyed on the CONFIGURATION now -- the pot
+    slot is a property of the ring, not of the beam in it -- and the
+    momentum path is kept for the callers written before 2026-08-28."""
+    from polligen import reco
+    from polli_fastsim import beams
+
+    expect = ((2.0e-3, 3.0e-3), (1.35e-3, 3.0e-3), (1.03e-3, 2.3e-3))
+    for iso in ("6Li", "7Li"):
+        got = [reco.rp_aperture_for(c) for c in beams.default_configs(iso)]
+        assert got == list(expect), iso
+    # the two isotopes' top configurations are DIFFERENT beams at the same
+    # machine setting, which is exactly what the momentum path could not see
+    top6, top7 = (beams.default_configs(i)[2] for i in ("6Li", "7Li"))
+    assert top6.ion_momentum_per_nucleon != top7.ion_momentum_per_nucleon
+    assert reco.rp_aperture_for(top6) == reco.rp_aperture_for(top7)
+    # backward compatibility: 6Li momenta still resolve, everything else
+    # returns None rather than interpolating
+    for cfg, want in zip(beams.default_configs("6Li"), expect):
+        assert reco.rp_aperture_for(cfg.ion_momentum_per_nucleon) == want
+    assert reco.rp_aperture_for(20.5) is None          # the retired energy
+    assert reco.rp_aperture_for(117.9) is None         # 7Li, momentum path
+
+
+def test_li7_alpha_tag_is_optics_blind_and_the_tagging_optics_is_a_net_loss():
+    """The B3 result in one assertion.  The 7Li alpha sits at rigidity
+    ratio 0.856, inside the Roman-Pot momentum window, so it never has to
+    clear the near-beam envelope: its tag is 0.96-0.97 at the Yellow Report
+    optics and 0.98-0.99 at the tagging optics -- x1.02 -- bought at 1/8 to
+    1/15 of the luminosity.  For 7Li the tagging optics is therefore a
+    factor 8-15 NET LOSS, the exact inverse of 6Li, where the same optics
+    turns a 1.5% tag into a 27-35% one.  6Li and 7Li want different machine
+    optics and are different runs."""
+    import numpy as np
+    from polli_fastsim import beams, farforward as ff, spectator as sp
+
+    for i, cfg in enumerate(beams.default_configs("7Li")):
+        k = sp.spectator_lab_kinematics(sp.LI7_ALPHA_TAG,
+                                        cfg.ion_momentum_per_nucleon,
+                                        200_000, beta=0.30,
+                                        rng=np.random.default_rng(7))
+        assert np.median(k["R"]) == pytest.approx(0.856, abs=0.01)
+        tag = {}
+        for label, o in (("yr", ff.yr_optics(cfg, "high-acceptance")),
+                         ("top", ff.tagging_optics(cfg))):
+            s = ff.acceptance_summary(k["R"], k["theta"], k["pT"], o,
+                                      phi=k["phi"])
+            tag[label] = 1.0 - s["lost"]
+            # the momentum window carries it, not the near-beam tail
+            assert s["RomanPots"] > 0.94
+        assert 0.96 < tag["yr"] < 0.98
+        assert 0.98 < tag["top"] < 1.00
+        gain = tag["top"] / tag["yr"]
+        loss = 1.0 / ff.tagging_optics(cfg).lumi_fraction
+        assert 1.00 < gain < 1.04                  # acceptance bought
+        assert 8.0 < loss < 16.0                   # luminosity paid
+        assert gain / loss < 0.15, i               # a net loss, decisively
+

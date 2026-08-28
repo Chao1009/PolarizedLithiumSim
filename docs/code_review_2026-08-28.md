@@ -56,7 +56,17 @@ consistency checks; after the pass 225 + 57 and 22/22.
   the bin variance vanished for a bin populated by one spin state
   (R = w_f exactly), giving it an infinite weight — the cause of the
   "rank-deficient" |t| bins of the earlier Table 3 — and the ratio
-  inversion's error Jacobian dropped its second-order denominator.
+  inversion's error Jacobian dropped its second-order denominator.  A
+  third, deeper than either, was found and closed the same day: the ratio
+  inversion is a nonlinear function of Poisson counts, so it carries an
+  O(1/ν_b) Jensen offset that biases a_t **low** below ~10² counts per
+  (α, β) bin, no matter how the variance is written; the
+  acceptance-profiled conditional-multinomial likelihood
+  `reco.harmonic_likelihood_fit_2d` removes it, returning 0.0902 / 0.1176
+  / 0.146 / 0.173 on the same draws where the ratio gives −4% and −34% in
+  the two sparsest |t| bins (plans/08 A12, Report 2 §4.3 and Table 5;
+  `--fit likelihood`, with the ratio kept as the default and as the
+  published record).
 * **The coherent closure was on the wrong geometry.**  6R ran on the
   legacy 73 μrad isotropic divergence with a 0.73 mrad "near-beam
   approach" while §8.1 of the same report listed the Yellow Report values;
@@ -79,6 +89,7 @@ pass.
 | R2 | PYTHIA `mHatMin` default removed x < 16/s | HIGH, input | sample x min vs 16/s (1.8% of events below, spectrum ratio 0.00–0.01 below x = 0.003); 39.2% of selected rate; 40k-event test with `mHatMin = 0.5` follows the rate map to ±25% | `--mhat-min 0.5`; library regenerated (σ +37–48%) |
 | R3 | `reco.spin_state_ratio` var = 0 for single-state bins | HIGH, statistics | toy counts `[[100,50,0,3],[90,60,5,0]]` → var `[.., 2e-33, 0]`, fit raised `LinAlgError` | expected-count variance with the first-order T clipped; tests (finite variance, Poisson spread reproduced to 6%) |
 | R4 | `_ratio_to_modulation` Jacobian (1+u+P̄T)/σ² instead of (1+u+P̄T)/(σ² − P̄R) | LOW, statistics | analytic; 0.3% on errors at P̄T ~ 10⁻³ | fixed; test |
+| R4b | the ratio inversion's O(1/ν_b) Jensen offset — a bias of a_t low that R3 and R4 do not touch, since it is in the estimator's form and not in its variance | MEDIUM, statistics | 200 pseudo-experiments per \|t\| bin at the tagging optics, 5 × 40.8: ratio −4.0% and −34.3% (pulls −9.0, −42.1) at 192 and 48 counts per (α, β) cell, and a sign change at 1 count; adaptive binning only attenuates it (−34.3% → −13.9% → −7.8% from 12 × 24 through 8 × 16 to 6 × 12, at +17% on δa_e) | `reco.harmonic_likelihood_fit_2d`, the acceptance-profiled conditional-multinomial likelihood, `--fit likelihood` (plans/08 A12); pulls +0.5…+2.0 at every bin, Asimov closure 4×10⁻¹⁶, errors within 0.24% of the ratio's; 16 tests in `evgen/tests/test_likelihood_fit.py` (14 for the likelihood, 2 for the in-situ u fit) |
 | R5 | hadron acceptance in the head-on frame, electron in the lab | MEDIUM, inconsistency | captured Σ within \|η\| ≤ 3.7 at the four spots: head-on 0.816/0.918/0.837/0.927, lab 0.831/0.925/0.850/0.934 | `HadronResponse(xing=)`: acceptance and smearing in the lab, sums in the head-on frame; test |
 | R6 | library f = Σ_reco/Σ_true(massive) applied to a massless 2E_e y | MEDIUM, physics | Σ_true − 2E_e y = 4.5 MeV in the library (2.3% at y ≈ 0.01) | the pseudo-event Σ carries the same mass term; test |
 | R7 | e + p / e + n merged by event count | LOW, inconsistency | σ_p/σ_n = 1.11–1.16 | `concatenate` weights by σ_gen/n; `HFSLibrary` draws by weight; test |
@@ -90,7 +101,7 @@ pass.
 | R13 | 6R on the legacy divergence; "residual template bias" on a_e | HIGH, inconsistency / doc | ensemble of 20: a_e means 0.0092 ± 0.0007, 0.0097 ± 0.0008 vs 0.010; a_t unbiased above 10⁵ recoils per bin | `--optics tagging`, `--ensemble`, `--exact`, `--n-alpha/--n-beta`; Table 5 of Report 2 |
 | R14 | ten-year a_t errors omitted the response's own MC statistics | LOW, statistics | 6×10⁵ recoils vs 10-yr errors | published runs at 6×10⁶ |
 | R15 | `delta_models` fell back silently to LO α_s without `parton` (+14% on Δ) | MEDIUM, inconsistency | — | warning printed once; manual states it |
-| R16 | ISR statement "x → x/(1 − z)" in Report 2 §3 and plans/08 D3 | MEDIUM, physics (doc) | (1 − z) cancels between Q²_e and s for y_Σ | corrected: the Q² label migrates, x does not |
+| R16 | ISR statement "x → x/(1 − z)" in Report 2 §3 and plans/08 D3 | MEDIUM, physics (doc) | (1 − z) cancels between Q²_e and s for y_Σ | corrected: the Q² label migrates, x does not; *closed 2026-08-28 (run 13)*: pinned by `test_mixed_x_is_exact_and_only_the_q2_label_migrates`, and the migration bound itself measured by `polligen/radiative.py` (plans/07 WP4: +0.50…+1.22% of Δ̂ at the sweet spots in the published window — the eight-seed mean ± sem +0.62 ± 0.03 / +0.50 ± 0.02 / +0.94 ± 0.03 / +1.22 ± 0.02% — and ≤ 2.9% with the low-Q² feed-in; gate ≤ 5% passed) |
 | R17 | Report 2 Table 1 at the pre-correction sweet spots; callout (3) with 50 GeV/u numbers; §4 resolution numbers at 50 GeV/u; the 73/149 μrad footer; §8.1 "PYTHIA" as the value used against Table 2's stand-in; §8.2 without the acceptance-stability requirement; 3% vs 5% polarimetry | HIGH–LOW, doc | read against the scripts | Report 2 rewritten |
 | R18 | Report 4 near-beam table on the legacy divergence | MEDIUM, doc | plans/10 A4 | scope banner; A4 stays open |
 | R19 | stale sample names (e10_p50), test counts (183/209 vs 225), 6R command in the manual | LOW, doc | — | restated |

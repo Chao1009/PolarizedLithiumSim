@@ -37,7 +37,8 @@ Physics setup (PYTHIA 8.3 DIS, cf. examples/main36 and the EIC tutorials):
   Q2Min >= pTHatMinDiverge^2 (PhaseSpace.cc: hasQ2Min = (Q2GlobalMin >=
   pow2(pTHatMinDiverge))), and pTHatMinDiverge defaults to 1 GeV -- so
   with the default the requested 0.7 GeV^2 is silently ignored and the
-  divergence cut itself sets the floor.  Measured at 10 x 50 GeV, 4000
+  divergence cut itself sets the floor.  Measured at 10 x 50 GeV -- a
+  diagnostic run, not a machine configuration -- with 4000
   events: default -> min Q2 = 1.002 GeV^2 and sigma = 0.381 ub, whatever
   Q2Min asks for below 1; with pTHatMinDiverge = 0.5 -> min Q2 = 0.697
   GeV^2 and sigma = 0.551 ub, i.e. the 0.7-1.0 GeV^2 band that the
@@ -49,17 +50,27 @@ against, Sigma over the whole final state = 2 E_e, holds only with them in
 (hfs.truth_kinematics_check).  The detector response drops them
 (hfs.HadronResponse, NEUTRINOS).
 
-Usage:
+The beam energies are the gamma-matched machine configurations of
+`beams.default_configs("6Li")` -- 5 x 40.8, 10 x 99.5 and 18 x 137.5 GeV/u
+(plans/10 A0).  The rigidity-scaled 5 x 20.5 and 10 x 50 that this script
+defaulted to before 2026-08-27 are not machine configurations and the
+samples named after them no longer exist.
+
+Usage (the mid configuration of the standing production; the manifest with
+all six files and their seeds is evgen/samples/README.md):
   export PYTHONPATH=$HOME/Apps/pythia8311/lib
   export PYTHIA8DATA=$HOME/Apps/pythia8311/share/Pythia8/xmldoc
-  python3 tools/pythia8/gen_dis_hfs.py --target p --n-events 1000000 \
-      --electron-energy 10 --p-per-nucleon 50 --seed 1 \
-      --out evgen/samples/pythia8_e10_p50_dis.npz
-  python3 tools/pythia8/gen_dis_hfs.py --target n ... --seed 2 \
-      --out evgen/samples/pythia8_e10_n50_dis.npz
-The p and n files are merged by the consuming scripts (HFSSample.concatenate,
-which mixes by event COUNT -- generate the same number of events for both,
-which is what Z = N = 3 asks for in 6Li).
+  python3 tools/pythia8/gen_dis_hfs.py --target p --n-events 2000000 \
+      --electron-energy 10 --p-per-nucleon 99.5 --seed 101 \
+      --out evgen/samples/pythia8_e10_p99.5_dis.npz
+  python3 tools/pythia8/gen_dis_hfs.py --target n ... --seed 102 \
+      --out evgen/samples/pythia8_e10_n99.5_dis.npz
+The p and n files are merged by the consuming scripts
+(HFSSample.concatenate), which since 2026-08-28 weights each file by
+sigma_gen/n_events so the two targets enter in the ratio of their cross
+sections rather than of their event counts -- for 6Li (Z = N = 3) that is
+the p : n mix the nucleus asks for, and it no longer matters whether the
+two files hold the same number of events.
 """
 
 import argparse
@@ -149,7 +160,11 @@ def main():
     ap.add_argument("--target", default="p", choices=("p", "n"))
     ap.add_argument("--n-events", type=int, default=100000)
     ap.add_argument("--electron-energy", type=float, default=10.0)
-    ap.add_argument("--p-per-nucleon", type=float, default=50.0)
+    ap.add_argument("--p-per-nucleon", type=float, default=99.5,
+                    help="GeV/u; the standing production runs 5 x 40.8, "
+                         "10 x 99.5 and 18 x 137.5, i.e. "
+                         "beams.default_configs('6Li') -- the default is the "
+                         "mid one, which pairs with --electron-energy 10")
     ap.add_argument("--q2min", type=float, default=0.7)
     ap.add_argument("--mhat-min", type=float, default=0.5,
                     help="PhaseSpace:mHatMin [GeV], the invariant mass of the "

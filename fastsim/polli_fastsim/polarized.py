@@ -68,6 +68,16 @@ class PartonG1(ToyG1):
     NNPDFpol11_100): g1 = (1/2) sum_q e_q^2 [Dq + Dqbar]; neutron by
     isospin. Unpolarized denominator (F1) still comes from `base`.
     Install:  yes | python3 -m parton install NNPDFpol11_100
+
+    THREE flavours (d u s) against `structure.PartonF2`'s five (d u s c b),
+    so every g1/F1 ratio built here mixes the two schemes.  That is the
+    standard treatment and not a defect: NNPDFpol1.1 sets Delta c =
+    Delta b = 0, so a three-flavour g1 is the whole of what it predicts,
+    while the F2 a measurement sees does carry charm.  The size of the
+    difference from a light-flavour-only denominator is measured and
+    recorded in the `PartonF2` docstring (7.8% of F2A event-weighted over
+    the money_polemc.py bins, 0.65% at x = 0.3-0.5); `tests/test_grids.py`
+    pins the subset relation.
     """
 
     _E2 = {1: 1 / 9, 2: 4 / 9, 3: 1 / 9}

@@ -26,9 +26,8 @@ The near-beam cut is ANGULAR, not a momentum cut.  A fragment at beam
 rigidity follows the beam's own optics, so what separates it from the
 beam at the pots is its angle in units of the beam's angular divergence:
 the documented "10 sigma" cut is theta > 10 sigma_theta.  The quoted
-0.20 GeV (high-acceptance) and 0.41 GeV (high-divergence, derived from
-the YR divergence tables and elsewhere rounded to 0.45) are that cut
-expressed for a 275 GeV PROTON, i.e. sigma_theta = 73 and 149 microrad;
+0.20 GeV (high-acceptance) and 0.45 GeV (high-divergence) are that cut
+expressed for a 275 GeV PROTON, i.e. sigma_theta = 73 and 164 microrad;
 applying those numbers as a pT threshold to a nucleus of momentum A p_u
 understates the envelope by A p_u / 275 GeV (code review S8).  For the
 6Li alpha fragment at 137.5 GeV/u, 0.20 GeV is 5 sigma, not 10.
@@ -46,6 +45,15 @@ from dataclasses import dataclass
 import numpy as np
 
 THETA_RP_MAX = 5.0e-3
+#: Outer angular edge of the Roman-Pot sensor package, as a polar angle at
+#: the IP.  THETA_RP_MAX is the acceptance bound the Yellow Report detector
+#: matrix quotes and it is what the routing has always used, so the default
+#: keeps every published number where it is; the constant exists because a
+#: real pot is a tiling of 16 x 16 mm modules a few tens of millimetres
+#: across, not a 153 mm disc (5 mrad x R12 = 30.6 m), and any topology
+#: question involving a SECOND fragment is dominated by where that edge is
+#: (plans/09 B1, D3).  Pass `theta_outer` to `route_charged` to price it.
+THETA_RP_OUTER = THETA_RP_MAX
 THETA_B0_MIN, THETA_B0_MAX = 5.5e-3, 20.0e-3
 THETA_ZDC_MAX = 4.0e-3
 RP_R_WINDOW = (0.60, 0.95)
@@ -96,12 +104,26 @@ class Optics:
 
     def clears(self, theta, phi=None):
         """Boolean: does a fragment at polar angle `theta` (from the ion
-        axis) and azimuth `phi` clear the envelope?  With `phi` None the
-        cut is circular in theta at n sigma_h -- exact for an isotropic
-        optics, and the only option when the azimuth is not known."""
+        axis) and azimuth `phi` clear the envelope?
+
+        The envelope is the RECTANGLE of half-widths n_sigma (sigma_h,
+        sigma_v) -- the same cutout `hole_acceptance` integrates and
+        `recopseudo.CoherentResponse` applies -- so with `phi` given the
+        cut is rectangular at every aspect ratio, an isotropic optics
+        included: there the rectangle is a SQUARE of half-width n sigma_h,
+        which is not its inscribed circle.  With `phi` None the cut falls
+        back to that inscribed circle, the only option when the azimuth is
+        not known; it is the more generous of the two (by 1.7x at the
+        tagging optics, plans/09 B2) and no published number uses it.
+        Until 2026-08-28 an `or self.isotropic` short-circuit sent every
+        square envelope down the circular branch, so the azimuth
+        `polligen.tagged` and the spectator routing take care to pass was
+        discarded at 10 x 100 and 18 x 275, where the Yellow Report
+        divergence is 180/180 and 92/92 microrad.
+        """
         theta = np.asarray(theta, dtype=float)
         cx, cy = self.envelope
-        if phi is None or self.isotropic:
+        if phi is None:
             return theta > cx
         phi = np.asarray(phi, dtype=float)
         return (np.abs(theta * np.cos(phi)) > cx) | (np.abs(theta * np.sin(phi)) > cy)
@@ -109,7 +131,7 @@ class Optics:
     @property
     def pt_cut_near_beam(self):
         """The same cut expressed for a 275 GeV proton -- the number the
-        Yellow Report quotes (0.20 / 0.41 GeV).  Use `pt_cut_for` for a
+        Yellow Report quotes (0.20 / 0.45 GeV).  Use `pt_cut_for` for a
         fragment of any other momentum."""
         return self.pt_cut_for(PROTON_REFERENCE_MOMENTUM)
 
@@ -123,10 +145,11 @@ class Optics:
 HIGH_ACCEPTANCE = Optics("high-acceptance", 0.20 / (10.0 * 275.0))    #  73 urad
 # The high-divergence envelope is not a documented spec: plans/06 SS6.5
 # derives ~0.41 GeV at 275 GeV from the YR divergence tables and the
-# fast-sim has always quoted the rounded-up 0.45 (every published
-# fast-sim number, plans/06 and the money-plot report).  polligen.reco
-# quotes the 0.41 end of the same band.  Unifying the two is a
-# documentation decision, not a code one (plans/04 #11, plans/08).
+# fast-sim rounds it up to 0.45 (every published fast-sim number,
+# plans/06 and the money-plot report).  The two ends of that band were
+# carried by two modules until 2026-08-28 (R10), when polligen.reco's
+# SIGMA_THETA_HD became an alias of this constant: 164 urad is now the
+# one high-divergence number in the repository (plans/04 #11, plans/08).
 HIGH_DIVERGENCE = Optics("high-divergence", 0.45 / (10.0 * 275.0))    # 164 urad
 
 # --- what the published tables actually say (plans/10) --------------------
@@ -151,33 +174,33 @@ YR_GOLD_DIVERGENCE = {                              # strong hadron cooling
     "41GeV/u":  ((275.0, 377.0), 10.0),
 }
 
-#: sigma_theta = sqrt(eps_N / (beta*gamma * beta*)).  At a given machine
-#: configuration the lattice is set by RIGIDITY, so beta* is common to every
-#: species and an A/Z = 2 ion sits at HALF the proton's beta*gamma -- hence
-#: sqrt(2) more divergence at equal normalised emittance.  Calibrating that
-#: assumption against the published gold rows gives eps_N(Au)/eps_N(p) = 0.85
-#: horizontally and 2.6 vertically, and gold's IBS (~ N Z^4/A^2) is 450x
-#: lithium's -- so equal eps_N is well supported for a light ion and the
-#: lithium divergence is set by KINEMATICS, not by intrabeam scattering.
-LIGHT_ION_DIVERGENCE_FACTOR = 1.409     # sqrt(beta*gamma_p / beta*gamma_Li)
+# --- the species step, and what calibrates it (plans/10) ------------------
+#
+# sigma_theta = sqrt(eps_N / (beta*gamma * beta*)).  At a given machine
+# configuration the lattice is set by RIGIDITY, so beta* is common to every
+# species and an ion at HALF the proton's beta*gamma picks up sqrt(2) more
+# divergence at equal normalised emittance -- which is a statement about
+# beta*gamma, not about A/Z, and applies only where the ring rigidity caps
+# the ion below its gamma-matched momentum (sigma_theta_for; plans/10
+# SS10.3).  A blanket sqrt(A/Z) at every configuration is the
+# rigidity-scaling rule that plans/10 rejects, and the function that
+# applied it was retired on 2026-08-28.
+#
+# Calibrating the equal-emittance assumption against the published gold
+# rows gives eps_N(Au)/eps_N(p) = 0.85 horizontally and 2.6 vertically,
+# and gold is far more IBS-prone than lithium under either normalisation
+# of the same law: the per-particle growth rate goes as Z^4/A^2, which
+# makes gold 446x lithium, and at fixed BEAM CURRENT (the comparison
+# plans/10 SS10.3 states, one factor Z removed because a fixed current is
+# fewer ions when each carries more charge) as Z^3/A^2, which makes it
+# 17x.  Either way lithium is proton-class -- 2.25x a proton per particle,
+# 0.75x at fixed current -- so equal eps_N is well supported for it and
+# the lithium divergence is set by KINEMATICS, not by intrabeam
+# scattering.
 
 
-def yr_divergence_for(config, a_over_z=2.0, optics="high-acceptance"):
-    """Estimated (sigma_theta_h, sigma_theta_v) [rad] and dp/p for a fully
-    stripped ion of the given A/Z in an EIC configuration, from the Yellow
-    Report proton tables scaled by sqrt(A/Z) (plans/10).
-
-    This is an ESTIMATE, not a machine specification: it assumes the ion's
-    normalised emittance equals the proton's, which the gold calibration
-    supports for a light ion but which no published light-ion optics
-    confirms.  plans/10 D1 is the question that would replace it."""
-    (hd_h, hd_v, ha_h, ha_v), dpp = YR_PROTON_DIVERGENCE[config]
-    h, v = (ha_h, ha_v) if optics == "high-acceptance" else (hd_h, hd_v)
-    f = float(np.sqrt(a_over_z))
-    return (1e-6 * h * f, 1e-6 * v * f), 1e-4 * dpp
-
-
-def route_charged(R, theta, pT, optics=HIGH_ACCEPTANCE, phi=None):
+def route_charged(R, theta, pT, optics=HIGH_ACCEPTANCE, phi=None,
+                  theta_outer=None):
     """Classify charged fragments into far-forward systems.
 
     Returns an integer array: 0 lost, 1 RP, 2 OMD, 3 B0, 4 RP-near-beam
@@ -185,6 +208,11 @@ def route_charged(R, theta, pT, optics=HIGH_ACCEPTANCE, phi=None):
     half-widths n_sigma (sigma_h, sigma_v) when the fragment azimuth `phi`
     is given, a circle at n_sigma sigma_h otherwise; Optics.clears).  `pT`
     is not used for the near-beam decision: the envelope is angular.
+
+    `theta_outer` replaces THETA_RP_OUTER as the outer edge of the pot and
+    off-momentum acceptance; the default leaves it at THETA_RP_MAX, where
+    every published number was computed.  The B0 window is untouched by it
+    -- a fragment between the pot edge and 5.5 mrad is lost, as it is now.
     """
     R = np.asarray(R, dtype=float)
     theta = np.asarray(theta, dtype=float)
@@ -194,7 +222,7 @@ def route_charged(R, theta, pT, optics=HIGH_ACCEPTANCE, phi=None):
     in_b0 = (theta >= THETA_B0_MIN) & (theta <= THETA_B0_MAX)
     out[in_b0] = 3
 
-    small = theta < THETA_RP_MAX
+    small = theta < (THETA_RP_OUTER if theta_outer is None else theta_outer)
     near = np.abs(R - 1.0) < NEAR_BEAM_BAND
     in_rp = small & ~near & (R >= RP_R_WINDOW[0]) & (R <= RP_R_WINDOW[1])
     in_omd = small & (R >= OMD_R_WINDOW[0]) & (R < OMD_R_WINDOW[1])
@@ -223,9 +251,11 @@ def neutral_summary(theta):
             "lost": float(np.sum(route == 0)) / n}
 
 
-def acceptance_summary(R, theta, pT, optics=HIGH_ACCEPTANCE, phi=None):
+def acceptance_summary(R, theta, pT, optics=HIGH_ACCEPTANCE, phi=None,
+                       theta_outer=None):
     """Fraction of spectators in each far-forward system."""
-    route = route_charged(R, theta, pT, optics, phi=phi)
+    route = route_charged(R, theta, pT, optics, phi=phi,
+                          theta_outer=theta_outer)
     n = float(len(route))
     return {label: float(np.sum(route == code)) / n
             for code, label in ROUTE_LABELS.items()}
@@ -238,6 +268,65 @@ def acceptance_summary(R, theta, pT, optics=HIGH_ACCEPTANCE, phi=None):
 #: pot-plane position and the dispersion at the pots.
 POT_R12 = 30.6        # m
 POT_DISPERSION = 0.30  # m
+
+
+def separation_at_pots(frag_a, frag_b, r12=POT_R12, r34=None,
+                       dispersion=POT_DISPERSION):
+    """Transverse distance [m] at the pot plane between two fragments that
+    leave the IP at (theta, phi) carrying rigidity ratio R.
+
+    Linear transport from a point source: horizontally the angular lever
+    and the dispersion, vertically the lever alone,
+
+        x = R12 theta cos phi + D (R - 1),      y = R34 theta sin phi,
+
+    so each fragment dict needs `theta`, `phi` and `R` -- what
+    `spectator._boost_fragment` returns.  `dispersion=0.0` recovers the
+    angular lever alone.
+
+    THE DISPERSIVE TERM DOES NOT CANCEL BETWEEN THE TWO FRAGMENTS, which
+    is the correction of 2026-08-28 (code review of plans/09 B4).  This
+    function was first written without it, on the argument that both
+    fragments of 6Li -> alpha + d sit within 0.7% of beam rigidity so
+    their dispersive displacements are common.  The 0.7% is true and the
+    conclusion is false: the fragments take OPPOSITE rest-frame momenta,
+    and the longitudinal component enters the two rigidities with opposite
+    sign and unequal weight.  Measured over the sampled k and at every
+    configuration, R_alpha = 0.9988 + 0.268 k_z and R_d = 1.0071 -
+    0.536 k_z (k_z in GeV/c), so R_alpha - R_d = -0.0083 + 0.804 k_z and
+    D (R_alpha - R_d) has 16/50/84% = 2.6 / 9.2 / 22.7 mm -- comparable to
+    the angular separation itself, which it moves by 5 / 23 / 39% at
+    5 x 41 / 10 x 100 / 18 x 275, and never below the 1.9 mm the k = 0
+    rigidity difference alone gives.  It is also what makes a merge
+    possible at all: the angular term alone puts a RECORDED pair tens of
+    millimetres apart, while the dispersive term can cancel it.
+
+    The SIGN of D relative to R12 is not measured, and does not matter
+    here: the joint distribution of (angular dx, R_a - R_b) is even in the
+    first (the breakup azimuth is uniform), so the separation distribution
+    is invariant under D -> -D.
+
+    R12 = 30.6 m and D = 0.30 m are SINGLE values measured on the ePIC
+    geometry at 18 x 275 (tools/fullsim) and applied here at every
+    configuration for want of per-optics numbers; R34, the vertical lever,
+    has never been measured at all and defaults to R12.  All three are
+    plans/09 D3, and every millimetre this function produces inherits
+    them: read the lower-energy rows as scaling, not as transport.
+    Nothing in the ROUTING depends on any of it -- the acceptance is
+    decided in angle (`route_charged`), which is the same assumption from
+    the other side (plans/04 #11: a near-beam fragment is taken to be
+    dispersion-blind, though its own D (R - 1) is 0.6 mm for the alpha and
+    1.4 mm for the deuteron) -- so this enters figures and tables only.
+    """
+    r34 = r12 if r34 is None else r34
+    ta, tb = np.asarray(frag_a["theta"]), np.asarray(frag_b["theta"])
+    pa, pb = np.asarray(frag_a["phi"]), np.asarray(frag_b["phi"])
+    dx = r12 * (ta * np.cos(pa) - tb * np.cos(pb))
+    if dispersion:
+        dx = dx + dispersion * (np.asarray(frag_a["R"])
+                                - np.asarray(frag_b["R"]))
+    dy = r34 * (ta * np.sin(pa) - tb * np.sin(pb))
+    return np.sqrt(dx * dx + dy * dy)
 
 
 def yr_config_key(config):

@@ -122,11 +122,26 @@ class RecoResponse:
     InclusiveSampler under a RecoModel (see module docstring)."""
 
     def __init__(self, sampler, model=None, n_mc_per_cell=400, rng=None,
-                 hfs=None):
+                 hfs=None, isr=None):
         """`hfs`: an hfs.HFSResponse (required when model.y_source == "hfs"):
         the hadronic y of every pseudo-event then comes from a generator
         event of the same (x, Q2) cell passed through the hadron-side
-        detector response, instead of the Gaussian stand-in."""
+        detector response, instead of the Gaussian stand-in.
+
+        `isr`: a radiative.ISRModel (default None = OFF, and with it off
+        this constructor is bit for bit what it was before the hook
+        existed).  With it on, every pseudo-event radiates a collinear
+        photon of fraction z off the INCOMING electron: (x, Q2) are read
+        as the hard variables at the reduced ss = (1 - z)s, the hard
+        y_hard = y/(1 - z), and the scattered electron is the one that
+        reduced beam makes -- while the analysis below reconstructs with
+        the NOMINAL beam and the nominal s, exactly as an experiment
+        must.  z comes from the ISR model's own random stream, so an
+        ISR-on and an ISR-off response built from the same `rng` share
+        every other random number and their difference is the radiation
+        alone (plans/07 WP4; see polligen/radiative.py).  With it on,
+        `self.y` becomes the HARD y = y/(1 - z) and the drawn
+        q2/(s x) is kept as `self.y_nominal`."""
         if hfs is not None:
             hfs.check_beams(sampler.config.electron_energy,
                             sampler.config.ion_momentum_per_nucleon)
@@ -159,11 +174,33 @@ class RecoResponse:
         y = q2 / (s * x)
         n = x.size
 
+        # 1b. collinear initial-state radiation (plans/07 WP4) -------------
+        self.isr = isr
+        self.isr_z = np.zeros(n)
+        self._amp_isr = None
+        y_hard, one_z = y, None
+        if isr is not None:
+            self.isr_z = isr.sample(q2, y)
+            one_z = 1.0 - self.isr_z
+            y_hard = y / one_z
+            # the (1 - z) shift of the HARD cross section and of the
+            # cos 2phi' amplitude at fixed (x, Q2) -- closed forms in
+            # radiative.rate_scale / amplitude_scale
+            w = w * isr.rate_scale(sampler.kernel, x, q2, y, self.isr_z)
+            self._amp_isr = isr.amplitude_scale(sampler.kernel, x, q2, y,
+                                                self.isr_z)
+
         # 2. scattered electron: true -> lab -> smeared -> head-on ---------
         phi_e = rng.uniform(0.0, 2.0 * np.pi, size=n)
         k, p_ion = reco.beam_fourvectors(cfg)
         s_vec = reco.spin_fourvector(m.phi_s)
-        kp = reco.electron_fourvector(x, y, s, e_e, phi_e)
+        if isr is None:
+            kp = reco.electron_fourvector(x, y, s, e_e, phi_e)
+        else:
+            # the electron the REDUCED beam makes; Q2 = x y_hard ss = q2
+            # is unchanged, which is why the cell and its tables are not
+            kp = reco.electron_fourvector(x, y_hard, s * one_z, e_e * one_z,
+                                          phi_e)
         kp_lab = reco.head_on_to_lab(kp, m.xing)
         e_lab = kp_lab[..., 0]
         pmag = np.sqrt((kp_lab[..., 1:] ** 2).sum(axis=-1))
@@ -204,10 +241,16 @@ class RecoResponse:
                 # hadronic final state of a library event from the same
                 # (x, Q2) cell, through the hadron-side response, combined
                 # with the RECONSTRUCTED electron (Sigma / JB / DA methods)
+                # y (not y_hard) sets the true hadronic sum: under a
+                # collinear photon Sigma_h = 2 E_hard y_hard = 2 E_e y is
+                # UNCHANGED, and y_Sigma = Sigma/(Sigma + E'(1-cos)) then
+                # returns y_hard by itself, with no beam energy anywhere
                 y_r, hk = self.hfs.y_hadronic(x, q2, y, e_r, th_r, e_e, s, rng)
                 self.sigma_capture = hk["f_sigma"]
             elif m.y_source == "param":
-                y_r = reco.hadronic_y(y, m.y_had_res, rng)
+                # the Gaussian stand-in for the Sigma method, which
+                # measures the HARD y (radiative module docstring)
+                y_r = reco.hadronic_y(y_hard, m.y_had_res, rng)
             else:
                 raise ValueError("y_source must be 'param' or 'hfs'")
             x_r = reco.mixed_method(q2_e, y_r, s)
@@ -231,14 +274,41 @@ class RecoResponse:
             eff = eff * eps
 
         # 4. azimuth dilution --------------------------------------------
-        phip_true = reco.azimuth_wrt_lepton_plane(k, kp, p_ion, s_vec)
+        # the TRUE azimuth is the one of the hard vertex, whose incoming
+        # lepton is (1 - z)k; the analysis has only the nominal k.  For a
+        # massless target the two are identical to machine precision --
+        # that is why collinear ISR fakes no cos phi' or cos 2phi' at all
+        # (plans/08 D3) -- and with the physical ion mass they differ by
+        # the O(gamma^2) residual this dilution then carries.
+        k_true = k if isr is None else k[None, :] * one_z[:, None]
+        phip_true = reco.azimuth_wrt_lepton_plane(k_true, kp, p_ion, s_vec)
         phip_reco = reco.azimuth_wrt_lepton_plane(k, kp_m, p_ion, s_vec)
         dil = np.cos(2.0 * (phip_reco - phip_true))
+        # the residual rotation the reading itself leaves: zero to double
+        # precision for a massless target (the theorem of plans/08 D3,
+        # pinned in tests/test_reco.py), O(gamma^2) with the physical ion
+        # mass.  Kept only when ISR is on, so the default path is inert.
+        self.isr_dphi = None
+        if isr is not None:
+            phip_nominal = reco.azimuth_wrt_lepton_plane(k, kp, p_ion, s_vec)
+            self.isr_dphi = np.angle(np.exp(1j * (phip_nominal - phip_true)))
 
         self.cell, self.w = cell, w
-        self.x, self.q2, self.y = x, q2, y
+        # NOTE `self.y` is the HARD y of the event, y/(1 - z): with ISR on
+        # it is NOT q2/(s x).  `self.y_nominal` is the drawn q2/(s x), the
+        # y the bin sits at, which is what radiative.method_bias_table and
+        # any other consumer of "the y of this bin" wants (with ISR off
+        # the two are the same array).
+        self.x, self.q2, self.y = x, q2, y_hard
+        self.y_nominal = y
         self.x_reco = np.where(valid, x_r, np.nan)
         self.q2_reco, self.y_reco, self.eta_reco = q2_e, y_r, eta_r
+        # the reconstructed electron itself, kept so that a downstream
+        # study can form observables the bin summary does not need -- in
+        # particular the event's total E - p_z = E'(1 - cos theta)/(1 -
+        # y_Sigma), the HERA-style handle on collinear radiation
+        # (radiative.empz_fraction)
+        self.e_prime_reco, self.theta_reco = e_r, th_r
         self.eff, self.dil = eff, dil
         self.phi_true = np.mod(phip_true, 2 * np.pi)
         self._cellamp = {}
@@ -266,10 +336,26 @@ class RecoResponse:
 
     def amplitude_per_event(self, category):
         """The P_zz-normalized cos 2phi' amplitude A at each event's TRUE
-        kinematics (fill-independent: num/P_zz)."""
+        kinematics (fill-independent: num/P_zz).
+
+        With ISR on, the per-event factor a_2(y_hard)/a_2(y) of
+        radiative.amplitude_scale corrects the cell-centre amplitude for
+        the (1 - z) shift of the hard y; it is 1 with ISR off."""
         _den, num = self._fill_arrays(category)
         pzz = float(category.moments()[1])
-        return num[self.cell] / pzz
+        if self._amp_isr is None:
+            return num[self.cell] / pzz
+        return num[self.cell] / pzz * self._amp_isr
+
+    def _dil_amp(self):
+        """The per-event factor that multiplies a CELL amplitude on its
+        way into a reco bin: the phi' dilution alone with ISR off, and
+        with ISR on the dilution times the a_2(y_hard)/a_2(y) of
+        radiative.amplitude_scale.  One array, so `fold_kernel`,
+        `fold_mc_error` and `expected_counts` cannot drift apart."""
+        if self._amp_isr is None:
+            return self.dil
+        return self.dil * self._amp_isr
 
     # --- masks and bin bookkeeping ---------------------------------------
 
@@ -363,7 +449,7 @@ class RecoResponse:
         fit costs one dot product per bin per trial shape."""
         cells = self.cell[mask]
         we = (self.w * self.eff)[mask]
-        v = np.bincount(cells, weights=we * self.dil[mask],
+        v = np.bincount(cells, weights=we * self._dil_amp()[mask],
                         minlength=self.sampler.xsec_flat.size)
         nz = np.flatnonzero(v)
         return nz, v[nz] * self.delta_response(category)[nz], float(we.sum())
@@ -413,7 +499,7 @@ class RecoResponse:
         cells = self.cell[mask]
         u = (self.w * self.eff)[mask]
         a = (self.delta_response(category) * self.delta_cells(delta_func))
-        r = u * (self.dil[mask] * a[cells] - val)
+        r = u * (self._dil_amp()[mask] * a[cells] - val)
         ncell = self.sampler.xsec_flat.size
         n_c = np.bincount(self.cell, minlength=ncell).astype(float)
         r_sum = np.bincount(cells, weights=r, minlength=ncell)
@@ -440,7 +526,7 @@ class RecoResponse:
         effs = reco.per_fill_acceptance(phi_eff, len(categories))
         dphi = (edges[1:] - edges[:-1]) / (2.0 * np.pi)
         we = (self.w * self.eff)[mask]
-        dil = self.dil[mask]
+        dil = self._dil_amp()[mask]
         cells = self.cell[mask]
         out = np.empty((len(categories), edges.size - 1))
         for f, (cat, eff) in enumerate(zip(categories, effs)):
@@ -997,9 +1083,10 @@ def measure_coherent(cresp, n_produced, plan, tlo, thi, a_e, a_t_func,
                      a_m=0.0, u1=0.0, u2=0.0, kappa=0.0, n_alpha=12,
                      n_beta=24, rng=None, poisson=True, responses=None,
                      lumi_assumed=None, u_coeffs_assumed=None,
-                     with_sin=False, a_e_s=0.0, a_t_s_func=None, a_m_s=0.0):
+                     with_sin=False, a_e_s=0.0, a_t_s_func=None, a_m_s=0.0,
+                     fit="ratio", u_iter=5):
     """One two-azimuth pseudo-measurement of a reco t bin: expected 2-D
-    counts per spin state -> Poisson -> reco.harmonic_ratio_fit_2d with
+    counts per spin state -> Poisson -> the two-azimuth harmonic fit with
     the acceptance-weighted beta basis from the same response
     (cresp.basis_means).
 
@@ -1012,7 +1099,30 @@ def measure_coherent(cresp, n_produced, plan, tlo, thi, a_e, a_t_func,
                        which is what a real analysis has.
       `lumi_assumed`   luminosity fractions the analysis believes.
       `u_coeffs_assumed`  (u1, u2) the analysis subtracts, if not the
-                       generated ones.
+                       generated ones; the string "in-situ" fits them
+                       from the spin-averaged counts of the same data
+                       instead (see below).
+
+    `fit` selects the estimator: "ratio" (default, and therefore every
+    published number) is the bin-wise spin-state ratio inverted for the
+    modulation and fitted by weighted LSQ, `reco.harmonic_ratio_fit_2d`;
+    "likelihood" is the acceptance-profiled Poisson likelihood,
+    `reco.harmonic_likelihood_fit_2d`, which is unbiased at any count and
+    is what the sparse |t| bins want (plans/08 A12).  The two share the
+    basis, the assumptions and the systematics exactly.
+
+    `u_coeffs_assumed="in-situ"` measures (u1, u2) from the spin-averaged
+    counts against the response's own acceptance shape
+    (`reco.unpolarized_insitu_fit_2d`, whose docstring states the
+    assumption: with a free per-bin acceptance u is not identifiable, so
+    an in-situ u NECESSARILY uses the acceptance MC), alternates it with
+    the harmonic fit `u_iter` times (the coupling is weak -- Pbar T is
+    ~0.03 against u ~ 0.05 -- so the pair converges by a factor ~40 per
+    round and five rounds reach machine precision on exact counts), and
+    propagates cov(u1, u2) into the returned harmonic covariance and
+    errors through the numerical Jacobian dA/du.  The extra keys are then
+    "u_insitu", "u_cov", "u_err", "u_fit", "cov_stat", "cov_u" and
+    "u_jacobian", and "cov" / "err_*" carry statistics AND the in-situ u.
     """
     rng = rng or np.random.default_rng(20260824)
     ae = np.linspace(0.0, 2.0 * np.pi, n_alpha + 1)
@@ -1031,12 +1141,62 @@ def measure_coherent(cresp, n_produced, plan, tlo, thi, a_e, a_t_func,
     counts = rng.poisson(mu) if poisson else mu
     bm = cresp.basis_means(tlo, thi, be)
     lum = frac if lumi_assumed is None else list(lumi_assumed)
-    u_ass = (u1, u2) if u_coeffs_assumed is None else tuple(u_coeffs_assumed)
-    fit = reco.harmonic_ratio_fit_2d(counts, lum, pzz, ae, be,
-                                     u_coeffs=u_ass, beta_means=bm,
-                                     with_sin=with_sin)
-    fit["beta_means"] = bm
-    fit.update({"counts": counts, "expected": mu, "alpha_edges": ae,
+    try:
+        fitter = {"ratio": reco.harmonic_ratio_fit_2d,
+                  "likelihood": reco.harmonic_likelihood_fit_2d}[fit]
+    except KeyError:
+        raise ValueError("fit must be 'ratio' or 'likelihood', not %r"
+                         % (fit,)) from None
+
+    def _fit_at(u_ass):
+        return fitter(counts, lum, pzz, ae, be, u_coeffs=u_ass,
+                      beta_means=bm, with_sin=with_sin)
+
+    insitu = isinstance(u_coeffs_assumed, str)
+    if insitu and u_coeffs_assumed != "in-situ":
+        raise ValueError("u_coeffs_assumed must be a (u1, u2) pair, None, "
+                         "or the string 'in-situ', not %r"
+                         % (u_coeffs_assumed,))
+    if not insitu:
+        u_ass = ((u1, u2) if u_coeffs_assumed is None
+                 else tuple(u_coeffs_assumed))
+        out = _fit_at(u_ass)
+    else:
+        # what an analysis takes from its acceptance Monte Carlo: the
+        # spin-averaged shape at u = 0, P_zz = 0, normalization free
+        eps_mc = cresp.expected_counts_2d(
+            n_produced, [0.0], [1.0], tlo, thi, ae, be, 0.0,
+            lambda t: np.zeros_like(np.asarray(t, dtype=float)))[0]
+        u_ass, out, ufit = (0.0, 0.0), None, None
+        for _ in range(max(1, int(u_iter))):
+            out = _fit_at(u_ass)
+            ufit = reco.unpolarized_insitu_fit_2d(
+                counts, eps_mc, lum, pzz, ae, be, harmonics=out,
+                beta_means=bm, with_sin=with_sin)
+            u_ass = (ufit["u1"], ufit["u2"])
+        out = _fit_at(u_ass)
+        cols = (["const", "a_e", "a_t", "a_m"]
+                + (["a_e_s", "a_t_s", "a_m_s"] if with_sin else []))
+        jac = np.zeros((len(cols), 2))
+        for j in range(2):
+            h = max(1e-4, 0.25 * np.sqrt(ufit["cov"][j, j]))
+            step = np.zeros(2)
+            step[j] = h
+            hi = _fit_at(tuple(np.asarray(u_ass) + step))
+            lo = _fit_at(tuple(np.asarray(u_ass) - step))
+            jac[:, j] = [(hi[c] - lo[c]) / (2.0 * h) for c in cols]
+        cov_u = jac @ ufit["cov"] @ jac.T
+        out["cov_stat"] = out["cov"]
+        out["cov_u"] = cov_u
+        out["cov"] = out["cov"] + cov_u
+        err = np.sqrt(np.diag(out["cov"]))
+        for i, c in enumerate(cols):
+            out["err_" + ("const" if c == "const" else c[2:])] = err[i]
+        out.update({"u_insitu": (ufit["u1"], ufit["u2"]), "u_cov": ufit["cov"],
+                    "u_err": (ufit["err_u1"], ufit["err_u2"]),
+                    "u_fit": ufit, "u_jacobian": jac})
+    out["beta_means"] = bm
+    out.update({"counts": counts, "expected": mu, "alpha_edges": ae,
                 "beta_edges": be, "n": float(mu.sum()),
                 "truth": cresp.truth_reference(tlo, thi, a_e, a_t_func, a_m)})
-    return fit
+    return out

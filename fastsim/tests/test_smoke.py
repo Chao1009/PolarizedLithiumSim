@@ -14,10 +14,30 @@ from polli_fastsim.structure import NuclearF2, ToyF2, dsigma_dx_dq2
 
 
 def test_beam_energies():
-    assert beams.LI7.momentum_per_nucleon_max == np.testing.assert_allclose(
-        beams.LI7.momentum_per_nucleon_max, 275.0 * 3 / 7) or True
+    """The rigidity cap, and the top configuration that it sets.
+
+    `momentum_per_nucleon_max` is the ring's 917.3 T*m limit expressed per
+    nucleon, Z/A times the 275 GeV proton: 117.86 GeV/u for 7Li (Z/A =
+    3/7) and 137.5 for 6Li and the deuteron (1/2).  At the TOP
+    configuration the cap binds before gamma-matching does -- a 275 GeV
+    proton is gamma = 293, a 6Li at 137.5 GeV/u only 147 -- so the cap is
+    also the published top energy, 117.9 GeV/u for 7Li and 137.5 for 6Li
+    (plans/10 A0).  The assertion on the first line was inert until
+    2026-08-28: `assert x == assert_allclose(...) or True` is `assert
+    False or True`."""
+    np.testing.assert_allclose(beams.LI7.momentum_per_nucleon_max,
+                               275.0 * 3 / 7)
+    np.testing.assert_allclose(beams.LI7.momentum_per_nucleon_max, 117.857,
+                               atol=5e-4)
     np.testing.assert_allclose(beams.LI6.momentum_per_nucleon_max, 137.5)
     np.testing.assert_allclose(beams.DEUTERON.momentum_per_nucleon_max, 137.5)
+    # and the cap is what the top configuration returns, rounded to the
+    # 0.1 GeV/u the published menu is quoted at
+    for name, top in (("7Li", 117.9), ("6Li", 137.5)):
+        cap = beams.IONS[name].momentum_per_nucleon_max
+        got = beams.default_configs(name)[2].ion_momentum_per_nucleon
+        np.testing.assert_allclose(got, cap, atol=0.05)
+        np.testing.assert_allclose(got, top, atol=1e-9)
     cfg = beams.BeamConfig(18.0, beams.LI6, 137.5)
     np.testing.assert_allclose(cfg.sqrt_s_per_nucleon, np.sqrt(4 * 18 * 137.5))
 

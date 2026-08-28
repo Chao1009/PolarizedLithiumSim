@@ -31,7 +31,7 @@ number that run produced.
 **Fully reproducible on one Linux box, no accounts, no licences.**
 Everything in `fastsim/` and `evgen/`; the PYTHIA 8 hadronic final state;
 the BeAGLE e+d control study (the samples stream from a public xrootd
-door); the ePIC far-forward acceptance scans; all three reports.  That is
+door); the ePIC far-forward acceptance scans; all five reports.  That is
 every published number except the four cases below.
 
 **Not reproducible here, and honestly so.**
@@ -41,7 +41,7 @@ every published number except the four cases below.
 | BeAGLE breakup of A = 6, 7 | BeAGLE links FLUKA, whose licence is personal and per-user (`tools/beagle/README.md`) | the cluster-IA model of `polli_fastsim/spectator.py`, whose tail is *calibrated* against the official BeAGLE e+d sample (§5.2) — and found wanting, which is the result |
 | ePIC calorimeter noise/threshold floor at Σ_h ≈ 0.2–0.5 GeV | an ePIC design number nobody outside the collaboration has (plans/04 #21) | a noise scan, 0 → 25 → 50 → 100 MeV, which brackets it (§4.3) |
 | the backward-disk angular resolution | same (plans/04, F3) | the repository's placeholder table, flagged as such everywhere it is used |
-| radiative corrections | work package WP4, not written | nothing; the affected claims say so |
+| the TENSOR-sector radiative correction | never calculated by anybody (plans/05 §5.5, plans/04 #10); an unpolarized QED study does not bound a tensor one | nothing, and the affected claims say so.  The *unpolarized* collinear-ISR migration IS reproducible here — `--isr`, §4.3 and §8 |
 
 **Reproducible but not bit-for-bit.**  Monte-Carlo results carry a seed
 and repeat exactly on the same machine; across machines and NumPy
@@ -167,13 +167,13 @@ automatically.
 ## 2 · The five-minute check: the test suites
 
 ```bash
-cd evgen   && python3 -m pytest tests/ -q     # 225 passed, ~40 s
-cd fastsim && python3 -m pytest tests/ -q     # 62 passed, ~6 s
-python3 tools/consistency_check.py --verbose  # 22 checks, whole repository
+cd evgen   && python3 -m pytest tests/ -q     # 276 passed, ~46 s
+cd fastsim && python3 -m pytest tests/ -q     # 81 passed, ~11 s
+python3 tools/consistency_check.py --verbose  # 23 checks, whole repository
 ```
 
-282 tests, all of which run without the PDF grids except the two in
-`fastsim/tests/test_grids.py`, which skip.  These are not smoke tests:
+357 tests, all of which run without the PDF grids except three of the four
+in `fastsim/tests/test_grids.py`, which skip.  These are not smoke tests:
 they pin physics identities against independent constructions — the
 spin-1 cross section against an explicit density-matrix trace, the
 covariant azimuth against a boost-and-rotate construction of the
@@ -218,10 +218,10 @@ and the legacy proton-derived 73 μrad for reproduction.  Expected at the
 β = 0.30 central short-range scale, 5 × 41 / 10 × 100 / 18 × 275:
 
 ```
-6Li α-tag   YR high-acceptance  0.017 / 0.015 / 0.017    tagging optics  0.353 / 0.273 / 0.281    legacy 73 μrad  0.204 / 0.029 / 0.019
-6Li d-tag   YR high-acceptance  0.078 / 0.062 / 0.073    tagging optics  0.55 / 0.49 / 0.50
-7Li α-tag   YR high-acceptance  0.967 / 0.967 / 0.973    tagging optics  0.986 / 0.990 / 0.991
-7Li t-tag   YR high-acceptance  0.033 / 0.004 / 0.006
+6Li α-tag   YR high-acceptance  0.017 / 0.015 / 0.016    tagging optics  0.353 / 0.273 / 0.281    legacy 73 μrad  0.167 / 0.025 / 0.018
+6Li d-tag   YR high-acceptance  0.078 / 0.061 / 0.068    tagging optics  0.55 / 0.49 / 0.50
+7Li α-tag   YR high-acceptance  0.967 / 0.966 / 0.971    tagging optics  0.986 / 0.990 / 0.991
+7Li t-tag   YR high-acceptance  0.033 / 0.004 / 0.005
 ```
 
 The ⁶Li α is beam-blind (rigidity ratio 0.99813, inside the ±5% near-beam
@@ -230,6 +230,36 @@ envelope at every configuration and what survives is the slice that falls
 below R = 0.95 into the Roman-Pot window; the tagging optics (1/7–1/13 of
 the luminosity) recovers the tail.  §5.2 still matters — the tail is the
 least trustworthy part of the cluster model.
+
+**Two samplers, one channel — read the ⁶Li α numbers with this.**  The
+table above is `spectator.spectator_lab_kinematics`, which carries one
+partial wave per channel (`ClusterChannel.l_wave` = 0 for α–d).  The
+tagged generator behind money plot 4 (`polligen.tagged`) carries the full
+S + D expansion, and the D wave is the whole difference: its S-wave radial
+*is* `spectator.momentum_density`, ⟨k⟩ = 0.1071 GeV/c in both, while the
+D wave is hard at ⟨k⟩ = 0.2778 and at P_D = 0.0867 pulls the channel mean
+to 0.1219 and the off-rigidity R < 0.95 slice from 1.5% to 2.5%.  Set
+`p_d = 0` and the two agree quantile by quantile
+(`test_boost_matches_fastsim_spectator`).  So the ⁶Li α tag at the Yellow
+Report optics is 1.5–1.7% on the pure spectator model and 2.5–2.9% on the
+tagged one, and neither is wrong — the D wave is not an optional tail, it
+*is* the tensor observable (with P_D = 0 the α–d density is m-independent
+and A_zz^tag vanishes identically), so the tagged observables are quoted
+on the S + D spectrum and this table on the S-wave one.  For ⁷Li the two
+densities are identical (both pure P wave), and the 0.6 points by which
+the table's 0.9674 at 5 × 40.8 exceeds `tagged_polarimetry_7li.py`'s
+0.9614 is **two different acceptance definitions, not two different
+densities**.  This table is `1 - lost`, i.e. any far-forward system; the
+tagged script's mask is the Roman Pots alone (route 1 | 4), and at
+5 × 40.8 the B0 carries 1.1% of the ⁷Li α.  Like for like, the pure
+model's Roman-Pot tag is 0.9568 / 0.9668 / 0.9721, and restricted to
+k ≤ 1.2 GeV/c where the tagged model's momentum grid ends it is
+0.9626 / 0.9683 / 0.9736 against the tagged sampler's
+0.9614 / 0.9676 / 0.9726 — 0.1 point at every configuration.  (The grid
+truncation alone is worth +0.6 point at 5 × 40.8 and +0.2 at the other
+two on the Roman-Pot mask, +0.1 uniformly on `1 - lost`; the B0 fraction
+is 0.0000 at 10 × 99.5 and 18 × 117.9, where the two definitions
+coincide.)  `tagged_polarimetry_7li.py` now prints both definitions.
 
 ### 3.3 The July money-Δ production, and the R that changes it
 
@@ -313,13 +343,74 @@ Monte-Carlo sample takes `--seed`.
 cd evgen
 python3 scripts/phase_space_bins.py        --outdir .
 python3 scripts/closure_fom.py             --outdir .    # estimator closure vs the analytic FOM
-python3 scripts/money_tagged_azz.py        --outdir . --events 400000
-python3 scripts/tagged_polarimetry_7li.py  --outdir .
+python3 scripts/money_tagged_azz.py        --outdir . --events 400000   # 3 s, money plot 4
+python3 scripts/tagged_polarimetry_7li.py  --outdir .                  # 3 s
 ```
 
 `closure_fom.py` is the one to run if you doubt the generator: it
 compares the spread of pseudo-experiments against the analytic error
 formulas over ~65 x bins.
+
+The two tagged scripts take `--config {0,1,2}` and `--optics
+{menu,legacy,high-acceptance,high-divergence,tagging}` since 2026-08-28
+(plans/09 B2, B3); `menu`, the default, is the Yellow Report
+high-acceptance optics of that configuration plus the lithium tagging
+optics with its luminosity fraction, and `legacy` reproduces the retired
+proton-derived 73/164 μrad pair.  The published figures are the DEFAULT
+combination, `--config 1 --optics menu`; any other combination writes
+`money_tagged_azz_6Li_<key>_<optics>.png` /
+`tagged_polarimetry_7Li_<key>_<optics>.png`, so no exploratory run —
+`--optics legacy` at the default configuration included — can overwrite
+them.
+
+**Money plot 4 at 10 × 99.5** (`--events 400000`, seed 20260713).  The α
+tag is 0.0250 at the Yellow Report optics against 0.3046 at the tagging
+optics — but the tagging optics runs at L/L_HA = 1/13.3, so in tagged
+events per year the tagging optics costs 8% here (acc × L = 0.0250 vs
+0.0230), which is the worst of the three configurations.  What the 8%
+buys is the REACH, and that is the result: the median accepted
+spectator momentum is 0.322 GeV/c at the Yellow Report optics with
+**nothing at all below k = 0.15 GeV/c**, against 0.162 GeV/c with 44%
+below 0.15 at the tagging optics (0.348/0.322/0.333 and
+0.145/0.162/0.161 GeV/c at 5 × 41 / 10 × 100 / 18 × 275; the unfolded
+sample has median 0.093 and 74% below 0.15).  The rate trade is even or
+better at the other two: acc × L/L_HA is 0.0285 → 0.0540 at 5 × 41,
+0.0250 → 0.0230 at 10 × 100 and 0.0267 → 0.0330 at 18 × 275, so at two
+of the three configurations the tagging optics gains the reach and the
+rate together, and pays for it only at 10 × 100.  At every published optics
+the ⁶Li α tag admits only the high-k tail; the tagging optics is what
+turns money plot 4 from a one-point measurement into a curve.
+
+The right panel's coloured curves are the truth weighted by each optics'
+own θ_k acceptance (`tagged.acceptance_weights`,
+`tagged.azz_tensor_curve`), and that is what the markers measure: at
+k ≈ 0.325 GeV/c the folded A_zz is +0.428 against a weighted truth of
++0.455 at the Yellow Report optics and −0.083 against −0.098 at the
+tagging optics, while the θ_k = 90° curve — drawn as a grey reference —
+says −0.482 at both.  The published version before this round overlaid
+that 90° curve alone, on samples whose ⟨|cos θ_k|⟩ is 0.79 (the
+off-rigidity window slice, longitudinal) or 0.40 (the near-beam tail,
+transverse); its ±0.5 swing between two optics at k ≈ 0.3 GeV/c was the
+envelope, not the wave function.  Closure: the residual is |ΔA_zz| ≤
+0.018 in every populated bin at both optics, which at the figure's own
+4 × 10⁵ events is within 1.4σ (Yellow Report) and 2.2σ (tagging).  At
+`--events 8e6` the errors fall to 0.003–0.03 and one bin, k = 0.175 at
+the tagging optics, reads 3.3σ on the same residual: that is the bin in
+which the acceptance turns on — nothing at all is accepted below
+k = 0.189 GeV/c at the Yellow Report optics — so the truth at the bin
+*centre* is not what the bin-averaged marker measures.  Averaged over the
+bin as the marker is, every populated bin is within 1.4σ at 8 × 10⁶ too.
+
+**⁷Li polarimetry at 10 × 99.5** (`--events 300000`).  Nothing moves, and
+that is the deliverable: the Roman-Pot tag is 0.9676 at the Yellow Report
+optics against 0.9916 at the tagging optics, the folded ⟨P₂⟩ slope
+−0.1947 and −0.1964 against the analytic −0.2000 (the retired 73 μrad
+gave −0.1929), and the median δA_∥ 0.01150 against 0.01138 *at equal
+generated statistics*.  At equal luminosity the
+tagging optics multiplies every ⁷Li error bar by 2.83 / 3.87 / 3.15 at
+5 × 41 / 10 × 100 / 18 × 275: ×1.02 in acceptance for ×1/8–1/15 in
+luminosity is a factor 8–15 net loss, the exact inverse of ⁶Li.  ⁶Li and
+⁷Li want different machine optics and are different runs.
 
 ### 4.2 The cos 2φ money plots, truth level
 
@@ -342,12 +433,46 @@ optics of Report 1 §6.1 at the low configuration, with the pots following
 the 10σ envelope in both planes (`--optics tagging` sets the divergence,
 the cutout and the luminosity from `reco.tagging_optics_point`).  Without
 it the script runs the pre-2026-08-27 legacy geometry, which is kept for
-reproduction only.  `--ensemble 20` repeats the one-year pseudo-experiment
+reproduction only.  The published stem `money_cos2phi_coherent_reco_6Li.png`
+belongs to that one combination — `--config 0 --optics tagging` with the
+default ratio fit, the assumed (u₁, u₂) and the published |t| edges; any
+other run appends its keys, so none of the exploratory commands below can
+overwrite money plot 6R.  `nearbeam_reach_gain.py` carries the same guard
+on `--fit` (both since 2026-08-28).  `--ensemble 20` repeats the one-year pseudo-experiment
 and prints the bias test of Table 5; `--exact` switches the Poisson draw
 off for the systematic scans; `--config 1/2` gives the other two
 configurations.
 
-Three switches change what these mean.
+**`--fit likelihood`** replaces the bin-wise spin-state ratio by the
+acceptance-profiled Poisson likelihood (`reco.harmonic_likelihood_fit_2d`,
+plans/08 A12): the same model and the same template basis, with the
+per-bin acceptance profiled out, which makes the estimator exactly the
+conditional multinomial given the bin totals and therefore unbiased at any
+occupancy.  `ratio` is the default and reproduces every published number
+bit for bit.  Run it with `--ensemble` to see the difference:
+
+```bash
+python3 scripts/money_cos2phi_coherent_reco.py --config 0 --optics tagging \
+        --n-mc 6000000 --ensemble 20 --fit likelihood --outdir .
+```
+
+**`--u-in-situ`** measures (u₁, u₂) from the spin-averaged counts of the
+same data against the response's acceptance shape instead of assuming the
+ZEUS values, and propagates their covariance into the harmonic errors
+(plans/08 A3).  With the per-bin acceptance free, u is not identifiable at
+all, so this necessarily uses the acceptance MC — the point is that ZEUS
+becomes the prior it is.  The fitted pair, its error and the term it
+propagates into a_e are printed for **every** |t| bin, under that bin's
+summary line.
+
+**`--t-edges`** replaces the published reconstructed |t| binning
+`0.05,0.08,0.12,0.17,0.25` by any increasing list, which is how the
+window below 0.05 GeV² that the published binning discards is priced
+(plans/08 §8.4).  The summary ends with the quadrature combination of
+δa_e over the bins that survived — a_e is one constant across |t|, so its
+errors combine, and a_t is not.
+
+Three further switches change what the inclusive commands mean.
 
 **`--y-source hfs --hfs-sample <p.npz> <n.npz>`** replaces the 25%
 Gaussian stand-in for the hadronic y by a real hadronic final state
@@ -380,6 +505,48 @@ python3 scripts/money_cos2phi_reco.py --unfold-scan --outdir .
 **`--syst-scan`** runs the detector nuisances (electron energy scale,
 hadronic-resolution mismatch with common random numbers, ε_eID η tilt,
 the Yellow Report EMCal table) and prints their effect on Δ̂.
+
+**`--isr`** is the radiative-correction bound (plans/07 WP4, Report 2 §7).
+It rebuilds the response with collinear leading-log initial-state
+radiation switched on — `polligen/radiative.py` draws the radiated
+fraction z from its own random stream, so the ISR-on and ISR-off
+responses sit on identical pseudo-events — and prints purity, efficiency
+and the shift of Δ̂ an ISR-free bin-centering would leave, against the 5%
+gate, plus the z spectrum and the five-method comparison table.  The hook
+is off everywhere else, so no published number moves.
+
+```bash
+S=20260824,20260925,20261026,20261127,20261228,20270129,20270302,20270403
+python3 scripts/money_cos2phi_reco.py --isr --isr-seeds $S \
+        --n-mc-per-cell 1600 --outdir .
+python3 scripts/money_cos2phi_reco.py --isr --isr-seeds $S --isr-gen-q2min 0.05 \
+        --n-mc-per-cell 1600 --outdir .
+python3 scripts/money_cos2phi_reco.py --isr --isr-seeds $S --isr-empz 0.85 \
+        --n-mc-per-cell 1600 --outdir .
+```
+
+**`--isr-seeds` is not optional for a quoted number.**  One draw of the
+response scatters by 4–14% of the bound: over the eight seeds above the
+seed-to-seed standard deviation is 0.087 / 0.048 / 0.073 / 0.051
+percentage points and the individual draws span 0.51–0.75, 0.43–0.57,
+0.80–1.01 and 1.15–1.31% at the four sweet spots, so the default seed's
+third spot sits 1.8 σ below the mean.  The published bound is therefore
+the mean over that list and the printed `+-` is the standard error of the
+mean; the run also prints the spread.  Plain `--isr` at the default seed
+prints a single draw, which is what §8 records as the single-command
+value.
+
+The first run is the bound with the published generator window: Δ̂ biased
+by +0.62 ± 0.03, +0.50 ± 0.02, +0.94 ± 0.03 and +1.22 ± 0.02% at the four
+sweet spots.  `--isr-gen-q2min` opens the generator window so that events
+below it can radiate into the analysis bins — the feed-in the published
+window truncates — and the worst spot then reads 1.87, 2.81, 2.26 and
+2.34% at 0.35, 0.15, 0.05 and 0.02 GeV², i.e. the bound saturates in a
+1.8–2.8% band rather than at one value, and ≤ 2.9% is what the gate
+should be read against.  `--isr-empz 0.85` adds the HERA-style E − p_z
+window on both members of the pair and brings it to ≤ 0.25% while keeping
+87% of the non-radiative rate; the chain does not apply that cut, so it
+is a mitigation and not the bound.
 
 ### 4.4 The hadronic-final-state resolution
 
@@ -426,6 +593,13 @@ against the near-beam envelope, for the circular, square and slot
 cutouts.  Compare its answer with the *measured* ePIC aperture of §5.3 —
 they disagree, and that disagreement is an open item (plans/04 #20).
 
+The last point of `--err-cuts` (0.60 GeV) is set by the response Monte
+Carlo, not by data: it tags 18–27 recoils a year, and at `--n-mc 150000`
+the harmonic design in its |t| window loses rank.  Since 2026-08-28 that
+point is reported and dropped — with the recoil count and the guard's own
+message, and a note on panel (c) — instead of aborting the figure; raise
+`--n-mc` to recover it.
+
 ### 4.5b The tagging optics, priced (Report 1 §6.1)
 
 ```bash
@@ -453,13 +627,15 @@ equal luminosity; both planes de-squeezed gives a fifth of the yield at
 
 ```bash
 python3 scripts/eic_beam_figures.py       --outdir .   # 2 s
-python3 scripts/nearbeam_aperture_scan.py --outdir .   # 3 s
+python3 scripts/nearbeam_aperture_scan.py --outdir .   # 7 s
+python3 scripts/nearbeam_aperture_scan.py --isotope 7Li --outdir .   # 7 s
 python3 scripts/nearbeam_reach_gain.py    --outdir .   # 2 s
 python3 scripts/nearbeam_sensor_budget.py --outdir .   # 1 s
 python3 scripts/nearbeam_zid_power.py     --outdir .   # 48 s
+python3 scripts/nearbeam_two_hit.py       --outdir .   # 27 s
 ```
 
-Three questions, three scripts, all on the per-configuration Yellow
+Four questions, four scripts, all on the per-configuration Yellow
 Report divergences of plans/10 since 2026-08-28. The first prices *every*
 near-beam aperture — coherent tagged fraction and α-tag acceptance against
 the horizontal half-width in angle, per configuration, with three markers:
@@ -472,22 +648,43 @@ and with the pots following the envelope, and reports what the
 be the thing that delivers a closer approach: energy deposits in a 12 nm
 NbN film, the hot-spot firing-threshold model of charge identification
 (Figure 3 of the report), the sizing strip at the tagging envelope, and
-the channel count at each available granularity.
+the channel count at each available granularity. The fourth (plans/09 B4,
+2026-08-28) samples BOTH fragments of a ⁶Li → α + d breakup from one
+relative momentum (`spectator.breakup_lab_kinematics`) and asks what hit
+multiplicity is worth against the coherent tag: the 2 × 2 topology per
+optics, the separation at the pot plane in millimetres and in 500 μm
+pixels, and — the result — how often the partner deuteron is there to veto
+an α that faked an intact ⁶Li, scanned against the pot's outer edge. Its
+quantiles come from `--events` breakups (4 × 10⁵) held in memory and every
+COUNT from a chunked pass over `--veto-events` (1.2 × 10⁷), because at the
+Yellow Report optics the α fakes a coherent tag only once in 10³–10⁴
+breakups and a small sample conditions on a handful of events. It
+writes `nearbeam_two_hit_6Li.png`, which no report embeds; Report 4
+Table 5 and plans/09 §9.2 quote its numbers, and
+`tools/consistency_check.py` recomputes the three medians and compares
+them with both documents.
 
 The coherent script also grew `--near-beam-mrad`, which replaces the
 measured *horizontal* aperture and keeps the measured vertical:
 
 ```bash
-python3 scripts/money_cos2phi_coherent_reco.py --config 1 \
-        --rp-aperture measured --cut-scale-x 1.0 --near-beam-mrad 1.8
+python3 scripts/money_cos2phi_coherent_reco.py --config 1 --optics tagging \
+        --rp-aperture measured --cut-scale-x 1.0 --near-beam-mrad 0.17
 ```
 
-(1.8 mrad is the Yellow Report high-acceptance envelope at 10 × 100; the
-published 6R is `--optics tagging`, §4.3, whose pots follow the 0.17 mrad
-tagging envelope.)  `--cut-scale-x 1.0` matters. The default 2.5 comes from the
-pre-measurement belief in a wide horizontal slot, and on top of a
-measured geometric aperture it imposes a 25σ horizontal retraction that
-binds *before* the geometry does — hiding the whole effect.
+0.17 mrad is the tagging envelope at 10 × 100, and this run returns all
+four |t| bins (acc 0.315, N_tag 2.93 × 10⁶/yr).  Asking for the Yellow
+Report envelope instead — `--config 1 --rp-aperture measured
+--cut-scale-x 1.0 --near-beam-mrad 1.8`, at 1.8 mrad — returns nothing:
+all four bins are dropped for zero accepted recoils and the script exits
+non-zero.  That is not a defect of the switch but the result of §2 of
+Report 4 restated at the reconstructed level — at the Yellow Report
+optics the coherent channel has no acceptance at all — and it is why the
+published 6R is `--optics tagging` (§4.3).  `--cut-scale-x 1.0` matters
+in either case: the default 2.5 comes from the pre-measurement belief in
+a wide horizontal slot, and on top of a measured geometric aperture it
+imposes a 25σ horizontal retraction that binds *before* the geometry
+does — hiding the whole effect.
 
 ---
 
@@ -635,12 +832,22 @@ singularity exec $SIF python3 tools/fullsim/ff_gun_hits.py gun_li6.edm4hep.root 
     --per-event --index li6.index --positions
 ```
 
-Use the **matching optics file** for the beam energy — the ⁶Li momentum
-must put it at that ring's reference rigidity:
-`epic_craterlake_5x41.xml` with `--p-per-nucleon 20.5`,
+Use the **matching optics file** for the beam energy.  The number here
+is a *lattice-matching momentum*, not a fill energy: the gun must put the
+⁶Li at the reference rigidity the chosen beamline file was built for, so
+that the transport is the one the file describes.  For the two lower
+files that rigidity corresponds to 20.5 and 50 GeV/u — the
+rigidity-scaled pair that plans/10 A0 retired as ⁶Li *beam* energies in
+favour of the γ-matched 40.8 and 99.5 GeV/u — and for the top file to
+137.5, where the two conventions coincide because the ring rigidity caps
+⁶Li there.  So: `epic_craterlake_5x41.xml` with `--p-per-nucleon 20.5`,
 `epic_craterlake_10x100.xml` with 50, `epic_craterlake_18x275.xml` with
 137.5.  Plain `epic_craterlake.xml` loads the 5×41 beamline fields, which
-sends 275-optics momenta straight to the ZDC.
+sends 275-optics momenta straight to the ZDC.  The angular edges this
+scan measures are geometric and independent of that choice; plans/04 #20
+converts them into p_T at the γ-matched 40.8 / 99.5 / 137.5 GeV/u, which
+is where the lithium fill actually sits (0.49 / 0.81 / 0.85 GeV rather
+than 0.25 / 0.41 / 0.85).
 
 Expected: no Roman-Pot hits below |θ_x| ≈ 1.03 mrad at 18 × 275, hits
 from 1.09 mrad at φ = 0 and 180°, and nothing from a *vertical* kick
@@ -690,13 +897,14 @@ trust anything downstream of it.
 |---|---|---|
 | CT18NLO F₂ᵖ(0.1, 10) | see §1.3 | 0.4274 |
 | R1998 at (0.1, 5) | `python3 -c "from polli_fastsim.structure import r1998; print(r1998(0.1,5))"` | 0.1844 |
-| ⁶Li α-tag, β = 0.30 | `scripts/tagging_acceptance.py` | YR high-acceptance 0.017 / 0.015 / 0.017, tagging optics 0.353 / 0.273 / 0.281, legacy 73 μrad 0.204 / 0.029 / 0.019 (5 × 41 / 10 × 100 / 18 × 275) |
-| ⁷Li α-tag, β = 0.30 | same | 0.967 / 0.967 / 0.973 (YR HA), 0.986 / 0.990 / 0.991 (tagging) |
+| ⁶Li α-tag, β = 0.30 | `scripts/tagging_acceptance.py` | YR high-acceptance 0.017 / 0.015 / 0.016, tagging optics 0.353 / 0.273 / 0.281, legacy 73 μrad 0.167 / 0.025 / 0.018 (5 × 41 / 10 × 100 / 18 × 275) |
+| ⁷Li α-tag, β = 0.30 | same | 0.967 / 0.966 / 0.971 (YR HA), 0.986 / 0.990 / 0.991 (tagging) |
+| … on the tagged generator instead | `evgen/scripts/tagged_polarimetry_7li.py` | Roman-Pot tag 0.9614 / 0.9676 / 0.9726 (YR HA), 0.9807 / 0.9916 / 0.9920 (tagging); the script also prints `acc(any far-fwd)` = 0.9683 / 0.9676 / 0.9726 and 0.9876 / 0.9916 / 0.9920, which is the definition the row above tabulates.  The two ⁷Li densities are identical (both pure P wave): the 0.6-point gap at 5 × 41 is the B0, which takes 1.1% of the α there and enters `1 - lost` but not the Roman-Pot mask.  Like for like and inside the tagged model's k ≤ 1.2 GeV/c grid the pure model gives 0.9626 / 0.9683 / 0.9736 — 0.1 point.  For ⁶Li the two differ by the D wave — §4.1 |
 | A_bag triple (frozen R) | `scripts/money_delta_20260729.py --emit-a-bag-reference` | −0.317767 / −0.310041 / −0.296750 |
 | A_bag triple (published R) | `… --r-model r1998 --emit-a-bag-reference` | −0.237040 / −0.235825 / −0.234926 |
 | L₅σ (frozen R) | `scripts/money_delta_realistic.py --configs low,mid,top` | 135.31 / 131.26 / 274.64 fb⁻¹/u (script-internal pre-2026-08-27 configs at 27.5 / 50 / 137.5 GeV/u, superseded by plans/10; only TOP is a machine configuration) |
 | L₅σ (published R) | `… --r-model r1998 --configs low,mid,top` | 67.51 / 65.80 / 155.12 fb⁻¹/u (same caveat) |
-| L₅σ toy, current energies | `scripts/money_delta.py` | 16.7 / 16.3 / 21.8 fb⁻¹/u at Δ/F₁ = 10⁻³, P_zz = 0.8 |
+| L₅σ toy, current energies | `scripts/money_delta.py` | 16.7 / 16.3 / 21.8 fb⁻¹/u at Δ/F₁ = 10⁻³, P_zz = 0.8 (16.719 / 16.332 / 21.811 to the precision the 2026-08-28 min-events correction is pinned at, `tests/test_money_delta_mask.py`) |
 
 ### Event generator
 
@@ -714,15 +922,32 @@ trust anything downstream of it.
 | … low config | `--config 0` | 0.39 / 0.23 / 0.24 / 0.11 |
 | … top config | `--config 2` | 0.23 / 0.19 / 0.21 / 0.18 |
 | unfolding model dependence (moment_B prior) | `scripts/money_cos2phi_reco.py --unfold-scan` | bin-by-bin (−4.1, +8.0, −5.5, +4.9)% → folded (−1.5, −1.8, −0.3, +0.5)% |
-| coherent tagged fraction | `scripts/coherent_optics_scan.py` | 32% / 3.0% / 4×10⁻⁵ / 2×10⁻⁷ at 0.10 / 0.22 / 0.45 / 0.60 GeV |
+| collinear-ISR migration bound (plans/07 WP4) | `scripts/money_cos2phi_reco.py --isr --n-mc-per-cell 1600` | one draw at the default seed 20260824: Δ̂ biased by +0.616 / +0.501 / +0.804 / +1.240% at the four sweet spots; ⟨z⟩ = 0.0245, 26.6% of the rate radiates above z = 10⁻⁴, ⟨z\|z>10⁻⁴⟩ = 0.0923, t = 0.0700 at ⟨Q²⟩ = 4.37 GeV²; the covariant azimuth's residual under k → (1−z)k is 2.6×10⁻² rad and fakes cos 2φ′ at 9×10⁻⁸ |
+| … the PUBLISHED bound, averaged over eight response seeds (`$S` below is that list) | `… --isr --isr-seeds $S --n-mc-per-cell 1600`, `S=20260824,20260925,20261026,20261127,20261228,20270129,20270302,20270403` | +0.62 ± 0.03 / +0.50 ± 0.02 / +0.94 ± 0.03 / +1.22 ± 0.02%; purity 0.653 → 0.638, 0.633 → 0.613, 0.679 → 0.659, 0.684 → 0.640; efficiency 0.414 → 0.404, 0.590 → 0.572, 0.374 → 0.369, 0.653 → 0.634 |
+| … with the low-Q² feed-in opened up | `… --isr --isr-seeds $S --isr-gen-q2min 0.05` | +2.26 ± 0.03 / +2.24 ± 0.10 / +1.88 ± 0.07 / +1.88 ± 0.05%.  Worst spot over the window sequence 0.7 → 0.35 → 0.15 → 0.05 → 0.02 GeV²: 1.22 → 1.87 → 2.81 → 2.26 → 2.34%, so the bound saturates in a 1.8–2.8% band and **≤ 2.9%** is what the ≤5% gate is read against |
+| … behind a HERA-style E − p_z window | `… --isr --isr-seeds $S --isr-empz 0.85` | +0.23 ± 0.02 / +0.16 ± 0.02 / +0.22 ± 0.02 / +0.18 ± 0.01%, independent of the generator window; the window keeps 86.9% of the non-radiative selected rate and 82.4% of the radiative one |
+| … through the PYTHIA hadronic final state | `… --isr --isr-seeds $S --y-source hfs --hfs-sample … --hfs-calibrate --n-mc-per-cell 800` | +0.38 ± 0.03 / +0.44 ± 0.02 / +0.46 ± 0.03 / +0.88 ± 0.04% — the bound does not come from the Gaussian y stand-in |
+| coherent tagged fraction | `scripts/coherent_optics_scan.py` | 32% / 3.0% / 4×10⁻⁵ / 2×10⁻⁷ at 0.10 / 0.22 / 0.45 / 0.60 GeV.  The 0.60 GeV point is response-MC-limited (18–27 tagged/yr): at `--n-mc 150000` its harmonic design loses rank, and the point is now reported and dropped rather than aborting the figure |
 | coherent tag at the three half-widths | `scripts/nearbeam_aperture_scan.py` | silicon / YR HA envelope / tagging envelope: 9.8×10⁻⁷ / 7.2×10⁻⁸ / 0.42 (5 × 41), 7.7×10⁻¹⁶ / 6.2×10⁻²⁷ / 0.32 (10 × 100), 1.9×10⁻¹⁷ / 3.9×10⁻¹⁴ / 0.33 (18 × 275) |
-| α tag (routed) at the three half-widths | same | 0.018 / 0.017 / 0.35, 0.015 / 0.015 / 0.27, 0.015 / 0.015 / 0.28 |
-| the chain at the tagging optics | `scripts/nearbeam_reach_gain.py --n-mc 2000000` | pots at the silicon: acc 0, 0 bins at every configuration; pots following: acc 0.41 / 0.31 / 0.32, N_tag 2.5 / 2.9 / 6.0 ×10⁶/yr, 4 of 4 \|t\| bins, δa_t 0.0035–0.018 / 0.0034–0.0135 / 0.0023–0.0151 |
+| ⁶Li α tag (routed) at the three half-widths | same | 0.018 / 0.017 / 0.35, 0.015 / 0.015 / 0.27, 0.015 / 0.015 / 0.28 |
+| ⁷Li α tag at the same three | `… --isotope 7Li` | 0.969 / 0.968 / 0.987 (5 × 41), 0.967 / 0.965 / 0.990 (10 × 100), 0.968 / 0.968 / 0.991 (18 × 275) — flat to three points across the whole 0.05–3 mrad axis, at 1/8.2 / 1/15.3 / 1/10.1 of the luminosity for the tagging point.  Panel (a) stays the coherent intact ⁶Li at either setting: `polligen.coherent` is ⁶Li-specific and a ⁷Li coherent channel is a different amplitude (plans/09 B3, open) |
+| money plot 4: ⁶Li α-tag reach, 10 × 99.5 | `scripts/money_tagged_azz.py --events 400000` | acc 0.0250 (YR HA) vs 0.3046 (tagging, L/L_HA = 1/13.3) — acc × L 0.0250 vs 0.0230, an 8% cost — but median accepted k 0.322 vs 0.162 GeV/c and frac(k < 0.15) 0.000 vs 0.438.  At k ≈ 0.325 GeV/c A_zz = +0.428 (acceptance-weighted truth +0.455) and −0.083 (−0.098); the θ_k = 90° curve says −0.482 at both.  `acc` is the unbinned accepted fraction: 9–11% of the accepted α lie above the 0.6 GeV/c right edge of the panel |
+| … the same at the other two configurations | `… --config 0` / `--config 2` | median accepted k 0.348 / 0.333 GeV/c (YR HA, frac below 0.15 GeV/c = 0.000) against 0.145 / 0.161 with 0.522 / 0.446 (tagging); acc × L/L_HA 0.0285 → 0.0540 and 0.0267 → 0.0330, i.e. the tagging optics gains reach *and* rate at both, and costs rate only at 10 × 100 |
+| ⁷Li polarimetry and tagged EMC, 10 × 99.5 | `scripts/tagged_polarimetry_7li.py` | acc(RP) 0.9676 (YR HA) vs 0.9916 (tagging); ⟨P₂⟩ slope −0.1947 vs −0.1964 against the analytic −0.2000 (legacy 73 μrad: −0.1929); median δA_∥ 0.01150 vs 0.01138 *at equal generated statistics* — the plotted bars are drawn there, and the figure says so.  At equal luminosity the tagging optics multiplies every ⁷Li error bar by 2.83 / 3.87 / 3.15 — a factor 8–15 net loss |
+| the chain at the tagging optics | `scripts/nearbeam_reach_gain.py --n-mc 2000000` | pots at the silicon: acc 0, 0 bins at every configuration; pots following: acc 0.41 / 0.31 / 0.32, N_tag 2.5 / 2.9 / 6.0 ×10⁶/yr, 4 of 4 \|t\| bins, δa_t 0.0035–0.018 / 0.0034–0.0135 / 0.0023–0.0151.  `--fit likelihood` leaves the errors alone (0.0035–0.0187 / 0.0034–0.0137 / 0.0023–0.0152) and moves only the recovered a_t of the sparsest bin, 0.118 → 0.197 against 0.181 injected at 5 × 41 |
 | sizing strip at the tagging envelope | `scripts/nearbeam_sensor_budget.py` | d50 / d90 / d99 = 183 / 504 / 842 μrad (5 × 41), 69 / 194 / 328 (10 × 100), 50 / 141 / 239 (18 × 275); α at 137.5 GeV/u 77 / 269 / 624 |
 | tagging optics, priced | `scripts/tagging_optics.py` | horizontal-only optimum β*_x/β*_x,HA = 49.7 / 175.6 / 89.3, ε = 0.422 / 0.322 / 0.332, L/L_HA = 1/7.1 / 1/13.3 / 1/9.5, N_tag/yr = 2.6×10⁶ / 3.0×10⁶ / 6.1×10⁶, 5σ floor/yr = 1.7 / 2.1 / 1.6% per unit P_zz, shape term 9.3 / 8.3 / 10.7σ/yr |
 | 6R at the tagging optics, 5 × 40.8 | `scripts/money_cos2phi_coherent_reco.py --config 0 --optics tagging --n-mc 6000000 [--ensemble 20]` | σ_θ = 33/380 μrad, cutout 0.33 × 3.8 mrad, acc 0.411, N_tag 2.52×10⁶/yr at L/L_HA = 1/7.1, ⟨cos 2β⟩ = −0.27; a_t 0.0899 ± 0.0035 / 0.118 ± 0.005 / 0.131 ± 0.009 / 0.104 ± 0.018 (1 yr; inj. 0.090 / 0.118 / 0.147 / 0.180), 0.0892 / 0.1202 / 0.1465 / 0.183 at 10 yr; ensemble means 0.0899 / 0.1170 / 0.139 / 0.114 |
-| 6R at the tagging optics, 18 × 137.5 | `… --config 2 --optics tagging --n-mc 6000000` | acc 0.324, N_tag 5.99×10⁶/yr; a_t 0.1005 ± 0.0023 / 0.133 ± 0.003 / 0.177 ± 0.006 / 0.221 ± 0.015 (inj. 0.100 / 0.137 / 0.179 / 0.228) |
+| … the same with the likelihood estimator | `… --ensemble 20 --fit likelihood` | ensemble means 0.0902 / 0.1176 / 0.146 / 0.173 (σ 0.0033 / 0.0038 / 0.0085 / 0.0207) on the same twenty draws.  With `--ensemble 200` (8 min): likelihood 0.0902 / 0.1185 / 0.1477 / 0.1816, pulls of the mean +2.0 / +1.0 / +0.5 / +0.9, spreads 0.0031 / 0.0048 / 0.0091 / 0.0193 against quoted errors 0.0035 / 0.0048 / 0.0086 / 0.0187; ratio 0.0899 / 0.1179 / 0.1414 / 0.1184, pulls +0.4 / −0.7 / −9.0 / −42.1 |
+| … coarser (α, β) bins, same 200 draws | `… --ensemble 200 --n-alpha 8 --n-beta 16` (and `--n-alpha 6 --n-beta 12`) | the sparsest bin's ratio mean rises 0.1184 → 0.1552 → 0.1662 against 0.1803 injected, i.e. −34.3% → −13.9% → −7.8%, at δa_e 0.0139 → 0.0148 → 0.0162 (+17%).  Coarser binning attenuates the bias, it does not remove it |
+| 6R at the tagging optics, 18 × 137.5 | `… --config 2 --optics tagging --n-mc 6000000` | acc 0.324, N_tag 5.99×10⁶/yr; a_t 0.1005 ± 0.0023 / 0.133 ± 0.003 / 0.177 ± 0.006 / 0.221 ± 0.015 (inj. 0.100 / 0.137 / 0.179 / 0.228); ensemble means 0.0998 / 0.1368 / 0.1776 / 0.207 (ratio) and 0.0998 / 0.1372 / 0.1788 / 0.230 (`--fit likelihood`, same draws) |
+| 6R at the tagging optics, 10 × 99.5 | `… --config 1 --optics tagging --n-mc 6000000 --ensemble 20 --fit likelihood` | acc 0.315, N_tag 2.93×10⁶/yr at L/L_HA = 1/13.3; ensemble means 0.0896 / 0.1131 / 0.1369 / 0.1576 against inj. 0.0897 / 0.1136 / 0.1360 / 0.1595 |
+| in-situ (u₁, u₂), tagging optics | `… --config 0 --optics tagging --exact --u-in-situ --n-mc 6000000` | δu₂ = 0.0028 / 0.0040 / 0.0070 / 0.0136 per \|t\| bin at 5 × 40.8 in one year (0.0016 / 0.0026 / 0.0049 / 0.0111 at 18 × 137.5, `--config 2`), i.e. 1.8–15× the ZEUS 1σ of 0.024; the propagated a_e term is 0.00005–0.00063 across the eight bins, negligible against the 0.0016–0.0141 statistical error |
+| \|t\| re-binned below the window | `… --config 0 --optics tagging --exact --n-mc 6000000 --t-edges 0.006,0.017,0.028,0.039,0.05,0.08,0.12,0.17,0.25` | δa_e = 0.0022 / 0.0022 / 0.0026 / 0.0031 in the four added bins, and the printed combination falls from 0.00205 (the four published bins) to 0.00105 over the eight |
 | 6R systematics at 5 × 40.8, exact counts | `… --exact --no-sin --envelope-split 1e-3 / --u2-assumed 0.044 / --rel-lumi-offset 1e-3` | a_t −0.8 / −0.5 / −0.1 / −0.3%; a_e +0.0007 to +0.0009; a_t 0.1% |
+| α + d separation at the pots | `scripts/nearbeam_two_hit.py` | median 38.4 / 18.5 / 15.1 mm (16–84% 17.1–79.4 / 8.2–38.7 / 6.6–32.1) = 77 / 37 / 30 pixels of 500 μm at 5 × 41 / 10 × 100 / 18 × 275; the angular lever alone gives 36.7 / 15.1 / 10.9, the rest is the pot dispersion D = 0.30 m acting on rigidities that move apart with k_z; θ_d/θ_α → 1.987 as k → 0.  `--beta 0.20 / 0.40` moves the medians to 33.6 / 16.2 / 13.2 and 41.7 / 20.1 / 16.4 mm (−12% to +9%) and the veto by less than 0.03 |
+| α + d topology per breakup | same | both fragments recorded 0.0002 / 0.0000 / 0.0003 (YR high acceptance) and 0.287 / 0.216 / 0.223 (tagging); d alone 0.075 / 0.062 / 0.072 and α alone 0.017 / 0.015 / 0.016 (YR); a recorded pair lands inside one 500 μm pixel in 2 × 10⁻⁶ / 1.7 × 10⁻⁴ / 4.1 × 10⁻⁴ of cases at the tagging optics and never at the YR or legacy envelopes |
+| partner-fragment veto | same | P(α fakes a coherent tag) 0.0020 / 0.0001 / 0.0007 (YR) and 0.338 / 0.258 / 0.265 (tagging); of those the partner d is recorded 0.120 ± 0.002 / 0.017 ± 0.004 / 0.245 ± 0.005 (YR, on 2.4 × 10⁴ / 1.4 × 10³ / 8.7 × 10³ fakes) and 0.850 / 0.838 / 0.840 (tagging), falling to 0.00 / 0.31 / 0.56 against a 0.5 mrad outer edge |
 | hot-spot Z-ID thresholds | `scripts/nearbeam_sensor_budget.py` | r_s = 134 / 268 / 402 nm for p,d / α / ⁶Li; at w = 1 µm, I_th/I_c = 0.73 / 0.46 / 0.20 |
 | Z-ID fake rate, 4 planes at 95% eff | `scripts/nearbeam_zid_power.py` | 2.3×10⁻⁵ (8-bit LLR) / 3.1×10⁻⁵ (one bit) / 2.7×10⁻³ (truncated mean) / 5.3×10⁻² (plain sum); 50% fill cannot reach 95% |
 
@@ -791,8 +1016,11 @@ Every entry below is an error we actually hit, with its cause.
 ## 10 · Runtimes
 
 Measured 2026-08-26 on eight cores (Python 3.11.4, numpy 1.25.1), single
-job, warm page cache.  Everything in `fastsim/` and `evgen/` together is
-about eleven minutes.
+job, warm page cache; the PYTHIA-consuming rows, the `fastsim` suite and
+the rows added since were re-measured 2026-08-28, after the sample
+regeneration of §5.1 raised the particle multiplicity 27–36%.  Everything
+in `fastsim/` and `evgen/` together is about sixteen minutes, half of it
+`money_delta_pdfgrid`, `nearbeam_zid_power` and the two PYTHIA rows.
 
 | script | s | script | s |
 |---|---:|---|---:|
@@ -804,19 +1032,22 @@ about eleven minutes.
 | `fastsim/tagging_acceptance` | 3 | `evgen/money_tagged_azz` | 3 |
 | `fastsim/diag_sig2_grid` | 1 | `evgen/tagged_polarimetry_7li` | 3 |
 | `fastsim/coverage_and_stat_maps` | 7 | `evgen/coherent_optics_scan` | 3 |
-| `evgen/nearbeam_aperture_scan` | 3 | `evgen/nearbeam_reach_gain` | 2 |
-| `evgen/tagging_optics` | 3 | `evgen/hfs_acceptance` (PYTHIA) | 16 |
+| `evgen/nearbeam_aperture_scan` | 7 | `evgen/nearbeam_reach_gain` | 2 |
+| `evgen/tagging_optics` | 3 | `evgen/hfs_acceptance` (PYTHIA) | 19 |
 | `evgen/nearbeam_sensor_budget` | 1 | `evgen/nearbeam_zid_power` | 48 |
+| `evgen/nearbeam_two_hit` | 27 | `evgen/eic_beam_figures` | 2 |
 | `fastsim/_check_reco_mask_invariants` | <1 | `evgen/reco_chain_figures` | 13 |
 | `fastsim/money_delta_realistic` | 36 | `evgen/money_cos2phi_reco` | 4 |
 | `fastsim/money_delta_pdfgrid` | **293** | `evgen/money_cos2phi_coherent_reco` | 3 |
 | `fastsim/money_delta_20260715` | 5 | `evgen/hfs_resolution` (toy) | 10 |
-| `fastsim/money_delta_20260720` | 17 | `evgen/hfs_resolution` (PYTHIA) | **64** |
+| `fastsim/money_delta_20260720` | 17 | `evgen/hfs_resolution` (PYTHIA) | **98** |
 | `fastsim/money_delta_20260721` | 40 | `evgen/money_cos2phi_reco --y-source hfs` | 20 |
 | `fastsim/money_delta_20260724` | 24 | `evgen/money_cos2phi_reco --unfold-scan` | 4 |
 | `fastsim/money_delta_20260725` | 21 | `evgen/money_cos2phi_reco --syst-scan` | 10 |
-| `fastsim/money_delta_20260728` | 15 | `evgen` test suite | 30 |
-| `fastsim/money_delta_20260729` | 15 | `fastsim` test suite | 3 |
+| | | `evgen/money_cos2phi_reco --isr --n-mc-per-cell 1600` | 14 |
+| | | `… --isr --isr-seeds` (8 seeds) | 78 |
+| `fastsim/money_delta_20260728` | 15 | `evgen` test suite | 44 |
+| `fastsim/money_delta_20260729` | 15 | `fastsim` test suite | 12 |
 
 The long poles are elsewhere:
 
@@ -827,15 +1058,16 @@ The long poles are elsewhere:
 | generate the 8 M-event PYTHIA production (§5.1) | 12 min, 3 jobs in parallel |
 | stream 20 k BeAGLE e+d events (§5.2) | 2 min |
 | one npsim far-forward scan, 84 events (§5.3) | 70 s geometry + ~1 s/event |
-| build the three reports with PDFs (§6) | 90 s |
+| build the five reports with PDFs (§6) | 90 s when this was measured at three pages; the two added since are not timed |
 
 ---
 
 ## 11 · Provenance
 
-- What each result means, and its caveats: `reports/` (three pages:
-  the cos 2φ projection report, the educational primer, and the
-  reconstruction-chain analysis note).
+- What each result means, and its caveats: `reports/` (five pages,
+  numbered 0–4 in reading order: the educational primer, the cos 2φ
+  projection report, the reconstruction-chain analysis note, the
+  EIC/ePIC parameter reference, and the near-beam far-forward study).
 - What was done when, and why a number changed: the development-run log
   in `plans/00_README.md`.
 - What is still missing from the chain, ordered:
@@ -843,7 +1075,8 @@ The long poles are elsewhere:
 - External dependencies with owners and default assumptions:
   `plans/04_open_questions.md`.
 - The audit the current state was built against:
-  `docs/code_review_2026-08-25.md`.
+  `docs/code_review_2026-08-28.md` (its predecessor,
+  `docs/code_review_2026-08-25.md`, is kept as the dated record).
 - Per-tool detail this manual compresses: `tools/pythia8/README.md`,
   `tools/beagle/README.md`, `tools/fullsim/README.md`,
   `evgen/README.md`, `evgen/samples/README.md`, `fastsim/README.md`.

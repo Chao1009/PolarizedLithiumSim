@@ -41,7 +41,9 @@ brings to the EIC, in support of the ANL polarized ⁶,⁷Li ion-source program
 2. **Tagging inverts between isotopes at IP6** (rigidity-verified): ⁷Li
    α-tag lands mid-Roman-Pot window (works); ⁶Li α-tag is beam-blind below
    the RP pT cutoff (needs the pT tail, p/³He channels, or IR-8 secondary
-   focus); tritons have no IP6 coverage at all. ⁷Li — the isotope the
+   focus); tritons have no IP6 coverage in the fast-sim routing (no R > 1
+   branch; the 2026-06-12 gun scan's over-rigid path is unverified,
+   plans/03 §2.2). ⁷Li — the isotope the
    source commissions first — is also the tagging-friendly one.
 3. **No generator anywhere does polarized nuclei** — asymmetry reweighting
    on unpolarized samples (BeAGLE for breakup) is the established route;
@@ -53,10 +55,128 @@ brings to the EIC, in support of the ANL polarized ⁶,⁷Li ion-source program
 5. **Calendar anchor**: INT program on polarized ion beams at EIC,
    March 22 – April 2, 2027 — target for Phase-1 money plots.
 
+## Development run 13 (2026-08-28): the to-do audit, the low-count estimator, the α+d veto, the tagged chain on the real optics, the radiative bound
+
+Every ☐/◐ item in plans/02–10 and this log — 319 of them — was classified
+against the code, the reports and the git history, and each classification
+handed to an adversarial verifier: 133 were open and closable here, 100
+external, 43 done but unticked, 28 superseded, 15 the author's.  The
+closable ones were then worked in three rounds, each deliverable reviewed
+adversarially and repaired.  Reports 0–4 now carry the author line
+"C. Peng and J. Zhou" and a "Writing assisted by Claude (Anthropic)" line.
+
+- ☑ **The low-count bias of the coherent estimator is removed** (plans/08
+  A12).  The bin-wise ratio inverts R = σ_P²T/(1 + u + P̄T) bin by bin, and
+  the inversion is strongly curved (g″ ∝ P̄ < 0 for the flip plan), so each
+  (α, β) bin carries a Jensen offset ∝ 1/ν_b that is flat in α and lands on
+  a_t: over 200 one-year pseudo-experiments at the tagging optics (5 × 40.8)
+  the ratio's a_t is off by +0.1 / −0.2 / −4.0 / −34.3 % in the four |t|
+  bins (pulls −9.0 and −42.1 in the last two), and at one count per cell it
+  changes sign.  `reco.harmonic_likelihood_fit_2d` — the Poisson likelihood
+  with the per-bin acceptance profiled out, which is exactly the
+  conditional multinomial given the bin totals, whose score has zero mean
+  at any count — returns pulls +0.5…+2.0 on the same draws, +0.181 where the
+  ratio gives −0.085, errors that reproduce the ensemble spread, Asimov
+  errors within 0.24 % of the ratio's and the blind systematics unchanged;
+  on Table 5's twenty draws its means are 0.0902 / 0.1176 / 0.146 / 0.173
+  against 0.0898 / 0.1181 / 0.1473 / 0.1803 injected.  Coarser bins only
+  attenuate (−34.3 → −13.9 → −7.8 % at +17 % on δa_e; 4 × 8 is
+  rank-deficient because ⟨cos 2α⟩ vanishes).  `--fit likelihood`; the ratio
+  stays the default and the published record.  With it, the in-situ
+  (u₁, u₂) fit of A3 (`--u-in-situ`, against the response's acceptance —
+  the only way u is identifiable): δu₂ 1.8–15× tighter than the ZEUS 1σ,
+  the u₂ leakage into a_e down from 7–9 % to 0.5–6.3 %.  §8.4's
+  "anisotropic basis" item is superseded (the design is near-orthogonal at
+  the tagging optics, cond 1.8–2.9); what survives is that the fixed |t|
+  window discards 67–74 % of the tagged sample below 0.05 GeV² — four
+  added bins would halve the one-year δa_e, 0.00205 → 0.00105, recorded as
+  a follow-up.  The WP5 optics scan no longer loses its figure to a
+  rank-deficient last point, and a stalled Newton step is named.
+- ☑ **The α + d partner-fragment veto is quantified, and Report 4's
+  Table 5 was 2× wrong** (plans/09 B4).  Nothing sampled both fragments;
+  `spectator.breakup_lab_kinematics` boosts one relative momentum twice
+  (θ_d → 2θ_α at the opposite azimuth) and `farforward.separation_at_pots`
+  carries the dispersive term the earlier estimate dropped.  The separations
+  at the pots are 38.4 / 18.5 / 15.1 mm (5 × 41 / 10 × 100 / 18 × 275); the
+  published 73.4 / 30.1 mm carried the retired 20.5 / 50 GeV/u through a
+  derived millimetre no drift check could see — one now does (23 checks).
+  Given an α that fakes a coherent tag, the deuteron is in acceptance
+  0.85 / 0.84 / 0.84 of the time at the tagging optics (0.12 / 0.02 / 0.25
+  at the Yellow Report optics), a recorded pair merges only rarely (≤ 4 × 10⁻⁴ in one
+  pixel), and the veto collapses at 5 × 41 once the pot's outer edge is
+  below 2 mrad — a station-layout question for B1.  plans/06 handle #3 is
+  upgraded from "rare, not worth relying on" to the strongest handle after
+  the |t| shape.  `nearbeam_two_hit.py`.
+- ☑ **The tagged chain runs on the real optics** (plans/09 B2, B3; the
+  last two published figures on the retired 73 µrad).  `polligen.tagged`
+  now hands the spectator's lab azimuth to the rectangular envelope (without
+  it the tagging-optics cut degenerated to a circle, ×1.7 too generous) and
+  defaults to `yr_optics`; both scripts take `--optics/--config`.  ⁶Li α tag
+  on the tagged sampler 0.0285 / 0.0250 / 0.0267 (YR high acceptance) →
+  0.381 / 0.305 / 0.312 (tagging) at 1/7.1, 1/13.3, 1/9.5 of the
+  luminosity — ×1.9, ×0.92, ×1.2 in tagged events — and the reach is the
+  result: at every published optics not one accepted spectator lies below
+  k = 0.15 GeV/c (minimum 0.184), while at the tagging optics the median is
+  0.145–0.162 with 44–52 % below 0.15, so money plot 4 becomes a curve.
+  The published ±0.5 swing of the folded A_zz at k ≈ 0.3 was θ_k
+  sculpting by the envelope (⟨|cos θ_k|⟩ 0.71–0.79 against 0.40), not the
+  wave function; the overlay is now the acceptance-weighted prediction.
+  The two ⁶Li samplers differ by the D wave alone (P_D = 0.0867).  ⁷Li:
+  0.961–0.974 → 0.981–0.992 for 1/8–1/15 of the luminosity — a strict net
+  loss (×2.8–3.9 on the error bars at equal time), so ⁶Li and ⁷Li want
+  different optics and are different runs; `rp_aperture_for` is keyed by
+  configuration for both isotopes.
+- ☑ **The radiative-correction bound exists** (plans/07 WP4, plans/08 D3,
+  plans/02 step 1.4).  `polligen/radiative.py` radiates a collinear photon
+  off the incoming electron (exponentiated leading log) and lets the
+  analysis reconstruct with the nominal beam: the covariant azimuth is
+  invariant (3.6 × 10⁻¹⁵ rad over the massless flat sample, pinned; 2.6 × 10⁻² rad over the response itself, faking cos 2φ′ at 9 × 10⁻⁸), the mixed x is exact and the Q²_e label
+  migrates by 1/(1 − z), Q²_DA by 1/(1 − z)².  With common random numbers
+  the ISR-free corrections leave Δ̂ high by +0.62 / +0.50 / +0.94 / +1.22 % (mean ± sem over eight response seeds)
+  at the four mid-configuration sweet spots in the published generator
+  window, ≤ 2.9 % once the low-Q² feed-in is generated; a HERA-style
+  E − p_z window would bring it to ≤ 0.25 % while keeping 87 % of the non-radiative rate.  The
+  ≤ 5 % gate passes; the tensor-sector RC stays unmodelled and is said so
+  wherever the bound is quoted.  `--isr`.
+- ☑ **Far-forward and fast-sim hygiene.**  `yr_divergence_for` and its
+  blanket √2 deleted (the test that pinned it now pins `sigma_theta_for`);
+  the IBS normalisations stated once (Z⁴/A² per particle, Z³/A² at fixed
+  current); the 149 µrad comments retired; `coherent.fragment_rigidity` on
+  the physical masses (R = 0.998 / 1.005); two inert `or True` assertions
+  made real; the 10σ envelope made a rectangle at every aspect ratio
+  (`Optics.clears` fell back on its inscribed circle wherever σ_h = σ_v,
+  discarding the azimuth at 10 × 100 and 18 × 275: the ⁶Li α tag at the
+  Yellow Report optics is 1.7 / 1.5 / 1.6 %, the α + d fake rate
+  0.0020 / 0.0001 / 0.0007 and its veto 0.12 / 0.02 / 0.25); the measured
+  aperture priced against the per-configuration
+  envelopes (0.91× / 0.75× / 1.12× — the envelope binds at the two lower
+  configurations, the "never binding" of run 8 withdrawn); `tools/pythia8`
+  defaults and commands on the γ-matched menu with the stale-energy guard
+  extended to `tools/`; F₂'s five flavours against g₁'s three documented
+  (charm + bottom are 7.8 % of F₂ event-weighted, 0.65 / 0.23 % in the EMC
+  window); `money_delta`'s min-events mask applied at the evaluated
+  luminosity (nothing moves: 16.7 / 16.3 / 21.8 and 66–155 fb⁻¹/u stand).
+- ☑ **Documents.**  plans/10 §10.1 marked superseded, β* = 13 m → 45 m,
+  §10.5 restated; plans/04 #3 / #11 / #19 / #20, plans/06, plans/09
+  restated; 28 markers ticked and 11 superseded in plans/02, 03, 05, 07;
+  Report 0's α tag on the current optics; Report 3's triton "no coverage"
+  qualified (a routing assumption the gun scan contradicts); β = 0.30
+  defined at its first use.  Reports rebuilt.
+- ☐ **Left**, in order of value: B1 (the aperture on the current
+  `epic-main`, container); the fast-sim run-plan split (each observable
+  gets the full luminosity today — a run-plan decision, not a defect);
+  the γ²A₂ target-mass term at high x (author's physics choice); digitized
+  CBT/TMT/b₁ theory curves; the R > 1 triton branch (needs B1's scan);
+  per-configuration R₁₂/R₃₄ (same scan); a coherent ⁷Li channel (a
+  different physics case, J = 3/2); the |t| window below 0.05 GeV² and the
+  E − p_z cut, both quantified and not adopted; D1 / D7 / D9.
+
+Tests: 276 evgen + 81 fastsim, 23 consistency checks.
+
 ## Development run 12 (2026-08-28): the divergence fixed everywhere, Reports 3 and 4 rewritten as papers
 
 The last place the single proton-derived 72.7 µrad still drove a published
-number was the fast simulation's spectator routing — the 1.85% ⁶Li α-tag
+number was the fast simulation's spectator routing — the 1.85% azimuth-blind ⁶Li α-tag
 of the README — and the near-beam scripts of plans/09.  Both now run on
 the per-configuration optics (plans/10 A3, A4 ☑):
 
@@ -67,11 +187,12 @@ the per-configuration optics (plans/10 A3, A4 ☑):
   §6.1 optimum; `sigma_theta_for`, `hole_acceptance`, `tagging_optics_point`
   moved from `polligen.reco` into `farforward` and reco delegates
   (`fastsim/tests/test_optics_20260828.py`, 5 tests).
-- **⁶Li α-tag** at the Yellow Report optics: 1.7 / 1.5 / 1.7% at
+- **⁶Li α-tag** at the Yellow Report optics: 1.7 / 1.5 / 1.6% at
   5 × 41 / 10 × 100 / 18 × 275 — the near-beam tail is inside the envelope
   at every configuration and only the slice below R = 0.95 survives; the
   tagging optics recovers 35 / 27 / 28% at 1/7–1/13 of the luminosity.
-  The legacy 73 µrad gave 20 / 2.9 / 1.9%; the old 1.85% was close at the
+  The legacy 73 µrad gave 17 / 2.5 / 1.8% (20 / 2.9 / 1.9% as it was
+  applied, azimuth-blind); the old 1.85% was close at the
   top energy by coincidence (92 ≈ 73 µrad) and 12× wrong at the bottom.
   ⁷Li α: 97% at every optics.
 - **Near-beam study re-derived** (`nearbeam_aperture_scan.py`,
@@ -160,7 +281,7 @@ was acted on.  Record: `docs/code_review_2026-08-28.md`.  What changed:
   ISR-invariant, the Q² label migrates).
 
 What is still open from the review: a likelihood (or coarser-binned) fit
-for the low-count coherent bins; Report 4's absolute acceptances on the
+for the low-count coherent bins *(closed in run 13)*; Report 4's absolute acceptances on the
 Yellow Report divergences (plans/10 A4); the ePIC inputs of plans/04 #20
 and #21.
 
@@ -371,7 +492,12 @@ at **48 fastsim + 183 evgen**, from 25 + 143.
   top the aperture leaves nothing in the binned window, so the coherent
   programme is a low-energy programme.  The measured edge is
   2.8× / 1.9× / 1.4× the 10σ envelope, so the envelope is never the
-  binding constraint; it is marked on all three WP5 curves.  Two latent
+  binding constraint; it is marked on all three WP5 curves.  *[Both
+  statements superseded 2026-08-28 (run 13): against the per-configuration
+  Yellow Report envelopes the edge is 0.91× / 0.75× / 1.12× the horizontal
+  10σ half-width, binding at the two lower configurations, and at the
+  tagging optics the top configuration is the best covered — plans/04
+  #20, `tools/fullsim/README.md`.]*  Two latent
   defects surfaced with it — a tight cutout made the two-azimuth fit
   raise a bare "Singular matrix", and one dead |t| bin aborted the whole
   figure.  Caveats and what is left in plans/08 §8.4 and plans/04 #20.
@@ -702,7 +828,9 @@ Tests: 143 evgen + 25 fastsim (from 94 + 24 at the start of run 6).
   `cos2phi_fit_binned`, `effective_modulation`.
 - ☑ **plans/06 background budget** for the coherent tag, anchored on a
   32-claim verified research sweep: the α+d channel is the killer (both
-  fragments R = 1.000, same velocity — only dE/dx Z² separates); every
+  fragments R ≈ 1 — 0.998 and 1.005 with the physical nuclear masses,
+  run 13 — same velocity; dE/dx Z² separates, and since run 13 so does
+  the partner-fragment two-hit veto, plans/09 B4); every
   T = 1 ⁶Li* state is γ- or nucleon-vetoable while T = 0 states feed
   the blind channel; B0 EMCal (not ZDC) catches the 3.56 MeV
   de-excitation γ; ⁶Li is a deformation null test (Q = −0.0806 fm²).

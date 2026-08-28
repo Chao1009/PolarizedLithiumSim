@@ -34,7 +34,23 @@ shrinks by 7-11x and the sensor package IS the limit: a near-beam layer
 that reaches the envelope is what makes the optics worth having.  This
 script prices every aperture per configuration and marks the three.
 
-Usage:  python3 scripts/nearbeam_aperture_scan.py [--outdir .]
+`--isotope` (plans/09 B3) selects the species of PANEL (b) alone.  For 7Li
+the same scan is flat: the 7Li alpha is off rigidity at R = 0.856, so it
+is accepted by the Roman-Pot momentum window and never has to clear the
+near-beam cutout -- the curve sits at 0.96-0.99 across the whole
+0.05-3 mrad axis and the three marked half-widths coincide.  That is the
+picture of a tag that does not care about the aperture, and it is why a
+near-beam layer is worth nothing to 7Li.
+
+PANEL (a) IS ALWAYS 6Li, whatever `--isotope` says.  The coherent channel
+is 6Li-specific by construction (`polligen.coherent`: a J = 1 nucleus
+whose quadrupole deformation is scaled from the deuteron's).  7Li has
+J = 3/2 and a quadrupole moment ~50x larger, so its coherent cos 2phi
+amplitude is a different physics case with its own model, not a re-run of
+this one -- recorded as an open item in plans/09 B3 rather than
+half-built here.
+
+Usage:  python3 scripts/nearbeam_aperture_scan.py [--isotope 7Li] [--outdir .]
 """
 
 import argparse
@@ -57,6 +73,7 @@ from polli_fastsim import farforward as ff  # noqa: E402
 from polli_fastsim import spectator as sp  # noqa: E402
 
 C_TRUTH, C_FIT, C_ALT, C_GREY = "#1F4E79", "#C0392B", "#B8860B", "#8A8A8A"
+_SUP = {"6Li": "⁶Li", "7Li": "⁷Li"}
 R12 = ff.POT_R12                            # m, IP angle -> pot-plane x (measured)
 
 
@@ -68,16 +85,26 @@ def coherent_acceptance(theta_x, p_ion, slope_b, theta_y):
                      for t in np.atleast_1d(theta_x)])
 
 
-def alpha_acceptance(theta_x, theta_y, p_per_nucleon, n=200000, beta=0.30,
-                     seed=7):
-    """Tagged fraction of 6Li alpha spectators in ANY far-forward system,
+ALPHA_CHANNEL = {"6Li": sp.LI6_ALPHA_TAG, "7Li": sp.LI7_ALPHA_TAG}
+
+
+def alpha_acceptance(theta_x, theta_y, p_per_nucleon, channel=None,
+                     n=200000, beta=0.30, seed=7):
+    """Tagged fraction of alpha spectators in ANY far-forward system,
     with the near-beam band (|R - 1| < 0.05) cut by a rectangular envelope
     of half-widths (theta_x, theta_y) in angle -- the same routing
-    (farforward.acceptance_summary) and therefore the same quantity as
-    fastsim/scripts/tagging_acceptance.py (Report 3 Table 6).  The
-    off-rigidity slice below R = 0.95 (~1.5%) is tagged at any envelope;
-    the rest is the R ~ 1 tail outside the rectangle."""
-    k = sp.spectator_lab_kinematics(sp.LI6_ALPHA_TAG, p_per_nucleon, n,
+    (farforward.acceptance_summary) as fastsim/scripts/tagging_acceptance.py
+    (Report 3 Table 6), but NOT at the same vertical half-width: this
+    script's callers pass max(measured aperture, 10 sigma_v), which is
+    2.3 mrad at 18 x 275 against Table 6's 0.92 mrad envelope, so its
+    YR-envelope marker reads 0.0150 there against Table 6's 0.0161.  The
+    two agree wherever the envelope is the binding vertical constraint.
+    For 6Li the off-rigidity slice below R = 0.95 (~1.5%) is tagged at any
+    envelope and the rest is the R ~ 1 tail outside the rectangle; for 7Li
+    the alpha is at R = 0.856, entirely inside the momentum window, and the
+    curve is flat."""
+    channel = sp.LI6_ALPHA_TAG if channel is None else channel
+    k = sp.spectator_lab_kinematics(channel, p_per_nucleon, n,
                                     beta=beta, rng=np.random.default_rng(seed))
     out = []
     for t in np.atleast_1d(theta_x):
@@ -93,6 +120,10 @@ def main():
     ap.add_argument("--slope-b", type=float, default=50.0,
                     help="coherent t-slope [GeV^-2]")
     ap.add_argument("--n-spectator", type=int, default=200000)
+    ap.add_argument("--isotope", default="6Li", choices=("6Li", "7Li"),
+                    help="species of the alpha-tag panel (b).  Panel (a), "
+                         "the coherent intact-nucleus recoil, is 6Li at "
+                         "either setting -- see the module docstring")
     ap.add_argument("--outdir", default=".")
     args = ap.parse_args()
     outdir = pathlib.Path(args.outdir)
@@ -108,17 +139,33 @@ def main():
              "# the vertical half-width is the larger of the measured "
              "aperture and the 10 sigma_v envelope of the high-acceptance "
              "optics, per configuration"]
-    cfgs = beams.default_configs("6Li")
-    for cfg, name, col in zip(cfgs, ("5 x 41", "10 x 100", "18 x 275"),
-                              (C_TRUTH, C_FIT, C_ALT)):
+    iso = args.isotope
+    channel = ALPHA_CHANNEL[iso]
+    lines.append("# panel (a) coherent: 6Li always; panel (b) alpha tag: %s"
+                 % iso)
+    # the machine configuration is shared; the BEAM in it is not (7Li's top
+    # per-nucleon momentum is 117.9 GeV/u against 6Li's 137.5), so the
+    # coherent panel keeps the 6Li configuration and the alpha panel takes
+    # the isotope's own.  The measured aperture is a property of the ring
+    # and is the same for both (reco.rp_aperture_for, keyed on the
+    # configuration since 2026-08-28).
+    for cfg, cfg_a, name, col in zip(beams.default_configs("6Li"),
+                                     beams.default_configs(iso),
+                                     ("5 x 41", "10 x 100", "18 x 275"),
+                                     (C_TRUTH, C_FIT, C_ALT)):
         pu = cfg.ion_momentum_per_nucleon
+        pu_a = cfg_a.ion_momentum_per_nucleon
         p_ion = cfg.ion.A * pu
-        meas_x, meas_y = reco.rp_aperture_for(pu)
+        meas_x, meas_y = reco.rp_aperture_for(cfg)
         yr = ff.yr_optics(cfg, "high-acceptance")
         env_x, env_y = yr.envelope
         top = ff.tagging_optics_point(cfg, slope_b=args.slope_b)
         tag_x = top["env_x"]
         ty = max(meas_y, env_y)
+        # panel (b) rides the isotope's own optics
+        env_a_x, env_a_y = ff.yr_optics(cfg_a, "high-acceptance").envelope
+        top_a = ff.tagging_optics_point(cfg_a, slope_b=args.slope_b)
+        ty_a = max(meas_y, env_a_y)
 
         acc = coherent_acceptance(th, p_ion, args.slope_b, ty)
         ax1.plot(1e3 * th, acc, "-", color=col, lw=1.6,
@@ -138,27 +185,32 @@ def main():
                         pts["tagging"] / max(pts["silicon"], 1e-300),
                         1.0 / top["lumi_fraction"]))
 
-        acc_a = alpha_acceptance(th, ty, pu, n=args.n_spectator)
+        acc_a = alpha_acceptance(th, ty_a, pu_a, channel, n=args.n_spectator)
         ax2.plot(1e3 * th, acc_a, "-", color=col, lw=1.6, label="%s" % name)
         apts = {}
         for key, tx, mk, fill in (("silicon", meas_x, "o", "white"),
-                                  ("YR envelope", env_x, "s", col),
-                                  ("tagging", tag_x, "^", col)):
-            apts[key] = alpha_acceptance(tx, ty, pu, n=args.n_spectator)[0]
+                                  ("YR envelope", env_a_x, "s", col),
+                                  ("tagging", top_a["env_x"], "^", col)):
+            apts[key] = alpha_acceptance(tx, ty_a, pu_a, channel,
+                                         n=args.n_spectator)[0]
             ax2.plot([1e3 * tx], [apts[key]], mk, color=col, ms=7, mfc=fill, mew=1.6)
-        lines.append("alpha    %-9s silicon -> %.4f ; YR HA envelope -> %.4f (x%.3g) ; "
-                     "tagging optics -> %.4f (x%.3g)"
-                     % (name, apts["silicon"], apts["YR envelope"],
+        lines.append("alpha %s %-9s silicon -> %.4f ; YR HA envelope -> %.4f (x%.3g) ; "
+                     "tagging optics -> %.4f (x%.3g at L/L_HA = 1/%.1f)"
+                     % (iso, name, apts["silicon"], apts["YR envelope"],
                         apts["YR envelope"] / max(apts["silicon"], 1e-12),
-                        apts["tagging"], apts["tagging"] / max(apts["silicon"], 1e-12)))
+                        apts["tagging"], apts["tagging"] / max(apts["silicon"], 1e-12),
+                        1.0 / top_a["lumi_fraction"]))
 
     for ax, ylab, title in (
             (ax1, "tagged fraction of the coherent recoil",
              "(a) coherent intact ⁶Li, exp(−B|t|), B = %g GeV$^{-2}$" % args.slope_b),
-            (ax2, "⁶Li α-tag, any far-forward system (routed)",
-             "(b) ⁶Li α spectator, cluster model (β = 0.30)")):
+            (ax2, "%s α-tag, any far-forward system (routed)" % _SUP[iso],
+             "(b) %s α spectator, cluster model (β = 0.30)" % _SUP[iso])):
         ax.set_xscale("log")
-        ax.set_yscale("log")
+        # 7Li's alpha panel spans 0.96-0.99, not fourteen decades: a log
+        # axis would render the whole B3 result as one flat line
+        if not (ax is ax2 and iso == "7Li"):
+            ax.set_yscale("log")
         ax.set_xlabel("horizontal half-width of the near-beam cutout at the IP [mrad]")
         ax.set_ylabel(ylab)
         ax.set_title(title, fontsize=9.5)
@@ -168,11 +220,15 @@ def main():
         ax.plot([], [], "^", color="0.3", label="10σ envelope, tagging optics (pots follow)")
         ax.legend(fontsize=7.0, loc="lower left")
     ax1.set_ylim(1e-18, 2.0)
-    ax2.set_ylim(1e-3, 1.5)
+    ax2.set_ylim((1e-3, 1.5) if iso == "6Li" else (0.94, 1.005))
     fig.suptitle("What the near-beam aperture is worth, per configuration: the tag is an "
-                 "angle, and the three half-widths that compete for it", fontsize=9.5)
+                 "angle, and the three half-widths that compete for it"
+                 + ("" if iso == "6Li" else
+                    "\n(b) is ⁷Li: off rigidity at R = 0.856, so the α is "
+                    "inside the momentum window and the aperture never "
+                    "enters"), fontsize=9.5)
     fig.tight_layout()
-    out = outdir / "nearbeam_aperture_6Li.png"
+    out = outdir / ("nearbeam_aperture_%s.png" % iso)
     fig.savefig(out, dpi=140)
     lines.append("wrote %s" % out)
     print("\n".join(lines))

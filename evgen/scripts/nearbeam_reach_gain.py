@@ -26,6 +26,9 @@ and this script prices the layer GIVEN the optics.
 
 Panels: (a) delta a_t per |t| bin, 1 yr, both apertures, all three
 configurations; (b) the recovered a_t against the injected curve.
+`--fit likelihood` swaps the bin-wise ratio for the acceptance-profiled
+Poisson likelihood (plans/08 A12); the errors are the same, the recovered
+a_t of panel (b) is unbiased in the sparse bins.
 
 Usage:  python3 scripts/nearbeam_reach_gain.py [--outdir .]
 """
@@ -58,7 +61,8 @@ NAMES = ("5 x 41", "10 x 100", "18 x 275")
 
 def run(cfg_index, aperture, args, seed):
     """One configuration at one aperture, at the tagging optics -> per-bin
-    fit results."""
+    fit results.  `args.fit` selects the estimator (see
+    money_cos2phi_coherent_reco.py --fit)."""
     config = beams.default_configs("6Li")[cfg_index]
     rng = np.random.default_rng(seed)
     sc = coh.CoherentScenario(amp=args.amp, eps_b0=args.eps_b0)
@@ -82,7 +86,8 @@ def run(cfg_index, aperture, args, seed):
         try:
             f = rp.measure_coherent(cresp, n_produced, plan, tlo, thi,
                                     args.amp, a_t_func, u1=args.u1,
-                                    u2=args.u2, rng=rng, with_sin=True)
+                                    u2=args.u2, rng=rng, with_sin=True,
+                                    fit=args.fit)
         except (np.linalg.LinAlgError, ValueError, ZeroDivisionError):
             continue
         if not np.isfinite(f["err_t"]):
@@ -94,6 +99,15 @@ def run(cfg_index, aperture, args, seed):
     return out
 
 
+def output_stem(args):
+    """File stem for one run.  Report 4's __NB2__ is the DEFAULT run --
+    the ratio fit at the published (u1, u2).  A non-default `--fit` gets
+    its key appended rather than overwriting the published PNG (the same
+    guard as `money_tagged_azz.output_stem`, 2026-08-28)."""
+    base = "nearbeam_reach_gain_6Li"
+    return base if args.fit == "ratio" else "%s_%s" % (base, args.fit)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--lumi-1yr", type=float, default=10.0)
@@ -103,6 +117,14 @@ def main():
     ap.add_argument("--u1", type=float, default=0.05)
     ap.add_argument("--u2", type=float, default=0.02)
     ap.add_argument("--n-mc", type=int, default=600000)
+    ap.add_argument("--fit", default="ratio", choices=("ratio", "likelihood"),
+                    help="estimator of the two-azimuth harmonics: 'ratio' "
+                         "(default, the published curve) or 'likelihood', "
+                         "the acceptance-profiled Poisson likelihood that "
+                         "is unbiased at any count (plans/08 A12).  The two "
+                         "give the same ERRORS -- this figure plots errors "
+                         "-- and differ in the recovered a_t of panel (b) "
+                         "wherever a bin is sparse")
     ap.add_argument("--seed", type=int, default=20260826)
     ap.add_argument("--outdir", default=".")
     args = ap.parse_args()
@@ -114,8 +136,10 @@ def main():
     alphas = (1.0, 0.75, 0.5)
     for cfg_index, (name, alpha) in enumerate(zip(NAMES, alphas)):
         cfg = _CFG[cfg_index]
-        key = name.replace(" ", "")
-        meas = reco.RP_APERTURE_MEASURED[key]
+        # keyed on the CONFIGURATION, not on a momentum or on the panel
+        # label: the aperture is a property of the ring, and the momentum
+        # path of rp_aperture_for cannot resolve 7Li (plans/09 B3)
+        meas = reco.rp_aperture_for(cfg)
         top = ff.tagging_optics_point(cfg)
         near = (top["env_x"], top["env_y"])
         for tag, apert, col, ls, mk in (("silicon", meas, C_SI, "--", "s"),
@@ -163,7 +187,7 @@ def main():
                  "measured silicon aperture against pots following the 10σ envelope",
                  fontsize=9.5)
     fig.tight_layout()
-    out = outdir / "nearbeam_reach_gain_6Li.png"
+    out = outdir / ("%s.png" % output_stem(args))
     fig.savefig(out, dpi=140)
     print("wrote %s" % out)
 

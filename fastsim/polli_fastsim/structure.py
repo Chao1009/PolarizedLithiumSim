@@ -227,6 +227,22 @@ class PartonF2:
     F2 = sum_q e_q^2 (x q + x qbar); neutron by isospin u<->d swap.
     Install grids once:  yes | python3 -m parton install CT18NLO
     Drop-in replacement for ToyF2 (same interface).
+
+    FLAVOUR SCHEME (documented 2026-08-28).  `_E2` runs over FIVE flavours,
+    d u s c b, while `polarized.PartonG1._E2` runs over three, d u s.  That
+    asymmetry is deliberate and physical, not an oversight: the unpolarized
+    F2 a measurement sees contains charm and bottom, and NNPDFpol1.1 -- the
+    polarized set behind PartonG1 -- assumes Delta c = Delta b = 0, so a
+    three-flavour g1 IS the polarized structure function that set predicts.
+    Every g1/F1 ratio built from the two is therefore the physical ratio,
+    and it is smaller than a light-flavour-only ratio by the heavy-quark
+    share of F2.  Measured on the (x, Q2) bins money_polemc.py combines
+    (CT18NLO, 7Li, >= 100 events at 10 fb^-1/u): charm + bottom carry 7.8%
+    of F2A event-weighted over all of them, 10% at x = 1e-3 to 1e-2 and up
+    to 25% at the highest Q2 there, but only 0.65% at x = 0.3-0.5 and 0.23%
+    at 0.5-0.7 -- the region where the polarized-EMC discrimination lives,
+    which is why the mixed scheme costs the headline nothing.
+    `tests/test_grids.py` pins the two flavour sets against each other.
     """
 
     _E2 = {1: 1 / 9, 2: 4 / 9, 3: 1 / 9, 4: 4 / 9, 5: 1 / 9}

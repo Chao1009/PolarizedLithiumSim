@@ -41,6 +41,7 @@ import numpy as np
 from polli_fastsim import fom
 from polli_fastsim.farforward import (NEAR_BEAM_BAND, OMD_R_WINDOW,
                                       RP_R_WINDOW, route_charged)
+from polli_fastsim.spectator import nucleus_mass
 
 M_LI6 = 5.6015  # GeV (6.0151228 u atomic minus 3 m_e)
 GEV_PER_FM_INV = 0.19733  # hbar c
@@ -133,10 +134,17 @@ class CoherentScenario:
         the recoil's angle, so the cut on the nucleus pT scales with the
         beam momentum, pT_cut = n_sigma sigma_theta A p_u
         (reconstruction-chain note, 2026-08-24; open question #20).  The
-        documented 0.20 GeV (HA) / 0.41 GeV (HD) proton cuts correspond to
-        sigma_theta = 73 / 149 microrad: for 6Li that is 0.09 / 0.22 /
-        the three machine configurations (40.8 / 99.5 / 137.5 GeV/u,
-    gamma-matched at the two lower ones; plans/10)."""
+        legacy envelopes are the 0.20 and 0.45 GeV cuts of a 275 GeV
+        PROTON, i.e. sigma_theta = 73 and 164 microrad; at 10 sigma they
+        put the 6Li cut at 0.18 / 0.43 / 0.60 GeV (high acceptance) and
+        0.40 / 0.98 / 1.35 GeV (high divergence) at the three machine
+        configurations, 40.8 / 99.5 / 137.5 GeV/u.  The PUBLISHED
+        divergences are per configuration and anisotropic --
+        220/380, 180/180 and 92/92 microrad (h/v) for 6Li, gamma-matched
+        at the two lower ones and sqrt(2) rigidity-capped at the top --
+        so this scalar form is the isotropic stand-in and
+        farforward.sigma_theta_for / yr_optics are the current numbers
+        (plans/10)."""
         cut = n_sigma * sigma_theta * a_beam * np.asarray(p_per_nucleon,
                                                           dtype=float)
         return np.exp(-self.slope_b * cut * cut)
@@ -291,10 +299,24 @@ LI6_BREAKUP = (
 
 
 def fragment_rigidity(a, z, beam_a=6, beam_z=3):
-    """Rigidity ratio R of a beam-velocity fragment: (A/Z)/(A/Z)_beam."""
+    """Rigidity ratio R of a beam-velocity fragment.
+
+    A fragment at rest in the beam frame has p = (p_beam / m_beam) m, so
+    R = (m/Z) / (m_beam/Z_beam): a ratio of MASS-to-charge ratios, not of
+    mass numbers.  With the physical nuclear masses (spectator.
+    NUCLEUS_MASS) the alpha and the deuteron of 6Li -> alpha + d are at
+    0.99813 and 1.00452, not both at the naive 1.000 -- the alpha is more
+    bound per nucleon than the lithium it comes from and the deuteron
+    less.  Until 2026-08-28 this function returned (A/Z)/(A/Z)_beam while
+    `polli_fastsim.spectator` boosted the same fragments with the physical
+    masses, so one fragment had two rigidities in one repository; the
+    routing labels are unchanged by the correction (every fragment stays
+    in the window it was in), but the 0.2-0.5% displacements are the ones
+    the near-beam study measures against the R = 0.95 window edge.
+    """
     if z == 0:
         return np.nan
-    return (a / z) / (beam_a / beam_z)
+    return (nucleus_mass(z, a) / z) / (nucleus_mass(beam_z, beam_a) / beam_z)
 
 
 def fragment_route_label(a, z):

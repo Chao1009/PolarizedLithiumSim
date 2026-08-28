@@ -168,6 +168,52 @@ def test_recoil_lab_shortcut_is_sub_mrad():
     assert np.abs(err).max() < 1e-3
 
 
+def test_covariant_azimuth_is_invariant_under_a_collinear_photon():
+    """phi' does not know about initial-state radiation (plans/08 D3).
+
+    A collinear photon replaces the incoming lepton by k -> (1 - z)k.
+    With a = P.k, b = P.k' and c = k.k', the covariant azimuth of the
+    spin axis has
+
+        cos phi = -a (S.k') / sqrt(2ac[(1-z)a - b]),
+        sin phi = -eps(k, S, P, k') / sqrt(2ac[(1-z)a - b]),
+
+    so both carry the SAME z-dependent factor and the arctan2 divides it
+    out: for a massless target the azimuth is invariant to double-
+    precision roundoff, and collinear ISR can therefore fake NEITHER a
+    cos phi' nor a cos 2phi' modulation.  With the physical ion mass the
+    O(gamma^2) terms of the projector leave a residual rotation that is
+    still far below any resolution.
+
+    Every number below is measured on THIS sample, which is flat in
+    (log x, log y) over x in [10^-3.3, 10^-0.5], y in [10^-2.3, 10^-0.1]
+    and z out to 0.9(1 - y) -- far harder than anything the analysis
+    sees.  Massless: max |dphi'| = 3.6e-15 rad and <cos 2 dphi'> = 1 to
+    the last bit.  Physical 6Li mass: max |dphi'| = 1.1e-2 rad and
+    1 - <cos 2 dphi'> = 1.3e-6.  The rate-weighted residual of the actual
+    response, where the numbers the letter quotes live, is smaller again
+    and is measured by `money_cos2phi_reco.py --isr` from
+    `RecoResponse.isr_dphi`; do not confuse the two samples."""
+    rng = np.random.default_rng(20260828)
+    n = 20000
+    x = 10 ** rng.uniform(-3.3, -0.5, n)
+    y = 10 ** rng.uniform(-2.3, -0.1, n)
+    z = rng.uniform(0.0, 0.9, n) * (1.0 - y)
+    phi_e = rng.uniform(0.0, 2 * np.pi, n)
+    one_z = 1.0 - z
+    s_vec = reco.spin_fourvector(np.pi / 2)
+    for ion_mass, tol, dil_tol in ((0.0, 1e-14, 1e-15), (None, 2e-2, 2e-6)):
+        k, p = reco.beam_fourvectors(CONFIG, ion_mass=ion_mass)
+        kp = reco.electron_fourvector(x, y / one_z, S_NN * one_z,
+                                      CONFIG.electron_energy * one_z, phi_e)
+        nominal = reco.azimuth_wrt_lepton_plane(k, kp, p, s_vec)
+        hard = reco.azimuth_wrt_lepton_plane(k[None, :] * one_z[:, None], kp,
+                                             p, s_vec)
+        d = np.angle(np.exp(1j * (nominal - hard)))
+        assert np.abs(d).max() < tol
+        assert abs(np.mean(np.cos(2.0 * d)) - 1.0) < dil_tol
+
+
 # --- electron reconstruction -------------------------------------------------
 
 def test_electron_method_roundtrip():

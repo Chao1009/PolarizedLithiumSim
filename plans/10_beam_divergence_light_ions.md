@@ -14,19 +14,30 @@ lithium beam.
 
 ---
 
-## 10.1 What the repository assumes
+## 10.1 What the repository assumed before 2026-08-27
+
+> **Superseded 2026-08-28 (A1, A1b, A2 and A3 of §10.4).** All three
+> assumptions below have been replaced in the code.  The section is kept
+> because every figure published before 2026-08-27 rests on them, and
+> because the legacy constants survive, labelled, for those
+> reproductions.
 
 | where | value | provenance |
 |---|---|---|
 | `fastsim/polli_fastsim/farforward.py` | `HIGH_ACCEPTANCE` 0.20/(10·275) = **72.7 µrad**, `HIGH_DIVERGENCE` 0.45/(10·275) = **164 µrad** | a 275 GeV **proton**, back-derived from the documented p_T cuts |
-| `evgen/polligen/reco.py` | `SIGMA_THETA_HA` = 72.7 µrad, `SIGMA_THETA_HD` = 0.41/(10·275) = **149 µrad** | same, and the high-divergence value **disagrees with `farforward.py` by 10%** — the module comment records the 0.41/0.45 rounding but the two are not reconciled |
-| everywhere | **isotropic** (σ_x = σ_y), `aspect = 1.0` | the anisotropy parameter exists and is unused by default |
-| everywhere | **energy-independent** | the same 72.7 µrad at 5 × 41, 10 × 100 and 18 × 275 |
+| `evgen/polligen/reco.py` | `SIGMA_THETA_HA` = 72.7 µrad, `SIGMA_THETA_HD` = **164 µrad**, the `farforward` constant itself | the two packages disagreed by 10% until 2026-08-28: `reco.py` derived the high-divergence value from the 0.41 GeV end of the band, 0.41/(10·275) = 149 µrad, against `farforward.py`'s rounded 0.45. A1b made `reco.SIGMA_THETA_HD` an alias, pinned by `evgen/tests/test_review_20260828.py` |
+| everywhere | **isotropic** (σ_x = σ_y), `aspect = 1.0` | the anisotropy parameter existed and was unused by default; A2 made `sigma_theta_for` return the (h, v) pair and threaded it to the call sites |
+| everywhere | **energy-independent** | the same 72.7 µrad at 5 × 41, 10 × 100 and 18 × 275; A3 replaced it with `farforward.yr_optics(config)` and `tagging_optics(config)` |
 
 Three assumptions, each of which the published tables contradict — and
-§10.3 replaces all three with an estimate. `farforward.YR_PROTON_DIVERGENCE`,
-`YR_GOLD_DIVERGENCE` and `yr_divergence_for()` now carry the tables and the
-scaling, with `fastsim/tests/test_farforward.py` pinning them.
+§10.3 replaces all three with an estimate. `farforward.YR_PROTON_DIVERGENCE`
+and `YR_GOLD_DIVERGENCE` carry the tables and `farforward.sigma_theta_for()`
+the species step, with `fastsim/tests/test_farforward.py` pinning them.  The
+blanket √(A/Z) that the first correction applied through
+`yr_divergence_for()` and `LIGHT_ION_DIVERGENCE_FACTOR` was **retired on
+2026-08-28** together with those two names: a γ-matched ion pays no species
+penalty at all, and only the rigidity-capped top configuration pays √2
+(§10.3).
 
 ## 10.2 What the Yellow Report actually says
 
@@ -116,10 +127,15 @@ and there it does pick up √2.
 **Is equal ε_N defensible?** Gold is the published test. Scaling the 275 GeV
 proton to Au at 110 GeV/u by 1/√(βγ) alone predicts 236 µrad against an
 observed 218 (h) and 379 (v) — ε_N(Au)/ε_N(p) = **0.85 horizontally, 2.6
-vertically**. Intrabeam scattering at fixed beam current goes as Z³/A² =
-**0.75 for ⁶Li against 1 for a proton and 12.7 for gold, 17× lithium's**, and RHIC
-deuterons showed no measurable IBS growth while gold grew 20–45%/h. Lithium
-is a proton-class ion.
+vertically**. Intrabeam scattering separates gold from lithium by far more
+than that, under either normalisation of the same law. Per particle the
+growth rate goes as N Z⁴/A², so at equal bunch intensity gold is **446×**
+lithium (Z⁴/A² = 2.25 for ⁶Li, 1 for a proton, 1004 for gold); at fixed
+beam *current*, where N ∝ 1/Z because a fixed current is fewer ions when
+each carries more charge, it goes as Z³/A² and gold is **17×** lithium
+(0.75, 1, 12.7). `farforward.py` and `fastsim/tests/test_farforward.py`
+carry both. RHIC deuterons showed no measurable IBS growth while gold
+grew 20–45%/h. Lithium is a proton-class ion on either count.
 
 **Δp/p is the easy one.** Protons give 6.8–10.3×10⁻⁴ and gold 6.2–13×10⁻⁴
 across every energy and both cooling schemes — set by the RF bucket rather
@@ -153,18 +169,25 @@ configuration** — an invariance that is itself the derivation:
 | 10 × 100 | 23.7 µrad | ×57.7 | 0.368 |
 | 18 × 275 | 17.1 µrad | ×28.6 | 0.368 |
 
-β\* = 13 m at 5 × 41 (from 0.90 m) is the smallest absolute ask and sits
+That table is the circular-isotropic derivation, and run 12 replaced it
+with the horizontal-only de-squeeze priced immediately below; the absolute
+ask that follows from the corrected optimum is **β*_x ≈ 45 m at 5 × 41**
+(0.90 m × 49.7), with ≈ 107 m and ≈ 71 m at the other two configurations
+(Report 0 §4.2). Forty-five metres is the smallest of the three and sits
 well inside the LHC's demonstrated forward-physics optics — TOTEM/ALFA ran
-β\* = 90 m and 2500 m against a nominal 0.55 m. Raising β\* also *shrinks*
-the beam in the final-focus quadrupoles (β = 14.9 m at the first quad against
-28.7 m today), so the IR aperture is not the constraint; matching and
-chromaticity would be.
+β\* = 90 m and 2500 m against a nominal 0.55 m. It does not, however, relax
+the IR aperture, as the superseded ×14.5 would have: that optimum shrank the
+beam in the final-focus quadrupoles (β ≈ β\* + L²/β\* ≈ 15 m at the first
+quad against 29 m today, for L ≈ 5 m), whereas a 45 m horizontal de-squeeze
+leaves β_x ≈ 46 m there, larger than today. Aperture, matching and
+chromaticity are all questions for C-AD.
 
 **Priced (2026-08-27, `evgen/scripts/tagging_optics.py`, Report 1 §6.1):**
 with the envelope as planar pots see it (a rectangle 10σ_h × 10σ_v) only
 the horizontal plane needs the de-squeeze, and the optimum of ε × L sits
-at β*_x/β*_x,HA = 50 / 180 / 90 with the vertical plane at high acceptance
-(L/L_HA = 1/7 / 1/13 / 1/9.5, ε = 0.32–0.42) rather than at the
+at β*_x/β*_x,HA = 49.7 / 175.6 / 89.3 with the vertical plane at high
+acceptance (L/L_HA = 1/7.1 / 1/13.3 / 1/9.5, ε = 0.42 / 0.32 / 0.33,
+`farforward.tagging_optics_point`) rather than at the
 circular-isotropic 14.5 / 57.7 / 28.6 above: 2.6×10⁶ / 3.0×10⁶ / 6.1×10⁶
 tagged events per year at the 10 fb⁻¹/u placeholder — still 3–8× below
 what IR-8's secondary focus (≈ 20%, our interpolation) would give at the
@@ -172,9 +195,11 @@ same luminosity.  Two assumptions stated there: the electron β* raised in
 step, and a parallel-to-point far-forward transport for the de-squeezed
 lattice (R₁₁σ* ≪ R₁₂σ_θ at the pots), which is the first thing to ask C-AD.
 
-**But the detector must follow.** At β\* = 13 m the 10σ envelope is 0.58
-mrad while the silicon aperture at 5 × 41 is ≈2–3 mrad, so the geometry
-pins the acceptance and the whole β\* gain is wasted. The two levers are
+**But the detector must follow.** At the tagging optics the horizontal
+10σ envelope is 0.33 / 0.17 / 0.12 mrad while the measured silicon edge is
+2.00 / 1.35 / 1.03 mrad (`tools/fullsim`), six to nine times outside it, so
+the geometry pins the acceptance and the whole β\* gain is wasted unless the
+pots follow the envelope in. The two levers are
 strictly multiplicative, and the second one is the near-beam granularity
 question of plans/09 — the module-quantised insertion and the x-moving layer
 ePIC is already designing.
@@ -219,19 +244,50 @@ figure now states its optics per configuration.  `farforward.yr_optics`
 (the Yellow Report high-acceptance / high-divergence rows, a rectangular
 10(σ_h, σ_v) envelope applied to each fragment's azimuth) and
 `farforward.tagging_optics` (the Report 1 §6.1 optimum, with its
-luminosity fraction) are the two optics every script evaluates;
-`coherent_optics_scan.py` panel (d) is per-configuration YR curves with
-the tagging-optics points, `tagging_acceptance.py` tabulates the spectator
-tags at both plus the legacy 73 µrad for reproduction (Report 3 Table 6).
+luminosity fraction) are the two optics the per-configuration figures
+evaluate: `coherent_optics_scan.py` panel (d) is per-configuration YR
+curves with the tagging-optics points, `tagging_acceptance.py` tabulates
+the spectator tags at both plus the legacy 73 µrad for reproduction
+(Report 3 Table 6), and `money_cos2phi_coherent_reco.py --optics`,
+`tagging_optics.py`, `eic_beam_figures.py`, `reco_chain_figures.py` and
+the five `nearbeam_*.py` take the per-configuration values.
 `sigma_theta_for` and `hole_acceptance` live in `farforward` and
 `polligen.reco` delegates to them, pinned by
 `fastsim/tests/test_optics_20260828.py`.
 
+**The two tagged scripts joined them the same evening** (plans/09 B2,
+B3), which closes this item for the tagged observables.
+`money_tagged_azz.py` and `tagged_polarimetry_7li.py` take `--config
+{0,1,2}` and `--optics {menu,legacy,high-acceptance,high-divergence,
+tagging}`, default `menu` = the configuration's Yellow Report
+high-acceptance optics plus the tagging optics with its luminosity
+fraction; `legacy` reproduces the retired 73 / 164 µrad pair and is the
+only place it survives in a published figure.  Threading the flag was
+not the whole fix: `polligen.tagged` never exposed the spectator's lab
+azimuth, so the rectangular envelope degenerated to a circle at n σ_h
+wherever these scripts had used it — ×1.7 too generous at the tagging
+optics — and `TaggedSampler`'s default optics is now
+`farforward.yr_optics(beam_config)` rather than a module constant that
+cannot know the beam.
+
+**Two scripts are still legacy, for reproduction, and say so.**
+`money_cos2phi_coherent.py` and `phase_space_bins.py` price
+the coherent tag with `Optics.pt_cut_near_beam`, the 0.20 and 0.45 GeV
+cuts as a **275 GeV proton** sees them, which for a ⁶Li at 40.8–137.5
+GeV/u is between 5σ and 2σ rather than 10σ; their figure annotations, which
+said only "near-beam envelope", now carry "(legacy)".
+
 ### A4 — re-derive the near-beam study's gains on the band ☑
 Re-derived 2026-08-28 (plans/09 §9.0, Report 4 §2).  The ×26 / ×569 gains
-are withdrawn: at the Yellow Report optics the envelope is at or inside
-the silicon at every configuration and a closer approach buys nothing
-(coherent 7×10⁻⁸ / 6×10⁻²⁷ / 4×10⁻¹⁴ at the envelope).  At the tagging
+are withdrawn: at the Yellow Report optics the envelope is the binding
+constraint at the two lower configurations (2.2 mrad horizontally against
+a 2.0 mrad silicon edge, and 1.8 against 1.35) and the silicon only
+marginally at the top (0.92 against 1.03), so a closer approach buys
+nothing worth having (coherent 7.2×10⁻⁸ / 6.2×10⁻²⁷ / 3.9×10⁻¹⁴ at the
+envelope — `nearbeam_aperture_scan.py`'s column, i.e. the envelope
+horizontally and the larger of silicon and envelope vertically, which is
+how the pots move; the pure envelope in both planes would read
+7.2×10⁻⁸ / 1.2×10⁻²⁶ / 7.8×10⁻¹⁴).  At the tagging
 optics the envelope is 0.33 / 0.17 / 0.12 mrad and the silicon at
 1.0–2.0 mrad tags zero; pots that follow the envelope tag 0.42 / 0.32 /
 0.33 of coherent recoils and 0.35 / 0.27 / 0.28 of α spectators at
@@ -274,10 +330,21 @@ high-acceptance / high-divergence choice actually names.
 
 ## 10.5 What this changes elsewhere
 
-* **plans/04 #11 and #20** — the optics half of both is promoted here and
-  given a number.
-* **plans/09** — the near-beam gains are ratios and survive; the absolute
-  tagged fractions do not.
+* **plans/04 #20** — the optics half is promoted here and given a number.
+  **#11** is not: its transfer-matrix half — what the far-forward
+  transport looks like at the pot planes, and what it becomes under a
+  de-squeezed lattice — stays with the ePIC FF WG, and nothing in this
+  file answers it.
+* **plans/09** — neither the absolute tagged fractions nor the gains
+  survive.  The ×26 / ×569 are withdrawn with them (A4): the recoil must
+  clear the larger of the envelope and the aperture per plane, and at the
+  published optics the envelope is the larger at 5 × 41 (2.2 mrad against
+  a 2.0 mrad silicon edge) and at 10 × 100 (1.8 against 1.35), so
+  approaching closer buys exactly nothing there; at 18 × 275 it buys the
+  ×2.01×10³ the aperture scan prints (3.9×10⁻¹⁴ against 1.9×10⁻¹⁷) on a
+  tagged fraction of 2×10⁻¹⁷, which is nothing that matters.  The
+  near-beam layer pays only *under a tagging optics*, where it is the
+  difference between no coherent tag at all and 32–42%.
 * **reports/1 (cos 2φ projections) and reports/3 (detector study)** —
   both quote acceptances conditioned on the single proton-derived σ_θ.
   Neither should be circulated further without the band of §10.3 or an

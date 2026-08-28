@@ -191,22 +191,42 @@ with R₁₂ = 30.6 m, and θ_y ≈ 2.0 mrad → y = 8.0 mm, the first value abo
 
 **Each energy configuration has its own optics, and its own edge.**  The
 scan was repeated with `epic_craterlake_5x41.xml` and
-`epic_craterlake_10x100.xml`, each with the ⁶Li momentum that puts it at
-that ring's reference rigidity (123 and 300 GeV):
+`epic_craterlake_10x100.xml`, shooting the ion at each ring's **reference
+rigidity** (123 and 300 GeV of ⁶Li) so that it follows the reference orbit
+— which is what makes the result an aperture measurement.  The **angular**
+edge is therefore a property of the aperture and the lattice, and it is
+the conversion to p_T that has to use the beam's own momentum: a ⁶Li fill
+at those two configurations is γ-matched, not rigidity-scaled, and runs at
+40.8 and 99.5 GeV/u, i.e. 244.8 and 597 GeV total, at twice the proton's
+rigidity with the magnets set for it (plans/10 A0).
 
 | configuration | ⁶Li p_u [GeV/u] | p [GeV] | horizontal edge | as p_T |
 |---|---|---|---|---|
-| 5 × 41 | 20.5 | 123 | ≈ 2.0 mrad | 0.25 GeV |
-| 10 × 100 | 50 | 300 | ≈ 1.35 mrad | 0.41 GeV |
+| 5 × 41 | 40.8 | 244.8 | ≈ 2.0 mrad | 0.49 GeV |
+| 10 × 100 | 99.5 | 597 | ≈ 1.35 mrad | 0.81 GeV |
 | 18 × 275 | 137.5 | 825 | ≈ 1.03 mrad | 0.85 GeV |
 
 The angle tightens with energy but not as fast as the momentum grows, so
 in p_T — which is what the physics delivers — the low-energy
-configuration is 3.4× more permissive.  Against the fast simulation's
-angular envelope (10 σ_θ, p_T = 0.089 / 0.218 / 0.60 GeV for high
-acceptance and 0.18 / 0.45 / 1.23 for high divergence) the measured
-aperture is 2.8× / 1.9× / 1.4× the high-acceptance number, i.e. it sits
-between the two optics assumptions and closer to high divergence.
+configuration is 1.7× more permissive.  (Priced instead against the
+rigidity-scaled 20.5 and 50 GeV/u this README carried until 2026-08-28,
+the same edges read 0.25 / 0.41 / 0.85 GeV and the low configuration
+looked 3.4× more permissive.)
+
+**Against which envelope.**  The 10 σ_θ envelope is per configuration and
+anisotropic, not one proton-derived number: `farforward.yr_optics` gives
+10(σ_h, σ_v) = 2.2 × 3.8, 1.8 × 1.8 and 0.92 × 0.92 mrad for ⁶Li at high
+acceptance (0.54 × 0.93, 1.07 × 1.07 and 0.76 × 0.76 GeV of p_T).  The
+measured horizontal edge is **0.91× / 0.75× / 1.12×** that envelope's
+horizontal half-width, so the beam envelope is the binding constraint at
+the two lower configurations and the silicon only marginally at the top —
+the opposite of the "2.8× / 1.9× / 1.4×, the envelope is never binding"
+of plans/08 §8.4, which priced the same edges against the retired single
+73 µrad.  Under the lithium tagging optics (`farforward.tagging_optics`,
+Report 1 §6.1) the horizontal envelope drops to 0.33 / 0.17 / 0.12 mrad —
+six to nine times inside the measured edge — and there the aperture is the
+whole constraint, which is what makes the pot approach the second,
+multiplicative lever.
 
 **What it changes.**  `polligen.reco.rp_measure` models the cutout as a
 slot *wide in x and tight in y* — its docstring says so and
@@ -218,23 +238,49 @@ Two consequences, both computed with the repository's own
 (c_y taken as 3.0 mrad at 5 × 41 and 10 × 100, where the 30° scan only
 bounds it between 2 and 3):
 
-| p_u [GeV/u] | tagged fraction, measured aperture | assumed HA slot | ⟨cos 2φ_t⟩ measured | assumed |
-|---|---|---|---|---|
-| 20.5 | 1.4×10⁻² | 0.824 | **+0.78** | −0.09 |
-| 50 | 5.1×10⁻⁵ | 0.401 | **+0.90** | −0.42 |
-| 137.5 | 1.9×10⁻¹⁷ | 1.6×10⁻² | **+0.97** | −0.80 |
+| p_u [GeV/u] | measured aperture | tagged fraction | ⟨cos 2φ_t⟩ | pure 10σ envelope, both planes | tagged fraction | ⟨cos 2φ_t⟩ |
+|---|---|---|---|---|---|---|
+| 40.8 | 2.0 × 3.0 mrad | 9.8×10⁻⁷ | **+0.93** | 2.2 × 3.8 mrad | 7.2×10⁻⁸ | +0.94 |
+| 99.5 | 1.35 × 3.0 | 7.7×10⁻¹⁶ | **+0.97** | 1.8 × 1.8 | 1.2×10⁻²⁶ | 0.00 |
+| 137.5 | 1.03 × 2.3 | 1.9×10⁻¹⁷ | **+0.97** | 0.92 × 0.92 | 7.8×10⁻¹⁴ | 0.00 |
 
-(Both columns are `rp_hole_acceptance`'s own convention, φ measured from
+A recoil has to clear **both**, and `rp_measure` takes the larger per
+axis: (2.2, 3.8), (1.8, 3.0) and (1.03, 2.3) mrad, tagging 7.2×10⁻⁸,
+6.2×10⁻²⁷ and 1.9×10⁻¹⁷ with ⟨cos 2φ_t⟩ = +0.94, +0.98 and +0.97.
+
+The envelope column above is the **pure** 10σ envelope in both planes,
+which is a different quantity from the column the rest of the repository
+publishes under the name *YR high-acceptance envelope*
+(`evgen/scripts/nearbeam_aperture_scan.py`, plans/09 §9.0,
+`docs/reproduction_manual.md`, plans/10 A4): that one holds the vertical
+at the larger of the measured aperture and the 10σ_y envelope while the
+horizontal is scanned, because the pots are retracted in x and fixed in
+y.  It is therefore (2.2, 3.8), (1.8, 3.0) and (0.9169, 2.3) mrad, i.e.
+7.2×10⁻⁸, **6.2×10⁻²⁷** and **3.9×10⁻¹⁴** — the same at 5 × 41, where
+the envelope is the larger in both planes, and smaller at the other two,
+where the silicon is the taller cut.  Both are correct under their own
+definition; only the name is shared, and neither may be quoted without
+it.  (Use the exact 0.9169 mrad `sigma_theta_for` returns, not a rounded
+0.92: in an exponential of the SQUARE of the angle those 0.3% cost 18%,
+7.8×10⁻¹⁴ against 6.4×10⁻¹⁴.)
+
+(Every column is `rp_hole_acceptance`'s own convention, φ measured from
 **x**; the analysis's β is measured from the *vertical* spin axis, so
-⟨cos 2β⟩ is the negative of each — the assumed slot gives the "large and
-positive" ⟨cos 2β⟩ that plans/04 #20 records, and the measured aperture
-gives a large NEGATIVE one.)
+⟨cos 2β⟩ is the negative of each — the wide-in-x slot that was assumed
+before this scan gives the "large and positive" ⟨cos 2β⟩ that plans/04 #20
+records, and both the measured aperture and the real, tall envelope give a
+large NEGATIVE one.  The superseded comparison this table carried until
+2026-08-28 priced the assumed slot at 0.824 / 0.401 / 1.6×10⁻² with
+⟨cos 2φ_t⟩ = −0.09 / −0.42 / −0.80, and the measured column at the
+rigidity-scaled momenta: 1.4×10⁻², 5.1×10⁻⁵ and 1.9×10⁻¹⁷.)
 
-The coherent tag is far more restrictive than assumed and survives only
-at the low-energy configuration, and the acceptance-induced fake cos 2φ_t
-**changes sign** — which is exactly the harmonic the coherent fit
-templates (report §7, `reco.basis_2d`).  The magnitude is what the
-template absorbs; the sign is what a mis-specified template gets wrong.
+The coherent tag is far more restrictive than assumed — at the published
+optics it survives at no configuration, the best of them being 7×10⁻⁸ —
+and the acceptance-induced fake cos 2φ_t **changes sign**, which is
+exactly the harmonic the coherent fit templates (report §7,
+`reco.basis_2d`).  The magnitude is what the template absorbs; the sign is
+what a mis-specified template gets wrong, and the sign is the half of this
+that does not depend on the optics.
 
 **Carried through the coherent chain.**  `reco.RP_APERTURE_MEASURED` is
 the table above, `rp_measure(cut_theta_xy=…)` takes the larger of the
@@ -246,9 +292,19 @@ At the **low** configuration the measurement survives: acceptance
 a formula — two of the four |t| bins instead of four, δa_t worse by
 6–34×, and a_e still recovered (0.0073 ± 0.0045 and 0.0091 ± 0.0045
 against an injected 0.0100).  At **mid** and **top** the aperture leaves
-no accepted recoil in the binned |t| window at all.  The coherent
-programme is therefore a low-energy programme for a second and stronger
-reason than the angular envelope already gave.
+no accepted recoil in the binned |t| window at all.  That was read at the
+time as a second and stronger reason why the coherent programme is a
+low-energy one; **it is not**, since the per-configuration divergences
+came in.  At the Yellow Report optics no configuration has a coherent tag
+— 7×10⁻⁸ at the best of them, and the beam, not the silicon, is what
+closes it at the two lower ones — and under the tagging optics, the only
+optics at which the channel exists, all three tag 32–42% provided the pots
+follow the envelope in, so the aperture no longer separates the
+configurations at all.  Which one to run is then a physics choice, and
+Report 1 §7 proposes the **top**, 18 × 137.5, on reach and yield
+(plans/04 #20, Report 4).  What this scan establishes independently of any
+optics is the **aspect** — the cutout is tall, not wide — and with it the
+sign.
 
 **Caveats before this is quoted as a correction.** One event per scan
 point, 30° azimuthal steps, no beam divergence or vertex spread, and the

@@ -91,27 +91,40 @@ generator's rate map to ±25% down to x = 3×10⁻⁴.
 **The massless Σ identity does not hold for a massive target.**
 `hfs.truth_kinematics_check` pins Σ over the final state = 2 E_e y, which
 the toy generator satisfies exactly.  A PYTHIA sample does not: the target
-nucleon carries E − p_z = 8.8 MeV at 50 GeV/u, so Σ − 2 E_e y = 9.4 MeV
-(measured median), which is 0.14% of Σ at y = 1 but 2% at y = 0.01 and
-7.7% at y = 0.004.  Nothing downstream is affected — `HFSLibrary`
-transfers the *ratio* Σ_reco/Σ_true of the library event's own sums, in
-which the offset cancels — but the check itself must not be applied to a
-PYTHIA sample below y ≈ 0.2.  The p_T identity is exact (≤ 5×10⁻¹¹).
+nucleon enters with E − p_z ≈ m_N²/(2 p_u), which is 8.8 MeV at the
+50 GeV/u of the diagnostic run above and 10.8 / 4.4 / 3.2 MeV at the
+standing production's 40.8 / 99.5 / 137.5 GeV/u.  On that diagnostic run
+Σ − 2 E_e y = 9.4 MeV (measured median), which is 0.14% of Σ at y = 1 but
+2% at y = 0.01 and 7.7% at y = 0.004; the offset scales as 1/p_u, so it is
+smaller in every file of the standing production except the low one.
+Nothing downstream is affected — `HFSLibrary` transfers the *ratio*
+Σ_reco/Σ_true of the library event's own sums, in which the offset cancels
+— but the check itself must not be applied to a PYTHIA sample below
+y ≈ 0.2.  The p_T identity is exact (≤ 5×10⁻¹¹).
 
 ## Production
+
+The beam energies are the three γ-matched machine configurations,
+`beams.default_configs("6Li")` = 5 × 40.8, 10 × 99.5 and 18 × 137.5 GeV/u
+(plans/10 A0); the rigidity-scaled 5 × 20.5 and 10 × 50 this file carried
+before 2026-08-27 are not machine configurations.  The mid one, doubled
+because money plots 5R/7R are published at it:
 
 ```bash
 export PYTHONPATH=$HOME/Apps/pythia8311/lib
 export PYTHIA8DATA=$HOME/Apps/pythia8311/share/Pythia8/xmldoc
 python3 tools/pythia8/gen_dis_hfs.py --target p --n-events 2000000 \
-    --electron-energy 10 --p-per-nucleon 50 --seed 101 --quiet \
-    --out evgen/samples/pythia8_e10_p50_dis.npz
+    --electron-energy 10 --p-per-nucleon 99.5 --seed 101 --quiet \
+    --out evgen/samples/pythia8_e10_p99.5_dis.npz
 python3 tools/pythia8/gen_dis_hfs.py --target n ... --seed 102 \
-    --out evgen/samples/pythia8_e10_n50_dis.npz
+    --out evgen/samples/pythia8_e10_n99.5_dis.npz
 ```
 
-Measured 2026-08-26 on eight cores, three jobs in parallel: **9 000–13 000
-events/s**, 330 MB and ~115 s per million events at 10 × 99.5.  The six files
+Measured 2026-08-28 on eight cores, three jobs in parallel, with
+`PhaseSpace:mHatMin = 0.5`: **7 000–8 500 events/s**, 455 MB and ~140 s per
+million events at 10 × 99.5 (the 9 000–13 000 events/s, 330 MB and 115 s
+quoted here before are the pre-2026-08-28 production, whose default m̂ floor
+removed the low-x half of the sample and 27–36% of the particles with it).  The six files
 of the standing production and their cross sections are the manifest in
 [evgen/samples/README.md](../../evgen/samples/README.md).
 
@@ -119,21 +132,22 @@ Then, on any machine that has the files:
 
 ```bash
 python3 evgen/scripts/hfs_resolution.py --config 1 \
-    --sample evgen/samples/pythia8_e10_p50_dis.npz \
-             evgen/samples/pythia8_e10_n50_dis.npz     # resolution figure + table
+    --sample evgen/samples/pythia8_e10_p99.5_dis.npz \
+             evgen/samples/pythia8_e10_n99.5_dis.npz   # resolution figure + table
 python3 evgen/scripts/money_cos2phi_reco.py --y-source hfs \
-    --hfs-sample evgen/samples/pythia8_e10_p50_dis.npz \
-                 evgen/samples/pythia8_e10_n50_dis.npz
+    --hfs-sample evgen/samples/pythia8_e10_p99.5_dis.npz \
+                 evgen/samples/pythia8_e10_n99.5_dis.npz
 ```
 
 Without a sample both scripts fall back to the toy string-fragmentation
 generator `hfs.ToyHFS` (flagged "toy" in every output); its numbers are
 illustrative.
 
-The p and n files are merged by event count (`HFSSample.concatenate`),
-which is what Z = N = 3 asks for in ⁶Li — but the two cross sections are
-not equal (0.666 vs 0.576 μb at 10 × 99.5, 0.420 vs 0.339 at 5 × 40.8), so
-generating the same number of events for both is a *choice of weighting*,
-not a neutral merge.  It is the right one for a library that supplies
-hadronic shapes per (x, Q²) cell and the wrong one for anything that reads
-the sample as a rate.
+The p and n files are merged by `HFSSample.concatenate`, which since
+2026-08-28 weights each file by σ_gen/n_events (plans/08 A10).  That
+matters because the two cross sections are not equal — 0.947 vs 0.855 μb
+at 10 × 99.5, 0.642 vs 0.555 at 5 × 40.8, 1.164 vs 1.070 at 18 × 137.5 —
+so the equal-count merge the manifest still generates would have mixed the
+targets 1 : 1 where ⁶Li (Z = N = 3) asks for σ_p : σ_n, 1.11 : 1 at the mid
+configuration.  With the weighting in place the event counts of the two
+files no longer have to match.

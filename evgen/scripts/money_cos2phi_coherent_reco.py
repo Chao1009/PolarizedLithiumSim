@@ -27,6 +27,13 @@ level (plans/07 WP3 -> WP5) -- money plot 6 re-derived with
     the cos 2beta COEFFICIENT is 2 a_2 -- twice what money plot 6 injects;
   * the spin-state-sorted 2-D ratio fit (reco.harmonic_ratio_fit_2d) of
     P_zz = +0.6 / -1.2 fills, which cancels the cutout's fake harmonics.
+    `--fit likelihood` swaps it for the acceptance-profiled Poisson
+    likelihood (reco.harmonic_likelihood_fit_2d), which is unbiased at
+    any count and is what the sparse |t| bins need;
+  * `--u-in-situ`, which measures the unpolarized harmonics (u1, u2)
+    from the spin-averaged counts of the same data against the response's
+    acceptance shape and propagates their covariance into the harmonic
+    errors, instead of assuming ZEUS's values.
 
 Panels: (a) raw spin-sorted yields vs beta (acceptance-dominated);
 (b) the acceptance-free modulation T projected on beta and on alpha with
@@ -56,6 +63,30 @@ from polli_fastsim import beams, fom  # noqa: E402
 from polli_fastsim.farforward import HIGH_ACCEPTANCE  # noqa: E402
 
 C_TRUTH, C_FIT, C_ALT, C_GREY = "#0072B2", "#D55E00", "#009E73", "0.45"
+
+
+def output_stem(args):
+    """File stem for one run.  Money plot 6R -- Report 2's __RC5__ --
+    is ONE combination: `--config 0 --optics tagging` with the default
+    ratio fit, the assumed (u1, u2) and the published |t| edges.  Every
+    other combination gets its keys appended, because the reproduction
+    manual documents non-default runs (`--fit likelihood`, `--u-in-situ`,
+    `--t-edges`) whose figure would otherwise silently overwrite the
+    published one -- the bug `money_tagged_azz.output_stem` fixed for the
+    tagged scripts on 2026-08-28."""
+    base = "money_cos2phi_coherent_reco_6Li"
+    if (args.config == 0 and args.optics == "tagging"
+            and args.fit == "ratio" and not args.u_in_situ
+            and args.t_edges is None):
+        return base
+    keys = ["c%d" % args.config, args.optics]
+    if args.fit != "ratio":
+        keys.append(args.fit)
+    if args.u_in_situ:
+        keys.append("uinsitu")
+    if args.t_edges is not None:
+        keys.append("tedges")
+    return "%s_%s" % (base, "_".join(keys))
 
 
 def main():
@@ -154,6 +185,26 @@ def main():
     ap.add_argument("--rel-lumi-offset", type=float, default=0.0,
                     help="relative-luminosity error unknown to the "
                          "analysis (second order in the ratio)")
+    ap.add_argument("--u-in-situ", action="store_true",
+                    help="measure (u1, u2) from the SPIN-AVERAGED counts "
+                         "of the same data against the response's own "
+                         "acceptance shape, instead of assuming them, and "
+                         "propagate their covariance into the harmonic "
+                         "errors (plans/08 A3).  With a free per-bin "
+                         "acceptance u is not identifiable, so this "
+                         "necessarily uses the acceptance MC -- see "
+                         "reco.unpolarized_insitu_fit_2d")
+    ap.add_argument("--fit", default="ratio", choices=("ratio", "likelihood"),
+                    help="estimator of the two-azimuth harmonics.  'ratio' "
+                         "(default, and every published number) inverts "
+                         "the bin-wise spin-state ratio and fits it by "
+                         "weighted LSQ; 'likelihood' profiles the per-bin "
+                         "acceptance out of the Poisson likelihood, which "
+                         "is exactly the conditional multinomial given the "
+                         "bin totals and therefore unbiased at ANY count "
+                         "-- the fix for the low-count bias of the sparse "
+                         "|t| bins (plans/08 A12; run it with --ensemble "
+                         "to see the difference)")
     ap.add_argument("--no-sin", action="store_true",
                     help="drop the sin 2alpha / sin 2beta / sin(alpha+beta) "
                          "null columns.  They are exactly forbidden by the "
@@ -179,8 +230,17 @@ def main():
     ap.add_argument("--n-beta", type=int, default=24,
                     help="(alpha, beta) binning of the two-azimuth fit; the "
                          "bin-wise ratio of Poisson counts is biased below "
-                         "~30 counts per bin, so low-count |t| bins want "
-                         "coarser bins (2026-08-28)")
+                         "~30 counts per bin (--fit ratio, the default). "
+                         "Coarser bins only attenuate that, at a cost in "
+                         "resolution; --fit likelihood removes it outright "
+                         "at any count and needs no re-binning "
+                         "(plans/08 A12)")
+    ap.add_argument("--t-edges", default=None,
+                    help="comma-separated reconstructed |t| bin edges in "
+                         "GeV^2, replacing the published "
+                         "0.05,0.08,0.12,0.17,0.25.  The window BELOW 0.05 "
+                         "that the published binning discards is what "
+                         "plans/08 8.4 prices")
     ap.add_argument("--n-mc", type=int, default=600000,
                     help="response recoils; the published Table 3 uses "
                          "6e6 so that the template basis's own MC "
@@ -227,15 +287,15 @@ def main():
         sigma_theta_list=(args.sigma_theta,))
     # coherent recoils produced in one year AT THIS OPTICS' luminosity
     n_produced = float(n_coh.sum()) * lumi_scale
-    aperture = (reco.rp_aperture_for(config.ion_momentum_per_nucleon)
+    aperture = (reco.rp_aperture_for(config)
                 if args.rp_aperture == "measured" else None)
     if args.optics == "tagging":
         aperture = (top["env_x"], top["env_y"])
     if args.rp_aperture == "measured" and aperture is None:
-        raise SystemExit("no measured aperture for %g GeV/u: it is tabulated "
-                         "per optics at the three machine configurations (reco."
-                         "RP_APERTURE_MEASURED)"
-                         % config.ion_momentum_per_nucleon)
+        raise SystemExit("no measured aperture for %s: it is tabulated per "
+                         "machine configuration (reco.RP_APERTURE_MEASURED, "
+                         "keyed by farforward.yr_config_key)"
+                         % config.label())
     if args.near_beam_mrad is not None:
         if aperture is None:
             raise SystemExit("--near-beam-mrad replaces the horizontal half "
@@ -275,7 +335,15 @@ def main():
                  responses[0].cut_pt_xy[k], cresp.cut_pt_xy[k],
                  responses[0].acceptance, cresp.acceptance))
     u_assumed = None
-    if args.u1_assumed is not None or args.u2_assumed is not None:
+    if args.u_in_situ:
+        if args.u1_assumed is not None or args.u2_assumed is not None:
+            raise SystemExit("--u-in-situ measures (u1, u2) from the data; "
+                             "it cannot be combined with --u1/--u2-assumed")
+        u_assumed = "in-situ"
+        print("unpolarized harmonics (u1, u2) measured IN SITU from the "
+              "spin-averaged counts against the response's acceptance "
+              "shape, and propagated into the harmonic errors")
+    elif args.u1_assumed is not None or args.u2_assumed is not None:
         u_assumed = (args.u1 if args.u1_assumed is None else args.u1_assumed,
                      args.u2 if args.u2_assumed is None else args.u2_assumed)
         print("assumed unpolarized harmonics (u1, u2) = (%.4f, %.4f) "
@@ -305,7 +373,12 @@ def main():
     def a_t_rot(t):
         return a_t_func(t) * np.cos(2.0 * d_t)
 
-    t_edges = [0.05, 0.08, 0.12, 0.17, 0.25]
+    t_edges = ([0.05, 0.08, 0.12, 0.17, 0.25] if args.t_edges is None
+               else [float(v) for v in args.t_edges.split(",")])
+    if len(t_edges) < 2 or any(hi <= lo for lo, hi
+                               in zip(t_edges[:-1], t_edges[1:])):
+        raise SystemExit("--t-edges wants at least two increasing edges, "
+                         "not %r" % (args.t_edges,))
     fits1, fits10, kept_edges = [], [], []
     for tlo, thi in zip(t_edges[:-1], t_edges[1:]):
         # A cutout tight enough to empty part of the circle leaves the
@@ -319,17 +392,19 @@ def main():
                 a_m=args.a_m, u1=args.u1, u2=args.u2, rng=rng,
                 responses=responses, u_coeffs_assumed=u_assumed,
                 lumi_assumed=lumi_assumed, poisson=not args.exact,
-                n_alpha=args.n_alpha, n_beta=args.n_beta, **kw_sin)
+                n_alpha=args.n_alpha, n_beta=args.n_beta, fit=args.fit,
+                **kw_sin)
             f10 = rp.measure_coherent(
                 cresp, n_produced * lumi_ratio, plan, tlo, thi, amp_c,
                 a_t_rot, a_m=args.a_m, u1=args.u1, u2=args.u2, rng=rng,
                 responses=responses, u_coeffs_assumed=u_assumed,
                 lumi_assumed=lumi_assumed, poisson=not args.exact,
-                n_alpha=args.n_alpha, n_beta=args.n_beta, **kw_sin)
+                n_alpha=args.n_alpha, n_beta=args.n_beta, fit=args.fit,
+                **kw_sin)
         except np.linalg.LinAlgError as exc:
             n_acc = int(((cresp.t_reco >= tlo)
                          & (cresp.t_reco < thi)).sum())
-            print("t in [%.2f,%.2f): DROPPED -- %d accepted response "
+            print("t in [%g,%g): DROPPED -- %d accepted response "
                   "recoils, and %s" % (tlo, thi, n_acc, exc))
             continue
         fits1.append(f1)
@@ -349,13 +424,13 @@ def main():
             "importance-sample above it with CoherentResponse(t_floor=...), "
             "which is what the WP5 optics scan does for exactly this "
             "reason." % window)
-    t_edges = [e[0] for e in kept_edges] + [kept_edges[-1][1]]
 
     # --- ensemble: is the template basis unbiased? ------------------------
     if args.ensemble > 0:
         print("ensemble of %d one-year pseudo-experiments per |t| bin "
-              "(same response, fresh Poisson draws): mean fit - injected, "
-              "the spread, and the pull of the mean" % args.ensemble)
+              "(same response, fresh Poisson draws, %s fit): mean fit - "
+              "injected, the spread, and the pull of the mean"
+              % (args.ensemble, args.fit))
         for (tlo, thi) in kept_edges:
             at, ae_, dt, de = [], [], [], []
             for k in range(args.ensemble):
@@ -365,12 +440,12 @@ def main():
                     a_m=args.a_m, u1=args.u1, u2=args.u2, rng=rk,
                     responses=responses, u_coeffs_assumed=u_assumed,
                     lumi_assumed=lumi_assumed, n_alpha=args.n_alpha,
-                    n_beta=args.n_beta, **kw_sin)
+                    n_beta=args.n_beta, fit=args.fit, **kw_sin)
                 at.append(f["a_t"]); ae_.append(f["a_e"])
                 dt.append(f["err_t"]); de.append(f["err_e"])
             tr = f["truth"]
             at, ae_, dt, de = map(np.array, (at, ae_, dt, de))
-            print("  t in [%.2f,%.2f): a_t mean %.4f (inj %.4f) spread %.4f "
+            print("  t in [%g,%g): a_t mean %.4f (inj %.4f) spread %.4f "
                   "quoted err %.4f pull-of-mean %+.1f | a_e mean %.4f "
                   "(inj %.4f) spread %.4f quoted err %.4f pull-of-mean %+.1f"
                   % (tlo, thi, at.mean(), tr["a_t"], at.std(), dt.mean(),
@@ -384,8 +459,12 @@ def main():
     bc = 0.5 * (be[:-1] + be[1:])
     ac = 0.5 * (ae[:-1] + ae[1:])
     # the displayed modulation uses what the ANALYSIS assumes (u, shares)
-    u1_shown, u2_shown = (u_assumed if u_assumed is not None
-                          else (args.u1, args.u2))
+    if args.u_in_situ:
+        u1_shown, u2_shown = f0["u_insitu"]  # the summary loop prints all bins
+    elif u_assumed is not None:
+        u1_shown, u2_shown = u_assumed
+    else:
+        u1_shown, u2_shown = args.u1, args.u2
     lum_shown = lumi_assumed if lumi_assumed is not None else [0.5, 0.5]
 
     # --- (a) raw yields per fill vs beta --------------------------------
@@ -408,7 +487,7 @@ def main():
     ax1.set_xlabel(r"$\beta=\phi_t-\phi_S$ (reconstructed)")
     ax1.set_ylabel(r"$N_f(\beta)/\langle N_f\rangle$")
     ax1.set_title(r"(a) raw spin-sorted yields, $|t|\in[%.2f,%.2f]$: the "
-                  r"cutout dominates" % (t_edges[0], t_edges[1]), fontsize=9)
+                  r"cutout dominates" % kept_edges[0], fontsize=9)
     ax1.legend(fontsize=7, loc="upper right")
     ax1.tick_params(labelsize=8)
 
@@ -512,17 +591,18 @@ def main():
         "\n" r"$N_{\rm tag}$ = %.2g (1 yr) vs %.2g with the constant 0.20 GeV cut at $L_{HA}$; "
         r"deformation $c_2=2a_2$ (Eq. 9 convention), $a_e=%.3f$"
         "\n" r"$u_1=%.2f$, $u_2=%.2f$ (ZEUS LPS $1\sigma$ bounds); "
-        r"two-fill ratio fit with the MC template basis; statistical errors only"
+        r"two-fill %s fit with the MC template basis; statistical errors only"
         % (config.label(), args.pzz, 1e6 * args.sigma_theta,
            1e6 * args.sigma_theta * args.aspect,
            args.shape, cresp.cut_pt_xy[0], cresp.cut_pt_xy[1],
            args.optics + " optics", n_tag,
-           tagged[HIGH_ACCEPTANCE.name].sum(), args.amp, args.u1, args.u2),
+           tagged[HIGH_ACCEPTANCE.name].sum(), args.amp, args.u1, args.u2,
+           args.fit),
         fontsize=9)
     fig.tight_layout(rect=(0, 0, 1, 0.905))
     outdir = pathlib.Path(args.outdir)
     outdir.mkdir(parents=True, exist_ok=True)
-    out = outdir / "money_cos2phi_coherent_reco_6Li.png"
+    out = outdir / ("%s.png" % output_stem(args))
     fig.savefig(out, dpi=140)
     print("wrote", out)
     print("coherent produced (1 yr at this optics' luminosity, L/L_HA = %.3f): "
@@ -535,14 +615,24 @@ def main():
              1e6 * args.sigma_theta * args.aspect, cresp.acceptance, n_tag,
              tagged[HIGH_ACCEPTANCE.name].sum()))
     print("cutout fake <cos 2beta> = %.3f" % fake)
-    for (tlo, thi), f1, f10 in zip(zip(t_edges[:-1], t_edges[1:]), fits1, fits10):
+    # kept_edges, not a rebuilt contiguous list: a bin dropped from
+    # anywhere but the tail would shift every label after it
+    for (tlo, thi), f1, f10 in zip(kept_edges, fits1, fits10):
         tr = f1["truth"]
-        print("t in [%.2f,%.2f]: N=%.3g  a_t truth %.4f  fit %.4f +- %.4f (1yr) "
+        print("t in [%g,%g]: N=%.3g  a_t truth %.4f  fit %.4f +- %.4f (1yr) "
               "%.4f +- %.4f (10yr) | a_e truth %.4f fit %.4f +- %.4f (1yr) "
               "%.4f +- %.4f (10yr) | a_m %.4f +- %.4f"
               % (tlo, thi, f1["n"], tr["a_t"], f1["a_t"], f1["err_t"],
                  f10["a_t"], f10["err_t"], tr["a_e"], f1["a_e"], f1["err_e"],
                  f10["a_e"], f10["err_e"], f1["a_m"], f1["err_m"]))
+        if args.u_in_situ:
+            print("    in-situ (u1, u2) = (%.4f +- %.4f, %.4f +- %.4f) "
+                  "against generated (%.4f, %.4f); propagated into a_e it "
+                  "adds %.5f in quadrature to the %.5f statistical error"
+                  % (f1["u_insitu"][0], f1["u_err"][0], f1["u_insitu"][1],
+                     f1["u_err"][1], args.u1, args.u2,
+                     np.sqrt(max(f1["cov_u"][1, 1], 0.0)),
+                     np.sqrt(f1["cov_stat"][1, 1])))
         if not args.no_sin:
             print("    null test: a_e_s %+.4f +- %.4f, a_t_s %+.4f +- %.4f, "
                   "a_m_s %+.4f +- %.4f  -> sin/cos %+.4f (alpha) %+.4f "
@@ -552,6 +642,12 @@ def main():
                      f1["a_e_s"] / f1["a_e"], f1["a_t_s"] / f1["a_t"],
                      5e2 * f1["err_e_s"] / abs(f1["a_e"]),
                      5e2 * f1["err_t_s"] / abs(f1["a_t"])))
+    # a_e is ONE constant across the |t| bins, so its errors combine; a_t
+    # is a different number in each bin and does not (plans/08 8.4)
+    de1 = np.array([f["err_e"] for f in fits1])
+    print("combined one-year delta(a_e) over the %d |t| bins: %.5f (from %s)"
+          % (len(de1), 1.0 / np.sqrt((1.0 / de1 ** 2).sum()),
+             " / ".join("%.5f" % v for v in de1)))
 
 
 if __name__ == "__main__":

@@ -130,6 +130,16 @@ class ClusterChannel:
         return nucleus_mass(self.beam_Z, self.beam_A)
 
     @property
+    def partner_A(self):
+        """Mass number of the struck (partner) cluster."""
+        return self.beam_A - self.spectator_A
+
+    @property
+    def partner_Z(self):
+        """Charge of the struck (partner) cluster."""
+        return self.beam_Z - self.spectator_Z
+
+    @property
     def m_partner(self):
         """Mass of the FREE struck cluster [GeV].
 
@@ -225,6 +235,48 @@ def sample_k(channel, n, beta=0.30, k_max=1.5, rng=None):
     return k * sin_t * np.cos(phi), k * sin_t * np.sin(phi), k * cos_t
 
 
+def _boost_fragment(channel, p_per_nucleon, kx, ky, kz, m, frag_Z, frag_A):
+    """Lab kinematics of ONE fragment of a breakup, from its rest-frame
+    momentum (kx, ky, kz), mass `m`, charge `frag_Z` and mass number
+    `frag_A`.  Returns the dict `spectator_lab_kinematics` documents.
+
+    The single implementation of the boost, the rigidity ratio and the
+    azimuth convention, shared by `spectator_lab_kinematics` (the spectator
+    alone, +k) and `breakup_lab_kinematics` (both fragments, +-k) so that
+    the two cannot drift apart -- the lesson of plans/08 C1, where one
+    two-body scale computed in two places came out as two numbers.
+    """
+    e_rest = np.sqrt(m * m + kx * kx + ky * ky + kz * kz)
+    # beam boost (per-nucleon momentum sets the velocity of the nucleus).
+    # The beam mass is the physical nuclear mass: with beam_A * M_U the
+    # boost gamma*beta = p_beam / m_beam, and with it p_lab, theta and R,
+    # is high by the relative mass excess (2.2e-3 for 6Li, 2.1e-3 for
+    # 7Li) -- see NUCLEUS_MASS.
+    m_beam = channel.m_beam
+    p_beam = channel.beam_A * p_per_nucleon
+    e_beam = np.sqrt(p_beam**2 + m_beam**2)
+    gamma = e_beam / m_beam
+    gbeta = p_beam / m_beam
+    pz_lab = gamma * kz + gbeta * e_rest
+    pt = np.sqrt(kx * kx + ky * ky)
+    p_lab = np.sqrt(pt * pt + pz_lab * pz_lab)
+    theta = np.arctan2(pt, pz_lab)
+    rigidity_beam = p_beam / channel.beam_Z
+    if frag_Z > 0:
+        rig_ratio = (p_lab / frag_Z) / rigidity_beam
+    else:
+        rig_ratio = np.full_like(p_lab, np.nan)  # neutral: no rigidity
+    return {
+        "pT": pt,
+        "theta": theta,
+        "phi": np.arctan2(ky, kx),        # lab azimuth, for a planar cut
+        "p_lab": p_lab,
+        "R": rig_ratio,
+        "xL": p_lab / (frag_A * p_per_nucleon),
+        "k": np.sqrt(kx**2 + ky**2 + kz**2),
+    }
+
+
 def spectator_lab_kinematics(channel, p_per_nucleon, n=200_000, beta=0.30,
                              rng=None):
     """Boost spectator (rest-frame momentum -k of the struck cluster) to the
@@ -245,9 +297,11 @@ def spectator_lab_kinematics(channel, p_per_nucleon, n=200_000, beta=0.30,
     fraction rises 1.31% -> 1.51% (+15% relative) and the total alpha
     tag 1.65% -> 1.85% (legacy 73 urad "high-acceptance") and 1.31% ->
     1.51% (legacy 164 urad) at 137.5 GeV/u; 13.2% -> 13.5% at 50 GeV/u.
-    (Since 2026-08-28 the published tag is evaluated per configuration
-    at the Yellow Report optics -- 1.7 / 1.5 / 1.7% -- and at the
-    tagging optics, farforward.yr_optics / tagging_optics.)  The 7Li
+    (These legacy numbers are the AZIMUTH-BLIND circular cut the routing
+    applied at the time; since 2026-08-28 the published tag is evaluated
+    per configuration at the Yellow Report optics -- 1.7 / 1.5 / 1.6% --
+    and at the tagging optics, farforward.yr_optics / tagging_optics,
+    with the rectangle applied to each fragment's azimuth.)  The 7Li
     alpha, off rigidity at R = 0.856 with no nearby edge, moves by
     +0.13% relative (97.7% -> 97.9%).  Splitting the two changes shows
     the acceptance shift is the mass alone: at 137.5 GeV/u the new
@@ -255,33 +309,43 @@ def spectator_lab_kinematics(channel, p_per_nucleon, n=200_000, beta=0.30,
     1.645% -> 1.839%.
     """
     kx, ky, kz = sample_k(channel, n, beta=beta, rng=rng)
-    m = channel.m_spec
-    e_rest = np.sqrt(m * m + kx * kx + ky * ky + kz * kz)
-    # beam boost (per-nucleon momentum sets the velocity of the nucleus).
-    # The beam mass is the physical nuclear mass: with beam_A * M_U the
-    # boost gamma*beta = p_beam / m_beam, and with it p_lab, theta and R,
-    # is high by the relative mass excess (2.2e-3 for 6Li, 2.1e-3 for
-    # 7Li) -- see NUCLEUS_MASS.
-    m_beam = channel.m_beam
-    p_beam = channel.beam_A * p_per_nucleon
-    e_beam = np.sqrt(p_beam**2 + m_beam**2)
-    gamma = e_beam / m_beam
-    gbeta = p_beam / m_beam
-    pz_lab = gamma * kz + gbeta * e_rest
-    pt = np.sqrt(kx * kx + ky * ky)
-    p_lab = np.sqrt(pt * pt + pz_lab * pz_lab)
-    theta = np.arctan2(pt, pz_lab)
-    rigidity_beam = p_beam / channel.beam_Z
-    if channel.spectator_Z > 0:
-        rig_ratio = (p_lab / channel.spectator_Z) / rigidity_beam
-    else:
-        rig_ratio = np.full_like(p_lab, np.nan)  # neutral: no rigidity
-    return {
-        "pT": pt,
-        "theta": theta,
-        "phi": np.arctan2(ky, kx),        # lab azimuth, for a planar cut
-        "p_lab": p_lab,
-        "R": rig_ratio,
-        "xL": p_lab / (channel.spectator_A * p_per_nucleon),
-        "k": np.sqrt(kx**2 + ky**2 + kz**2),
-    }
+    return _boost_fragment(channel, p_per_nucleon, kx, ky, kz,
+                           channel.m_spec, channel.spectator_Z,
+                           channel.spectator_A)
+
+
+def breakup_lab_kinematics(channel, p_per_nucleon, n=200_000, beta=0.30,
+                           rng=None):
+    """Both fragments of one two-body breakup, correlated.
+
+    `spectator_lab_kinematics` boosts ONE fragment; the two channels of a
+    beam (6Li -> alpha + d as LI6_ALPHA_TAG and LI6_D_TAG) sampled
+    separately are two unrelated events.  Here a single relative momentum k
+    is drawn and BOTH fragments are boosted from it: the spectator with +k
+    and the partner with -k, which is all the two-body rest-frame condition
+    says.  The two channels of a beam share kappa and carry complementary
+    masses, so nothing new is assumed -- only the correlation that sampling
+    them apart throws away.
+
+    Returns {"spectator": {...}, "partner": {...}, "k": |k|, "kx", "ky",
+    "kz"}, the two fragment dicts carrying exactly the keys
+    `spectator_lab_kinematics` returns and the rest-frame components being
+    the SPECTATOR's (the partner's are their negatives).
+
+    The observable consequence, and the reason this is worth sampling: the
+    two fragments take opposite transverse kicks of equal size but are
+    carried by different longitudinal momenta, so their lab angles are in
+    the inverse ratio of their masses and their azimuths differ by pi.  For
+    6Li -> alpha + d that is theta_d / theta_alpha -> m_alpha / m_d = 1.987
+    as k -> 0 (the naive mass-number ratio would say 2), and the deuteron
+    is always the wider, easier fragment.
+    """
+    kx, ky, kz = sample_k(channel, n, beta=beta, rng=rng)
+    spec = _boost_fragment(channel, p_per_nucleon, kx, ky, kz,
+                           channel.m_spec, channel.spectator_Z,
+                           channel.spectator_A)
+    part = _boost_fragment(channel, p_per_nucleon, -kx, -ky, -kz,
+                           channel.m_partner, channel.partner_Z,
+                           channel.partner_A)
+    return {"spectator": spec, "partner": part, "kx": kx, "ky": ky, "kz": kz,
+            "k": spec["k"]}

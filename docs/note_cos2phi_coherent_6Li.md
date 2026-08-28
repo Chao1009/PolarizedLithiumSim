@@ -262,9 +262,15 @@ Background = anything putting a beam-rigidity track into the RP pT tail
 with a quiet central detector. Ranked:
 
 1. **α+d breakup — the killer** (threshold 1.474 MeV; the 2.186 MeV 3⁺,
-   Γ = 24 keV, decays ~100% to α+d [39]): both fragments have
-   A/Z = 2 → R = 1.000, same trajectory *and* same velocity as an
-   intact ⁶Li — only dE/dx (∝ Z²: 9/4/1 for Li/α/d) can separate.
+   Γ = 24 keV, decays ~100% to α+d [39]): both fragments share the
+   beam's A/Z = 2 and sit within 0.5% of its rigidity (R = 0.998 for
+   the α and 1.005 for the d, mass-to-charge rather than mass-number
+   ratios; this note said R = 1.000 for both until 2026-08-28), i.e.
+   the same trajectory *and* very nearly the same velocity as an intact
+   ⁶Li — so dE/dx (∝ Z²: 9/4/1 for Li/α/d) was taken to be the only
+   separation. It is not: the two fragments are TWO HITS tens of pixels
+   apart, and the partner deuteron vetoes 84% of the α fakes at the
+   tagging optics (plans/09 B4, Report 4 §4.2).
    **No EIC document addresses this A/Z = 2 degeneracy**; the RP
    AC-LGAD chain records pulse amplitude but only for position
    interpolation, and the only documented Z-ID concept is a Z²

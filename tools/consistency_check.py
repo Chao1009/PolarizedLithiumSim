@@ -232,6 +232,52 @@ def _():
     return bad
 
 
+@check("drift: the alpha+d separation table matches the current energies")
+def _():
+    """Report 4 Table 5 and plans/09 SS9.2 quote the median alpha-d
+    separation at the pot plane in MILLIMETRES, which is an angle (~ 1/p_u)
+    times R12.  A retired beam energy therefore survives inside a derived
+    number that no energy-drift check can scan for: the two lower rows were
+    published as 30.1 and 73.4 mm, computed at the rigidity-scaled 20.5 and
+    50 GeV/u, and stayed there through the correction to the gamma-matched
+    menu (a factor 2).  This check recomputes them from the current
+    configurations and compares, so the class of drift is closed rather than
+    the instance -- and it caught the second error in the same table on the
+    same day, when the correction to the energies dropped the DISPERSIVE
+    displacement between the two fragments (farforward.separation_at_pots)
+    and came out 5-39% low.  Pinned in fastsim/tests/test_two_hit.py at the
+    same numbers, together with the angular-only column; 400k events per
+    configuration, seed 7, ~1 s."""
+    import numpy as np
+    from polli_fastsim import beams
+    from polli_fastsim import farforward as ff
+    from polli_fastsim import spectator as sp
+    bad, computed = [], {}
+    for cfg in beams.default_configs("6Li"):
+        ev = sp.breakup_lab_kinematics(sp.LI6_ALPHA_TAG,
+                                       cfg.ion_momentum_per_nucleon, 400_000,
+                                       rng=np.random.default_rng(7))
+        computed[ff.yr_config_key(cfg)] = float(np.median(
+            1e3 * ff.separation_at_pots(ev["spectator"], ev["partner"])))
+    docs = (("reports/nanowire_far_forward.template.html",
+             r'<tr><td>%s</td><td class="mono">([\d.]+) mm</td>'),
+            ("plans/09_nearbeam_nanowire_far_forward.md",
+             r'\| %s \| \*\*([\d.]+) mm\*\*'))
+    labels = {"5x41": "5 × 41", "10x100": "10 × 100", "18x275": "18 × 275"}
+    for doc, pat in docs:
+        txt = (ROOT / doc).read_text()
+        for key, med in computed.items():
+            m = re.search(pat % re.escape(labels[key]), txt)
+            if not m:
+                bad.append("%s no longer carries an alpha+d separation row "
+                           "for %s" % (pathlib.Path(doc).name, labels[key]))
+            elif abs(float(m.group(1)) - med) > 0.04 * med:
+                bad.append("%s says %s mm for %s, the current energies give "
+                           "%.1f mm" % (pathlib.Path(doc).name, m.group(1),
+                                        labels[key], med))
+    return bad
+
+
 @check("drift: no report claims the P_zz scale propagates quadratically")
 def _():
     """Commit f05d026 published (1+d)^2 - 1 = 4.0/10.3/21.0% at
@@ -320,16 +366,37 @@ def _():
         png = ROOT / rel
         if not png.exists():
             continue
-        stem = png.stem
-        for script in glob.glob(str(ROOT / "evgen/scripts/*.py")):
-            body = pathlib.Path(script).read_text()
+        stem = png.stem.replace("_6Li", "").replace("_7Li", "")
+        # a "--tag" suffix (money_cos2phi_reco_6Li_hfscal.png) is not a
+        # literal in any script: fall back on the stem without it, or the
+        # figure is never checked at all
+        # most specific first: the full file stem (which is what an
+        # output_stem guard spells out), then the isotope-less one, then
+        # that without a "--tag" suffix
+        cands = [png.stem, stem]
+        if re.sub(r"_[a-z0-9]+$", "", stem) != stem:
+            cands.append(re.sub(r"_[a-z0-9]+$", "", stem))
+        scripts = sorted(glob.glob(str(ROOT / "evgen/scripts/*.py")))
+        bodies = {sc: pathlib.Path(sc).read_text() for sc in scripts}
+        for cand in cands:
             # the stem as a figure-file name, not as the prefix of a longer
-            # one: money_cos2phi must not claim money_cos2phi_reco_6Li.png
-            short = re.escape(stem.replace("_6Li", ""))
-            if re.search(short + r"(?![A-Za-z0-9]|_[A-Za-z])[^\"'\s]*\.png", body):
-                if png.stat().st_mtime < pathlib.Path(script).stat().st_mtime:
+            # one: money_cos2phi must not claim money_cos2phi_reco_6Li.png.
+            # Two spellings, tried in that order: the literal "...png", and
+            # (since 2026-08-28, when the published stems went behind an
+            # output_stem guard) the bare stem as a quoted string.
+            short = re.escape(cand) + r"(?![A-Za-z0-9]|_[A-Za-z])"
+            found = None
+            for pat in (short + r"[^\"'\s]*\.png", short + r"[\"']"):
+                for sc in scripts:
+                    if re.search(pat, bodies[sc]):
+                        found = sc
+                        break
+                if found:
+                    break
+            if found:
+                if png.stat().st_mtime < pathlib.Path(found).stat().st_mtime:
                     bad.append("%s is older than %s -- rerun it"
-                               % (rel, pathlib.Path(script).name))
+                               % (rel, pathlib.Path(found).name))
                 break
     return bad
 
@@ -383,21 +450,41 @@ def _():
     import subprocess
     txt = (ROOT / "docs/reproduction_manual.md").read_text()
     bad = []
+    collected = {}
     for pkg, pat in (("evgen", r"cd evgen\s+&& python3 -m pytest tests/ -q\s+# (\d+) passed"),
                      ("fastsim", r"cd fastsim && python3 -m pytest tests/ -q\s+# (\d+) passed")):
-        m = re.search(pat, txt)
-        if not m:
-            bad.append("the manual no longer states a %s test count" % pkg)
-            continue
         r = subprocess.run([sys.executable, "-m", "pytest", "tests/",
                             "--collect-only", "-q"],
                            capture_output=True, text=True, cwd=str(ROOT / pkg))
         got = re.search(r"(\d+) tests? collected", r.stdout)
         if not got:
             bad.append("could not collect %s tests" % pkg)
-        elif int(got.group(1)) != int(m.group(1)):
-            bad.append("the manual says %s has %s tests, pytest collects %s"
-                       % (pkg, m.group(1), got.group(1)))
+        else:
+            collected[pkg] = int(got.group(1))
+        m = re.search(pat, txt)
+        if not m:
+            bad.append("the manual no longer states a %s test count" % pkg)
+        elif pkg in collected and collected[pkg] != int(m.group(1)):
+            bad.append("the manual says %s has %s tests, pytest collects %d"
+                       % (pkg, m.group(1), collected[pkg]))
+    # the same count is quoted in the package quick-starts, which drifted
+    # unguarded until 2026-08-28 (evgen/README.md said 270 against 276)
+    for pkg, pat in (("evgen", r"python3 -m pytest tests/ -q\s+# (\d+) tests"),
+                     ("fastsim", r"python3 -m pytest tests/ -q\s+# (\d+) tests")):
+        rd = ROOT / pkg / "README.md"
+        if not rd.exists():
+            continue
+        m = re.search(pat, rd.read_text())
+        if m and pkg in collected and collected[pkg] != int(m.group(1)):
+            bad.append("%s/README.md says %s tests, pytest collects %d"
+                       % (pkg, m.group(1), collected[pkg]))
+    # and the manual's headline total must be the sum of the two suites
+    m = re.search(r"^(\d+) tests, all of which run", txt, re.M)
+    if not m:
+        bad.append("the manual no longer states a total test count")
+    elif len(collected) == 2 and sum(collected.values()) != int(m.group(1)):
+        bad.append("the manual's total is %s, the two suites collect %d"
+                   % (m.group(1), sum(collected.values())))
     return bad
 
 

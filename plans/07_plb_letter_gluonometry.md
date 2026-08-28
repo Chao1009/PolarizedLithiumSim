@@ -89,7 +89,7 @@ into the letter's far-forward requirement.
 | 2 | polarization placeholder | single P_zz = 0.6, full luminosity in one fill | δA vs P_zz ∈ {0.4, 0.6, 0.8} and fill-share ∈ {0.5, 1}; one table | WP2 | **yes** |
 | 3 | dilution convention (plans/04 #6) | 1/3 baseline (Cloët convention); cluster picture gives ≈0.81 (×2.4) | keep 1/3 as conservative baseline, quote the cluster value as labeled upside; ask Cloët (D3) | WP2 | yes (one paragraph) |
 | 4 | detector level | generator-level φ′; smearing machinery exists (money_delta_20260729: ePIC tracking + ε_eID, Case-3 retains ~92% S/N) | reco-level amplitude dilution + δA inflation per super-bin; 2-D φ-hole closure (plans/03 2.3.3) | WP3 | **yes** |
-| 5 | radiative corrections | uncalculated for tensor observables (flagged) | quantified migration bound + spin-state-ratio cancellation argument (common acceptance, bunch-by-bunch) + explicit open-theory statement | WP4 | yes (as a bound, not a calculation) |
+| 5 | radiative corrections | uncalculated for tensor observables (flagged); **the collinear-ISR migration is bounded — Δ̂ by +0.5 to +1.2% in the published generator window, ≤ 2.9% with the low-Q² feed-in opened up, ≤ 0.25% behind an E − p_z window, against the 5% gate (WP4 closed 2026-08-28)** | quantified migration bound + spin-state-ratio cancellation argument (common acceptance, bunch-by-bunch) + explicit open-theory statement | WP4 | yes (as a bound, not a calculation) |
 | 6 | coherent optics cut | two-point (0.20/0.45 GeV); Li optics undocumented (report assumption #1) | acceptance, N_tag, δA as curves vs pT_cut ∈ [0.1, 0.7] GeV; IR-8 alternative with published efficiencies; t_min and ×0.73 rate-weighting folded into the central curve | WP5 | **yes** |
 | 7 | far-forward geometry | RP z = 26/28 m (YR-era) in text; run-2 Geant4 scan found 32.5/34.3 m in epic-main | quote current ePIC geometry, windows unchanged in θ/R | WP5 | minor |
 | 8 | coherent fraction f₀ | scenario 0.04 [×2/÷2] | unchanged (no light-A prediction exists — stated); theory ask on record (IP-Glasma α–d, #18) | — | no |
@@ -127,19 +127,42 @@ into the letter's far-forward requirement.
   against one sampler rerun).
 - ☐ Dilution paragraph: 1/3 baseline; 0.81-cluster upside as the labeled
   alternative (amplitudes ×2.4); one email to I. Cloët (D3) — do not block.
+  ☐ *2026-08-28: the paragraph is written (Report 1 §3.2 and assumption row 3)
+  and 1/3 is the code default, with the ×2.4 exact because the bag-moment
+  normalization is solved before the dilution multiplies Δ. The email is unsent —
+  external, plans/04 #6.*
 - Acceptance: Table 1 of the letter exists. Effort: 1 day.
 
 ### WP3 — Reconstructed-level closure for cos 2φ
-- ☐ Port the 20260729 smearing model (tracking σ_p/p, σ_θ, η-dependent
+- ☑ Port the 20260729 smearing model (tracking σ_p/p, σ_θ, η-dependent
   ε_eID) onto the polligen φ′ pseudo-experiments: migration in (x, Q², φ′),
   reco-binned refit per super-bin.
+  ☑ *2026-08-28: done — `polligen/reco.py` carries the 20260729 tables verbatim
+  (`tracking_resolution`, `tracking_angular_resolution`, `eps_eid`, plus the
+  η-dependent `emcal_resolution`); `recopseudo.RecoResponse` generates on a
+  loosened scenario so events migrate in, smears in the lab frame and refits per
+  super-bin (`money_cos2phi_reco.py` = money plot 5R). φ′ migration enters as the
+  exact second-harmonic dilution cos 2(φ′_reco − φ′_true).*
 - ☐ 2-D acceptance-hole closure: (φ, η) hole map → binned-fit bias < stat
   error at 10 fb⁻¹/u (the generator-level version already passes).
+  — *superseded (2026-08-28): the WP3 addendum below replaces it with a
+  smooth-ε(φ′) closure under the ratio estimator, demonstrated in Report 2
+  Figure 1(d) (400 pseudo-experiments under ε = 1 + 0.03 cos 2φ′ + 0.02 cos φ′:
+  the single-fill fit biased by 0.03/P_zz, the two-state ratio unbiased and 1.5×
+  narrower). No (φ, η) hole map exists or is wanted.*
 - ☐ D2: if reco dilution < ~10% and unbiased, keep main figures at generator
   level with reco factors quoted per bin; otherwise switch figures to reco
   level.
 - Acceptance: per-bin dilution factors; statement "Case-3-style retention X%"
   reproduced for the cos 2φ observable. Effort: ~1 week.
+  ☑ *2026-08-28: met — `recopseudo.RecoResponse.bin_summary` gives purity,
+  efficiency and D per super-bin, published in Report 1 Table 1 and Report 2
+  Table 4 for both the Gaussian stand-in and the PYTHIA final state; the
+  retention statement survives as the reco-over-truth error ratio, 0.59–0.69,
+  quoted in both reports and in the WP3-results block below. The literal
+  "Case-3-style retention X%" phrasing was never restated, and no fully
+  integrated (rate-weighted, all-bins) observable exists — the chain closes per
+  super-bin.*
 
 **WP3 addendum (2026-08-24, `reports/reconstruction_chain_report`).** The
 reconstructed-level closure is now specified end to end and seeded in
@@ -150,23 +173,53 @@ reconstructed-level closure is now specified end to end and seeded in
   `reco.hadronic_y` with a 15–30% band (purity 0.75–0.83, reco-bin
   amplitude 0.96–0.99 of truth at 15–20%); quote the e′-only variant at
   y ≥ 0.05 and the low-energy configuration for x ≈ 0.1 (open question #21).
+  ☐ *2026-08-28: the mixed-method reco binning is done and is the default
+  (`reco.mixed_method`/`hadronic_y`, `recopseudo.RecoModel`,
+  `money_cos2phi_reco.py --y-method mixed --y-source hfs`). The two trailing
+  clauses are not: nothing quotes the e′-only variant at y ≥ 0.05 (the published
+  e′-only panels sit at y = 0.010–0.025, where the conclusion is that the bins are
+  not reconstructible), and the x ≈ 0.1 case is argued from a δy/y comparison
+  rather than run as a low-configuration projection — every 5R/7R number is
+  mid-config.*
 - ☐ **Estimator: spin-state-sorted ratio** (`reco.harmonic_ratio_fit`) of
   m = ±1-rich (P_zz = +0.6) and m = 0-rich (−1.2) fills, with a sin 2φ′
   term; the single-fill fit is biased by the detector's cos 2φ′ acceptance
   harmonic ÷ P_zz. δA becomes 2√(2/N)/(P₊ − P₀) = 0.67× the current
   values — re-derive the §7.1 numbers with it (the 1.5× gain is real only
   if the source delivers m = 0-rich bunches at the same purity).
-- ☐ **Angles from four-vectors**: `reco.azimuth_wrt_lepton_plane` (covariant
+  ☐ *2026-08-28: the estimator is done and drives the reconstructed-level
+  analysis (`reco.harmonic_ratio_fit` with the sin term, `err_harmonic_ratio`,
+  the 0.67 factor derived and published). The second clause is not: §7.1 still
+  quotes single-state values, and the three scripts that produce them
+  (`money_cos2phi.py`, `money_cos2phi_coherent.py`, `money_delta_extraction.py`)
+  have no two-fill path at all.*
+- ☑ **Angles from four-vectors**: `reco.azimuth_wrt_lepton_plane` (covariant
   φ_S, = φ_e − φ_S to O(γ²)); head-on transformation applied (e′ odd
   harmonics only). The 2-D φ-hole closure of the original bullet becomes
   a smooth-ε(φ′) closure with the ratio estimator (already demonstrated
   at the super-bin level, Fig. 1d of the note).
-- ☐ **Coherent (feeds WP5)**: present the anchored a₂ as a modulation of the
+  ☑ *2026-08-28: done and in use — the covariant azimuth is built from the
+  four-vectors with the Bacchetta transverse projector and the ε-tensor sign
+  convention, `recopseudo` forms φ′_true and φ′_reco from them, the head-on ↔ lab
+  transformation is applied on both the electron and the hadron side, and the
+  smooth-ε(φ′) closure exists with `harmonic_ratio_fit`/`_2d` and the
+  `--eff-cos2` split. `lab_azimuth_shortcut_error` quantifies the shortcut it
+  replaces.*
+- ☑ **Coherent (feeds WP5)**: present the anchored a₂ as a modulation of the
   recoil azimuth φ_t − φ_S and the exotic-glue term of the electron azimuth;
   fit R(α, β) in 2-D; replace the constant 0.20 GeV cut in `coherent.py` by
   the angular cut `reco.tag_pt_cut` (5.0×10⁻⁷ / 8.4×10⁻²⁶ / 3.7×10⁻¹³ at 40.8 / 99.5 /
   137.5 GeV/u) and state the cutout geometry (open question #20); settle
   the a_n normalization convention of arXiv:2408.13213 (1 + 2Σ vs 1 + Σ).
+  ☑ *2026-08-28: all five clauses discharged — the two-azimuth presentation and
+  the 2-D R(α, β) fit (`reco.basis_2d`, `harmonic_ratio_fit_2d`,
+  `recopseudo.CoherentResponse`) are money plot 6R and Report 2 §4.5/Table 5; the
+  angular cut (`reco.tag_pt_cut`, `coherent.tag_acceptance_angular`) is what the
+  reconstructed chain uses; the cutout geometry is no longer assumed but measured
+  through the ePIC geometry (`reco.RP_APERTURE_MEASURED`, plans/04 #20); and
+  Eq. (9) settles the convention as 1 + 2Σ. The generator-level money plot 6
+  deliberately keeps the constant proton-referenced cut as the reference tag,
+  labelled as such in Report 1's Figure 5(a) caption.*
 - D2 input: the reco-level dilution is small (1–9% at the 25% default, 1–4% at 15–20%) and unbiased with the
   mixed method, so the main figures can stay at generator level with
   reco factors quoted — provided the binning and the estimator above are
@@ -253,8 +306,15 @@ efficiency explicitly.
   purities 0.43 / 0.54 / 0.47 / 0.69 [0.60 / 0.68 / 0.68 / 0.86], amplitude
   dilution D = 0.79 / 0.85 / 0.82 / 0.95, δÂ = 1.2 / 1.0 / 1.8 / 2.9 × 10⁻⁴
   (Table 2 errors unchanged — the loss is in purity, not in statistics).
-- ☐ Quote the resolution table by y and Q² in the reconstruction report and
+- ☑ Quote the resolution table by y and Q² in the reconstruction report and
   decide whether 5R/7R are published on the HFS y or the stand-in.
+  ☑ *2026-08-28: Report 2 Table 3 is that table — the four sweet spots with y, W,
+  e′ kinematics, δy/y for the electron alone and for Σ/JB/DA, with the acceptance
+  and threshold columns, backed by Figure 3(a), (c) and the 0/25/50/100 MeV noise
+  scan of 3(d) (`hfs_resolution.py`, `hfs_acceptance.py`). The decision resolved as
+  publish both: Table 4 carries the stand-in and the calibrated PYTHIA columns side
+  by side and §5.1 quotes δΔ both ways, with the figures made on the PYTHIA final
+  state.*
 - ☐ Replace the Yellow-Report response magnitudes by the ePIC design values
   (calorimeter noise/threshold floor at Σ_h ≈ 0.2–0.5 GeV is the decisive
   input — plans/04 #21 narrowed to it); add the HFS energy-scale
@@ -262,17 +322,91 @@ efficiency explicitly.
 - Effort: sample generation ≈ 1 h machine time; the rerun and the report
   update 1 day.
 
-### WP4 — Radiative-correction bound (not a calculation)
-- ☐ Leading-log unpolarized RC weights (plans/02 step 1.4 route) applied as
-  (x, Q², φ) kinematic migration on the modulated cross section → bound on
-  amplitude dilution and on a fake-a₁ term.
-- ☐ Spin-state-ratio cancellation argument (acceptance and relative
-  luminosity cancel for a common acceptance; bunch-by-bunch alternation —
-  supersedes the single-fill self-normalization wording) written up with
-  the bound.
-- ☐ Gate: bound ≤ ~5% of amplitude → one paragraph + assumptions row;
-  larger → appendix in the arXiv version and a flagged systematic band.
-- Effort: 3–5 days.
+### WP4 — Radiative-correction bound (not a calculation) — ☑ **closed 2026-08-28**
+- ☑ Leading-log unpolarized RC weights (plans/02 step 1.4 route) applied as
+  kinematic migration. `evgen/polligen/radiative.py`: the exponentiated
+  leading-log electron structure function D(z, Q²) = (t/2)z^(t/2−1)S(t) −
+  (t/4)(2−z), t = (2α/π)[ln(Q²/mₑ²) − 1] (Kuraev–Fadin / Nicrosini–Trentadue;
+  ∫D = 1 + O(t²), residual 7×10⁻⁴ at t = 0.070), a per-event sampler with its
+  own random stream, the closed-form observed kinematics of all five
+  reconstruction methods, the (1 − z) rescalings of the hard rate and of a₂,
+  and `migration_bound` / `migration_bound_seeds`. Hook:
+  `recopseudo.RecoResponse(isr=…)`, **default off and bit-for-bit inert**
+  (pinned against a stored digest of the response arrays, against the closed
+  form of the generator weight, and against the state of the response's own
+  random stream); driver `money_cos2phi_reco.py --isr [--isr-seeds]
+  [--isr-gen-q2min] [--isr-empz]`. 25 tests.
+  - **The fake-modulation term is identically zero.** The covariant azimuth is
+    invariant under k → (1 − z)k for a massless target: cos φ′ and sin φ′ carry
+    the same factor [2ac((1−z)a−b)]^(−1/2) and the arctan divides it out.
+    Measured **3.6×10⁻¹⁵ rad** over the 2×10⁴-event flat sample of
+    `test_covariant_azimuth_is_invariant_under_a_collinear_photon` (z ≤ 0.9);
+    over the 1.84×10⁶ events of the response, where the physical ⁶Li mass
+    leaves the O(γ²) residual, max |Δφ′| = 2.6×10⁻² rad and the fake cos 2φ′ is
+    **9×10⁻⁸** rate-weighted (`RecoResponse.isr_dphi`, printed by `--isr`).
+    The two samples must not be conflated.
+  - **x is exact, the Q²ₑ label migrates by 1/(1 − z)** (plans/08 D3, code review
+    R16), pinned against a four-vector construction through `hfs.hadronic_kinematics`.
+- ☑ Spin-state-ratio cancellation argument written up **with the bound**. The
+  cancellation, the non-cancelling residual (ε₂⁺ − ε₂⁰)/(P₊ − P₀) = 5.6×10⁻⁴ and
+  the bunch-by-bunch requirement are in Report 1 §3.3 / assumption row 8, Report 2
+  §4.3/§6 and plans/06; the bound they were missing is now Report 2 §7 and its
+  Table 2 row. An unpolarized-lepton QED correction is common to the fills by
+  construction, so the whole rate effect (−0.3% to +3.7% per bin) cancels and only
+  the amplitude migration survives.
+- ☑ Gate: **PASS** → one paragraph (Report 2 §7) + assumptions row (Report 2
+  Table 2); no appendix needed. Mid configuration, four sweet spots, 1600
+  pseudo-events per cell, ISR seed 20260828, common random numbers,
+  Δ̂ = Â × K(ISR-free). One response draw scatters by 4–14% of the bound
+  (seed-to-seed sd 0.087 / 0.048 / 0.073 / 0.051 points; the eight draws span
+  0.51–0.75, 0.43–0.57, 0.80–1.01 and 1.15–1.31%), so **every number below is the
+  mean ± sem over the eight response seeds** of `--isr-seeds
+  20260824,20260925,20261026,20261127,20261228,20270129,20270302,20270403`
+  (the plain `--isr` at the default seed 20260824 prints one draw of the same
+  quantity: +0.62 / +0.50 / +0.80 / +1.24%):
+  - published generator window (Q² ≥ 0.7 GeV²): **+0.62 ± 0.03 / +0.50 ± 0.02 /
+    +0.94 ± 0.03 / +1.22 ± 0.02%**; purity 0.653 → 0.638, 0.633 → 0.613,
+    0.679 → 0.659, 0.684 → 0.640; efficiency 0.414 → 0.404, 0.590 → 0.572,
+    0.374 → 0.369, 0.653 → 0.634; selected rate ×0.997, ×0.998, ×1.017, ×1.037.
+  - the window truncates the feed-in (an event below it cannot radiate into an
+    analysis bin). Opening it, the worst spot rises **1.22 → 1.87 → 2.81 →
+    2.26 → 2.34%** at Q²_gen = 0.7 → 0.35 → 0.15 → 0.05 → 0.02 GeV², i.e. it
+    saturates in a 1.8–2.8% band below Q²_gen ≈ 0.15 rather than at one value.
+    At Q²_gen = 0.05 the four spots are **+2.26 ± 0.03 / +2.24 ± 0.10 /
+    +1.88 ± 0.07 / +1.88 ± 0.05%**; the largest value found at any window is
+    +2.81 ± 0.08% (Q²_gen = 0.15, second spot). **≤ 2.9% is the number the ≤5%
+    gate is read against**, and it passes by a factor 1.7.
+  - not an artefact of the 25% Gaussian y stand-in: through the PYTHIA hadronic
+    final state with the calibrated scale (`--y-source hfs --hfs-sample …
+    --hfs-calibrate`, 800/cell) the same bound is **+0.38 / +0.44 / +0.46 /
+    +0.88%** (± 0.02–0.04).
+  - **mitigation the chain does not yet use:** the HERA E − p_z window. The
+    visible sum is 2(1 − z)E_e and is already reconstructed as
+    Σ_h + E′(1 − cos θ) = E′(1 − cos θ)/(1 − y_Σ); requiring it within 15% of
+    2E_e brings the bias to **+0.23 / +0.16 / +0.22 / +0.18%** (± 0.01–0.02),
+    independent of the generator window, and keeps 86.9% of the non-radiative
+    selected rate (82.4% with radiation)
+    (`radiative.empz_fraction`, `apply_empz_cut`).
+  - **method comparison** at z = 0.092 (the mean radiated fraction of the emitting
+    events), observed/hard for (Q², y, x). The electron-method rows are a strong
+    function of y — (y + z)(1 − z)/y — so the y has to be stated. At the
+    rate-weighted ⟨y⟩ = 0.189 of the whole selected sample: electron
+    (1.102, 1.351, 0.740), Σ (1.000, 1.000, 0.908), Jacquet–Blondel
+    (0.976, 0.908, 0.976), double angle (1.214, 1.000, 1.102),
+    **mixed (1.102, 1.000, 1.000)**. At the four sweet spots themselves
+    (y = 0.0102, 0.0256, 0.0111, 0.0255) the electron method is far worse —
+    y is off by 9.2, 4.2, 8.5, 4.2 and x by 0.109, 0.239, 0.118, 0.238 — while
+    every other row is unchanged except Jacquet–Blondel's Q² (0.998). That
+    factor 3–7 between the two y is why the chain uses the mixed method.
+    Q²_Σ = p_T,e²/(1 − y_Σ) is ISR-exact too, so an e-Σ *label* would have no
+    migration at all — a chain change, not made.
+- **Still open and outside this bound:** the TENSOR-sector radiative correction
+  (plans/05 §5.5) — never calculated, and no unpolarized study stands in for it;
+  the polarized-lepton correction (irrelevant, unpolarized beam); wide-angle real
+  emission; FSR; the elastic and quasi-elastic radiative tails (removed by
+  W² ≥ 10 GeV²).
+- Effort spent: ~1 day (vs 3–5 estimated; the DJANGOH route of plans/02 step 1.4
+  was not needed).
 
 ### WP5 — Coherent channel presentation
 **◐ 2026-08-25: the scan exists** — `evgen/scripts/coherent_optics_scan.py`
@@ -288,16 +422,41 @@ an envelope of 0.10 / 0.22 / 0.45 / 0.60 GeV. **The coherent measurement
 lives at the low- and mid-energy configurations and is dead at the top
 energy.** Remaining: fold the curve into the letter figure and quote the
 cutout geometry as the assumption it is (#20).
-- ☐ Replace two-point optics with curves vs pT_cut (0.1–0.7 GeV):
+- ☑ Replace two-point optics with curves vs pT_cut (0.1–0.7 GeV):
   acceptance, N_tag, best-bin δA; mark 0.20 (documented top-rigidity scale,
   ³He precedent) and 0.45 (our derivation) on the curves; state that Li
   optics are undocumented and the physics case constrains them.
+  ☑ *2026-08-28: done in `evgen/scripts/coherent_optics_scan.py` — acceptance,
+  N_tag and the fitted δa_t/a_t, δa_e/a_e over a 0.05–0.70 GeV cut scan for the
+  slot / square / circular cutouts across B = 40–60, with the undocumented-optics
+  statement in the module docstring and Report 1 §6.1. The "mark 0.20 and 0.45"
+  clause is half superseded: 0.45 came from the legacy 164 µrad high-divergence
+  optics retired in b9d2e82, and the script now marks the per-configuration
+  Yellow Report envelopes, the tagging optics and the measured pot aperture
+  instead.*
 - ☐ Fold exp(−B t_min) and the ×0.73 rate-weighting option into the central
   tagged-yield curve (small changes in `polligen/coherent.py` + tests).
-- ☐ IR-8 panel/inset: published efficiencies d 47% / ³He 32% / ⁴He 29% /
+  ☐ *2026-08-28: the figure half is done (panel (b) draws N_tag, ×exp(−B t_min)
+  and ×0.73), but the library half is not: `t_min` is hard-coded in the script —
+  with its own slope, so the suppression curve cannot follow the B band the panel
+  draws — `coherent.tag_acceptance`/`mean_t_tagged`/`tag_acceptance_angular` take
+  no t_min, `a2_tagged` still asks the caller to apply `RATE_WEIGHT_SYST` by hand,
+  and no test mentions it. Money plot 6 still quotes the unweighted value.*
+- ☑ IR-8 panel/inset: published efficiencies d 47% / ³He 32% / ⁴He 29% /
   ⁷Li 17.8% (no ⁶Li — interpolation labeled ours), pT ≈ 0 reach.
-- ☐ Geometry note: quote current RP z (32.5/34.3 m scan) alongside the
+  ☑ *2026-08-28: delivered as an overlay on panel (b) rather than a separate
+  panel — `IR8_PUBLISHED` with `IR8_LI6_INTERPOLATED = 0.20` drawn as a
+  cut-independent line (the p_T ≈ 0 reach) over an axhspan of the published
+  min/max, labelled "interpolated, ours", and repeated in Report 1 §6.4 and
+  plans/06 §6.5. The annotation rounds ⁷Li to 18%; the exact 17.8% lives in
+  Report 1 §6.1 and refs/README.md.*
+- ☑ Geometry note: quote current RP z (32.5/34.3 m scan) alongside the
   YR-era 26/28 m, windows in θ/R unchanged.
+  ☑ *2026-08-28: done in `farforward.py`'s module header (z = 32.55/34.25 m read
+  from current `eic/epic` main, θ < 5 mrad, R ∈ [0.60, 0.95]) and in Report 3
+  Table 7, whose caption makes the alongside-quote explicit; `tools/fullsim/README.md`
+  carries the reason for the move. Residual elsewhere: plans/03 §2.2 still lists
+  26/28 m and 22.5/24.5 m.*
 - Effort: 2–3 days.
 
 ### WP6 — Paper production
@@ -329,7 +488,7 @@ cutout geometry as the assumption it is (#20).
 | 3 | Simulation framework: beams (EPIOS), polligen validation (one paragraph), grid SFs, acceptance, statistics method | 500 | Fig. 1 |
 | 4 | Inclusive projections: φ′ pseudo-data, amplitude vs x, xΔ extraction, A-vs-B discrimination | 700 | Figs. 2–3, Table 1 |
 | 5 | Coherent channel: detection at IP6/IR-8, rate model bands, anchored a₂, sign flip, null test, two-component fit | 700 | Fig. 4 |
-| 6 | Systematics and assumptions: reco dilution, RC bound, polarimetry, purity via |t| fit, acceptance stability between the spin-state samples (bunch-by-bunch requirement: a 10⁻³ difference of the cos 2φ′ efficiency harmonic fakes half the signal), K model dependence (3–11% between Δ shapes with the bin-by-bin factor, ≤ 1.2% with the folded shape fit), O(γ²) b₁ leakage — **not** γ²b₁/6: the full Cosyn Eq. (17e) combination is ≈ 6.9× that, so the bound is γ²b₁ × 1.15, still ≤ 0.15% of everything published and exposed only at Δ/F₁ ~ 10⁻³ and x ≳ 0.2, Q² ≈ 1 (plans/08 D2) — R model in Δ/F₁ = −2(1+R)Â, now the published R1998 and worth +16.6 / +18.0 / +4.7 / −4.4% at the sweet spots — code review 2026-08-25 — condensed assumptions | 450 | — |
+| 6 | Systematics and assumptions: reco dilution, RC bound (collinear-ISR migration ≤ 2.9% of Δ̂, ≤ 0.25% behind an E − p_z window; tensor-sector RC still uncalculated), polarimetry, purity via |t| fit, acceptance stability between the spin-state samples (bunch-by-bunch requirement: a 10⁻³ difference of the cos 2φ′ efficiency harmonic fakes half the signal), K model dependence (3–11% between Δ shapes with the bin-by-bin factor, ≤ 1.2% with the folded shape fit), O(γ²) b₁ leakage — **not** γ²b₁/6: the full Cosyn Eq. (17e) combination is ≈ 6.9× that, so the bound is γ²b₁ × 1.15, still ≤ 0.15% of everything published and exposed only at Δ/F₁ ~ 10⁻³ and x ≳ 0.2, Q² ≈ 1 (plans/08 D2) — R model in Δ/F₁ = −2(1+R)Â, now the published R1998 and worth +16.6 / +18.0 / +4.7 / −4.4% at the sweet spots — code review 2026-08-25 — condensed assumptions | 450 | — |
 | 7 | Summary and outlook (theory and machine asks) | 250 | — |
 
 Title candidates (D5): (a) "Nuclear gluonometry with a tensor-polarized ⁶Li
@@ -343,7 +502,7 @@ double-helicity-flip structure function of ⁶Li at the EIC"; (c) variant of
 |---|---|---|
 | "The Δ model is arbitrary" | moment-constrained (Δ⁺⁺ bag provenance stated); A/B interpretations bracket; the measurement discriminates them — that is the point | §2, §4 |
 | "Bag moment ported to a nucleus" | labeled scenario; literature brackets both directions (NPLQCD suppression vs binding enhancement); x-shape ours by necessity (S–S give none) | §2, §6 |
-| "No tensor radiative corrections" | quantified migration bound; spin-state-ratio cancellation; open-theory statement with citation trail | §6 (WP4) |
+| "No tensor radiative corrections" | quantified migration bound (≤ 2.9% of Δ̂ with the low-Q² feed-in opened up, ≤ 0.25% with an E − p_z window; Report 2 §7); collinear ISR fakes no cos 2φ′ at all and cancels in the spin-state ratio; open-theory statement with citation trail | §6 (WP4) |
 | "Li beams do not exist; no luminosity" | EPIOS PRC 113:060501 feasibility; stated 10 fb⁻¹/u with linear scaling; P_zz band quoted | §3, Table 1 |
 | "Coherent fraction is invented" | explicit f₀ band bracketing HERA ep and heavy-A saturation; first-of-kind labeled; IP-Glasma ask on record | §5 |
 | "pT cut undocumented for Li" | curves vs cut, not a point estimate; documented anchors marked; IR-8 alternative with published numbers | §5 (WP5) |
@@ -352,7 +511,10 @@ double-helicity-flip structure function of ⁶Li at the EIC"; (c) variant of
 
 ## 7.7 Authorship, circulation, timeline (D3, D4)
 
-- **D3 authorship** (user's call): lead C. Peng; candidates to invite —
+- **D3 authorship** (user's call): lead C. Peng, second author J. Zhou (ANL
+  Physics Division; *2026-08-28: Reports 0–4 now carry "C. Peng and
+  J. Zhou" with a "Writing assisted by Claude (Anthropic)" line under the
+  affiliation — the letter keeps both*); candidates to invite —
   I. Cloët (⁶Li structure/conventions), J. Maxwell (gluonometry lineage,
   LOI), EPIOS accelerator contact (one, for the beam paragraph), optionally
   W. Chang/A. Jentsch (far-forward blessing). A short-author-list projection
@@ -364,7 +526,7 @@ double-helicity-flip structure function of ⁶Li at the EIC"; (c) variant of
 |---|---|
 | Sep 5 | WP1 + WP2 done; §7.1 numbers re-derived on grids (addendum here) |
 | Sep 26 | WP3 (reco closure) + WP5 (coherent curves) done; D2 decided |
-| Oct 10 | WP4 bound done; gate passed or appendix planned |
+| Oct 10 | WP4 bound done; gate passed or appendix planned — ☑ **done 2026-08-28, gate passed, no appendix** |
 | Oct 31 | WP6: full draft v1 + letter figures |
 | Nov | circulation (D3 list), revisions |
 | Dec 19 | v2 frozen; co-author sign-off |

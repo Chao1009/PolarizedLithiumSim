@@ -106,7 +106,30 @@ only at second order" is wrong for u₂ and must be corrected.
 
 The honest systematic is the in-situ one: fit (u₁, u₂) from the
 spin-averaged counts of the same data and propagate; ZEUS is then the
-prior it is.
+prior it is.  **Done 2026-08-28** (`reco.unpolarized_insitu_fit_2d`,
+`measure_coherent(u_coeffs_assumed="in-situ")`, `--u-in-situ`).  The
+identifiability had to be faced first: with the per-bin acceptance free —
+which is what makes both estimators acceptance-free — u is *not*
+identifiable at all, because u_b multiplies ε_b in exactly the same way.
+So the in-situ measurement necessarily uses the acceptance MC, and the
+implementation says so: it fits the spin-averaged counts against the
+response's own ε^MC shape (u = 0, P_zz = 0) with the normalisation free,
+by Poisson likelihood, alternating with the harmonic fit (five rounds
+reach machine precision on exact counts) and propagating cov(u₁, u₂) into
+the harmonic covariance through the numerical Jacobian dA/du.  Measured at
+the tagging optics, one year, per |t| bin (`money_cos2phi_coherent_reco.py
+--config 0 --optics tagging --exact --u-in-situ --n-mc 6000000`, which
+now prints the pair and its error for every |t| bin): δu₂ = 0.0028 /
+0.0040 / 0.0070 / 0.0136 at 5 × 40.8 and 0.0016 / 0.0026 / 0.0049 /
+0.0111 at 18 × 137.5 (`--config 2`), i.e. **1.8–15× better than the ZEUS
+1σ band of 0.024** that Table 6's systematic assumes — 15× where the bin
+is full, and only 1.8–2.2× in the sparsest bin of either configuration,
+which is where the leakage matters most.  The leakage into a_e falls with
+it all the same, from the +0.00066–0.00093 (6.6–9.3%) of an assumed wrong
+u₂ to a propagated 0.00005–0.00063 (0.5–6.3% of a_e) across the eight
+bins, which adds nothing measurable to the statistical error in
+quadrature.  What is left is the acceptance-shape uncertainty this
+transfers the problem to.
 
 ### A4 — WP5: the optics scan ☑
 *New:* `evgen/scripts/coherent_optics_scan.py`.
@@ -356,7 +379,7 @@ fix and left for the author.
 | # | item | blocker |
 |---|---|---|
 | D2 | exact finite-γ kernel (Cosyn Eqs. 9/10/14/24), b₃/b₄ slots, Eqs. 17d/17e | gated on D1 for the subtraction sign. **Correct now, without code:** report §2, code review G2 and the `plans/07` systematics row all quote the leakage as γ²b₁/6 and are ≈ 7× low; the exact ratio a₂(full)/a₂(17e alone) ≈ 6.9. Impact on everything published is ≤ 0.15%; the exposure is the Δ/F₁ ~ 10⁻³ scenario and x ≳ 0.2 at Q² ≈ 1 |
-| D3 | radiative corrections (WP4) | **two of the four planned deliverables are void**: collinear ISR generates exactly zero fake cos φ′/cos 2φ′ (the covariant azimuth is invariant under k → (1−z)k to 2×10⁻¹⁶ rad in the massless-target limit), and the ratio cancellation is already demonstrated. What survives is (a) the migration bound on purity/efficiency/K — the number the ≤5% gate should apply to — and (b) the method comparison: y_Σ and y_DA use no beam energy and are ISR-robust, and so is the chain's own x = Q²_e/(s y_Σ): the (1−z) of a collinear photon cancels between Q²_e and s, so x is exact and it is the Q²_e *label* of the bin that migrates by 1/(1−z) (corrected 2026-08-28; the earlier reading here and in Report 2 §3 had x biased) |
+| D3 | radiative corrections (WP4) | ☑ **closed 2026-08-28 — it was never external.** Two of the four planned deliverables were void by algebra and the other two are now measured, in `evgen/polligen/radiative.py` (exponentiated leading-log D(z, Q²), Kuraev–Fadin / Nicrosini–Trentadue; ∫D = 1 + O(t²) with a 7×10⁻⁴ residual at t = 0.070), the default-off `recopseudo.RecoResponse(isr=…)` hook and `money_cos2phi_reco.py --isr`. **Void:** collinear ISR generates exactly zero fake cos φ′/cos 2φ′ — the covariant azimuth is invariant under k → (1−z)k in the massless-target limit, now *pinned* at 3.6×10⁻¹⁵ rad over the 2×10⁴-event flat sample of `test_covariant_azimuth_is_invariant_under_a_collinear_photon` (z ≤ 0.9; the 2×10⁻¹⁶ quoted here before was a gentler sample). Over the 1.84×10⁶ events of the response, where the physical ⁶Li mass leaves the O(γ²) residual, max |Δφ′| = 2.6×10⁻² rad and the fake cos 2φ′ is 9×10⁻⁸ rate-weighted (`RecoResponse.isr_dphi`) — the two samples are not the same and their residuals differ by two orders — and the ratio cancellation is demonstrated. **Measured:** (a) the migration bound on purity/efficiency/K with common random numbers at the four mid-configuration sweet spots — purity 0.653→0.638, 0.633→0.613, 0.679→0.659, 0.684→0.640, efficiency 0.414→0.404, 0.590→0.572, 0.374→0.369, 0.653→0.634, and Δ̂ corrected with an ISR-free K biased by +0.62±0.03/+0.50±0.02/+0.94±0.03/+1.22±0.02% (mean ± sem over eight response seeds; one draw scatters by 4–14% of the bound, seed-to-seed sd 0.05–0.09 points, so a single-seed number is not publishable), rising to a 1.8–2.8% band as the generator window is opened to Q² ≥ 0.15–0.02 GeV², where the truncated feed-in saturates — ≤2.9% is what the 5% gate is read against, and it passes; a HERA-style E − p_z window brings it to ≤0.25% while keeping 87% of the non-radiative rate; (b) the method comparison at z = 0.092, observed/hard for (Q², y, x), at the rate-weighted ⟨y⟩ = 0.189 of the whole selected sample: electron (1.102, 1.351, 0.740), Σ (1.000, 1.000, 0.908), JB (0.976, 0.908, 0.976), DA (1.214, 1.000, 1.102), mixed (1.102, 1.000, **1.000**). The electron rows go as (y + z)(1 − z)/y and are therefore far worse at the sweet spots themselves (y = 0.010–0.026), where y is off by 4.2–9.2 and x by 0.109–0.239; the mixed row is 1.000 at every y, which is the whole argument for the chain's choice. The 2026-08-28 correction stands and is now pinned against a four-vector construction: x = Q²_e/(s y_Σ) is exact under a collinear photon and it is the Q²_e *label* that migrates by 1/(1−z). Q²_Σ = p_T,e²/(1 − y_Σ) uses no beam energy either, so an e-Σ label would carry no migration at all — a chain change, not made. Still external / uncalculated: the TENSOR-sector RC (plans/05 §5.5) |
 | D4 | PYTHIA 8 HFS samples | ☑ **closed 2026-08-26** — it was never external. PYTHIA 8.311 builds its own Python bindings against the analysis machine's interpreter (`tools/pythia8/README.md`); the eic-shell container has the C++ library but no bindings, which is what had made this look like a container problem. 8 M events over the three beam configurations now stand in `evgen/samples/`, and A5's beam guard makes the merge safe |
 | D5 | incoherent breakup shapes, veto efficiencies, event-level Z-ID | FLUKA licence → BeAGLE. `plans/07` already rules this non-blocking; the m-state-blind dilution argument is algebra, not a simulation gap. *2026-08-26:* the no-FLUKA half is done — the official BeAGLE e+d sample streams over xrootd and the control study is run (`tools/beagle/README.md`), which is what calibrates the cluster model's p_T tail; what FLUKA still gates is A = 6, 7 breakup itself |
 | D6 | ePIC numbers: the calorimeter noise/threshold floor at Σ_h ≈ 0.2–0.5 GeV (#21, the one number the letter cannot do without); the **backward-disk angular resolution** (F3 — worth more than A7); Li ring σ_θ (#20); the RP slot geometry; EICROC Z-ID (#19) | external — except the RP slot geometry, which is now measured rather than assumed: an intact ⁶Li through the ePIC far-forward geometry puts the aperture at \|θ_x\| ≳ 2.0 / 1.35 / 1.03 mrad in the 5×41 / 10×100 / 18×275 optics against \|θ_y\| ≳ 1.8–3 mrad, i.e. **open horizontally**, the opposite aspect to `rp_measure`'s slot (`tools/fullsim/README.md`, plans/04 #20) |
@@ -409,13 +432,69 @@ index, and the numbers are in `plans/00` run 8.
    to empty part of the circle made `harmonic_ratio_fit_2d` raise a bare
    "Singular matrix" (it now names the cause and how many bins carry
    weight), and one dead |t| bin aborted the whole figure (it is now
-   reported and skipped).  **What is left:** a harmonic basis that works
+   reported and skipped).  ~~**What is left:** a harmonic basis that works
    under a strongly anisotropic acceptance — fewer columns, wider bins,
-   or |t| re-binned inside the window the cutout leaves.  The WP5 optics
+   or |t| re-binned inside the window the cutout leaves.~~
+   **SUPERSEDED 2026-08-28** (verified numerically; the disposition is
+   below).  The WP5 optics
    scan now carries the measured edge as a marked line on all three of
-   its curves: it is 2.8× / 1.9× / 1.4× the 10σ envelope at
-   5×41 / 10×100 / 18×275, so the envelope is never the binding
-   constraint.
+   its curves.  Priced against the per-configuration Yellow Report
+   envelopes it is 0.91× / 0.75× / 1.12× the horizontal 10σ half-width at
+   5×41 / 10×100 / 18×275, so the envelope binds at the two lower
+   configurations and the silicon only marginally at the top (the
+   "2.8× / 1.9× / 1.4×, never binding" quoted here until 2026-08-28 was
+   the same edge against the retired single 73 µrad;
+   `tools/fullsim/README.md`).
+
+   *Why item 4's "what is left" is superseded.*  The problem it names does
+   not exist at the configurations the programme now quotes, and where the
+   anisotropy is extreme it has become an **empty-sample** problem rather
+   than an ill-conditioned-fit one.  At the tagging optics the acceptance
+   *is* strongly anisotropic — ⟨cos 2β⟩ of the tagged sample runs −0.50 to
+   +0.14 across the four |t| bins, and four of twenty-four β bins are hard
+   empty in the lowest ones — and the design is nonetheless near
+   orthogonal: condition number 1.80–2.86, rank 7/7, corr(a_e, a_t) <
+   0.005 (worst 0.0046) and no non-constant parameter pair correlated
+   above 0.031, at all three configurations, and the fit closes on the
+   injected coefficients to every printed digit on exact counts even where
+   those four β bins are empty (an empty bin already carries weight zero).
+   *Measured on* `money_cos2phi_coherent_reco.py --config {0,1,2}
+   --optics tagging --exact --n-mc 6000000`: the condition number is
+   σ_max/σ_min of the weighted design the fit actually solves (`basis_2d`
+   with the response's `beta_means`, scaled by 1/√var_t — the array
+   `_harmonic_rank_guard` receives), the correlations come from the
+   returned `cov`, and ⟨cos 2β⟩ is the tagged sample's mean over the true
+   β of the recoils reconstructed into the bin.  The item was written on
+   the pre-2026-08-27 rigidity-scaled energies, where 2.0 mrad of silicon
+   sat at |t| ≈ 0.06
+   GeV², inside the fitted window; at the γ-matched energies
+   p_ion = 244.8 GeV, so 2.0 mrad is |t| > 0.24 GeV² and the
+   measured-aperture case has
+   **zero** accepted recoils, not an awkward fit.  Of the three levers:
+   *fewer columns* buys nothing, because the three sin columns are already
+   orthogonal to the cos ones — dropping them (`--no-sin`) leaves the
+   condition number unchanged to every printed digit, 2.33 / 1.94 / 1.80 /
+   2.01 in the four bins at 5 × 40.8 either way; *wider bins* buys nothing
+   either (2.33 → 2.40 → 2.46 in the sparsest bin going 12 × 24 → 8 × 16 →
+   6 × 12, i.e. slightly worse) and hits the rank guard at 4 × 8, where
+   ⟨cos 2α⟩ vanishes identically — it belongs to A12, which closed the
+   low-count problem with a likelihood instead; and *|t| re-binned inside
+   the window the cutout leaves* is the only surviving content — and it is
+   an unclaimed gain, not a repair.  **Follow-up, measurable but not
+   adopted:** the fixed 0.05–0.25 GeV² window discards 67–74% of the
+   tagged sample below 0.05 GeV² (reco |t| quantiles 0.010 / 0.018 /
+   0.031 / 0.052 / 0.101 at 5 × 40.8); four added bins over 0.006–0.05
+   fit cleanly (rank 7/7, exact-count closure exact) with δa_e = 0.0022 /
+   0.0022 / 0.0026 / 0.0031 at edges 0.006 / 0.017 / 0.028 / 0.039 / 0.05,
+   halving the combined one-year δa_e from 0.00205 to 0.00105 — the script
+   takes `--t-edges` and prints the combination, so
+   `money_cos2phi_coherent_reco.py --config 0 --optics tagging --exact
+   --n-mc 6000000 --t-edges 0.006,0.017,0.028,0.039,0.05,0.08,0.12,0.17,0.25`
+   is the whole measurement.  Those bins are
+   resolution-dominated (δp_T,y = 93 MeV; the 0.17–0.25 reco bin already
+   has t_ref = 0.0895), so they buy statistics for the flat a_e far more
+   than shape information for a_t(t), and t_min = 3 × 10⁻³ GeV² at
+   x_P = 0.01 bounds the window below.
 5. **The e+d control calibrates the cluster tail** — and says no β in
    the two-parameter Hulthén reproduces BeAGLE's shape (plans/02 step
    1.5.3).  Since the ⁶Li α tag is entirely a p_T-tail measurement, its
@@ -438,8 +517,95 @@ plans/00 run 11.  Items that change the plan above:
 | A9 | `spin_state_ratio` variance for single-state bins; `_ratio_to_modulation` Jacobian | ☑ |
 | A10 | hadron acceptance in the lab frame; target-mass term; σ-weighted p + n merge | ☑ |
 | A11 | 6R at the tagging optics with ensembles; per-fill perturbation on the binding cut; `--exact` systematics | ☑ |
-| A12 | low-count bias of the bin-wise 2-D ratio below ~30 counts per (α, β) bin: a likelihood fit, or adaptive binning | ☐ |
-| D3 | the ISR statement corrected (above) | — |
+| A12 | low-count bias of the bin-wise 2-D ratio below ~30 counts per (α, β) bin: a likelihood fit, or adaptive binning | ☑ **closed 2026-08-28**, see below |
+| D3 | the ISR statement corrected (above), then **closed in code** 2026-08-28: `polligen/radiative.py`, the default-off `RecoResponse(isr=…)` hook, `money_cos2phi_reco.py --isr`, 25 tests; bound +0.5 to +1.2% of Δ̂ in the published generator window (≤2.9% with the low-Q² feed-in opened up, ≤0.25% behind an E − p_z window) against the 5% gate | ☑ |
+
+### A12 — what the low-count bias was, and what closed it
+
+The defect is the *inversion*, not the ratio.  R_b itself is unbiased at
+any count (conditional on the bin total the per-fill split is multinomial
+and R_b is linear in it), but T̂ = R(1 + u)/(σ_P² − P̄R) is strongly curved
+over the range |R| ≤ max_f |P_f − P̄| that R actually explores when the bin
+holds a handful of counts — a bin with one count has R = ±0.9 exactly.  Its
+second derivative 2(1 + u)σ_P²P̄/(σ_P² − P̄R)³ has the sign of P̄, so the
+flip plan's P₀ = −2P₊ (P̄ = −0.3) makes it strictly *concave*, each bin
+carries a *negative* Jensen offset (1 + u_b)P̄/(σ_P² ν_b), and the
+data-driven 1/var weights add an opposite-sign term of the same order.
+ε_b is flat in α and modulated ×25 in β by the cutout, so the offset is
+orthogonal to ⟨cos 2α⟩ and ⟨cos(α+β)⟩ and lands entirely on the constant
+and on a_t.  That is exactly the pattern Table 5 shows.
+
+The fix is `reco.harmonic_likelihood_fit_2d`: the same model, the same
+`basis_2d` columns, with ε_b carried as a free nuisance per bin and
+profiled out.  ε_b is a linear scale, so the profile is closed-form,
+ε̂_b = n_b/D_b, and substituting it back gives **exactly** the conditional
+multinomial given the bin totals, p_{f,b} = l_f q_{f,b}/D_b.  Profiling B
+nuisances that grow with the data would normally raise the Neyman–Scott
+worry; it does not here, because the conditional score has zero mean bin
+by bin at any count — Σ_f p_f (P_f/q_f − P̄/D) = 0 identically — so there
+is no 1/ν_b term anywhere.  Newton from A = 0, six iterations, a
+step-halving guard that keeps every populated bin's density positive,
+covariance from the conditional Fisher information at the observed
+totals, the same rank guard as the ratio (the Fisher information is the
+same Gram matrix as the weighted design, so the two fail on the same
+acceptances and say so in the same words), 1.5 ms per fit.  The loop
+stops on the step, which cannot on its own tell convergence from a
+step-halving *stall* on the positivity boundary, so
+`_check_profile_convergence` tests the gradient at the solution in units
+of the error bar it would move and raises a named `LinAlgError` instead
+of returning a boundary point with a meaningless covariance (2026-08-28
+review, finding 5; the margin is twelve orders of magnitude at every
+occupancy this chain reaches, and the guard first fires around a tenth of
+a count per (α, β) cell).  Empty bins
+contribute nothing and single-fill bins contribute a finite n log p term,
+which removes the R3 variance pathology structurally rather than by a
+patch.
+
+Measured at the tagging optics, `--n-mc 6000000`, twenty one-year
+pseudo-experiments per |t| bin at 5 × 40.8 on **the same Poisson draws**
+(`money_cos2phi_coherent_reco.py --optics tagging --ensemble 20
+[--fit likelihood]`):
+
+| \|t\| | N_tag/yr | counts/(α,β) bin | injected a_t | ratio mean | likelihood mean |
+|---|---|---|---|---|---|
+| 0.05–0.08 | 4.2×10⁵ | 1451 | 0.0898 | 0.0899 (+0.1%) | 0.0902 |
+| 0.08–0.12 | 1.8×10⁵ | 620 | 0.1181 | 0.1170 (−0.9%) | 0.1176 |
+| 0.12–0.17 | 5.4×10⁴ | 192 | 0.1473 | 0.1394 (−5.4%) | 0.1463 |
+| 0.17–0.25 | 1.3×10⁴ | 48 | 0.1803 | 0.1143 (−37%) | 0.173 |
+
+Two hundred experiments turn that comparison from an indication into a
+measurement (the same command with `--config 0 --n-mc 6000000
+--ensemble 200`, 8 min).  Ratio: 0.0899 / 0.1179 / 0.1414 / 0.1184,
+i.e. +0.1 / −0.2 / −4.0 / −34.3 % with pulls of the mean +0.4 / −0.7 /
+**−9.0** / **−42.1**.
+Likelihood: 0.0902 / 0.1185 / 0.1477 / 0.1816, i.e. +0.4 / +0.3 / +0.3 /
++0.7 % with pulls +2.0 / +1.0 / +0.5 / +0.9 — and the first bin's residual
+is the response Monte Carlo's own floor at 6 × 10⁶ recoils, not the
+estimator.  At 18 × 137.5 the likelihood gives 0.0998 / 0.1373 / 0.1793 /
+0.2298 against 0.0997 / 0.1372 / 0.1791 / 0.2283, pulls +0.8 / +0.6 /
++0.4 / +1.5.  The error bars become honest with it: the likelihood's
+spreads are 0.0031 / 0.0048 / 0.0091 / 0.0193 against quoted errors
+0.0035 / 0.0048 / 0.0086 / 0.0187, while the ratio's quoted error at 48
+counts per bin is 13% *below* its own spread (0.0181 against 0.0208) and
+at one count per bin 62% *above* it — a compressed estimator's error bar
+is not its spread in either direction.  Push the same bin to ONE count
+per (α, β) cell and the ratio changes sign, mean −0.085 against +0.182
+injected, while the likelihood still returns +0.181.  On exact counts the
+likelihood returns the injected coefficients to machine precision (rel
+4 × 10⁻¹⁶ against the ratio's 2 × 10⁻⁶) and the two quote the same Asimov
+errors to 0.24%, so **no published error bar moves**.  The default stays
+`fit="ratio"`, and a test asserts the default reproduces
+`harmonic_ratio_fit_2d` bit for bit.
+
+*Adaptive binning is not the fix.*  In the sparsest bin it only
+attenuates — over the same two hundred experiments, −34.3% at 12 × 24,
+−13.9% at 8 × 16, −7.8% at 6 × 12 (`--n-alpha 8 --n-beta 16` and
+`--n-alpha 6 --n-beta 12` on that same `--ensemble 200` command) —
+because the offset falls as 1/ν_b while ν_b grows only as the bin count
+falls; it inflates err(a_e) by 17% through the wider-bin dilutions
+(0.0139 → 0.0148 → 0.0162); and it hits a hard floor at K_α = 4, where
+⟨cos 2α⟩ vanishes identically and the design is rank-deficient at 430
+counts per bin.  It survives as a cross-check, not as the remedy.
 
 ## 8.5 Commit sequence
 

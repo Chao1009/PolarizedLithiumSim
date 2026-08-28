@@ -301,14 +301,19 @@ def test_tagged_events_complete_and_routed(li6_sampler):
     assert np.all(ev["pT"] >= 0) and np.all(ev["p_lab"] > 0)
     assert np.all((ev["route"] >= 0) & (ev["route"] <= 4))
     # 6Li alpha spectator is BEAM-BLIND: R ~ 1 (rigidity 2 p_u vs beam
-    # 2 p_u) -- only the pT tail reaches the Roman Pots (fastsim headline
-    # 3-9% with high-acceptance optics, beta = 0.3 central)
+    # 2 p_u), so it reaches the Roman Pots only through the pT tail
+    # outside the near-beam envelope or through the off-rigidity slice
+    # below R = 0.95.  Since 2026-08-28 the sampler's own route column is
+    # at the CONFIGURATION's Yellow Report high-acceptance envelope
+    # (1.80 x 1.80 mrad at 10 x 99.5), not at the legacy 73 microrad: the
+    # tail collapses from ~2.5% to ~0.05% and the off-rigidity slice --
+    # which no envelope touches -- is what is left (plans/09 B2).
     r_med = np.median(ev["R"])
     assert 0.97 < r_med < 1.03
     frac_tail = float(np.mean(ev["route"] == 4))
     frac_rp_main = float(np.mean(ev["route"] == 1))
-    assert 0.005 < frac_tail < 0.20
-    assert frac_rp_main < 0.05
+    assert 0.0 < frac_tail < 0.005
+    assert 0.01 < frac_rp_main < 0.05
     assert float(np.mean(ev["route"] == 0)) > 0.5  # mostly lost
 
 
@@ -352,3 +357,267 @@ def test_tagged_rate_asymmetry_matches_analytic(li6_sampler):
                        weights=inner.xsec_flat)
     expected = model.tensor_dilution() * azz_w
     assert measured == pytest.approx(expected, rel=2e-2)
+
+
+# --- per-configuration optics and the lab azimuth (plans/09 B2) ------------
+#
+# Until 2026-08-28 the tagged sampler routed through the retired
+# proton-derived HIGH_ACCEPTANCE (73 microrad, isotropic, the same at every
+# energy) and passed no azimuth, so the rectangular near-beam envelope
+# degenerated to a circle at n sigma_h.  Both are fixed; these pin the fix.
+
+
+def test_phi_spec_is_the_lab_azimuth_of_the_transverse_momentum():
+    """`boost_spectator` must expose the azimuth the pots see -- and it is
+    NOT the DIS azimuth, which is why the key is not "phi"."""
+    ch = tagged.li6_alpha_channel()
+    rng = np.random.default_rng(31)
+    k = rng.uniform(0.02, 0.6, 5000)
+    c = rng.uniform(-1.0, 1.0, 5000)
+    phi_k = rng.uniform(0.0, 2.0 * np.pi, 5000)
+    lab = tagged.boost_spectator(ch, k, c, phi_k, 99.5)
+    np.testing.assert_allclose(lab["phi_spec"],
+                               np.arctan2(lab["ky"], lab["kx"]), atol=1e-12)
+    # the longitudinal boost does not touch the transverse plane, so with
+    # an untilted spin axis the lab azimuth IS the spin-frame one
+    np.testing.assert_allclose(np.cos(lab["phi_spec"]), np.cos(phi_k),
+                               atol=1e-12)
+    # and pT / phi_spec reconstruct (kx, ky)
+    np.testing.assert_allclose(lab["pT"] * np.cos(lab["phi_spec"]),
+                               lab["kx"], atol=1e-12)
+    # a tilted quantization axis is rotated BEFORE the boost, so the lab
+    # azimuth is no longer phi_k
+    tilt = tagged.boost_spectator(ch, k, c, phi_k, 99.5, theta_s=0.5)
+    assert np.mean(np.abs(np.cos(tilt["phi_spec"]) - np.cos(phi_k))) > 0.05
+    np.testing.assert_allclose(tilt["phi_spec"],
+                               np.arctan2(tilt["ky"], tilt["kx"]), atol=1e-12)
+
+
+def test_routing_uses_the_rectangular_envelope():
+    """Mirror of fastsim/tests/test_optics_20260828.py::
+    test_rectangular_envelope_in_the_routing, through the tagged sampler's
+    own routing call: a beam-rigidity fragment at 3 mrad clears the
+    2.2 x 3.8 mrad envelope of 5 x 40.8 horizontally and not vertically."""
+    from polli_fastsim import farforward as ff
+    o = ff.yr_optics(beams.default_configs("6Li")[0])
+    assert o.envelope == pytest.approx((2.20e-3, 3.80e-3), abs=1e-5)
+    assert ff.route_charged(1.0, 3.0e-3, 0.1, o, phi=0.0) == 4
+    assert ff.route_charged(1.0, 3.0e-3, 0.1, o, phi=np.pi / 2) == 0
+    # what dropping the azimuth would do: the circle at n sigma_h accepts
+    # the vertical fragment too
+    assert ff.route_charged(1.0, 3.0e-3, 0.1, o) == 4
+
+
+def test_sampler_defaults_to_the_configuration_optics():
+    """No module-level default can know the beam: the default envelope is
+    this configuration's Yellow Report high-acceptance one, and the legacy
+    constants stay reachable by passing them explicitly."""
+    from polli_fastsim import farforward as ff, fom
+    kern = InclusiveKernel(beams.DEUTERON, b1_func=toy_b1)
+    model = tagged.TaggedModel(tagged.li6_alpha_channel())
+    for cfg in beams.default_configs("6Li"):
+        s = tagged.TaggedSampler(model, kern, cfg, fom.Scenario(),
+                                 nx=8, nq2=6)
+        assert s.optics.envelope == ff.yr_optics(cfg).envelope
+        assert s.optics.sigma_theta_v is not None      # anisotropic-capable
+    s = tagged.TaggedSampler(model, kern, beams.default_configs("6Li")[1],
+                             fom.Scenario(), optics=ff.HIGH_ACCEPTANCE,
+                             nx=8, nq2=6)
+    assert s.optics is ff.HIGH_ACCEPTANCE
+
+
+def test_alpha_tag_acceptance_per_optics_at_10x99():
+    """The headline B2 numbers, on the tagged sampler at 10 x 99.5: 2.5% at
+    the Yellow Report high-acceptance optics against 30% at the tagging
+    optics, and the whole difference is the near-beam tail.  The circular
+    cut the azimuth-less call applies would read 51% instead of 30%."""
+    from polli_fastsim import farforward as ff, fom
+    kern = InclusiveKernel(beams.DEUTERON, b1_func=toy_b1)
+    model = tagged.TaggedModel(tagged.li6_alpha_channel())
+    cfg = beams.default_configs("6Li")[1]
+    s = tagged.TaggedSampler(model, kern, cfg, fom.Scenario(),
+                             nx=16, nq2=12)
+    cat = bk.SpinCategory("flat", 1.0, (1 / 3., 1 / 3., 1 / 3.))
+    ev = s.sample_category(cat, n=200_000, rng=np.random.default_rng(32))
+    acc = {}
+    for label, o in (("yr", ff.yr_optics(cfg, "high-acceptance")),
+                     ("tag", ff.tagging_optics(cfg))):
+        r = ff.route_charged(ev["R"], ev["theta"], ev["pT"], o,
+                             phi=ev["phi_spec"])
+        acc[label] = float(np.mean((r == 1) | (r == 4)))
+    assert acc["yr"] == pytest.approx(0.025, rel=0.10)
+    assert acc["tag"] == pytest.approx(0.30, rel=0.10)
+    # the off-rigidity R < 0.95 window slice is optics-independent and is
+    # all that survives at the Yellow Report optics
+    r_yr = ff.route_charged(ev["R"], ev["theta"], ev["pT"],
+                            ff.yr_optics(cfg), phi=ev["phi_spec"])
+    assert float(np.mean(r_yr == 1)) == pytest.approx(0.024, rel=0.10)
+    # dropping the azimuth overstates the tagging optics by ~1.7x
+    r_circ = ff.route_charged(ev["R"], ev["theta"], ev["pT"],
+                              ff.tagging_optics(cfg))
+    assert float(np.mean((r_circ == 1) | (r_circ == 4))) > 1.5 * acc["tag"]
+
+
+def test_acceptance_weighted_curve_reduces_to_the_90_degree_curve(li6):
+    """The overlay of money plot 4.  Weights concentrated at cos theta_k =
+    0 must return the analytic 90 degree curve exactly; a real acceptance
+    table must not, and at the Yellow Report optics it must come out with
+    the OPPOSITE sign at k ~ 0.3 GeV/c, which is the defect the weighting
+    corrects."""
+    from polli_fastsim import farforward as ff
+    ic = int(np.argmin(np.abs(li6.c)))
+    ref = tagged.azz_tensor_curve(li6, ic)
+    w = np.zeros((li6.k.size, li6.c.size))
+    w[:, ic] = 1.0
+    np.testing.assert_allclose(tagged.azz_tensor_curve(li6, weights=w), ref,
+                               rtol=1e-12)
+    # a uniform weight is the 4pi average: the L cross terms integrate
+    # away and CG completeness makes the c-integral of n_M the same for
+    # every M, so the tensor combination vanishes at every k -- to the
+    # accuracy of the midpoint rule on the 96-cell c grid, which is 3e-5
+    flat = tagged.azz_tensor_curve(li6, weights=np.ones_like(w))
+    assert np.abs(flat).max() < 1e-3
+
+    cfg = beams.default_configs("6Li")[1]
+    j = int(np.argmin(np.abs(li6.k - 0.30)))
+    eps_yr = tagged.acceptance_weights(li6, cfg, ff.yr_optics(cfg))
+    eps_tag = tagged.acceptance_weights(li6, cfg, ff.tagging_optics(cfg))
+    a_yr = tagged.azz_tensor_curve(li6, weights=eps_yr)[j]
+    a_tag = tagged.azz_tensor_curve(li6, weights=eps_tag)[j]
+    assert ref[j] < -0.4                      # the 90 degree curve
+    assert a_yr > +0.4                        # longitudinal acceptance
+    assert -0.2 < a_tag < 0.0                 # transverse near-beam tail
+    # eps is a probability, and the near-beam tail the tagging optics opens
+    # is the transverse half of the sphere
+    assert eps_tag.min() >= 0.0 and eps_tag.max() <= 1.0
+    wt = eps_tag * li6.n_of_kc(1.0) * li6.k[:, None] ** 2
+    wy = eps_yr * li6.n_of_kc(1.0) * li6.k[:, None] ** 2
+    mean_abs_c = lambda ww: float((ww * np.abs(li6.c)).sum() / ww.sum())
+    assert mean_abs_c(wt) < 0.5 < mean_abs_c(wy)
+
+
+def test_the_alpha_tag_is_not_the_sub_0p6_histogram():
+    """money_tagged_azz.py printed `acc` as the sum of its k < 0.6 GeV/c
+    histogram, i.e. the accepted fraction TRUNCATED at the right edge of
+    the panel, and six documents published that as the 6Li alpha tag.  The
+    tail above 0.6 GeV/c is 9-11% of the accepted sample at the Yellow
+    Report optics, so the two differ by that much and the truncated one is
+    not an acceptance.  This pins the tail, and pins that the script now
+    divides the UNBINNED accepted count by the generated one."""
+    import importlib
+    import pathlib as _pl
+    import sys as _sys
+    from polli_fastsim import farforward as ff, fom
+    _sys.path.insert(0, str(_pl.Path(__file__).resolve().parents[1]
+                            / "scripts"))
+    mod = importlib.import_module("money_tagged_azz")
+
+    kern = InclusiveKernel(beams.DEUTERON, b1_func=toy_b1)
+    model = tagged.TaggedModel(tagged.li6_alpha_channel())
+    cfg = beams.default_configs("6Li")[1]
+    s = tagged.TaggedSampler(model, kern, cfg, fom.Scenario(), nx=16, nq2=12)
+    cat = bk.SpinCategory("flat", 1.0, (1 / 3., 1 / 3., 1 / 3.))
+    ev = s.sample_category(cat, n=200_000, rng=np.random.default_rng(32))
+    r = ff.route_charged(ev["R"], ev["theta"], ev["pT"],
+                         ff.yr_optics(cfg, "high-acceptance"),
+                         phi=ev["phi_spec"])
+    k_acc = ev["k"][(r == 1) | (r == 4)]
+    assert 0.05 < float(np.mean(k_acc > 0.6)) < 0.15
+    # the two candidate definitions, on the script's own machinery
+    plan = bk.tensor_thirds_plan(0.7, 0.6)
+    k_edges = np.linspace(0.0, 0.6, 13)
+    menu = mod.optics_menu(cfg, "high-acceptance")
+    folded, n_gen = mod.folded_asymmetry(s, plan, 60_000, k_edges, menu,
+                                         np.random.default_rng(5))
+    (_a, n, k_acc2), = folded.values()
+    assert n.sum() < k_acc2.size            # the histogram truncates
+    tag = k_acc2.size / n_gen
+    assert tag == pytest.approx(0.025, rel=0.20)
+    assert n.sum() / n_gen < 0.96 * tag     # by 4% or more, and here ~9%
+
+
+def test_the_published_figure_stems_are_guarded_by_config_AND_optics():
+    """The guard used to key on --config alone, so `--optics legacy` at the
+    default configuration -- the reproduction command the manual documents
+    -- silently overwrote the published PNG with the retired 73/164 microrad
+    figure.  Only the default combination may claim the published stem."""
+    import importlib
+    import pathlib as _pl
+    import sys as _sys
+    _sys.path.insert(0, str(_pl.Path(__file__).resolve().parents[1]
+                            / "scripts"))
+    for name, base in (("money_tagged_azz", "money_tagged_azz_6Li"),
+                       ("tagged_polarimetry_7li", "tagged_polarimetry_7Li")):
+        stem = importlib.import_module(name).output_stem
+        assert stem(base, "10x100", 1, "menu") == base
+        for cfg, key, opt in ((1, "10x100", "legacy"),
+                              (1, "10x100", "tagging"),
+                              (1, "10x100", "high-acceptance"),
+                              (0, "5x41", "menu"),
+                              (2, "18x275", "legacy")):
+            assert stem(base, key, cfg, opt) != base
+        # and distinct runs never collide
+        stems = {stem(base, k, c, o)
+                 for c, k in ((0, "5x41"), (1, "10x100"), (2, "18x275"))
+                 for o in ("menu", "legacy", "tagging", "high-acceptance",
+                           "high-divergence")}
+        assert len(stems) == 15
+
+    # the two coherent scripts carry the same guard (2026-08-28 review):
+    # money plot 6R is `--config 0 --optics tagging` with the ratio fit and
+    # the published |t| edges, and Report 4's reach figure is the ratio fit
+    class _A:
+        def __init__(self, **kw):
+            self.__dict__.update(kw)
+
+    coh = importlib.import_module("money_cos2phi_coherent_reco").output_stem
+    published = dict(config=0, optics="tagging", fit="ratio",
+                     u_in_situ=False, t_edges=None)
+    assert coh(_A(**published)) == "money_cos2phi_coherent_reco_6Li"
+    variants = [dict(published, config=1), dict(published, optics="legacy"),
+                dict(published, fit="likelihood"),
+                dict(published, u_in_situ=True),
+                dict(published, t_edges="0.006,0.05,0.25")]
+    for kw in variants:
+        assert coh(_A(**kw)) != "money_cos2phi_coherent_reco_6Li", kw
+    assert len({coh(_A(**kw)) for kw in variants}) == len(variants)
+
+    reach = importlib.import_module("nearbeam_reach_gain").output_stem
+    assert reach(_A(fit="ratio")) == "nearbeam_reach_gain_6Li"
+    assert reach(_A(fit="likelihood")) != "nearbeam_reach_gain_6Li"
+
+
+def test_li7_two_samplers_agree_once_the_acceptance_definition_matches():
+    """The published explanation of the 7Li two-sampler residual blamed the
+    tagged model's momentum grid.  It is not that.  `tagging_acceptance.py`
+    (Report 3 Table 6) reports 1 - lost, i.e. ANY far-forward system, while
+    `tagged_polarimetry_7li.py` masks on the Roman Pots alone, and at
+    5 x 40.8 the B0 carries 1.1% of the 7Li alpha -- which is the entire
+    0.6-point gap at that configuration and nothing at the other two.  Like
+    for like, and inside the k <= 1.2 GeV/c on which the tagged model's grid
+    ends, the two samplers agree to a few tenths of a point."""
+    from polli_fastsim import farforward as ff, spectator as sp
+
+    # the tagged generator's Roman-Pot tag, per configuration (the numbers
+    # tagged_polarimetry_7li.py prints as acc(RP))
+    published = (0.9614, 0.9676, 0.9726)
+    b0_expected = (0.011, 0.000, 0.000)
+    for i, cfg in enumerate(beams.default_configs("7Li")):
+        k = sp.spectator_lab_kinematics(sp.LI7_ALPHA_TAG,
+                                        cfg.ion_momentum_per_nucleon,
+                                        200_000, beta=0.30,
+                                        rng=np.random.default_rng(7))
+        o = ff.yr_optics(cfg, "high-acceptance")
+        r = ff.route_charged(k["R"], k["theta"], k["pT"], o, phi=k["phi"])
+        rp = (r == 1) | (r == 4)
+        assert float(np.mean(r == 3)) == pytest.approx(b0_expected[i],
+                                                       abs=0.002), i
+        # the two definitions differ by the B0, up to a 3e-5 off-momentum
+        # sliver (route 2) that neither mask nor argument turns on
+        assert (float(np.mean(r != 0)) - float(np.mean(rp))
+                == pytest.approx(float(np.mean(r == 3)), abs=1e-4)), i
+        # like for like, inside the tagged model's k grid
+        inside = k["k"] <= 1.2
+        assert float(np.mean(inside)) > 0.99
+        assert float(np.mean(rp[inside])) == pytest.approx(published[i],
+                                                           abs=0.003), i

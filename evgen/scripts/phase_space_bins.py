@@ -256,7 +256,7 @@ def main():
                  path_effects=HALO)
     axb.annotate(
         (r"$N_{\rm tag}=%s$ (1 yr)" "\n"
-         r"near-beam tag $p_T>0.20$ GeV: acc $= %.1f$%%, $f_0=%.2f$")
+         r"near-beam tag $p_T>0.20$ GeV (legacy, 275 GeV $p$): acc $= %.1f$%%, $f_0=%.2f$")
         % (sci(n_tag.sum()), 100 * sc.tag_acceptance(
             HIGH_ACCEPTANCE.pt_cut_near_beam), sc.f0),
         xy=(0.985, 0.035), xycoords="axes fraction", fontsize=8,

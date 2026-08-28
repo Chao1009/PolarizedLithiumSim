@@ -154,8 +154,9 @@
 
   <p class="eyebrow">Polarized ⁶,⁷Li @ EIC · <b>Report 1</b> · Physics projections</p>
   <h1>Nuclear gluonometry with a tensor-polarized ⁶Li beam at the Electron-Ion Collider: projected inclusive and coherent cos 2φ measurements</h1>
-  <p class="authors">C. Peng</p>
+  <p class="authors">C. Peng and J. Zhou</p>
   <p class="affil">Physics Division, Argonne National Laboratory</p>
+  <p class="affil">Writing assisted by Claude (Anthropic)</p>
   <p class="dateline">Draft for circulation · 2026-08-27, numbers restated 2026-08-28 (first version 2026-08-10; revision history in Appendix A) · companions: Report 0 (physics case), Report 2 (reconstruction chain), Report 3 (machine and detector)</p>
 
   <div class="abstract">
@@ -517,7 +518,7 @@
   <p>That the analysis closes once a tag exists has been demonstrated with the reconstructed-level
   chain [16]: the recoil is transported to the pots with divergence smearing and an aperture, the
   spin-state ratio is formed in the two azimuths and fitted with an acceptance-weighted template
-  basis in which the pot geometry's own ⟨cos 2β⟩ cancels, and reflection-forbidden sin terms serve as null columns. At the tagging optics of §6.1 at 5 × 40.8 GeV/u — the Yellow Report divergence with the horizontal β* de-squeezed, pots following the 0.33 × 3.8 mrad envelope, tagged fraction 41%, 2.5×10⁶ tagged events per year at 1/7.1 of the high-acceptance luminosity, 4.2×10⁵ in the lowest of four |t| bins — the fit recovers the deformation coefficient a<sub>t</sub> = 0.0899 ± 0.0035, 0.118 ± 0.005 and 0.131 ± 0.009 against 0.090, 0.118 and 0.147 injected in the three bins that carry the statistics (the fourth, with 1.3×10⁴ events, returns 0.104 ± 0.018 against 0.180 — the low-count bias of the bin-wise ratio, which the ten-year sample removes at 0.183 ± 0.006), resolves the pot roll to 16 mrad through the null columns in the lowest bin, and recovers the flat term there to ± 0.0026: a single pseudo-experiment returns 0.0155, and the twenty-experiment ensemble a mean of 0.0092 with a spread of 0.0033 against 0.010 injected, so the estimator is unbiased at these counts (Report 2 Table 5).</p>
+  basis in which the pot geometry's own ⟨cos 2β⟩ cancels, and reflection-forbidden sin terms serve as null columns. At the tagging optics of §6.1 at 5 × 40.8 GeV/u — the Yellow Report divergence with the horizontal β* de-squeezed, pots following the 0.33 × 3.8 mrad envelope, tagged fraction 41%, 2.5×10⁶ tagged events per year at 1/7.1 of the high-acceptance luminosity, 4.2×10⁵ in the lowest of four |t| bins — the fit recovers the deformation coefficient a<sub>t</sub> = 0.0899 ± 0.0035, 0.118 ± 0.005 and 0.131 ± 0.009 against 0.090, 0.118 and 0.147 injected in the three bins that carry the statistics (the fourth, with 1.3×10⁴ events, returns 0.104 ± 0.018 against 0.180 — the low-count bias of the bin-wise ratio, which the ten-year sample removes at 0.183 ± 0.006 and which is now removed outright by the acceptance-profiled likelihood that carries the same templates: on the same twenty one-year pseudo-experiments its mean is 0.173 ± 0.005 against 0.180 injected, where the ratio's is 0.114), resolves the pot roll to 16 mrad through the null columns in the lowest bin, and recovers the flat term there to ± 0.0026: a single pseudo-experiment returns 0.0155, and the twenty-experiment ensemble a mean of 0.0092 with a spread of 0.0033 against 0.010 injected, so the estimator is unbiased at these counts (Report 2 Table 5).</p>
 
   <h3>6.4 · Backgrounds</h3>
 
@@ -555,7 +556,16 @@
 
   <p>Two extraction systematics survive the spin-state ratio: the polarimetry scale
   δP<sub>zz</sub>/P<sub>zz</sub> ≈ 3%, common with A<sub>zz</sub> and with tensor polarimetry still requiring dedicated development (Lamb-shift or Breit–Rabi-type polarimeters) [8], and radiative corrections for tensor observables, which have not been
-  calculated; the unpolarized QED tail is calculable and doubles as calibration. The detector
+  calculated. The unpolarized part is now bounded rather than assumed: collinear initial-state
+  radiation cannot fake a cos 2φ′ — the covariant azimuth is invariant under k → (1 − z)k for a
+  massless target — it is common to the two fills and cancels in the ratio, and it leaves
+  x = Q²<sub>e</sub>/(s y<sub>Σ</sub>) exact, moving only the Q²<sub>e</sub> label of the bin by
+  1/(1 − z); the migration that label carries biases Δ̂ by +0.5 to +1.2% at the four sweet spots
+  (≤2.9% once the generator window is opened below Q² = 0.15 GeV² and the low-Q² feed-in
+  saturates, ≤0.25% behind a HERA-style E − p<sub>z</sub> window), against the ≤5% gate this
+  programme set for its simulation letter (Report 2 §7). The tensor-sector correction is a different
+  object and no unpolarized study stands in for it; the unpolarized QED tail is calculable and
+  doubles as calibration. The detector
   nuisances have been measured rather than argued, holding the response fixed and varying one thing
   with common random numbers: a ±1% electron energy scale moves Δ̂ by 0.3–0.9% at the four bins, a hadronic-resolution mismatch (0.30 generated, 0.25 corrected) by 0.5–1.4%, a 1% residual hadronic-scale error by 0.1–0.6%, all above the 0.06–0.28% Monte Carlo floor and below the bin-centering model dependence of §5.3, while an η tilt of the electron-identification efficiency (≤ 0.03%) and the Yellow Report's η-dependent calorimeter table (≤ 0.1%) are unresolved at that floor. In interpretation, a ΔΔ-isobar admixture can mimic Δ at leading twist [12] and
   conventional double scattering generates the low-x b₁ [35–37]; the Q² lever arm and the ⁶Li/d
@@ -574,7 +584,7 @@
     <tr><td>6</td><td>Linear a₂(t) for |t| &lt; 0.2 GeV² only; the form-factor zero at 0.31 GeV² is excluded, not modelled</td><td>The upper tagged window carries unmodelled structure</td></tr>
     <tr><td>7</td><td>Toy structure functions with grid backends and a placeholder R; no target-mass terms; g₂ = g₂<sup>WW</sup> (§3.2)</td><td>Rates to ×1.5; shapes are scenarios; the R shift of §3.2 applies to every Δ</td></tr>
     <tr><td>8</td><td>All luminosity in transverse-tensor fills at P<sub>zz</sub> = 0.6, the m = 0-rich fill at −1.2 with equal purity, alternating bunch by bunch (§3.3)</td><td>N scales with the run-plan share and the amplitude with P<sub>zz</sub>; without alternation the bias of §3.3</td></tr>
-    <tr><td>9</td><td>Impulse approximation; no final-state interactions; tensor radiative corrections unknown</td><td>FSI distorts the recoil spectrum at larger |t|; RC unquantified</td></tr>
+    <tr><td>9</td><td>Impulse approximation; no final-state interactions; tensor radiative corrections unknown</td><td>FSI distorts the recoil spectrum at larger |t|; the collinear-ISR migration is bounded at ≤2.9% of Δ̂ (§7, Report 2 §7), the tensor-sector correction is not</td></tr>
     <tr><td>10</td><td>A calorimeter noise floor of 50 MeV on the hadronic E − p<sub>z</sub> sum, calorimeters to |η| = 3.7 (70–85% of it captured at the four bins) and a hadronic scale calibrated from the simulation in reconstructed bins (§5.2) [16]</td><td>The purities of Table 1 degrade in proportion to the noise; at 100 MeV the y ≈ 0.01 bins are lost at the mid configuration. Uncalibrated, the forward escape is a 13–27% scale bias on y and the purities fall to 0.42–0.68; a 1% residual moves Â by 0.1–0.6%; the ePIC nominal reach of 4.0 recovers a quarter of the escape without changing δy/y</td></tr>
   </table>
   <p class="tabcap"><b>Table 4</b> — the assumptions behind the projections, ranked by leverage.</p>
@@ -600,19 +610,19 @@
     <p>[6] W. Detmold, P. E. Shanahan, Phys. Rev. D 94 (2016) 014507 [Erratum: Phys. Rev. D 95 (2017) 079902], arXiv:1606.04505; W. Detmold, D. Pefkou, P. E. Shanahan, Phys. Rev. D 95 (2017) 114515, arXiv:1703.08220.</p>
     <p>[7] F. Winter et al. (NPLQCD), Phys. Rev. D 96 (2017) 094512, arXiv:1709.00395.</p>
     <p>[8] G. Atoian et al. (EPIOS), <i>Realizing the scientific program with polarized ion beams at EIC</i>, Phys. Rev. C 113 (2026) 060501, arXiv:2510.10794.</p>
-    <p>[9] C. Peng, <i>Deep inelastic scattering on polarized lithium: the physics case for ⁶Li and ⁷Li beams at the Electron-Ion Collider</i>, Report 0 of this series (2026).</p>
+    <p>[9] C. Peng and J. Zhou, <i>Deep inelastic scattering on polarized lithium: the physics case for ⁶Li and ⁷Li beams at the Electron-Ion Collider</i>, Report 0 of this series (2026).</p>
     <p>[10] H. Mäntysaari, F. Salazar, B. Schenke, C. Shen, W. Zhao, <i>Spatial imaging of polarized deuterons at the Electron-Ion Collider</i>, Phys. Lett. B 858 (2024) 139053, arXiv:2408.13213.</p>
     <p>[11] W. Cosyn, B. Roldan Tomei, A. Sosa, A. Zec, Eur. Phys. J. A 61 (2025) 83, arXiv:2410.12764.</p>
     <p>[12] M. Nzar, P. Hoodbhoy, <i>Estimation of the double helicity flip deuteron structure function</i>, Phys. Rev. D 45 (1992) 2264.</p>
-    <p>[13] R. Abdul Khalek et al., <i>EIC Yellow Report</i>, Nucl. Phys. A 1026 (2022) 122447, arXiv:2103.05419 (Tables 10.1–10.2, §10.1); C. Peng, <i>EIC and ePIC: the machine and the detector this programme is projected on</i>, Report 3 of this series (2026).</p>
+    <p>[13] R. Abdul Khalek et al., <i>EIC Yellow Report</i>, Nucl. Phys. A 1026 (2022) 122447, arXiv:2103.05419 (Tables 10.1–10.2, §10.1); C. Peng and J. Zhou, <i>The EIC and ePIC for a polarized-lithium programme: beam and detector parameters, their provenance, and the lithium case derived</i>, Report 3 of this series (2026).</p>
     <p>[14] K. Abe et al. (E143), Phys. Lett. B 452 (1999) 194, hep-ex/9808028.</p>
     <p>[15] A. Bacchetta, M. Diehl, K. Goeke, A. Metz, P. J. Mulders, M. Schlegel, JHEP 02 (2007) 093, hep-ph/0611265.</p>
-    <p>[16] C. Peng, <i>From detector signals to Δ(x,Q²): the reconstruction chain of the inclusive and coherent cos 2φ measurements</i>, Report 2 of this series (2026).</p>
+    <p>[16] C. Peng and J. Zhou, <i>Simulation and reconstruction chain of the inclusive and coherent cos 2φ measurements with a tensor-polarized ⁶Li beam at the EIC: assumptions, methodology and closure</i>, Report 2 of this series (2026).</p>
     <p>[17] S. Maple (ePIC), <i>Tracking and inclusive DIS reconstruction with the ePIC detector at the EIC</i>, seminar, Birmingham, 11 December 2024; ATHENA Collaboration, JINST 17 (2022) P10019, arXiv:2210.09048, §3.1; M. Arratia, D. Britzger, O. Long, B. Nachman, Nucl. Instrum. Meth. A 1025 (2022) 166164.</p>
     <p>[18] A. Jentsch, Z. Tu, C. Weiss, Phys. Rev. C 104 (2021) 065205, arXiv:2108.08314.</p>
     <p>[19] Second EIC detector / IR-8 far-forward design: <i>Precision studies of QCD in the low energy domain of the EIC</i>, arXiv:2211.15746 (§VIII); BNL LDRD 23-050 closeout, arXiv:2602.04636.</p>
     <p>[20] M. Pitt, PoS DIS2024 (2025) 259, arXiv:2409.02811; E.-C. Aschenauer et al., Phys. Rev. D 112 (2025) 036010, arXiv:2503.05908.</p>
-    <p>[21] C. Peng, <i>Superconducting nanowires at the ePIC far-forward: what a closer approach would buy the polarized-lithium tags</i>, Report 4 of this series (2026).</p>
+    <p>[21] C. Peng and J. Zhou, <i>Near-beam tagging of the far-forward lithium recoils at ePIC: what the aperture is worth, what the optics is worth, and whether superconducting nanowires help</i>, Report 4 of this series (2026).</p>
     <p>[22] W. Chang, E.-C. Aschenauer, A. Jentsch, A. Kumar, Z. Tu, Z. Yin, <i>Opportunities for imaging light nuclei with a second interaction region at the EIC</i>, Phys. Rev. D 113 (2026) 032018, arXiv:2511.05638.</p>
     <p>[23] H1 Collaboration, Eur. Phys. J. C 72 (2012) 2074, arXiv:1203.4495.</p>
     <p>[24] T. Lappi, Nucl. Phys. A 830 (2009) 403c, arXiv:0907.4588; H. Kowalski, T. Lappi, C. Marquet, R. Venugopalan, Phys. Rev. C 78 (2008) 045201, arXiv:0805.4071.</p>
@@ -647,8 +657,9 @@
     <tr><td class="mono">2026-08-24</td><td>The anchored coefficient's convention (2a₂); the reconstruction-chain report created as the reconstructed-level companion.</td></tr>
     <tr><td class="mono">2026-08-25</td><td>The spin-state-sorted ratio as the estimator of the measurement; the near-beam cut stated as angular; the b₁, b₂ sign convention; the inversion corrected; the O(γ²) b₁ leakage; far-forward parameters updated.</td></tr>
     <tr><td class="mono">2026-08-26</td><td>Development run 8: the PYTHIA 8 hadronic final state; the Roman-Pot aperture measured in the ePIC geometry; the published R1998 fit behind an r_func hook; the forward-folded bin-centering alternative.</td></tr>
-    <tr><td class="mono">2026-08-28</td><td>Numbers of §5.2 and §7 restated after the review of the reconstruction toolchain (Report 2 Appendix A, <code>docs/code_review_2026-08-28.md</code>): the hadronic-scale calibration is now keyed on the reconstructed (x, Q²) rather than the event's true cell, and the PYTHIA library was regenerated without PYTHIA's default m̂ ≥ 4 GeV floor, so the calibrated purities of Table 1 read 0.56 / 0.59 / 0.64 / 0.75 (D = 1.00 / 1.06 / 0.95 / 0.98) instead of 0.52 / 0.59 / 0.59 / 0.76; the coherent systematics of §7 are quoted at the tagging optics of §6.1 (δu₂ → 7–9% on a<sub>e</sub>, a 10⁻³ cutout change → ≤ 0.8% on a<sub>t</sub>) instead of the superseded slot geometry. No projection of §5.1 or §6 moved.</td></tr>
     <tr><td class="mono">2026-08-27</td><td>Rewritten as a paper on the γ-matched beam energies (⁶Li at 40.8 / 99.5 / 137.5 GeV/u, plans/10). All numbers restated from the current scripts: sweet spots at x = 0.011–0.14, amplitudes (0.44–0.95)×10⁻² against δA = (1.4–4.5)×10⁻⁴, the reconstructed-level Table 1, the R-model shifts (+18, +19, +8, −4%), the bin-centering scan, 1.2×10⁸ coherent events and 1.7×10⁷ tagged for the 0.20 GeV envelope. The coherent channel restated against the Yellow Report divergences and the measured pot aperture (Table 2): it does not survive at IP6 with any published optics, and the figures are presented for a tagging optics or IR-8 rather than as an IP6 projection; the pre-2026-08-27 6R and measured-aperture results, computed at the superseded rigidity-scaled energies (2.7×10⁶ tagged at 50 GeV/u; the low-energy survival at 20.5 GeV/u), are withdrawn and replaced by the analysis closure at a 0.73 mrad approach. Assumptions condensed to Table 4; references numbered in citation order. Later the same day: the tagging optics priced (Figure 4, <code>tagging_optics.py</code>) — luminosity ∝ 1/β* per plane against the tagged fraction, a horizontal-only de-squeeze with the vertical plane untouched, dispersion at the pots and the parallel-to-point transport assumption stated, the pots following or fixed — and the IP6 lithium tagging configuration proposed in §6.1 with its cost.</td></tr>
+    <tr><td class="mono">2026-08-28</td><td>Numbers of §5.2 and §7 restated after the review of the reconstruction toolchain (Report 2 Appendix A, <code>docs/code_review_2026-08-28.md</code>): the hadronic-scale calibration is now keyed on the reconstructed (x, Q²) rather than the event's true cell, and the PYTHIA library was regenerated without PYTHIA's default m̂ ≥ 4 GeV floor, so the calibrated purities of Table 1 read 0.56 / 0.59 / 0.64 / 0.75 (D = 1.00 / 1.06 / 0.95 / 0.98) instead of 0.52 / 0.59 / 0.59 / 0.76; the coherent systematics of §7 are quoted at the tagging optics of §6.1 (δu₂ → 7–9% on a<sub>e</sub>, a 10⁻³ cutout change → ≤ 0.8% on a<sub>t</sub>) instead of the superseded slot geometry. No projection of §5.1 or §6 moved.</td></tr>
+    <tr><td class="mono">2026-08-28</td><td>The unpolarized radiative correction moved from an exclusion to a bound (plans/07 WP4; Report 2 §7). §7 and assumption row 9 now carry the measured collinear-ISR migration — +0.5 to +1.2% of Δ̂ at the four sweet spots in the published generator window and ≤2.9% once that window is opened below Q² = 0.15 GeV², against the programme's ≤5% gate — in place of the earlier ≤1.1%, which quoted one response seed and the truncated window. The tensor-sector correction remains uncalculated and is stated as such. §6.3 gained the acceptance-profiled likelihood of Report 2 §4.3, which removes the low-count bias of the sparsest |t| bin outright (mean 0.173 ± 0.005 against 0.180 injected on the same twenty draws, where the ratio gives 0.114); the ratio remains the default and no published error bar moves.</td></tr>
   </table>
 
   <div class="foot">

@@ -719,6 +719,30 @@ def unpolarized_modulation_2d(alpha_edges, beta_edges, u1, u2,
     return u1 * b["u1"] + u2 * b["u2"]
 
 
+def _harmonic_rank_guard(a, cols, live, nbins, label="(alpha, beta)"):
+    """Raise a NAMED LinAlgError when the weighted harmonic design has
+    lost rank.  A cutout tight enough to empty whole regions of
+    (alpha, beta) leaves the template columns linearly dependent, and
+    `np.linalg.inv`/`solve` then raises a bare "Singular matrix" that says
+    nothing about why.  The cause is a statement about the acceptance, not
+    a numerical accident.  (Hit for real when the measured Roman-Pot
+    aperture was put under the mid-energy configuration, where it leaves
+    2.7e-3 of the recoils.)  `a` is the design weighted by the square root
+    of the per-bin weight -- 1/var for the ratio fit, the diagonal of the
+    expected information for the likelihood -- so the two estimators fail
+    on the same designs and report the same cause (they must: the Fisher
+    information of the profiled likelihood is the same Gram matrix as the
+    weighted design, up to weights)."""
+    if np.linalg.matrix_rank(a) < a.shape[1]:
+        raise np.linalg.LinAlgError(
+            "the %d-column harmonic design is rank-deficient: %d of %d "
+            "%s bins carry weight, and the cutout has emptied "
+            "enough of the circle that %s can no longer be separated. "
+            "Loosen the cutout, widen the bins, or drop columns "
+            "(with_sin=False)."
+            % (a.shape[1], live, nbins, label, "/".join(cols)))
+
+
 def harmonic_ratio_fit_2d(counts, lumis, pzz, alpha_edges, beta_edges,
                           u_coeffs=None, beta_means=None, with_sin=False):
     """Two-azimuth version for the coherent channel: counts (F, Ka, Kb)
@@ -750,32 +774,439 @@ def harmonic_ratio_fit_2d(counts, lumis, pzz, alpha_edges, beta_edges,
     cols = ["e", "t", "m"] + (["e_s", "t_s", "m_s"] if with_sin else [])
     design = np.vstack([np.ones(ka * kb)] + [basis[c] for c in cols]).T
     wgt = 1.0 / np.sqrt(np.maximum(var_t, 1e-300))
-    # A cutout tight enough to empty whole regions of (alpha, beta) leaves
-    # the template columns linearly dependent, and np.linalg.inv then
-    # raises a bare "Singular matrix" that says nothing about why.  Name
-    # the cause instead: it is a statement about the acceptance, not a
-    # numerical accident.  (Hit for real when the measured Roman-Pot
-    # aperture was put under the mid-energy configuration, where it leaves
-    # 2.7e-3 of the recoils.)
     a = design * wgt[:, None]
     live = int(np.count_nonzero(np.isfinite(var_t) & (var_t > 0.0)))
-    if np.linalg.matrix_rank(a) < a.shape[1]:
-        raise np.linalg.LinAlgError(
-            "the %d-column harmonic design is rank-deficient: %d of %d "
-            "(alpha, beta) bins carry weight, and the cutout has emptied "
-            "enough of the circle that %s can no longer be separated. "
-            "Loosen the cutout, widen the bins, or drop columns "
-            "(with_sin=False)."
-            % (a.shape[1], live, ka * kb, "/".join(cols)))
+    _harmonic_rank_guard(a, cols, live, ka * kb)
     coef, *_ = np.linalg.lstsq(a, t * wgt, rcond=None)
     cov = np.linalg.inv(a.T @ a)
     err = np.sqrt(np.diag(cov))
-    out = {"const": coef[0], "cov": cov, "sigma_p2": sig2, "pbar": pbar}
+    # err[0] belongs with coef[0]: the two estimators advertise the same
+    # return keys, and until 2026-08-28 only the likelihood twin carried
+    # "err_const", so code written to that contract raised KeyError on the
+    # default (published) estimator
+    out = {"const": coef[0], "err_const": err[0], "cov": cov,
+           "sigma_p2": sig2, "pbar": pbar}
     for i, c in enumerate(cols, start=1):
         out["a_" + c] = coef[i]
         out["err_" + c] = err[i]
     return out
 
+
+def _profile_likelihood_newton(n, lw, p, design, u, max_iter=50, tol=1e-10):
+    """Newton iteration of the acceptance-profiled Poisson log-likelihood
+    of `harmonic_likelihood_fit_2d`, from A = 0, with a step-halving guard
+    that keeps every density q_{f,b} positive in the bins that carry
+    counts.  The step uses the OBSERVED information (the exact Hessian of
+    the profile), falling back on the expected information wherever a
+    fluctuation makes that Hessian indefinite or singular -- both have the
+    same zero, so the fixed point is unchanged.  `n` is (F, B), `design`
+    (B, npar), `u` (B,).  Returns (A, n_iter, grad, q, D): the
+    coefficients, the iterations used, the gradient AT the returned A (a
+    convergence diagnostic, and it is recomputed after the loop for that
+    reason), and the per-fill and spin-averaged densities at the solution.
+
+    The loop exits on the step, so it cannot by itself tell convergence
+    from a step-halving STALL: where the likelihood has no interior
+    maximum the guard drives lambda to 2^-60 and lambda*step underflows
+    below `tol` at a point whose gradient is huge.  `_check_profile_
+    convergence` is what separates the two, on the gradient this returns;
+    every caller runs it (2026-08-28 review, finding 5)."""
+    pbar = float((lw * p).sum())
+    theta = np.zeros(design.shape[1])
+    live = n.sum(axis=0) > 0.0
+    design_live, u_live = design[live], u[live]   # hoisted: the positivity
+    grad = np.zeros(design.shape[1])              # guard runs every step
+    it = 0
+    for it in range(1, int(max_iter) + 1):
+        t = design @ theta
+        q = 1.0 + u[None, :] + p[:, None] * t[None, :]
+        d = 1.0 + u + pbar * t
+        score = (n * (p[:, None] / q - pbar / d[None, :])).sum(axis=0)
+        grad = design.T @ score
+        curv = (n * (p[:, None] ** 2 / q ** 2
+                     - pbar ** 2 / d[None, :] ** 2)).sum(axis=0)
+        info = design.T @ (curv[:, None] * design)
+        try:
+            np.linalg.cholesky(info)             # positive definite?
+        except np.linalg.LinAlgError:
+            w = _expected_information_weights(n, lw, p, pbar, q, d)
+            info = design.T @ (w[:, None] * design)
+        step = np.linalg.solve(info, grad)
+        lam = 1.0
+        for _ in range(60):
+            qc = (1.0 + u_live
+                  + p[:, None] * (design_live @ (theta + lam * step))[None, :])
+            if np.all(qc > 1e-6):
+                break
+            lam *= 0.5
+        theta = theta + lam * step
+        if np.max(np.abs(lam * step)) < tol:
+            break
+    t = design @ theta
+    q = 1.0 + u[None, :] + p[:, None] * t[None, :]
+    d = 1.0 + u + pbar * t
+    grad = design.T @ (n * (p[:, None] / q - pbar / d[None, :])).sum(axis=0)
+    return theta, it, grad, q, d
+
+
+def _check_profile_convergence(grad, covm, label="(alpha, beta)", tol=1e-3):
+    """Raise a NAMED LinAlgError when the profiled likelihood did not
+    reach its stationary point.  The Newton loop stops on the step, and a
+    step the positivity guard has halved sixty times is below any
+    tolerance whatever the gradient is; the fit would then return a point
+    on the boundary 1 + u_b + P_f T_b = 0 with a spuriously tiny
+    covariance and nothing to say so.  The test is on the gradient at the
+    returned solution measured in units of the error it would move --
+    |dlnL/dA_c| sigma_c, dimensionless -- so it does not depend on the
+    luminosity or on the number of bins.  The margin is enormous where the
+    estimator is used -- 6e-15 over 200 Poisson draws of the sparsest
+    published |t| bin at its 48 counts per (alpha, beta) cell, and 2e-15
+    at one count per cell, against a tolerance of 1e-3 -- and the guard
+    first fires around a tenth of a count per cell, an occupancy no
+    repository command reaches."""
+    # |diag| so that this stays a test of the GRADIENT: with cov=
+    # "observed" a fluctuation can make a variance negative, which is a
+    # different complaint and surfaces as a nan error bar on its own
+    scaled = (np.abs(np.asarray(grad, dtype=float))
+              * np.sqrt(np.abs(np.diag(covm))))
+    worst = float(np.max(scaled)) if scaled.size else 0.0
+    if not np.isfinite(worst) or worst > tol:
+        raise np.linalg.LinAlgError(
+            "the profiled likelihood stalled on the positivity boundary "
+            "of the %s design: the step-halving guard drove the Newton "
+            "step to zero at a point whose gradient is still %.3g error "
+            "bars (tolerance %g), so the returned coefficients and their "
+            "covariance are meaningless.  That happens when a spin state "
+            "has no counts where the model needs them -- an empty fill, a "
+            "cutout that empties whole regions of the circle -- not at "
+            "any occupancy this chain reaches." % (label, worst, tol))
+
+
+def _expected_information_weights(n, lw, p, pbar, q, d):
+    """Diagonal of the CONDITIONAL Fisher information at the observed bin
+    totals: n_b sum_f p_{f,b} (P_f/q_{f,b} - Pbar/D_b)^2 with
+    p_{f,b} = l_f q_{f,b}/D_b the conditional multinomial shares."""
+    s = p[:, None] / q - pbar / d[None, :]
+    return n.sum(axis=0) * (lw[:, None] * q / d[None, :] * s * s).sum(axis=0)
+
+
+def harmonic_likelihood_fit_2d(counts, lumis, pzz, alpha_edges, beta_edges,
+                               u_coeffs=None, beta_means=None, with_sin=False,
+                               cov="expected", max_iter=50, tol=1e-10):
+    """Maximum-likelihood twin of `harmonic_ratio_fit_2d`: the same model,
+    the same basis (`basis_2d` with the same arguments, so the c2t/s2t
+    templates and the bin dilutions are bit-for-bit shared), the same
+    return keys -- and no low-count bias.
+
+    THE MODEL.  Spin-sorted counts in the (Ka x Kb) bins of
+    alpha = phi_e - phi_S and beta = phi_t - phi_S are Poisson with
+
+        E[N_{f,b}] = l_f eps_b [1 + u_b + P_f (H A)_b],                (1)
+        (H A)_b = kappa + a_e <cos 2a> + a_t <g(t) cos 2b>
+                  + a_m <cos(a+b)>  [+ the three sin partners],
+
+    which is EXACTLY what `recopseudo.CoherentResponse.expected_counts_2d`
+    integrates: eps_b (acceptance x flux) is common to the fills, only the
+    luminosity share l_f and the tensor polarization P_f are
+    fill-dependent.  That common eps_b is what the spin-state ratio
+    cancels bin by bin; here it is carried as a free nuisance parameter
+    per bin and PROFILED OUT.
+
+    WHY THE PROFILE IS EXACT.  eps_b enters (1) as a linear scale, so
+
+        d lnL/d eps_b = 0  =>  eps_b(A) = n_b / D_b(A),
+        n_b = sum_f N_{f,b},  D_b = sum_f l_f q_{f,b} = 1 + u_b + Pbar (H A)_b,
+
+    and substituting it back leaves everything that depends on n_b alone
+    outside the fit: the profile likelihood is exactly the CONDITIONAL
+    multinomial given the bin totals,
+
+        -ln L_prof(A) = - sum_{b,f} N_{f,b} ln p_{f,b},
+        p_{f,b} = l_f q_{f,b} / D_b,  q_{f,b} = 1 + u_b + P_f (H A)_b.  (6)
+
+    Profiling B nuisance parameters that grow with the data would normally
+    raise the Neyman-Scott incidental-parameter worry; it does not here,
+    because the conditional score has zero mean bin by bin at ANY count:
+
+        E[d lnL/dA_c | n_b] = n_b sum_f p_{f,b} h_c(b)
+                              [P_f/q_{f,b} - Pbar/D_b] = 0              (7)
+
+    since sum_f p_f (P_f/q_f - Pbar/D) = Pbar/D - Pbar/D.  There is no
+    1/nu_b term anywhere.  That is the whole point: the ratio estimator
+    inverts R_b = sigma_P^2 T_b/(1 + u_b + Pbar T_b) bin by bin, and the
+    inversion T = R(1+u)/(sigma_P^2 - Pbar R) is strongly CURVED over the
+    range |R| <= max_f |P_f - Pbar| that R actually explores at low counts
+    (a bin with one count has R = w_f exactly): d2T/dR2 = 2(1 + u)
+    sigma_P^2 Pbar/(sigma_P^2 - Pbar R)^3 carries the sign of Pbar, so the
+    flip plan's P0 = -2 P+ (Pbar = -0.3) makes it strictly CONCAVE and the
+    Jensen offset (1 + u_b) Pbar/(sigma_P^2 nu_b) per bin negative, while
+    the data-driven 1/var weights add an opposite-sign term of the same
+    order.  The offset is flat in alpha (eps_b is: the Roman-Pot cutout
+    modulates beta, not alpha) so the LSQ lands it on the constant and on
+    a_t and leaves a_e alone.  Measured on the real chain at the tagging
+    optics over two hundred one-year pseudo-experiments (5 x 40.8, 12 x 24
+    bins, money_cos2phi_coherent_reco.py --config 0 --optics tagging
+    --n-mc 6000000 --ensemble 200): the ratio's a_t is biased by
+    +0.1 / -0.2 / -4.0 / -34.3 % in the four published |t| bins (1451,
+    620, 192, 48 counts per (alpha, beta) bin), this fit by
+    +0.4 / +0.3 / +0.3 / +0.7 %, with pulls of the mean
+    +2.0 / +1.0 / +0.5 / +0.9 against the ratio's +0.4 / -0.7 / -9.0 /
+    -42.1 -- and the first bin's residual is the response Monte Carlo's
+    own floor, not the estimator.  (Table 5 of Report 2 quotes the same
+    comparison on the TWENTY draws its published columns use, where the
+    ratio reads 0.0 / -0.9 / -5.4 / -37 %; the two ensembles are not
+    mixed anywhere.)  Push the sparsest bin to ONE count per
+    (alpha, beta) cell and the ratio changes sign, mean -0.085 against
+    +0.182 injected, while this fit still returns +0.181.  Its quoted
+    errors are the ensemble spread at both occupancies, where the ratio's
+    are 62% larger than its own spread at one count per bin (the
+    compressed estimator fluctuates less than it says); and it is the
+    smaller of the two even in variance, 0.0200 against 0.0211 in the
+    sparsest published bin.
+
+    Empty bins contribute exactly nothing to (6) -- no infinite weight, no
+    ad-hoc masking, no selection on n_b > 0 -- and a bin populated by one
+    fill contributes a finite, correct n ln p term, which is the
+    single-fill pathology of `spin_state_ratio` removed structurally
+    rather than patched.  Coarser (alpha, beta) bins only ATTENUATE the
+    ratio's bias -- in the sparsest chain bin, over the same two hundred
+    experiments, -34.3% at 12 x 24, -13.9% at 8 x 16 and -7.8% at 6 x 12
+    (--n-alpha/--n-beta) -- cost 17% on err(a_e) through the wider-bin
+    dilutions (0.0139 -> 0.0148 -> 0.0162), and run into a hard floor at
+    Ka = 4, where <cos 2alpha> vanishes identically and the design is
+    rank-deficient at 430 counts per bin: adaptive binning is a
+    cross-check, not the fix.
+
+    WHAT IT SHARES WITH THE RATIO, AND THEREFORE DOES NOT FIX.  Model (1)
+    assumes eps_b COMMON to the fills, so this estimator is blind to a
+    fill-dependent acceptance in exactly the same way, and a wrong
+    (u1, u2) or a wrong luminosity share moves it the same way too: on
+    exact counts the shifts agree to better than 1% of themselves and to
+    2% of the statistical error, the residual being second order in a
+    deliberately large 12% perturbation.  On exact (Asimov) counts the
+    score is identically zero at the truth, so it returns the injected
+    coefficients to machine precision (relative 4e-16 against the ratio's
+    2e-6) and its errors agree with the ratio fit's to 0.24% on err_t and
+    0.01% on err_e, INDEPENDENT of the luminosity -- no published error
+    bar moves.  The residual is the difference between the delta-method
+    variance of the inverted ratio and the exact Fisher information, and
+    it goes the efficient way: this fit's error is the smaller.
+
+    ARGUMENTS.  `counts` (F, Ka, Kb); `lumis`, `pzz` per fill;
+    `u_coeffs` = (u1, u2) the spin-independent modulation the analysis
+    subtracts (None = 0); `beta_means` the response's acceptance-weighted
+    in-bin means (`CoherentResponse.basis_means`); `with_sin` adds the
+    three parity-forbidden null columns.  `cov` selects the covariance:
+    "expected" (default) is the conditional Fisher information at the
+    observed bin totals, "observed" the Hessian at the solution; over
+    Poisson draws of the sparsest published bin the two agree to 0.01% on
+    average at 48 counts per (alpha, beta) cell (0.5% worst case) and to
+    0.5% at one count per cell, where the observed form can fluctuate by
+    14% -- which is why the expected one is the default.
+
+    Returns {"const", "a_e", "a_t", "a_m", "err_const", "err_e", "err_t",
+    "err_m", "cov", "sigma_p2", "pbar", "n_iter", "nll", "grad_max"} (+
+    "a_e_s", "a_t_s", "a_m_s" and their errors with `with_sin`), with
+    `cov` ordered (const, e, t, m [, e_s, t_s, m_s]) as in the ratio fit.
+    `nll` is the conditional -ln L of (6) at the solution and `grad_max`
+    the largest |dlnL/dA_c| there, which `_check_profile_convergence` has
+    already tested against the error bars: a fit that stalled on the
+    positivity boundary raises a named LinAlgError rather than returning
+    a boundary point with a meaningless covariance.  Cost 2.3 ms at
+    12 x 24 with seven columns against 0.4 ms for the ratio fit -- five
+    times as much, and negligible either way against building the
+    response."""
+    n = np.asarray(counts, dtype=float)
+    nf, ka, kb = n.shape
+    n = n.reshape(nf, ka * kb)
+    p = np.asarray(pzz, dtype=float)
+    lum = np.asarray(lumis, dtype=float)
+    lw = lum / lum.sum()
+    pbar = float((lw * p).sum())
+    sig2 = float((lw * (p - pbar) ** 2).sum())
+    basis = basis_2d(alpha_edges, beta_edges, beta_means)
+    u = (u_coeffs[0] * basis["u1"] + u_coeffs[1] * basis["u2"]
+         if u_coeffs is not None else np.zeros(ka * kb))
+    u = np.broadcast_to(np.asarray(u, dtype=float), (ka * kb,)).copy()
+    cols = ["e", "t", "m"] + (["e_s", "t_s", "m_s"] if with_sin else [])
+    design = np.vstack([np.ones(ka * kb)] + [basis[c] for c in cols]).T
+    # the rank guard, on the same footing as the ratio fit's: the weight a
+    # bin carries in the Fisher information at A = 0 is
+    # n_b sigma_P^2/(1 + u_b)^2, so the live bins are exactly those with
+    # counts and the two estimators fail on the same designs
+    nb = n.sum(axis=0)
+    w0 = nb * sig2 / (1.0 + u) ** 2
+    _harmonic_rank_guard(design * np.sqrt(np.maximum(w0, 0.0))[:, None],
+                         cols, int(np.count_nonzero(nb > 0.0)), ka * kb)
+    theta, n_iter, grad, q, d = _profile_likelihood_newton(
+        n, lw, p, design, u, max_iter=max_iter, tol=tol)
+    if cov == "observed":
+        w = (n * (p[:, None] ** 2 / q ** 2
+                  - pbar ** 2 / d[None, :] ** 2)).sum(axis=0)
+    else:
+        w = _expected_information_weights(n, lw, p, pbar, q, d)
+    covm = np.linalg.inv(design.T @ (w[:, None] * design))
+    _check_profile_convergence(grad, covm)
+    err = np.sqrt(np.diag(covm))
+    nll = -float((n * np.log(lw[:, None] * q / d[None, :],
+                             where=n > 0.0,
+                             out=np.zeros_like(q))).sum())
+    out = {"const": theta[0], "err_const": err[0], "cov": covm,
+           "sigma_p2": sig2, "pbar": pbar, "n_iter": n_iter, "nll": nll,
+           "grad_max": float(np.max(np.abs(grad)))}
+    for i, c in enumerate(cols, start=1):
+        out["a_" + c] = theta[i]
+        out["err_" + c] = err[i]
+    return out
+
+
+def harmonic_likelihood_fit(counts, lumis, pzz, edges, with_sin=False):
+    """One-azimuth twin of `harmonic_ratio_fit`, on the same Newton core
+    as `harmonic_likelihood_fit_2d`: the per-bin efficiency is profiled
+    out, which makes the estimator exactly the conditional multinomial
+    given the bin totals and therefore unbiased at any count.  The
+    inclusive phi' bins carry >= 10^4 counts, where it agrees with the
+    ratio fit to a small fraction of the error, so this is the general
+    statement rather than a change of the published inclusive numbers.
+
+    Returns {"amp", "err", "const", "err_const", "sigma_p2", "pbar",
+    "n_iter", "nll"} (+ "amp_sin", "phase" with `with_sin`), with the
+    finite-bin dilution sin(2w)/2w divided out of the amplitude and its
+    error exactly as in `harmonic_ratio_fit`."""
+    n = np.asarray(counts, dtype=float)
+    p = np.asarray(pzz, dtype=float)
+    lw = np.asarray(lumis, dtype=float)
+    lw = lw / lw.sum()
+    pbar = float((lw * p).sum())
+    sig2 = float((lw * (p - pbar) ** 2).sum())
+    edges = np.asarray(edges, dtype=float)
+    centers = 0.5 * (edges[:-1] + edges[1:])
+    cols = [np.ones_like(centers), np.cos(2.0 * centers)]
+    if with_sin:
+        cols.append(np.sin(2.0 * centers))
+    design = np.vstack(cols).T
+    u = np.zeros(centers.size)
+    nb = n.sum(axis=0)
+    _harmonic_rank_guard(design * np.sqrt(nb * sig2)[:, None],
+                         ["cos2phi"] + (["sin2phi"] if with_sin else []),
+                         int(np.count_nonzero(nb > 0.0)), centers.size,
+                         label="phi'")
+    theta, n_iter, grad, q, d = _profile_likelihood_newton(n, lw, p,
+                                                           design, u)
+    w = _expected_information_weights(n, lw, p, pbar, q, d)
+    covm = np.linalg.inv(design.T @ (w[:, None] * design))
+    _check_profile_convergence(grad, covm, label="phi'")
+    err = np.sqrt(np.diag(covm))
+    wdt = 0.5 * (edges[1] - edges[0])
+    dil = np.sin(2.0 * wdt) / (2.0 * wdt)
+    nll = -float((n * np.log(lw[:, None] * q / d[None, :], where=n > 0.0,
+                             out=np.zeros_like(q))).sum())
+    out = {"amp": theta[1] / dil, "err": err[1] / dil, "const": theta[0],
+           "err_const": err[0], "sigma_p2": sig2, "pbar": pbar,
+           "n_iter": n_iter, "nll": nll}
+    if with_sin:
+        out["amp_sin"] = theta[2] / dil
+        out["phase"] = 0.5 * np.arctan2(theta[2], theta[1])
+    return out
+
+
+def unpolarized_insitu_fit_2d(counts, eps_mc, lumis, pzz, alpha_edges,
+                              beta_edges, harmonics=None, beta_means=None,
+                              with_sin=False, max_iter=50, tol=1e-12):
+    """Fit the spin-independent modulation (u1, u2) IN SITU, from the
+    spin-averaged counts of the same data.
+
+    THE ASSUMPTION, STATED.  Once the per-bin acceptance eps_b is a free
+    parameter -- which is what makes both the ratio and
+    `harmonic_likelihood_fit_2d` acceptance-free -- u is NOT identifiable:
+    u_b multiplies eps_b in exactly the same way, and the spin-sorted
+    counts constrain only their product.  An in-situ (u1, u2) therefore
+    NECESSARILY leans on the acceptance model, and this fit says so
+    explicitly: it compares the spin-averaged counts with the response's
+    own acceptance prediction,
+
+        E[n_b] = N eps_b^MC [1 + u1 <cos(a-b)> + u2 <cos 2(a-b)>
+                             + Pbar (H A)_b],                          (8)
+
+    N free (so only the SHAPE of eps^MC is used, not its normalization),
+    eps^MC taken from the acceptance Monte Carlo at u = 0, P_zz = 0 -- i.e.
+    what an analysis takes from its own acceptance simulation -- and the
+    small Pbar (H A)_b term held at the harmonic coefficients `harmonics`.
+    The result is only as good as that acceptance shape; what it buys is
+    that the ZEUS LPS measurement becomes a PRIOR on u rather than the
+    input, and that the leakage a_t du2 <cos 2beta> into a_e is bounded by
+    the data's own statistics.
+
+    N profiles out in closed form, N(u) = n_tot/S with
+    S = sum_b eps_b^MC m_b, leaving a two-parameter Poisson likelihood in
+    (u1, u2) solved by Newton with the same positivity guard as the
+    harmonic fit.  Bins with eps_b^MC <= 0 are dropped (the acceptance MC
+    predicts nothing there).
+
+    `counts` (F, Ka, Kb) or (Ka, Kb) -- summed over fills either way;
+    `eps_mc` (Ka, Kb) or flat, up to any normalization; `harmonics` the
+    tensor coefficients (kappa, a_e, a_t, a_m [, a_e_s, a_t_s, a_m_s]) or
+    a fit dict, None for zero.  Returns {"u1", "u2", "cov", "err_u1",
+    "err_u2", "norm", "n_iter", "nll", "n_live"}."""
+    n = np.asarray(counts, dtype=float)
+    if n.ndim == 3:
+        n = n.sum(axis=0)
+    n = n.ravel()
+    eps = np.asarray(eps_mc, dtype=float).ravel()
+    if eps.size != n.size:
+        raise ValueError("eps_mc must have one entry per (alpha, beta) bin")
+    p = np.asarray(pzz, dtype=float)
+    lw = np.asarray(lumis, dtype=float)
+    pbar = float((lw / lw.sum() * p).sum())
+    basis = basis_2d(alpha_edges, beta_edges, beta_means)
+    cols = ["e", "t", "m"] + (["e_s", "t_s", "m_s"] if with_sin else [])
+    if harmonics is None:
+        tens = np.zeros(n.size)
+    else:
+        if isinstance(harmonics, dict):
+            a = [harmonics.get("const", 0.0)] + [harmonics.get("a_" + c, 0.0)
+                                                 for c in cols]
+        else:
+            a = list(harmonics)
+        tens = a[0] + sum(ai * basis[c] for ai, c in zip(a[1:], cols))
+    live = eps > 0.0
+    h = np.vstack([basis["u1"], basis["u2"]]).T[live]
+    eps, n, base = eps[live], n[live], (1.0 + pbar * tens)[live]
+    n_tot = float(n.sum())
+    theta = np.zeros(2)
+    it = 0
+    for it in range(1, int(max_iter) + 1):
+        m = base + h @ theta
+        s = float((eps * m).sum())
+        ge = eps @ h
+        grad = (n / m) @ h - n_tot * ge / s
+        info = (h.T @ ((n / m ** 2)[:, None] * h)
+                - n_tot * np.outer(ge, ge) / s ** 2)
+        step = np.linalg.solve(info, grad)
+        lam = 1.0
+        for _ in range(60):
+            if np.all(base + h @ (theta + lam * step) > 1e-6):
+                break
+            lam *= 0.5
+        theta = theta + lam * step
+        if np.max(np.abs(lam * step)) < tol:
+            break
+    m = base + h @ theta
+    s = float((eps * m).sum())
+    norm = n_tot / s
+    ge = eps @ h
+    # expected information at the fitted expectation: a weighted
+    # covariance of h/m, hence positive semi-definite by construction
+    info = norm * (h.T @ ((eps / m)[:, None] * h) - np.outer(ge, ge) / s)
+    covm = np.linalg.inv(info)
+    err = np.sqrt(np.diag(covm))
+    nu = norm * eps * m
+    nll = -float((n * np.log(nu, where=n > 0.0, out=np.zeros_like(nu))
+                  - nu).sum())
+    return {"u1": float(theta[0]), "u2": float(theta[1]), "cov": covm,
+            "err_u1": float(err[0]), "err_u2": float(err[1]),
+            "norm": norm, "n_iter": it, "nll": nll,
+            "n_live": int(live.sum())}
 
 def err_harmonic_ratio(n_total, pzz_list, lumi_fractions=None, nbins=24):
     """Analytic statistical error of harmonic_ratio_fit for n_total events
@@ -924,20 +1355,35 @@ RP_APERTURE_MEASURED = {
 }
 
 
-def rp_aperture_for(p_per_nucleon, table=None):
-    """The measured aperture of the machine configuration a 6Li at
-    `p_per_nucleon` belongs to.  Returns None off those three points rather
-    than interpolating: the pot positions are set per ring, not by a formula.
+def rp_aperture_for(config, table=None):
+    """The measured aperture of a machine configuration.
 
-    The three points are derived from `beams`, not hard-coded -- they moved
-    on 2026-08-27 when the two lower configurations were corrected from
-    rigidity-scaled (20.5, 50) to gamma-matched (40.8, 99.5) GeV/u
+    `config` is a `beams.BeamConfig` OF ANY SPECIES, resolved through
+    `farforward.yr_config_key` -- the aperture is a property of the ring
+    and the pot mechanics, not of the beam in it, so every isotope at a
+    given machine configuration sees the same slot.
+
+    A bare per-nucleon momentum [GeV/u] is still accepted, for the callers
+    written before 2026-08-28, and is matched against the 6Li
+    configurations alone; it returns None off those three points rather
+    than interpolating, since the pot positions are set per ring and not by
+    a formula.  That path CANNOT serve 7Li: 7Li's top configuration is
+    117.9 GeV/u against 6Li's 137.5, so `rp_aperture_for(117.9)` returned
+    None and the near-beam scans could not be run for it at all (plans/09
+    B3).  Pass the configuration.
+
+    The three 6Li momenta are derived from `beams`, not hard-coded -- they
+    moved on 2026-08-27 when the two lower configurations were corrected
+    from rigidity-scaled (20.5, 50) to gamma-matched (40.8, 99.5) GeV/u
     (plans/10)."""
     from polli_fastsim import beams as _beams
+    from polli_fastsim import farforward as _ff
     table = table or RP_APERTURE_MEASURED
+    if hasattr(config, "ion_momentum_per_nucleon"):
+        return table.get(_ff.yr_config_key(config))
     keys = ("5x41", "10x100", "18x275")
     for cfg, key in zip(_beams.default_configs("6Li"), keys):
-        if abs(float(p_per_nucleon) - cfg.ion_momentum_per_nucleon) < 1e-3:
+        if abs(float(config) - cfg.ion_momentum_per_nucleon) < 1e-3:
             return table[key]
     return None
 

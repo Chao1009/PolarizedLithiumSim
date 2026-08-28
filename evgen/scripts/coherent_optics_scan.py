@@ -213,6 +213,7 @@ def main():
     print("\n  cut [GeV]   acc      N_tag      t bin        "
           "a_t(t_ref)   d(a_t)     d(a_e)")
     rows = []
+    dropped = []
     for cut in args.err_cuts:
         sigma_theta = cut / (10.0 * p_ion)
         tlo, thi = 1.05 * cut ** 2, 1.05 * cut ** 2 + 0.03
@@ -221,16 +222,37 @@ def main():
                                     n_mc=args.n_mc,
                                     rng=np.random.default_rng(args.seed),
                                     t_floor=0.25 * cut ** 2)
-        fit = rp.measure_coherent(
-            cresp, n_produced, plan, tlo, thi, args.amp,
-            lambda t: sc.cos2phi_coefficient_deformation(t, 1.0),
-            u1=args.u1, u2=args.u2, poisson=False)
+        # The tightest envelopes are RESPONSE-MC-limited, not data-limited:
+        # at the top of the default --err-cuts the importance-sampled
+        # response leaves only a handful of recoils in the binned window,
+        # and the harmonic design loses rank.  That is a statement about
+        # this scan's Monte Carlo, so report the point and carry on rather
+        # than losing the whole figure (as money_cos2phi_coherent_reco.py
+        # already does per |t| bin).  Raise --n-mc to recover the point.
+        try:
+            fit = rp.measure_coherent(
+                cresp, n_produced, plan, tlo, thi, args.amp,
+                lambda t: sc.cos2phi_coefficient_deformation(t, 1.0),
+                u1=args.u1, u2=args.u2, poisson=False)
+        except (np.linalg.LinAlgError, ValueError, ZeroDivisionError) as exc:
+            n_acc = int(((cresp.t_reco >= tlo) & (cresp.t_reco < thi)).sum())
+            dropped.append((cut, n_acc))
+            print("  %-11.2f %-8.2e %-10.3g [%.3f,%.3f]  DROPPED -- %d "
+                  "response recoils in the window, and %s"
+                  % (cut, cresp.acceptance, n_produced * cresp.acceptance,
+                     tlo, thi, n_acc, exc))
+            continue
         tr = fit["truth"]
         rows.append((cut, cresp.acceptance, n_produced * cresp.acceptance,
                      tr["a_t"], fit["err_t"], fit["err_e"]))
         print("  %-11.2f %-8.2e %-10.3g [%.3f,%.3f]  %-12.4f %-10.4f %.4f"
               % (cut, cresp.acceptance, n_produced * cresp.acceptance,
                  tlo, thi, tr["a_t"], fit["err_t"], fit["err_e"]))
+    if not rows:
+        raise SystemExit(
+            "every --err-cuts point lost its harmonic fit: the response "
+            "Monte Carlo leaves too few recoils in the binned window at "
+            "n_mc = %d.  Raise --n-mc or lower the cuts." % args.n_mc)
     rows = np.array(rows)
     ax3.errorbar(rows[:, 0], rows[:, 4] / rows[:, 3], fmt="o-", color=C_TRUTH,
                  ms=4, lw=1.3,
@@ -246,6 +268,15 @@ def main():
     ax3.set_ylabel("relative statistical error, 1 yr")
     ax3.set_title("(c) reach of the two coefficients vs the envelope",
                   fontsize=9)
+    if dropped:
+        # a dropped point is a hole in the published curve: say so on the
+        # figure rather than letting the line close over it
+        ax3.annotate("no fit at %s GeV: response-MC-limited, %s recoils in "
+                     "the window\nat n_mc = %d (raise --n-mc to recover)"
+                     % (", ".join("%.2f" % c for c, _ in dropped),
+                        "/".join("%d" % k for _, k in dropped), args.n_mc),
+                     xy=(0.03, 0.03), xycoords="axes fraction", fontsize=6.4,
+                     color="0.35")
     ax3.legend(fontsize=7, loc="upper left")
     ax3.tick_params(labelsize=8)
 

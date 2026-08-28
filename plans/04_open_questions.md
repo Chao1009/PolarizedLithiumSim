@@ -23,10 +23,21 @@ A2. **Why ³He is quoted at 166 GeV/u in old documents** — eRHIC-era
     GeV/u) therefore stands, pending C-AD blessing of Li specifically.
 A3. **Far-forward routing of Li fragments** — verified windows (plans/03
     §2.2): ⁷Li α → Roman Pots (R = 0.86); tritons → **no IP6 coverage**
-    (R > 1, both beams); ⁶Li α/d → beam-blind below RP pT cutoff (R = 1.0);
+    (R > 1, both beams); ⁶Li α/d → beam-blind below RP pT cutoff
+    (R = 0.998 and 1.005 from the physical nuclear masses since
+    2026-08-28, not the 1.000 the A·Z ratio gives — the two fragments are
+    separated by 0.7% of rigidity, which is inside the ±5% near-beam band
+    and so still undispersed, but they are not the same trajectory);
     p → OMD; n/γ → ZDC. IR-8 secondary focus (RPs 44–45.5 m) recovers R ≈ 1
     at pT → 0. *Remaining question:* none at concept level — quantitative
-    acceptance is exactly Phase-2 step 2.2.
+    acceptance is exactly Phase-2 step 2.2.  *Caveat on the tritons
+    (2026-08-28):* "no coverage" is the routing's own answer —
+    `farforward.route_charged` has no R > 1 branch, so an over-rigid
+    fragment is lost by construction — and the 2026-06-12 particle-gun
+    scan of `tools/fullsim` contradicts it, putting the ⁷Li triton on the
+    inner side of the Roman-Pot planes and then in the ZDC. Unverified
+    against a beam envelope, a divergence or a reconstruction; open as
+    plans/03 §2.2 "Tritons at IP6 — revisit" ◐.
 A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
     C-12 Fermi-momentum parameterization, Woods–Saxon geometry without
     α+d/α+t clustering, FLUKA evaporation untuned for A<12, code frozen
@@ -60,16 +71,27 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
    (ε₂⁺ − ε₂⁰)/(P₊ − P₀) = 5.6×10⁻⁴ — half a Δ/F₁ ~ 10⁻³ signal, 5% of the
    sweet-spot amplitudes, and 4.6 one-year statistical errors (modelled
    since 2026-08-25 by `reco.fill_acceptance_bias` and
-   `money_cos2phi_reco.py --eff-cos2-split`; plans/08 A1).  The coherent counterpart is
-   tighter than the naive estimate: 10⁻³ of the Roman-Pot vertical
-   envelope between the samples biases a_t by **19%** and 1% by 169%
-   (measured, plans/08 A1b — under the slot half the β bins are blind and
-   the t-template is 99% anti-correlated with the constant, so a shape
-   perturbation is amplified ~100× over δ⟨cos 2β⟩/(P₊ − P₀) = 1.3%).
-   Bunch-by-bunch alternation is therefore a requirement of the
-   measurement; fill-by-fill needs 10⁻⁴ stability of both the φ′
-   efficiency and the pot envelope.  The higher-|t| bins are the
-   fallback: +3.9% and +0.04% at the same 10⁻³.
+   `money_cos2phi_reco.py --eff-cos2-split`; plans/08 A1).  The coherent
+   counterpart is a property of the cutout, so it moved when the cutout
+   did.  *Dated record, 2026-08-27 (plans/08 A1b, the assumed 2.5 : 1
+   slot):* half the β bins were blind there and the t-template was 99%
+   anti-correlated with the constant, so a shape perturbation was
+   amplified ~100× over δ⟨cos 2β⟩/(P₊ − P₀) = 1.3% — 10⁻³ of the
+   Roman-Pot vertical envelope between the samples biased a_t by **19%**
+   and 1% by **169%**, the higher-|t| bins being the fallback at +3.9%
+   and +0.04%.  That is what made 10⁻⁴ envelope stability the stated
+   requirement.  *2026-08-28 (run 11), re-measured at the tagging optics
+   of Report 1 §6.1, where the coherent channel is now measured:* a 10⁻³
+   change of the binding (horizontal) half-width between the fills moves
+   a_t by **−0.8 / −0.5 / −0.1 / −0.3 %** in the four |t| bins, and 10⁻²
+   by −7.6 / −4.5 / −3.6 / −2.9 %, with a_e untouched (Report 2
+   Table 6).  The tagging cutout's horizontal edge sits in a shallow part
+   of the recoil spectrum and all four bins stay live, so the
+   amplification is gone: per-mille stability now costs per-mille.
+   Bunch-by-bunch alternation remains a requirement of the measurement
+   — it is what makes the acceptance cancel at all — but fill-by-fill
+   running is no longer excluded by this systematic at the tagging
+   optics; the φ′ efficiency of the inclusive channel still needs 10⁻⁴.
    *Default:* equal thirds (+,0,−), δ(rel-lumi) as a Phase-2 systematic.
 4. **Li luminosity.** Confirmed gap — no Li number exists in any document
    (EPIOS included). Space charge, IBS, cooling for Li bunches unstudied.
@@ -104,7 +126,13 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
    *Engage:* Cloët (ANL), Cosyn, Miller; lattice: Detmold/Shanahan.
 10. **Radiative corrections on tensor observables** (A_zz, cos 2φ).
     Vector-case tools exist (DJANGOH/HERACLES); tensor RC uncharted.
-    *Default:* RC band from vector-case studies (Phase-1 step 1.4).
+    *Default:* **no band.**  An unpolarized QED study does not bound a
+    tensor one, so the affected claims carry no correction and say so
+    (plans/07 WP4, Report 2 §7).  What *is* measured is the unpolarized
+    collinear-ISR migration, in `polligen/radiative.py`: +0.62 / +0.50 /
+    +0.94 / +1.22% of Δ̂ at the four sweet spots in the published
+    generator window, ≤ 2.9% once the low-Q² feed-in is opened
+    (Phase-1 step 1.4, plans/08 D3).
 14. **Complete inclusive structure-function basis for spin-3/2** (⁷Li):
     rank-2 (b₁-analog) and rank-3 functions are not classified anywhere we
     can adopt; needed by the doubly polarized generator (plans/05 §5.2).
@@ -141,6 +169,23 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
 11. **Far-forward transfer matrices & optics at Li rigidities** (RP/OMD
     reconstruction in EICrecon is tuned per beam setting).
     *Engage:* ePIC FF WG (A. Jentsch). Phase-2 step 2.2.
+    *2026-08-28:* the item has split into its two halves, each with its
+    own owner and its own written-down ask.  The **optics** half was
+    promoted to a plan of its own — plans/10 **D1–D3**: σ_θ(h, v) and
+    Δp/p at the IP for a ⁶Li/⁷Li fill (D1), which cooling scenario is the
+    baseline for ion running (D2), and β* for light-ion running (D3), for
+    C-AD with the ePIC FF WG.  plans/10 §10.3 answers D1 provisionally by
+    scaling the Yellow Report's own proton tables with an equal-emittance
+    assumption calibrated on gold, and the sharp question inside it is
+    whether a light-ion *tagging* optics can exist at all, since nothing
+    else recovers the coherent channel.  The **transfer-matrix** half
+    stays with the ePIC FF WG and is written down as plans/09 **D3**:
+    R₁₂ = 30.6 m and the pot dispersion D = 0.30 m were measured at
+    18 × 275 only and are carried to the other configurations for want of
+    per-optics values, R₃₄ is unmeasured, and the 10σ offsets in
+    `beamline_*.xml` are marked a *"rough extrapolation"* at 5 × 41 —
+    which is why plans/09 works in angle and quotes millimetres for one
+    optics alone.
 12. **Geant4/DD4hep light-ion & excited-ion primaries** (10LZZZAAAI codes
     from BeAGLE; DD4hep had fixes ~PR #920; `sanitize_hepmc3.py` exists).
     Verify in Phase-2 step 2.1.4.
@@ -161,23 +206,50 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
     supplies a candidate mechanism (below), but the INCUMBENT already
     carries more information: EICROC provides per channel an 8-bit
     40 MHz SAR ADC for charge (the ToT of ALTIROC was replaced by it for
-    dynamic range) behind an AC-LGAD with a 30 µm active thickness, and
-    30 µm of silicon separates ⁶Li from α at **4.8σ per plane** against a
-    nanowire's one bit — over the **four** planes ePIC already has (2
-    stations × 2 layers). The limit on either is the δ-ray upper tail,
-    which falls as 1/λ and so is nearly thickness-independent; four
-    planes with a majority vote take a 5–6% single-plane fake to ~10⁻³.
+    dynamic range) behind an AC-LGAD with a 30 µm active thickness, over
+    the **four** planes ePIC already has (2 stations × 2 layers).
+    *Retracted 2026-08-27 (plans/09 §9.2):* this entry priced that
+    advantage as "**4.8σ per plane** against a nanowire's one bit", and a
+    σ is the wrong figure of merit — a gap over the quadrature sum of two
+    Landau core widths is neither a separation power nor a fake rate, and
+    what puts an α inside a ⁶Li's window is the Landau *upper tail*.
+    Restated as an α fake rate at a matched 95% ⁶Li efficiency over the
+    four planes (`nearbeam_zid_power.py`, a sampled Landau, 1.5×10⁶
+    events): **2.3×10⁻⁵** for the 8-bit per-plane likelihood ratio, the
+    optimum, against **3.1×10⁻⁵** for one bit per plane with a
+    majority-of-k — **a factor 1.4, not orders of magnitude**, because
+    the power comes from requiring coincidence across planes rather than
+    precision within one, and the two species are far apart (MPV 31.7
+    against 75.2 keV). More bits is not automatically better Z-ID: a
+    truncated mean, the standard analogue dE/dx estimator, gives
+    2.7×10⁻³ and a plain sum of the four planes 5.3×10⁻². Where the
+    nanowire actually loses is **geometric fill factor** — the
+    coincidence needs every plane to record the track, which silicon does
+    ~99% of the time and a wire comb only over its fill (25–50% in the
+    published devices), capping the reachable ⁶Li efficiency at 0.68–0.94
+    over four planes, so 95% is out of reach at any working point. That
+    is a fabrication number rather than an information-theoretic one, and
+    it is the actionable thing to put to the MEP group.
     **Ask the incumbent first** (plans/09 D1): a Geant4 study through the
     four layers, plus EICROC's input charge dynamic range in fC and the
     sensor's gain-suppression curve at ~9 MIP. One person-month, no
     hardware, closes #19 either way.
     *Better still, and free:* the background #19 exists to reject is
-    ⁶Li → α + d, and that is **two hits**. k_rel ≈ 40 MeV/c is transverse
-    and unboosted, so the α (4p_u) and the d (2p_u) take opposite kicks
-    and land 6.7 / 18.4 / 44.8 mm apart at 18×275 / 10×100 / 5×41 —
-    **13 to 90 pixels of the existing 500 µm pitch**. An intact ⁶Li is one
-    hit. Topology beats dE/dx here, in sensors that already exist, and
-    nobody had looked (plans/09 B4).
+    ⁶Li → α + d, and that is **two hits**. The relative momentum
+    (κ = 60.7 MeV/c) is transverse and unboosted, so the α (4p_u) and the
+    d (2p_u) take opposite kicks and land a median 15.1 / 18.5 / 38.4 mm
+    apart at 18×275 / 10×100 / 5×41 — **30 to 77 pixels of the existing
+    500 µm pitch**, and 13 to 159 over the 16–84% band. An intact ⁶Li is
+    one hit. And the second fragment is a *veto*: conditioned on an α
+    that fakes a coherent tag, the partner deuteron is recorded in **84%**
+    of events at the tagging optics (0.04–0.29 at the published ones,
+    where the fake rate is 10⁻³–10⁻⁴ anyway), so topology beats dE/dx
+    here in sensors that already exist — subject to how far the pot
+    stations extend, which is B1. Measured 2026-08-28 with both fragments
+    sampled from one relative momentum (plans/09 B4 §9.2); the
+    6.7 / 18.4 / 44.8 mm this entry carried until then were a single
+    k = 40 MeV/c at the retired rigidity-scaled energies, with no
+    dispersion.
     *The nanowire mechanism, for the record:* A
     superconducting nanowire latches — its pulse amplitude is the
     diverted bias current and is identical for hadrons, muons, pions and
@@ -211,9 +283,21 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
     aspect ratio (physics a₂ ≈ 0.036) unless the spin-state ratio is
     used. *Needed:* σ_θx, σ_θy (β*, emittance) at the light-ion energies
     and the pot geometry (`reco.rp_measure` takes both). *Engage:* ePIC
-    FF WG / C-AD optics. *Default:* proton-derived 73/149 μrad,
-    slot-like cutout (2.5 : 1, `rp_measure(cut_scale_xy=(2.5, 1))`), angular
-    envelope 10σ_θ·A·p_u; ratio estimator.
+    FF WG / C-AD optics. *Default (2026-08-28, plans/10):* the
+    **per-configuration** Yellow Report divergences, anisotropic, from
+    `farforward.sigma_theta_for` — 10σ_θ = 2.20 × 3.80, 1.80 × 1.80 and
+    0.92 × 0.92 mrad for ⁶Li at 5 × 41 / 10 × 100 / 18 × 275 high
+    acceptance — with the measured pot aperture as a second constraint
+    per axis, and the tagging optics of Report 1 §6.1 (0.33 × 3.80,
+    0.17 × 1.80, 0.12 × 0.92 mrad at 1/7.1, 1/13.3, 1/9.5 of the
+    luminosity) as the setting at which the coherent channel is
+    published.  The single proton-derived pair the code carried until
+    then — 73 μrad high acceptance and 164 μrad high divergence at every
+    configuration, from a 0.20 / 0.45 GeV p_T at 275 GeV — is **retired**
+    (`--optics legacy` keeps it as the dated record; the "149 μrad" this
+    entry used to give was `reco.SIGMA_THETA_HD`, an unreconciled second
+    copy of the same constant, unified on 164 by plans/10 A1b).  Angular envelope
+    10σ_θ·A·p_u throughout; ratio estimator.
     *2026-08-25 (refs/):* the ePIC pots are sensor planes around a
     horizontal SLOT (Jentsch DIS 2023, slide 15) — wide in x for the
     beam's momentum spread and dispersion, tight in y — so the cutout
@@ -234,14 +318,32 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
     onto the pot plane with R₁₂ ≈ 30.6 m horizontally against a few
     metres vertically, so what clears the slot is the HORIZONTAL angle:
     the boundary is |θ_x| ≳ 2.0 / 1.35 / 1.03 mrad in the 5×41 / 10×100 /
-    18×275 optics (p_T = 0.25 / 0.41 / 0.85 GeV for the ⁶Li at that
-    ring's rigidity), against |θ_y| ≳ 1.8–3 mrad. In `rp_measure` terms
+    18×275 optics (p_T = A p_u |θ_x| = 0.49 / 0.81 / 0.85 GeV for the ⁶Li
+    at the γ-matched 40.8 / 99.5 / 137.5 GeV/u; the 0.25 / 0.41 / 0.85
+    this entry carried until 2026-08-28 priced the same edges at the
+    retired rigidity-scaled momenta and made the low configuration look
+    3.4× rather than 1.7× more permissive), against |θ_y| ≳ 1.8–3 mrad.
+    In `rp_measure` terms
     that is `cut_scale_xy ≈ (1, 2.3)`, not (2.5, 1) — a factor ≈ 5.8 the
     wrong way — and the fake ⟨cos 2β⟩ about the vertical spin axis is
     therefore large and **negative**, not positive. The tagged fraction
-    falls with it (B = 50 GeV⁻²): 1.4×10⁻² against 0.82 at the then-assumed
-    20.5 GeV/u (superseded, plans/10),
-    5×10⁻⁵ against 0.40 at 50.
+    falls with it (B = 50 GeV⁻², `evgen/scripts/nearbeam_aperture_scan.py`,
+    re-run 2026-08-28 at the γ-matched momenta): **9.8×10⁻⁷ / 7.7×10⁻¹⁶ /
+    1.9×10⁻¹⁷** through the measured aperture at 40.8 / 99.5 / 137.5
+    GeV/u, against **7.2×10⁻⁸ / 6.2×10⁻²⁷ / 3.9×10⁻¹⁴** through the
+    Yellow Report high-acceptance envelope on the scan's own convention
+    (the envelope horizontally, the larger of silicon and envelope
+    vertically; the pure 10σ envelope in both planes gives 7.2×10⁻⁸ /
+    1.2×10⁻²⁶ / 7.8×10⁻¹⁴ — the two are different quantities sharing a
+    name, `tools/fullsim/README.md`).  **Which of the two binds is the
+    correction of 2026-08-28:** the measured edge is 0.91× / 0.75× /
+    1.12× the envelope's horizontal half-width, so the ENVELOPE binds at
+    the two lower configurations and the silicon only marginally at the
+    top — the opposite of the "2.8× / 1.9× / 1.4×, the envelope is never
+    binding" that plans/08 §8.4 obtained by pricing the same edges
+    against the retired single 73 μrad.  The 1.4×10⁻² and 5×10⁻⁵ this
+    entry carried until then were the measured aperture at the retired
+    rigidity-scaled 20.5 and 50 GeV/u.
     *2026-08-26 (the chain, run on it — `money_cos2phi_coherent_reco.py
     --rp-aperture measured`):* at the LOW configuration the measurement
     survives. Acceptance 37.7% → 1.42%, N_tag 8.3×10⁶ → 3.1×10⁵, the
@@ -252,9 +354,21 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
     factor 6–34. a_e is still recovered: 0.0073 ± 0.0045 and
     0.0091 ± 0.0045 against an injected 0.0100. At MID and TOP the
     aperture leaves no accepted recoil in the binned window at all.
-    **So the coherent programme is a low-energy programme**, which is what
-    the angular envelope already implied, but for a second and stronger
-    reason. *Caveats:* one event per scan point, 30° azimuthal steps,
+    (This chain entry is itself at the retired rigidity-scaled menu:
+    "LOW" is 20.5 GeV/u, superseded by plans/10.)
+    **The conclusion drawn here — "so the coherent programme is a
+    low-energy programme … for a second and stronger reason" — is
+    withdrawn (2026-08-28).** It rested on the measured aperture binding
+    everywhere, which it does not, and on the rigidity-scaled energies.
+    Against the per-configuration envelopes the aperture is the binding
+    constraint only at the top; and at the tagging optics, where the
+    channel is now measured, the ordering reverses outright — 0.42 / 0.32
+    / 0.33 tagged at 1/7.1 / 1/13.3 / 1/9.5 of the luminosity, with the
+    TOP configuration, which has four times the coherent rate at equal
+    luminosity, the best covered (Report 4 §3).  What survives is the
+    weaker statement the angular envelope alone makes at the *published*
+    optics, where no configuration is usable.
+    *Caveats:* one event per scan point, 30° azimuthal steps,
     no beam envelope, and a September-2024 `epic-main`. *Action:* repeat
     on the current release with beam effects, and put the aspect ratio to
     the FF WG as a question with a number attached.
@@ -358,10 +472,11 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
 | 6 | ⁶Li P convention | open | ask Cloët (local) — **first, cheapest, factor-2.4 impact** |
 | 7 | BeAGLE access+guidance | open | SDCC/ifarm accounts + email authors — **long pole, start now** |
 | 8–10 | theory inputs | open | Cloët/Cosyn/Miller engagement |
-| 11–13 | software checks | scheduled | inside Phase-1/2 steps |
+| 11 | FF transfer matrices + optics at Li rigidities | **split** | optics half → plans/10 D1–D3 (C-AD, provisionally answered in §10.3); transfer matrices → plans/09 D3 (ePIC FF WG) |
+| 12–13 | software checks | scheduled | inside Phase-1/2 steps |
 | 14–16 | generator theory inputs (plans/05) | open | Cloët/Cosyn (14), Wiringa (15), Cosyn/Sargsian (16) |
 | 17 | HepMC3 ion-spin convention | scheduled | plans/05 step 5.D → ePIC MC group |
 | 18 | coherent-⁶Li diffractive model (plans/06) | open | small-x theory engagement; scenario bands until then |
-| 19 | RP Z-ID for A/Z = 2 (plans/06) | **redirected** | ask the incumbent: EICROC's 8-bit charge over 4 AC-LGAD planes gives 4.8σ/plane vs a nanowire's 1 bit (plans/09 D1); and α + d is two hits 13–90 pixels apart (plans/09 B4) |
+| 19 | RP Z-ID for A/Z = 2 (plans/06) | **redirected** | ask the incumbent: EICROC's 8-bit charge over 4 AC-LGAD planes, where one bit costs only ×1.4 in α fake rate (3.1 vs 2.3 × 10⁻⁵ at 95% ⁶Li efficiency) and the nanowire loses on fill factor instead (plans/09 D1, §9.2); and α + d is two hits 30–77 pixels apart whose second fragment vetoes 84% of the α fakes at the tagging optics (plans/09 B4) |
 | 20 | RP cutout geometry + Li divergence (reco note) | **re-measure**; optics half → plans/10 | the ePIC pot geometry moved after the Sep-2024 snapshot (plans/09 §9.4, B1); then ePIC FF WG / C-AD for the light-ion optics |
 | 21 | hadronic-method δy/y at y ≈ 0.01–0.05 (reco note) | open | ePIC inclusive WG; e+Li sample through eic-smear |

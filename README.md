@@ -39,11 +39,11 @@ long it takes, what the answer should be, and what cannot be reproduced
 here and why.
 
 ```bash
-# fast simulation (57 tests; PDF-grid tests need the `parton` package
+# fast simulation (81 tests; PDF-grid tests need the `parton` package
 # with CT18NLO, EPPS21nlo_CT18Anlo_Li6 and NNPDFpol11_100 installed)
 cd fastsim && python -m pytest tests/ -q
 
-# event generator (225 tests)
+# event generator (276 tests)
 cd evgen && python -m pytest tests/ -q
 
 # money plots (outputs land next to the scripts' working directory)
@@ -60,7 +60,7 @@ python scripts/money_tagged_azz.py --events 400000    # tagged tensor asymmetry
 - **Coherent intact-⁶Li tag**: the recoil is exactly beam-blind
   (A/Z = 2), so the only handle is its angle against the 10σ envelope and the pot aperture. With the Yellow Report divergences (a rectangular 10(σ_h, σ_v) envelope) and the measured ePIC aperture the tag does not survive at IP6 at any configuration (7×10⁻⁸ / 6×10⁻²⁷ / 4×10⁻¹⁴ at the envelope, plans/10, Report 4); it needs the lithium tagging optics of Report 1 §6.1 — the horizontal β* raised 50 / 176 / 89× with pots that follow the 0.33 / 0.17 / 0.12 mrad envelope, tagging 0.42 / 0.32 / 0.33 at 1/7–1/13 of the luminosity, 2.5–6.0×10⁶ recoils per year — or the IR-8 secondary focus. For a 0.20 GeV near-beam envelope (13.5%): 1.7×10⁷ / 1.7×10⁸ tagged events in the 1-/10-year programs; modulation amplitude anchored on the polarized-deuteron CGC calculation (sign flip vs d predicted).
 - **Tagging inverts between isotopes at IP6**: ⁷Li α-tag works
-  (97% to the Roman Pots at every configuration and optics); ⁶Li α-tag is beam-blind — at the Yellow Report optics of each configuration (220/380, 180/180, 92/92 μrad h/v, plans/10) its near-beam tail is inside the 10σ envelope and only the ≈ 1.5% that falls below R = 0.95 into the Roman-Pot window survives (1.7 / 1.5 / 1.7% at 5 × 41 / 10 × 100 / 18 × 275); the lithium tagging optics of Report 1 §6.1 recovers 35 / 27 / 28% at 1/7–1/13 of the luminosity (2026-08-28, `fastsim/scripts/tagging_acceptance.py`; the 1.85% quoted before applied one proton-derived 73 μrad at every configuration);
+  (97% to the Roman Pots at every configuration and optics); ⁶Li α-tag is beam-blind — at the Yellow Report optics of each configuration (220/380, 180/180, 92/92 μrad h/v, plans/10) its near-beam tail is inside the 10σ envelope and only the ≈ 1.5% that falls below R = 0.95 into the Roman-Pot window survives (1.7 / 1.5 / 1.6% at 5 × 41 / 10 × 100 / 18 × 275); the lithium tagging optics of Report 1 §6.1 recovers 35 / 27 / 28% at 1/7–1/13 of the luminosity (2026-08-28, `fastsim/scripts/tagging_acceptance.py`; the 1.85% quoted before applied one proton-derived 73 μrad at every configuration);
   tritons need IR-8.
 - **The hadronic final state is PYTHIA 8, not a toy** (2026-08-26): 8 M
   events over the three beam configurations, generated natively
@@ -72,6 +72,25 @@ python scripts/money_tagged_azz.py --events 400000    # tagged tensor asymmetry
   5×41 / 10×100 / 18×275 optics against |θ_y| ≳ 1.8–3 mrad — the opposite
   aspect to the slot the coherent chain assumes, which flips the sign of
   the acceptance-induced ⟨cos 2β⟩ (plans/04 #20).
+- **The coherent estimator is unbiased at any count** (2026-08-28): the
+  bin-wise spin-state ratio carries an O(1/ν) offset that biased a_t by
+  −34% in the sparsest |t| bin at one year; the acceptance-profiled
+  likelihood (`reco.harmonic_likelihood_fit_2d`, `--fit likelihood`)
+  removes it with the same errors and the same blind spots (plans/08 A12).
+- **The α + d background has a second handle** (2026-08-28): given an α
+  that fakes a coherent tag, its partner deuteron is in the pots 84–85% of
+  the time at the tagging optics (12 / 2 / 25% at the Yellow Report
+  optics), 15–38 mm away and merged into one 500 μm pixel in at most
+  4 × 10⁻⁴ of recorded pairs, none at all at the Yellow Report envelope
+  (`nearbeam_two_hit.py`, plans/09 B4).  The tagged observables now run
+  on the same optics: the ⁶Li α tag admits nothing below k = 0.15 GeV/c
+  at any published optics and half its sample there at the tagging
+  optics; for ⁷Li the tagging optics is a net loss.
+- **Radiative corrections are bounded** (2026-08-28): collinear ISR
+  leaves the mixed x exact and the azimuth invariant; the ISR-free
+  corrections mis-state Δ̂ by 0.5–1.2% at the sweet spots (≤ 2.9% with
+  the low-Q² feed-in), inside the 5% gate (`polligen/radiative.py`,
+  plans/07 WP4).
 - **First systematics numbers**: relative-luminosity bias formulas
   (removed exactly by lumi-corrected estimators); the α+d breakup
   background requires Roman-Pot charge discrimination — an open

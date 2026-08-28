@@ -116,7 +116,7 @@ def main():
         ax1.axvline(cut2, color=color, ls="--", lw=1.2)
         ax1.annotate(
             "%s\n$p_T>%.2f$ GeV\nacc = %.3g\n[%.2g, %.2g]"
-            % ({"high-acceptance": "near-beam envelope", "high-divergence": "wide envelope"}.get(optics.name, optics.name),
+            % ({"high-acceptance": "near-beam envelope (legacy)", "high-divergence": "wide envelope (legacy)"}.get(optics.name, optics.name),
                optics.pt_cut_near_beam, acc, *band),
             xy=(cut2, 2e-3), xytext=(4, 6), textcoords="offset points",
             fontsize=7, color=color, va="bottom")

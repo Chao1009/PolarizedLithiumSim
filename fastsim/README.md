@@ -41,14 +41,14 @@ yes | python3 -m parton install EPPS21nlo_CT18Anlo_Li6   # money_delta_20260729
 
 | module | content |
 |---|---|
-| `beams.py` | species (d, ³He, ⁶Li, ⁷Li), rigidity-scaled top energies, verified ⁷Li P_p/P_n |
+| `beams.py` | species (d, ³He, ⁶Li, ⁷Li), γ-matched energies with rigidity-capped tops (plans/10 A0), verified ⁷Li P_p/P_n |
 | `kinematics.py` | DIS variables, scattered-electron lab kinematics, acceptance masks |
-| `structure.py` | **TOY** F2 (±40% vs CT18, see validate_inputs) + `PartonF2` grid backend, nuclear builder, NC cross section |
-| `polarized.py` | **TOY** g1 + `PartonG1` (NNPDFpol11); scenario curves: CBT 2× / TMT 1× polarized EMC, HERMES-like vs convolution b1, Δ scenarios |
+| `structure.py` | **TOY** F2 (±40% vs CT18, see validate_inputs) + `PartonF2` grid backend (five flavours; caveat 5), nuclear builder, NC cross section |
+| `polarized.py` | **TOY** g1 + `PartonG1` (NNPDFpol11, three flavours); scenario curves: CBT 2× / TMT 1× polarized EMC, HERMES-like vs convolution b1, Δ scenarios |
 | `delta_models.py` | **unified Δ(x,Q²) model registry** — single home for all double-helicity-flip models: `toy`, sum-rule-constrained `moment_A`/`moment_B` (ported from the `money_delta` suite; ∫xΔdx = −0.012·α_s), shape variants, per-nucleon dilution convention (plans/04 #6); every consumer switches by name |
 | `asymmetries.py` | spin-1 master-formula asymmetries (A∥, A_zz, A_cos2φ) + error estimators (toy-MC validated, `tests/test_closure.py`) |
 | `fom.py` | luminosity scenarios → events/bin → δ(observable); Q²-combination helper |
-| `spectator.py` | α+d / α+t cluster momentum densities (S/P-wave), lab boost → (pT, θ, R) |
+| `spectator.py` | α+d / α+t cluster momentum densities (S/P-wave), lab boost → (pT, θ, R); both fragments of one breakup jointly (`breakup_lab_kinematics`, plans/09 B4) |
 | `farforward.py` | verified far-forward windows (RP/OMD/B0/ZDC) + rigidity routing |
 
 ## First results (TOY inputs, statistical only — headline numbers)
@@ -62,7 +62,8 @@ yes | python3 -m parton install EPPS21nlo_CT18Anlo_Li6   # money_delta_20260729
   optics of Report 1 §6.1 at 1/7–1/13 of the luminosity; ⁷Li t-tag ~ 0
   (`scripts/tagging_acceptance.py`, 2026-08-28, plans/10). The 3–9% and
   1.85% quoted earlier applied a proton p_T threshold, then one
-  proton-derived 73 μrad divergence, at every configuration.
+  proton-derived 73 μrad divergence, at every configuration and
+  azimuth-blind — a circle rather than the 10σ rectangle.
 - **Gluonometry**: 5σ on Δ/F₁ = 10⁻³ (Sather–Schmidt scale) at
   **~66–155 fb⁻¹/u** (LOW/MID/TOP = 67.5 / 65.8 / 155.1 fb⁻¹/u; caveat
   2026-08-27 — `money_delta_realistic.py` carries its own pre-correction
@@ -84,6 +85,17 @@ yes | python3 -m parton install EPPS21nlo_CT18Anlo_Li6   # money_delta_20260729
   274.64 → 156.91; the published three-form fit
   (`structure.r1998`) gives 65.80 / 155.12 — inside the 63–69 / 152–164
   the code review predicted.
+  A defect found on 2026-08-28 and corrected in all three scripts left
+  every number above unchanged: the ≥ 10-events-per-bin floor was applied
+  at the 1 fb⁻¹/u the σ² is normalised to rather than at the luminosity
+  the reach is quoted at, so bins that would clear ten events at a 17–275
+  fb⁻¹/u reach were discarded and the reach scaled up from the truncated
+  sum.  Applying it at the reach (`money_delta.reach_from_terms`, now
+  imported by `diag_sig2_grid.py` and `money_delta_realistic.py` instead
+  of copied) changes the mask by −15 to +3 bins of the 311–509 accepted,
+  and those bins carry so little of σ² that L_5σ moves by at most
+  3×10⁻⁹ relative anywhere on the plotted Δ/F₁ range: 16.719 / 16.332 /
+  21.811 and 131.26 / 274.64 fb⁻¹/u are unchanged to every digit printed.
 - **Polarized EMC**: δΔR ≈ 2.6–4% per x-bin at x = 0.3–0.5 at 10 fb⁻¹/u
   (grid inputs, 3 energies combined; 12% at x = 0.7); CBT-vs-TMT
   discrimination ≈ 5σ at x ≈ 0.5–0.7 with 100 fb⁻¹/u.
@@ -101,3 +113,11 @@ yes | python3 -m parton install EPPS21nlo_CT18Anlo_Li6   # money_delta_20260729
    / BeAGLE needed (plans/02 step 1.5.3).
 4. Far-forward windows are Phase-1 parameterizations; the near-beam band
    and dispersion assumptions need Phase-2 optics (plans/04 #11).
+5. Grid backends mix flavour schemes: `PartonF2` is five-flavour (d u s c
+   b) and `PartonG1` three (d u s), so every g1/F1 ratio is the physical
+   one — NNPDFpol1.1 sets Δc = Δb = 0 — and is smaller than a
+   light-flavour-only ratio by the heavy-quark share of F2.  Measured on
+   the bins `money_polemc.py` combines: **7.8% of F2A** event-weighted
+   over all of them, 10% at x = 10⁻³–10⁻² and up to 25% at the highest Q²
+   there, but **0.65% at x = 0.3–0.5** and 0.23% at 0.5–0.7, where the
+   CBT/TMT discrimination sits (2026-08-28, `tests/test_grids.py`).

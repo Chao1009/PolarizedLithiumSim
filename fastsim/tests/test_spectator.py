@@ -94,7 +94,43 @@ def test_li7_alpha_tag_efficient_li6_suppressed():
     acc6 = ff.acceptance_summary(k6["R"], k6["theta"], k6["pT"])
     # near-beam alpha only via the pT tail -> much smaller acceptance
     assert (1.0 - acc6["lost"]) < 0.5
-    assert acc6["RP (pT tail, R~1)"] == 1.0 - acc6["lost"] or True
+    # WHAT the 6Li alpha tag is made of.  It is NOT the near-beam tail
+    # alone: the physical alpha mass puts it at R = 0.99813, so the low-R
+    # side of the k distribution crosses the RP window edge at R = 0.95 and
+    # lands in the main window, and that slice is the larger half of the
+    # tag (1.5% against 0.3% at the legacy 73 urad envelope).  Nothing
+    # reaches the off-momentum detectors or B0.  (Until 2026-08-28 this
+    # was written as `... == ... or True`, which asserts nothing.)
+    assert acc6["RomanPots"] + acc6["RP (pT tail, R~1)"] == pytest.approx(
+        1.0 - acc6["lost"], abs=1e-12)
+    assert acc6["RomanPots"] == pytest.approx(float(np.mean(k6["R"] < 0.95)),
+                                              abs=1e-12)
+    assert acc6["RomanPots"] > 4.0 * acc6["RP (pT tail, R~1)"]
+    assert acc6["OMD"] == 0.0 and acc6["B0"] == 0.0
+    # The identity survives the azimuth-resolved routing, and the routing
+    # is rectangular at EVERY aspect ratio: the legacy envelope is
+    # isotropic, so its rectangle is a square of half-width n sigma_h and
+    # the azimuth-less call is that square's inscribed circle.  The circle
+    # is the more generous of the two, and only the near-beam tail can
+    # tell them apart -- the off-rigidity R < 0.95 slice is angular-cut
+    # blind.  (Until 2026-08-28 `clears` short-circuited to the circle
+    # whenever sigma_h == sigma_v, which discarded the azimuth at the
+    # 180/180 and 92/92 microrad Yellow Report optics.)
+    accphi = ff.acceptance_summary(k6["R"], k6["theta"], k6["pT"],
+                                   phi=k6["phi"])
+    assert accphi["RomanPots"] == acc6["RomanPots"]
+    assert accphi["OMD"] == acc6["OMD"] and accphi["B0"] == acc6["B0"]
+    assert 0.0 < accphi["RP (pT tail, R~1)"] < acc6["RP (pT tail, R~1)"]
+    assert (accphi["RomanPots"] + accphi["RP (pT tail, R~1)"]
+            == pytest.approx(1.0 - accphi["lost"], abs=1e-12))
+    # and it is the square, not some third shape: reproduce it by hand
+    env = ff.HIGH_ACCEPTANCE.envelope[0]
+    by_hand = ((np.abs(k6["theta"] * np.cos(k6["phi"])) > env)
+               | (np.abs(k6["theta"] * np.sin(k6["phi"])) > env))
+    near = np.abs(k6["R"] - 1.0) < ff.NEAR_BEAM_BAND
+    small = k6["theta"] < ff.THETA_RP_MAX
+    assert accphi["RP (pT tail, R~1)"] == pytest.approx(
+        float(np.mean(by_hand & near & small)), abs=1e-12)
 
 
 # --- physical nuclear masses (plans/08 C1, 2026-08-26) --------------------

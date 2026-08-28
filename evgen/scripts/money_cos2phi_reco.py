@@ -50,7 +50,7 @@ from money_cos2phi import (build_delta_model, pick_sweet_spots_banded,  # noqa: 
                            superbin_edges)
 
 from polligen import bookkeeping as bk  # noqa: E402
-from polligen import hfs, reco, recopseudo as rp  # noqa: E402
+from polligen import hfs, radiative as rad, reco, recopseudo as rp  # noqa: E402
 from polligen.sample import InclusiveSampler  # noqa: E402
 from polligen.xsec import InclusiveKernel  # noqa: E402
 
@@ -177,6 +177,38 @@ def main():
                          "each nuisance varied and print the Delta shift "
                          "per sweet spot (common random numbers, so the "
                          "shifts are not seed noise)")
+    ap.add_argument("--isr", action="store_true",
+                    help="after the money plots, print the RADIATIVE-"
+                         "CORRECTION migration bound at the four sweet "
+                         "spots (plans/07 WP4): the response is rebuilt "
+                         "with collinear leading-log initial-state "
+                         "radiation switched on, with common random "
+                         "numbers (polligen.radiative draws z from its own "
+                         "stream), and the shift of Delta_hat that an "
+                         "ISR-free bin-centering would leave is compared "
+                         "with the 5% gate")
+    ap.add_argument("--isr-gen-q2min", type=float, default=None,
+                    help="rebuild the ISR pair from a generator window "
+                         "reaching down to this Q2 [GeV^2] instead of the "
+                         "0.7 the money plots use.  Events below the "
+                         "window cannot feed the analysis bins under "
+                         "radiation, so the published window UNDERSTATES "
+                         "the bound; 0.05 is where it converges")
+    ap.add_argument("--isr-empz", type=float, default=None,
+                    help="also apply a HERA-style E - p_z > this fraction "
+                         "of 2E_e to both members of the pair (0.85 is the "
+                         "cut H1/ZEUS used against radiative events); the "
+                         "chain does not apply it, so this is the "
+                         "MITIGATION column, not the bound")
+    ap.add_argument("--isr-seeds", default=None,
+                    help="comma-separated RESPONSE seeds over which the "
+                         "bound is averaged (mean +- sem).  One draw of "
+                         "the response scatters by 4-14%% of the bound "
+                         "(seed-to-seed sd 0.05-0.09 percentage points), "
+                         "so the PUBLISHED numbers are the average over "
+                         "this list; without it the single --seed run is "
+                         "printed")
+    ap.add_argument("--isr-seed", type=int, default=20260828)
     ap.add_argument("--seed", type=int, default=20260824)
     ap.add_argument("--outdir", default=".")
     args = ap.parse_args()
@@ -733,6 +765,95 @@ def main():
             print("  %-42s %s" % (label,
                                   "  ".join("%+7.3f%%" % (100 * v)
                                             for v in shifts)))
+
+    # --- radiative-correction migration bound (plans/07 WP4) ---------------
+    if args.isr:
+        isr_sampler = sampler
+        if args.isr_gen_q2min is not None:
+            isr_gen = rp.generator_scenario(
+                analysis, q2_min=args.isr_gen_q2min,
+                y_min=min(gen.y_min, 0.2 * analysis.y_min))
+            isr_sampler = InclusiveSampler(kern, config, isr_gen, nx=60,
+                                           nq2=45,
+                                           q2_range=(args.isr_gen_q2min, 2e3))
+
+        def build_isr(seed, isr_model):
+            """Both members from the SAME response seed: the ISR model has
+            its own stream, so the pair sits on identical pseudo-events
+            and the difference is the radiation, not seed noise."""
+            return rp.RecoResponse(isr_sampler, rmodel,
+                                   n_mc_per_cell=args.n_mc_per_cell,
+                                   rng=np.random.default_rng(seed),
+                                   hfs=hfs_resp, isr=isr_model)
+
+        isr_seeds = ([int(v) for v in args.isr_seeds.split(",")]
+                     if args.isr_seeds else None)
+
+        edges4 = [superbin_edges(proj, i, j) for _x, _q2, i, j in spots]
+        labels4 = ["x=%.3g Q2=%.3g" % (xs, qs) for xs, qs, _i, _j in spots]
+        print("\nRadiative corrections (plans/07 WP4): the collinear-ISR "
+              "MIGRATION bound.\nCollinear ISR fakes no cos phi' or "
+              "cos 2phi' (the covariant azimuth is invariant under "
+              "k -> (1-z)k), and\nanything common to the fills cancels in "
+              "the spin-state ratio; what is left is the Q2_e LABEL "
+              "migrating\nby 1/(1-z) while x = Q2_e/(s y_Sigma) stays "
+              "exact.  dDelta is A_reco(ISR)/A_reco(no ISR) - 1, i.e. what "
+              "an\nISR-free bin-centering leaves on Delta_hat if the data "
+              "radiate.  Common random numbers; %d MC/cell, response "
+              "seed %s.\nNOT bounded here: the TENSOR-sector radiative "
+              "correction, which has never been calculated (plans/05 5.5)."
+              % (args.n_mc_per_cell,
+                 args.isr_seeds if isr_seeds else args.seed))
+        empz = (None if args.isr_empz is None
+                else (args.isr_empz, 2.0 - args.isr_empz))
+        if isr_seeds:
+            bound = rad.migration_bound_seeds(
+                build_isr, edges4, cat_plus, isr_seeds,
+                isr_seed=args.isr_seed, labels=labels4, empz_cut=empz)
+        else:
+            bound = rad.migration_bound(
+                lambda m: build_isr(args.seed, m), edges4, cat_plus,
+                labels=labels4, isr=rad.ISRModel(seed=args.isr_seed),
+                empz_cut=empz)
+        print(rad.format_bound(bound))
+        on = bound["on"]
+        w_on = on.w * on.eff
+        z = on.isr_z
+        print("  <z> = %.4f over the selected rate; P(z > 1e-4) = %.3f; "
+              "<z | z > 1e-4> = %.4f; t = %.4f at <Q2> = %.3g GeV^2"
+              % (np.average(z, weights=w_on),
+                 np.average(z > 0.0, weights=w_on),
+                 np.average(z[z > 0], weights=w_on[z > 0]),
+                 np.average(rad.beta_ll(on.q2), weights=w_on),
+                 np.average(on.q2, weights=w_on)))
+        # The method comparison is a STRONG function of the nominal y of
+        # the bin (the electron-method ratios go as (y + z)/y), so it is
+        # printed at a stated y -- both the rate-weighted mean of the whole
+        # selected sample, which the high-y cells the money plots do not
+        # use dominate, and the four sweet spots themselves, which is where
+        # the letter's numbers live.  `on.y` is the HARD y with ISR on; the
+        # table wants the NOMINAL one (radiative.method_bias_table).
+        z_typ = float(np.average(z[z > 0], weights=w_on[z > 0]))
+        y_bar = float(np.average(on.y_nominal, weights=w_on))
+        y_spot = float(np.mean([qs / (sampler.s * xs)
+                                for xs, qs, _i, _j in spots]))
+        d_phi = on.isr_dphi
+        print("  covariant azimuth under k -> (1-z)k (physical 6Li mass): "
+              "max |dphi'| = %.2g rad,\n    1 - <cos 2 dphi'> = %.2g "
+              "rate-weighted over %d events -- the fake cos 2phi' collinear "
+              "ISR can make"
+              % (np.abs(d_phi).max(),
+                 1.0 - np.average(np.cos(2.0 * d_phi), weights=w_on),
+                 d_phi.size))
+        print("  method comparison at z = <z | z > 1e-4> = %.4f "
+              "(ratio observed/hard; the chain uses the last row):" % z_typ)
+        for y_typ, what in ((y_bar, "rate-weighted <y> of the whole "
+                                    "selected sample"),
+                            (y_spot, "mean y of the four sweet spots")):
+            print("    at y = %.4f (%s)" % (y_typ, what))
+            print("      %-24s %10s %10s %10s" % ("method", "Q2", "y", "x"))
+            for lab, rq2, ry, rx in rad.method_bias_table(y_typ, z_typ):
+                print("      %-24s %10.4f %10.4f %10.4f" % (lab, rq2, ry, rx))
 
 
 if __name__ == "__main__":

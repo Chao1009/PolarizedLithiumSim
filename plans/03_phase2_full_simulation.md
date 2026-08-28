@@ -37,6 +37,12 @@ Local `epic` @ 24.08.0 and `EICrecon` @ v1.6.0 checkouts are ~2 years stale.
    (`_18x110_Au`, `_10x110_He3`, `_10x130_H2`, …). Far-forward detectors
    are in craterlake by default. Build `epic`/`EICrecon` from source only
    when modifying geometry (needed in step 2.1 for Li beamline files).
+   ☑ *2026-08-28: done in `tools/fullsim/ff_gun_scan.sh` — it sources
+   `thisepic.sh` with fallbacks and selects `epic_craterlake_18x275.xml`
+   explicitly (plain `epic_craterlake.xml` loads the 5×41 beamline fields);
+   every `--compactFile` in the tree is `$DETECTOR_PATH`-relative, and the
+   recipe is in `tools/fullsim/README.md` and docs/reproduction_manual.md §5.3.
+   The build-from-source clause stays with step 2.1.*
 3. Smoke test per tutorials (eic.github.io/documentation/tutorials.html;
    esp. tutorial-simulations-using-npsim-and-geant4, tutorial-analysis,
    tutorial-jana2):
@@ -100,6 +106,14 @@ arXiv:2108.08314 Table I; arXiv:2409.02811; arXiv:2406.12877):
 (θ ≈ 5–5.5 mrad RP/OMD↔B0 gap is a known hole; beam-pipe material costs
 5–20%.)
 
+— *superseded (2026-08-28): the z positions and the p_T cutoffs of this table
+have been overtaken by the geometry read and by plans/10. `farforward.py` (from
+current `eic/epic` main) puts the Roman Pots at 32.55/34.25 m and the OMD at
+25.50/27.00 m with R ∈ [0.45, 0.65], and the p_T cutoffs — a 275 GeV proton
+number — are replaced by an angular 10(σ_h, σ_v) envelope that varies per
+configuration (`farforward.sigma_theta_for`, Report 3 Table 7). Rewrite against
+the code when the preTDR layout is confirmed (`tools/fullsim/README.md`).*
+
 **Rigidity routing, R = (A_f·Z_beam)/(A_beam·Z_f)** — corrected mapping
 that drives the whole tagging program:
 
@@ -111,6 +125,13 @@ that drives the whole tagging program:
 | t | R=1.50 → **no coverage** | R=1.29 → **no coverage** |
 | ³He | R=0.75 → Roman Pots | R=0.64 → RP/OMD boundary |
 | α | R=1.00 → **beam-blind** (pT tail only) | R=0.86 → **Roman Pots** |
+
+— *superseded (2026-08-28): the table's own formula was replaced by
+`spectator.py`'s mass-based R = (m_spec/Z_spec)/(m_beam/Z_beam) (plans/08 C1),
+which separates the ⁶Li α (0.99813, under the orbit) from the d (1.00452, over
+it) where A·Z arithmetic puts both at exactly 1; and the ⁷Li proton cell is
+falsified by the corrected OMD window R ∈ [0.45, 0.65], which loses R = 0.43
+(`route_charged`, `test_spectator.py`). The triton rows are the ◐ item below.*
 
 Consequences to quantify (no literature exists for e+Li breakup tagging —
 the only Li far-forward datapoint is coherent J/ψ at IR-8, arXiv:2511.05638,
@@ -124,6 +145,14 @@ the only Li far-forward datapoint is coherent J/ψ at IR-8, arXiv:2511.05638,
   both optics settings; this number decides whether the d-cluster tagging
   argument holds at IP6, needs the IR-8 secondary focus (RPs at 44–45.5 m
   recover R≈1 down to pT ~ 0), or relies on the ⁶Li → p/³He channels.
+☑ *2026-08-28: the fold is done — `fastsim/scripts/tagging_acceptance.py`
+folds the cluster-model p_T(α) against a 10σ angular envelope for four optics
+per configuration, giving a ⁶Li α tag of 1.7 / 1.5 / 1.6% at the Yellow Report
+optics and 35 / 27 / 28% at a lithium tagging optics costing 1/7–1/13 of the
+luminosity (`fastsim/out/tagging_acceptance.txt`, Report 3 Table 6). The
+argument therefore does not hold at any published IP6 optics: it needs the
+tagging optics or IR-8. The third branch, the ⁶Li → p/³He channels, was never
+quantified as a tag — those fragments are treated as breakup backgrounds.*
 - **Tritons at IP6 — revisit!** ◐ *2026-06-12 gun-scan finding
   (tools/fullsim/README.md): in the current epic-main geometry the
   over-rigid triton (R = 1.286) crosses the Roman-Pot planes ~36 mm on
@@ -143,6 +172,20 @@ proton-tuned. (3) Fold BeAGLE e+Li events → tagging efficiency × purity ×
 mis-tag matrix at reconstructed level. (4) Publish "Li far-forward tagging
 performance" note; feed parameterizations back into the Phase-1 fast-sim.
 
+☐ *2026-08-28 on (2): only the RP/OMD path was checked, and only for the beam-PDG
+matrix selection (Report 3 item 13). B0 and ZDC were never examined, and
+`MatrixTransferStaticConfig.h` hardcodes `partMass = 0.938272`, `partCharge = 1`
+with no override in `RPOTS.cc`/`FOFFMTRK.cc` — every far-forward particle is
+reconstructed as a proton. The "derive" half is ours, not the FF group's, and
+the repo holds one element of one matrix (R12 = 30.6 m at 18×275).*
+
+☐ *2026-08-28 on (4): feeding parameterizations back is done (the measured pot
+aperture and the per-configuration optics are in the fast sim), and the
+acceptance half of the note is published (Report 3 §5/Table 6, Report 4). What
+remains is the reco-level efficiency × purity × mis-tag matrix of work-plan item
+(3), which is externally gated — it needs BeAGLE A = 6,7 (FLUKA licence) and
+step 2.1's Li presets.*
+
 ## Step 2.3 ☐ Central-detector physics performance (4 weeks)
 
 1. Scattered electron: e-ID efficiency/purity vs (x,Q²); kinematic
@@ -155,6 +198,16 @@ performance" note; feed parameterizations back into the Phase-1 fast-sim.
    reco level, quantify dilution + fake modulation. Make-or-break for the
    gluonometry case — do early with small samples.
 
+☐ *2026-08-28: the parametric chain of plans/02 §1.6 and plans/07 WP3 answers the
+questions of items 2 and 3 — migration matrices, per-bin purity/efficiency,
+the φ′ dilution and the fake cos 2φ′ from a split acceptance — but it is the
+Phase-1 FOM this step exists to close against, not this step. No central-detector
+npsim/EICrecon run exists anywhere in the tree. Item 1 is additionally short of
+its own words: `reco.eps_eid(η)` carries no (x, Q²) dependence and no purity or
+background model, and there is no Fermi smearing in the reconstruction chain.
+Item 2's "purity ≳ 0.8 or rebin" gate is unmet even parametrically (0.56–0.75
+calibrated, 0.42–0.68 uncalibrated) — see the note under plans/02 Step 1.6.*
+
 ## Step 2.4 ☐ Pseudo-experiment closure tests (4 weeks)
 
 1. Weight reconstructed unpolarized samples with Phase-1 asymmetry models
@@ -165,6 +218,16 @@ performance" note; feed parameterizations back into the Phase-1 fast-sim.
 3. Systematics: relative luminosity between spin states, δP/P polarimetry
    (HJET-for-Li is itself R&D), φ-acceptance stability.
 
+☐ *2026-08-28: the estimators, the spin-state bookkeeping (`bookkeeping.py` run
+plans, relative-luminosity offsets, δP/P smearing) and a parametric reco-level
+closure all exist, but they are the plans/05 §5.A and plans/07 WP3 deliverables:
+no reconstructed sample has ever come out of EICrecon (`eicrecon` is invoked in
+zero scripts), and the generator has no HepMC3 writer (plans/05 step 5.D). Two
+coverage gaps survive even at the parametric level: only A_cos2φ has been run
+through a detector response — there is no reco-level A∥ or A_zz — and
+`RunPlan.delta_p_over_p` is read by nothing outside the tests, so no money plot
+yet carries a polarimetry-scale band.*
+
 ## Step 2.5 ☐ Campaign-scale production & write-up (ongoing)
 
 1. Existing eA campaign datasets to reuse for technique validation
@@ -174,6 +237,12 @@ performance" note; feed parameterizations back into the Phase-1 fast-sim.
    Campaign infra: `eic/simulation_campaign_hepmc3` + condor; species enter
    via geometry filename (`${DETECTOR_CONFIG}_${EBEAM}x${PBEAM}.xml`);
    afterburning is done upstream of campaigns (`*_ABCONV` datasets).
+☐ *2026-08-28: only the EVGEN e+d and e+³He (10×166) samples were streamed, for
+the plans/02 §1.5.3 control. The reconstructed campaign subtree was never listed,
+e+Au never opened, no podio/edm4eic reader exists, and the campaign-infrastructure
+claims of this bullet (`simulation_campaign_hepmc3` + condor, geometry-filename
+species routing, the `*_ABCONV` convention) appear nowhere but here and have never
+been checked against the endpoint.*
 2. Estimate compute (Geant4 e+A ~ min/event → 10⁷ events needs farm/OSG);
    prepare configs to campaign standards so an official e+Li request can go
    through ePIC once endorsed.
@@ -196,7 +265,7 @@ samples.
 | risk | mitigation |
 |---|---|
 | Li optics/afterburner configs don't exist | verified: 3 concrete artifacts to add (preset, beamline XML, runcard); ⁶Li can proxy d/He4 (same Z/A); engage FF WG early for ⁷Li |
-| ⁶Li α-tag fails at IP6 (R=1 beam-blind) | quantify pT-tail acceptance; document IR-8 secondary-focus case; pivot ⁶Li tagging to p/³He channels |
+| ⁶Li α-tag fails at IP6 (R=1 beam-blind) | quantify pT-tail acceptance; document IR-8 secondary-focus case; pivot ⁶Li tagging to p/³He channels — *superseded (2026-08-28): the risk materialised (1.5–1.7% at every published optics) and was answered by a mitigation this row predates — the one-plane β\* de-squeeze of Report 1 §6.1, 27–35% at 1/7–1/13 of the luminosity, with IR-8 (≈20%) as the fallback; the p/³He fragments were evaluated and classified as vetoable breakup backgrounds, not tags (plans/06 §6.2)* |
 | Geant4/DD4hep mishandles light-ion or excited-ion primaries | gun tests in 2.1.4; sanitize PDG codes to ground states |
 | EICrecon FF matrices proton-tuned | derive Li-rigidity matrices with FF WG |
 | Compute exceeds local resources | guns + small samples locally; campaign production via collaboration |
