@@ -38,6 +38,8 @@
   }
   h1 { font-size: 17.5pt; line-height: 1.22; margin: 0 0 4pt; font-weight: 700; letter-spacing: -0.01em; }
   .dateline { font-family: "Segoe UI", system-ui, sans-serif; font-size: 8pt; color: var(--ink-3); margin: 0 0 10pt; }
+  .authors { font-size: 10.5pt; margin: 6pt 0 1pt; }
+  .affil { font-size: 8.6pt; color: var(--ink-2); margin: 0 0 2pt; }
   h2 { font-size: 12.5pt; margin: 16pt 0 5pt; letter-spacing: -0.005em; break-after: avoid; }
   h3 { font-size: 10.5pt; margin: 10pt 0 3pt; break-after: avoid; }
   p { margin: 4.5pt 0; }
@@ -81,6 +83,8 @@
 
   <p class="eyebrow">Polarized ⁶,⁷Li @ EIC · <b>Report 2</b> · Simulation and reconstruction chain</p>
   <h1>Simulation and reconstruction chain of the inclusive and coherent cos 2φ measurements with a tensor-polarized ⁶Li beam at the EIC: assumptions, methodology and closure</h1>
+  <p class="authors">C. Peng</p>
+  <p class="affil">Physics Division, Argonne National Laboratory</p>
   <p class="dateline">2026-08-24 · rewritten 2026-08-28 after a full review of the toolchain (Appendix A) · companion to Report 1 (the projections) and Report 3 (the machine and the detector) · computed with <code>polligen.reco</code>, <code>polligen.hfs</code> and <code>polligen.recopseudo</code> on the PYTHIA 8 hadronic final state of <code>tools/pythia8</code>; every number is reproducible with the commands of <code>docs/reproduction_manual.md</code></p>
 
   <p class="lede"><b>Abstract.</b> The double-helicity-flip structure function Δ(x,Q²) of ⁶Li is projected in Report 1 as the cos 2φ modulation of inclusive DIS on a transversely tensor-polarized beam, and as a modulation of the recoil azimuth in coherent diffraction with the ⁶Li detected intact. This report describes the simulation and reconstruction chain behind those projections — the polarized event kernel, the PYTHIA 8 hadronic final state, the electron-side, hadron-side and far-forward detector responses, the kinematic reconstruction, the spin-state-sorted estimator and the conversion to Δ — lists every assumption it rests on with its provenance and leverage, and reports its closure at the reconstructed level. The analysis path consumes only quantities an experiment records — the spin state of each bunch crossing, the tensor polarization and luminosity of each state, the reconstructed electron, the hadronic E − p<sub>z</sub> sum and the Roman-Pot angle pair — with simulation-derived corrections applied as functions of reconstructed variables; a 2026-08-28 review of the toolchain found one place where that was not so (the hadronic-scale calibration, now keyed on the reconstructed point), a truncation of the PYTHIA library below x = 16/s (now regenerated), and two statistical defects of the estimator (now fixed), none of which changes a headline number by more than its statistical error. At e(10 GeV) × ⁶Li(99.5 GeV/u) the four sweet-spot bins reconstruct with purities 0.56–0.75 and amplitude errors 0.9–3.0 × 10⁻⁴ in one year, the fit closing on the response-folded truth; the coherent channel closes at the lithium tagging optics of Report 1 with 2.5–6.0 × 10⁶ tagged recoils per year, unbiased in every |t| bin with more than 10⁵ recoils.</p>
