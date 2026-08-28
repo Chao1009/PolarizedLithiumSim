@@ -14,6 +14,8 @@ import sys
 import numpy as np
 import pytest
 
+_trapezoid = getattr(np, "trapezoid", None) or np.trapz
+
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 
 from polligen import bookkeeping as bk  # noqa: E402
@@ -100,7 +102,7 @@ def test_density_matches_independent_transcription(li6):
     kg = model.k
     for w in ch.waves:
         psi = w.radial(kg, kappa)
-        norm = np.sqrt(getattr(np, "trapezoid", np.trapz)(psi**2 * kg**2, kg))
+        norm = np.sqrt(_trapezoid(psi**2 * kg**2, kg))
         rad[w.l] = lambda kk, w=w, norm=norm: (np.sqrt(w.prob)
                                                * w.radial(kk, kappa) / norm)
     for M in (1.0, 0.0, -1.0):

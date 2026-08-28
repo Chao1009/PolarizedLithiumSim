@@ -103,8 +103,8 @@ def test_kernel_thirds_combination_reproduces_azz_with_its_sign():
     expected = asym.azz(t["b1"], t["f1"], t["f2"], x, y, b2=t["b2"])
     np.testing.assert_allclose(num / den, expected, rtol=1e-12)
     np.testing.assert_allclose(w[1.0], 0.5 * expected, rtol=1e-12)
-    assert np.sign(float(w[1.0])) == np.sign(asym.TENSOR_LL_SIGN
-                                             * float(t["b1"]))
+    assert np.sign(float(np.asarray(w[1.0]).item())) == np.sign(
+        asym.TENSOR_LL_SIGN * float(np.asarray(t["b1"]).item()))
 
 
 def test_delta_sector_does_not_depend_on_the_convention():
@@ -120,7 +120,7 @@ def test_delta_sector_does_not_depend_on_the_convention():
     _, _, a2 = kern.amplitudes(t, np.array([x]), np.array([q2]), S, state)
     expected = asym.a_cos2phi(t["delta"], t["f1"], t["f2"], x, y)
     np.testing.assert_allclose(a2, expected, rtol=1e-12)
-    assert float(a2) > 0.0            # Delta < 0 with c_m = +1 -> a2 > 0
+    assert float(np.asarray(a2).item()) > 0.0  # Delta < 0 with c_m = +1 -> a2 > 0
     assert "TENSOR_LL_SIGN" not in asym.a_cos2phi.__doc__.upper()
 
 
@@ -185,7 +185,7 @@ def test_spin32_rate_and_cos2phi_channels_are_now_consistent():
         trans = kern.amplitudes(t, xa, qa, S,
                                 EventSpinState(0, 0.0, j, m,
                                                theta_s=np.pi / 2))[2]
-        return float(trans) / float(long_)
+        return float(np.asarray(trans).item()) / float(np.asarray(long_).item())
 
     r1, r32 = ratio(beams.LI6, 1.0), ratio(beams.LI7, 1.5)
     # the ratio is Q_NN-free by construction, so it must be spin-independent
