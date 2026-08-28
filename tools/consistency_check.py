@@ -139,7 +139,7 @@ def _():
     from polli_fastsim import beams
     from polligen import reco
     want = {0: (220, 380), 1: (180, 180), 2: (65, 65)}          # high acceptance
-    want_hd = {0: (220, 380), 1: (206, 206), 2: (119, 119)}
+    want_hd = {0: (220, 380), 1: (220, 220), 2: (150, 150)}   # e10 x p100, e18 x p275 (290 b)
     bad = []
     for i, c in enumerate(beams.default_configs("p")):
         got = tuple(round(1e6 * x) for x in reco.sigma_theta_for(c))

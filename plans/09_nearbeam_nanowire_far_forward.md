@@ -26,12 +26,29 @@ external inputs, not work.**
 
 ## 9.0 What a closer approach is worth
 
-> **Caveat added 2026-08-27 (plans/10).** The absolute tagged fractions
-> below are conditioned on a single energy-independent, isotropic,
-> proton-derived σ_θ = 72.7 µrad. The published e+Au rows of YR Table 8.9
-> are 2.5–3.8× larger and span ×47 between cooling scenarios, which moves
-> these acceptances by up to a factor 553 at 5 × 41. **The GAINS below are
-> ratios at fixed σ_θ and survive; the absolute numbers do not.**
+> **Superseded 2026-08-28 (plans/10 A4; Report 4 rewritten).** The table
+> below was computed with a single energy-independent, isotropic,
+> proton-derived σ_θ = 72.7 µrad at every configuration, and neither its
+> absolute numbers nor its gains survive the Yellow Report divergences
+> (220/380, 180/180, 92/92 µrad h/v for ⁶Li).  The re-derived table, from
+> the same two scripts on the rectangular 10(σ_h, σ_v) envelope:
+>
+> | | 5 × 41 | 10 × 100 | 18 × 275 |
+> |---|---|---|---|
+> | coherent, silicon (2.00 / 1.35 / 1.03 mrad) | 9.8×10⁻⁷ | 7.7×10⁻¹⁶ | 1.9×10⁻¹⁷ |
+> | coherent, YR high-acceptance envelope (2.2 / 1.8 / 0.92 mrad) | 7.2×10⁻⁸ | 6.2×10⁻²⁷ | 3.9×10⁻¹⁴ |
+> | coherent, tagging-optics envelope (0.33 / 0.17 / 0.12 mrad, L/L_HA = 1/7.1 / 1/13.3 / 1/9.5) | **0.42** | **0.32** | **0.33** |
+> | ⁶Li α tag (routed), silicon / YR envelope / tagging | 0.018 / 0.017 / 0.35 | 0.015 / 0.015 / 0.27 | 0.015 / 0.015 / 0.28 |
+> | chain at the tagging optics, pots at silicon → pots follow | 0 → 4 bins, N_tag 2.5×10⁶/yr | 0 → 4, 2.9×10⁶ | 0 → 4, 6.0×10⁶ |
+> | δa_t, best bin, pots follow | 0.0035 | 0.0034 | 0.0023 |
+>
+> At the published optics the *machine* binds at every configuration and a
+> closer approach buys nothing; at the tagging optics the silicon binds
+> and a layer that follows the envelope is the whole difference between no
+> tag and a 32–42% tag.  The energy ordering reverses: the top
+> configuration is the most productive at equal luminosity.  The three
+> effects listed below (statistics, a configuration, bias) were features
+> of the 72.7 µrad envelope against the silicon and are kept as a record.
 
 `evgen/scripts/nearbeam_aperture_scan.py` (analytic) and
 `nearbeam_reach_gain.py` (the full chain: Roman-Pot emulation, two

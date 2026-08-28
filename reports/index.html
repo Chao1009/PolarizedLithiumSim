@@ -134,7 +134,7 @@
     optics — the channel defines a far-forward requirement (a tagging optics
     or the IR-8 secondary focus), for which one year yields 1.7×10⁷ tagged
     events; and a lithium tagging optics for IP6 is priced (the horizontal β*
-    raised 50–180× with the pots following, 2.6–6.1×10⁶ tagged events per
+    raised 50–176× with the pots following, 2.6–6.1×10⁶ tagged events per
     year at 1/7–1/13 of the luminosity, 3–8× below an IR-8 secondary focus
     at equal luminosity) and proposed. Revision history in
     Appendix A.</p>
@@ -171,19 +171,23 @@
 
   <div class="card">
     <div class="num">Report 3</div>
-    <div class="date">2026-08-27 · reference</div>
-    <h2>EIC and ePIC: the machine and the detector this programme is
-    projected on</h2>
-    <p>The specification behind the other reports, with every row carrying
-    its source and its <i>status</i> — design value, requirement, measured,
-    derived here, or unknown. The collider and why the ion energies are
-    what they are (they are set by <i>speed</i>, not rigidity, so the ⁶Li
-    menu is 41 and 99–138 GeV/u with nothing between); the electron and
-    hadron beam parameters per configuration and optics; the lithium case,
-    where almost nothing is published and §4 is a derivation rather than a
-    citation; the ePIC detector, central and far-forward; and a closing list
-    of the eight things this programme assumes on the machine's and the
-    detector's behalf, each with an owner.</p>
+    <div class="date">2026-08-28 · reference</div>
+    <h2>The EIC and ePIC for a polarized-lithium programme: beam and
+    detector parameters, their provenance, and the lithium case derived</h2>
+    <p>The specification behind the other reports, every entry carrying
+    its source and its <i>status</i> — design value, requirement,
+    measured, derived here, or unknown. The ion energies follow from the
+    revolution-period constraint (⁶Li at 41 and 99–138 GeV/u, nothing
+    between); the divergence from the Yellow Report's proton tables with a
+    species factor that is unity where the ion is γ-matched and √2 only at
+    the rigidity-capped top (220/380, 180/180, 92/92 μrad); and the
+    far-forward lithium tags evaluated at each optics — at every published
+    one the intact ⁶Li recoil and the ⁶Li α spectator are inside the beam
+    envelope, and a lithium tagging optics (horizontal β* raised 50–176×,
+    pots following, 1/7–1/13 of the luminosity) recovers a 32–42% coherent
+    and 27–35% α tag: the one machine request this programme makes. The
+    ePIC detector, central and far-forward, fact-checked against the
+    Yellow Report, and fifteen assumptions with owners.</p>
     <div class="links">
       <a href="eic_epic_reference.html">Read (HTML)</a>
       <a href="eic_epic_reference.pdf">PDF</a>
@@ -192,25 +196,24 @@
 
   <div class="card">
     <div class="num">Report 4</div>
-    <div class="date">2026-08-26 · detector study</div>
-    <h2>Superconducting nanowires at the ePIC far-forward: what a closer
-    approach would buy the polarized-lithium tags</h2>
+    <div class="date">2026-08-28 · detector study</div>
+    <h2>Near-beam tagging of the far-forward lithium recoils at ePIC: the
+    aperture, the optics, and whether superconducting nanowires help</h2>
     <p>The coherent intact-⁶Li tag and the ⁶Li α tag are beam-blind, so
-    the transverse angle at the IP is the only handle and the acceptance
-    is an exponential in its square. This note prices every aperture
-    (×26 at 5 × 41, ×569 at 10 × 100, and at mid energy the difference
-    between a measurement and a non-measurement), then asks whether a
-    superconducting nanowire can deliver it. <b>The answer is no, in
-    both candidate roles, on arithmetic rather than unknowns</b>: a
-    nanowire's dead edge is worth 0.005 mrad against a 0.5–3 mrad gap,
-    and for charge identification the incumbent AC-LGAD already
-    digitises an 8-bit charge over four planes — 4.8σ of α ↔ ⁶Li
-    separation per plane against a nanowire's one bit. What survives is
-    worth more than the negative answer: a technology-independent
-    pricing curve, the finding that the ePIC pot geometry has moved
-    since the snapshot this repository measured, and a redirected open
-    question #19 — whose background separates by hit <i>topology</i>,
-    13 to 90 pixels apart, in sensors that already exist.</p>
+    the angle at the IP is the only handle and the acceptance is an
+    exponential in its square. Three half-widths compete to set it — the
+    Yellow Report 10σ envelope, the measured ePIC silicon aperture, and
+    the envelope of a lithium tagging optics — and the report prices all
+    three per configuration. <b>At the published optics the machine binds
+    everywhere and no closer approach by any technology recovers a tag;
+    at the tagging optics a layer that follows the 0.12–0.33 mrad envelope
+    is the difference between no tag and a 32–42% tag</b> with four clean
+    |t| bins per configuration through the full chain, the gain living in
+    a strip 50–180 μrad wide. Superconducting nanowires help with neither
+    role: a dead edge worth 0.005 mrad against a gap set by module tiling
+    and a machine-protection rule, and a one bit that is nearly sufficient
+    for charge identification but a 50% fill factor that is not — while
+    the α + d background separates by hit topology in sensors that exist.</p>
     <div class="links">
       <a href="nanowire_far_forward.html">Read (HTML)</a>
       <a href="nanowire_far_forward.pdf">PDF</a>

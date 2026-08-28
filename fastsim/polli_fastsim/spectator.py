@@ -243,8 +243,11 @@ def spectator_lab_kinematics(channel, p_per_nucleon, n=200_000, beta=0.30,
     sits at R ~ 1, down by 0.0022 moves events across the RP/near-beam
     boundary at R = 0.95, where the density is high: the Roman-Pot
     fraction rises 1.31% -> 1.51% (+15% relative) and the total alpha
-    tag 1.65% -> 1.85% (high-acceptance) and 1.31% -> 1.51% (high-
-    divergence) at 137.5 GeV/u; 13.2% -> 13.5% at 50 GeV/u.  The 7Li
+    tag 1.65% -> 1.85% (legacy 73 urad "high-acceptance") and 1.31% ->
+    1.51% (legacy 164 urad) at 137.5 GeV/u; 13.2% -> 13.5% at 50 GeV/u.
+    (Since 2026-08-28 the published tag is evaluated per configuration
+    at the Yellow Report optics -- 1.7 / 1.5 / 1.7% -- and at the
+    tagging optics, farforward.yr_optics / tagging_optics.)  The 7Li
     alpha, off rigidity at R = 0.856 with no nearby edge, moves by
     +0.13% relative (97.7% -> 97.9%).  Splitting the two changes shows
     the acceptance shift is the mass alone: at 137.5 GeV/u the new
@@ -276,6 +279,7 @@ def spectator_lab_kinematics(channel, p_per_nucleon, n=200_000, beta=0.30,
     return {
         "pT": pt,
         "theta": theta,
+        "phi": np.arctan2(ky, kx),        # lab azimuth, for a planar cut
         "p_lab": p_lab,
         "R": rig_ratio,
         "xL": p_lab / (channel.spectator_A * p_per_nucleon),

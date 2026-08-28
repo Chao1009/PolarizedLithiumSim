@@ -48,6 +48,7 @@ from polligen import coherent as coh  # noqa: E402
 from polligen import reco, recopseudo as rp  # noqa: E402
 
 from polli_fastsim import beams, fom  # noqa: E402
+from polli_fastsim import farforward as _ff  # noqa: E402
 from polli_fastsim.farforward import HIGH_ACCEPTANCE  # noqa: E402
 
 C_TRUTH, C_FIT, C_ALT, C_GREY = "#0072B2", "#D55E00", "#009E73", "0.45"
@@ -114,8 +115,12 @@ def main():
 
     print("configuration %s: coherent recoils produced in %g fb^-1/u = %.3g"
           % (config.label(), args.lumi_1yr, n_produced))
-    print("angular envelope at this energy: %.3f GeV (10 sigma_theta x A p_u)"
-          % cut_here)
+    cut_yr = _ff.yr_optics(config).envelope[0] * p_ion
+    cut_tag = _ff.tagging_optics_point(config)["env_x"] * p_ion
+    print("angular envelope at this energy (10 sigma_h x A p_u): %.3f GeV at "
+          "the Yellow Report high-acceptance optics, %.3f GeV at the tagging "
+          "optics of Report 1 Section 6.1, %.3f GeV at the legacy 73 urad "
+          "(reproduction only)" % (cut_yr, cut_tag, cut_here))
     # The pots' own GEOMETRIC aperture, measured in the ePIC geometry
     # (reco.RP_APERTURE_MEASURED, tools/fullsim).  It is a second, larger
     # constraint at every configuration, and the curves below are read at
@@ -124,8 +129,9 @@ def main():
     cut_meas = None if ap is None else float(ap[0]) * p_ion
     if cut_meas is not None:
         print("measured pot aperture at this energy: %.3f GeV in p_T "
-              "(|theta_x| > %.2f mrad), i.e. %.1fx the envelope"
-              % (cut_meas, 1e3 * ap[0], cut_meas / cut_here))
+              "(|theta_x| > %.2f mrad), i.e. %.2fx the Yellow Report envelope "
+              "and %.1fx the tagging envelope"
+              % (cut_meas, 1e3 * ap[0], cut_meas / cut_yr, cut_meas / cut_tag))
 
     cuts = np.linspace(0.05, 0.70, 140)
     fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(11.8, 8.4))
@@ -141,13 +147,19 @@ def main():
     ax1.plot(cuts, acc_sq, "-", color=C_FIT, lw=1.4, label="square, $B$ = 50")
     ax1.plot(cuts, np.exp(-50.0 * cuts ** 2), "-", color=C_GREY, lw=1.2,
              label=r"circular $e^{-B p_T^2}$ (routing code)")
-    for p_u, lab in ((_PU[0], "5$\\times$41"), (_PU[1], "10$\\times$100"),
-                     (_PU[2], "18$\\times$275")):
-        c = reco.tag_pt_cut(HIGH_ACCEPTANCE.sigma_theta, p_u,
-                            a_beam=config.ion.A)
-        ax1.axvline(c, color="0.75", lw=0.9, ls="-", zorder=0)
-        ax1.text(c, 1.4e-3, " " + lab, fontsize=6.6, rotation=90,
-                 color="0.35", va="bottom")
+    # the horizontal 10 sigma envelope of each configuration at the Yellow
+    # Report high-acceptance optics (plans/10; 0.54 / 1.07 / 0.76 GeV) and
+    # at the tagging optics of Report 1 Section 6.1 (0.08 / 0.10 / 0.10 GeV)
+    for cfg_i, lab in zip(beams.default_configs("6Li"),
+                          ("5$\\times$41", "10$\\times$100", "18$\\times$275")):
+        pi = cfg_i.ion.A * cfg_i.ion_momentum_per_nucleon
+        c_yr = _ff.yr_optics(cfg_i).envelope[0] * pi
+        c_tag = _ff.tagging_optics_point(cfg_i)["env_x"] * pi
+        for c, ls, col in ((c_yr, "-", "0.75"), (c_tag, ":", C_ALT)):
+            if cuts[0] <= c <= cuts[-1]:
+                ax1.axvline(c, color=col, lw=0.9, ls=ls, zorder=0)
+                ax1.text(c, 1.4e-3, " " + lab + (" YR" if ls == "-" else " tagging"),
+                         fontsize=6.0, rotation=90, color="0.35", va="bottom")
     if cut_meas is not None:
         ax1.axvline(cut_meas, color=C_ALT, lw=1.3, ls="-.")
         ax1.text(cut_meas, 1.4e-3, " measured pot aperture", fontsize=6.6,
@@ -185,7 +197,7 @@ def main():
              + ", ".join("%s %.0f%%" % (k, 100 * v)
                          for k, v in IR8_PUBLISHED.items()),
              fontsize=6.2, color=C_ALT, va="bottom")
-    ax2.axvline(cut_here, color="0.6", lw=1.0)
+    ax2.axvline(cut_tag, color=C_ALT, lw=1.0, ls=":")
     if cut_meas is not None:
         ax2.axvline(cut_meas, color=C_ALT, lw=1.3, ls="-.")
     ax2.set_yscale("log")
@@ -226,7 +238,7 @@ def main():
     ax3.plot(rows[:, 0], rows[:, 5] / args.amp, "s--", color=C_FIT, ms=4,
              lw=1.3, label=r"$\delta a_e / a_e$ (gluon transversity)")
     ax3.axhline(1.0, color="0.8", lw=0.8, zorder=0)
-    ax3.axvline(cut_here, color="0.6", lw=1.0)
+    ax3.axvline(cut_tag, color=C_ALT, lw=1.0, ls=":")
     if cut_meas is not None:
         ax3.axvline(cut_meas, color=C_ALT, lw=1.3, ls="-.")
     ax3.set_yscale("log")
@@ -239,18 +251,28 @@ def main():
 
     # --- (d) acceptance vs beam momentum ----------------------------------
     p_us = np.linspace(10.0, 145.0, 200)
-    for sig, lab, col in ((HIGH_ACCEPTANCE.sigma_theta, "73 $\\mu$rad "
-                           "(high-acceptance)", C_TRUTH),
-                          (reco.SIGMA_THETA_HD, "149 $\\mu$rad "
-                           "(high-divergence)", C_FIT)):
-        cut_p = 10.0 * sig * config.ion.A * p_us
-        acc_p = np.array([acceptance_curve([c], 50.0, args.cut_scale_x,
-                                           1.0)[0][0] for c in cut_p])
-        ax4.plot(p_us, acc_p, "-", color=col, lw=1.5, label=lab)
+    # the Yellow Report divergences are per configuration, not a function
+    # of the momentum: each curve is one configuration's high-acceptance
+    # (sigma_h, sigma_v) swept in p_u, with the configuration's own point
+    # marked, and the tagging optics of Report 1 Section 6.1 alongside
+    for cfg_i, col in zip(beams.default_configs("6Li"), (C_TRUTH, C_FIT, C_ALT)):
+        sh, sv = _ff.sigma_theta_for(cfg_i)
+        acc_p = np.array([reco.rp_hole_acceptance(50.0, 10 * sh * config.ion.A * p,
+                                                  10 * sv * config.ion.A * p)["acc"]
+                          for p in p_us])
+        ax4.plot(p_us, acc_p, "-", color=col, lw=1.5,
+                 label="YR HA %.0f/%.0f $\\mu$rad (%s)" % (1e6 * sh, 1e6 * sv, cfg_i.label()))
+        pu_i = cfg_i.ion_momentum_per_nucleon
+        ax4.plot([pu_i], [reco.rp_hole_acceptance(50.0, 10 * sh * config.ion.A * pu_i,
+                                                  10 * sv * config.ion.A * pu_i)["acc"]],
+                 "o", color=col, ms=6)
+        t = _ff.tagging_optics_point(cfg_i)
+        ax4.plot([pu_i], [t["acceptance"]], "^", color=col, ms=7, mfc="white", mew=1.6)
+    ax4.plot([], [], "^", color="0.3", mfc="white", mew=1.6, label="tagging optics (pots follow)")
     for p_u in _PU:
         ax4.axvline(p_u, color="0.75", lw=0.9, zorder=0)
     ax4.set_yscale("log")
-    ax4.set_ylim(1e-9, 1.5)
+    ax4.set_ylim(1e-30, 1.5)
     ax4.set_xlabel(r"$^6$Li beam momentum per nucleon [GeV]")
     ax4.set_ylabel("tagged fraction")
     ax4.set_title("(d) the coherent program chooses the beam energy",
@@ -261,10 +283,12 @@ def main():
     fig.suptitle(
         "Coherent intact-$^6$Li tag versus the near-beam envelope (WP5), "
         "%s, $B$ = 50 GeV$^{-2}$, $f_0$ = %.2f\n"
-        "the envelope is ANGULAR ($10\\sigma_\\theta A p_u$), so the same "
-        "optics gives %.2f GeV here; the $^6$Li optics are undocumented "
-        "(plans/04 #11, #20)"
-        % (config.label(), sc.f0, cut_here), fontsize=9.5)
+        "the envelope is ANGULAR ($10\\sigma_\\theta A p_u$): %.2f GeV at the "
+        "legacy 73 $\\mu$rad, %.2f GeV at the Yellow Report high-acceptance optics, "
+        "%.2f GeV at the tagging optics"
+        % (config.label(), sc.f0, cut_here,
+           _ff.yr_optics(config).envelope[0] * p_ion,
+           _ff.tagging_optics_point(config)["env_x"] * p_ion), fontsize=9.5)
     fig.tight_layout(rect=(0, 0, 1, 0.92))
     out = outdir / "coherent_optics_scan_6Li.png"
     fig.savefig(out, dpi=140)

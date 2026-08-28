@@ -84,98 +84,31 @@ def sigma_theta_tagging(config, slope_b=50.0, n_sigma=10.0):
 
 
 def sigma_theta_for(config, optics="high-acceptance"):
-    """(sigma_theta_h, sigma_theta_v) [rad] for a beam configuration.
-
-    Two steps, both from plans/10:
-
-    1.  The PROTON divergence of that machine configuration, from Yellow
-        Report Table 10.1 (farforward.YR_PROTON_DIVERGENCE).
-    2.  The species step.  An ion is GAMMA-MATCHED to its proton
-        configuration unless the ring rigidity caps it first
-        (beams.Ion.momentum_per_nucleon_at).  A gamma-matched ion has the
-        SAME beta*gamma as the proton, hence the same geometric emittance at
-        equal eps_N, hence the SAME divergence -- no penalty.  A
-        rigidity-capped one sits at lower beta*gamma and picks up
-        sqrt(beta*gamma_p / beta*gamma_ion), which for 6Li at the top
-        configuration is sqrt(2).
-
-    So the correction is not a blanket factor: it is 1.00 at the two lower
-    configurations and 1.41 at the top, and it rides on top of a proton
-    divergence that itself varies 65 -> 180 -> 220 microrad.
-    """
-    from polli_fastsim import beams as _beams
+    """(sigma_theta_h, sigma_theta_v) [rad] for a beam configuration: the
+    Yellow Report Table 10.1 proton divergence of the configuration with
+    the gamma-matched species step (plans/10).  Lives in
+    polli_fastsim.farforward.sigma_theta_for since 2026-08-28 so that the
+    fast simulation's spectator routing uses the same numbers; kept here
+    by name for every existing caller."""
     from polli_fastsim import farforward as _ff
-    key = {41.0: "5x41", 100.0: "10x100", 275.0: "18x275"}
-    # which machine configuration is this?  match on the proton energy whose
-    # gamma-matched (or rigidity-capped) momentum reproduces the ion's
-    p_e = min(_beams.PROTON_CONFIG_ENERGIES,
-              key=lambda e: abs(config.ion.momentum_per_nucleon_at(e)
-                                - config.ion_momentum_per_nucleon))
-    (hd_h, hd_v, ha_h, ha_v), _ = _ff.YR_PROTON_DIVERGENCE[key[p_e]]
-    h, v = (ha_h, ha_v) if optics == "high-acceptance" else (hd_h, hd_v)
-    # gamma of the proton configuration and of this ion
-    g_p = ((p_e ** 2 + _beams.PROTON_MASS ** 2) ** 0.5) / _beams.PROTON_MASS
-    bg_p = (g_p ** 2 - 1.0) ** 0.5
-    bg_i = config.ion_momentum_per_nucleon / config.ion.mass_per_nucleon
-    f = (bg_p / bg_i) ** 0.5
-    return 1e-6 * h * f, 1e-6 * v * f
+    return _ff.sigma_theta_for(config, optics)
 
 
-# Far-forward transport constants read off the ePIC geometry scan
-# (tools/fullsim, 18 x 275): the horizontal lever from an IP angle to the
-# pot-plane position and the dispersion at the pots.  Shared with
-# scripts/tagging_optics.py, which prices the optics these define.
-POT_R12 = 30.6        # m
-POT_DISPERSION = 0.30  # m
+# Far-forward transport constants (tools/fullsim): the horizontal lever
+# from an IP angle to the pot-plane position and the dispersion at the
+# pots.  Defined in polli_fastsim.farforward; re-exported here.
+from polli_fastsim.farforward import POT_R12, POT_DISPERSION  # noqa: E402
 
 
 def tagging_optics_point(config, slope_b=50.0, n_sigma=10.0, r_max=2000.0,
                          n_grid=400, dispersion=True, optics="high-acceptance"):
-    """The lithium TAGGING OPTICS of Report 1 Section 6.1, as the coherent
-    reconstruction chain needs it: the working point that maximises
-    (tagged fraction) x (luminosity) when the HORIZONTAL beta* alone is
-    raised by r over the high-acceptance value, the vertical plane is held,
-    and the Roman Pots follow the 10 sigma envelope in both planes.
-
-    Returns a dict with r_h (beta*_x / beta*_x,HA), sigma_x (the horizontal
-    RMS angle at the IP that the de-squeeze leaves), sigma_x_eff (the same
-    with the beam's momentum spread through the pot dispersion added in
-    quadrature -- the angular smearing a pot-plane measurement actually
-    sees, and the quantity the envelope is n_sigma of), sigma_y (the
-    vertical divergence, untouched), env_x / env_y (the n_sigma envelope
-    half-widths in angle), acceptance, lumi_fraction (= 1/sqrt(r_h)) and
-    the momentum per nucleus p_ion.  Identical to the scan of
-    scripts/tagging_optics.py (same grid, same acceptance), which is
-    pinned by a test; that script adds the pricing, this function is the
-    geometry the pseudo-experiments consume.
-    """
-    from polli_fastsim import beams as _beams
+    """The lithium TAGGING OPTICS of Report 1 Section 6.1 -- see
+    polli_fastsim.farforward.tagging_optics_point, of which this is the
+    re-export used by the coherent reconstruction chain."""
     from polli_fastsim import farforward as _ff
-    sh, sv = sigma_theta_for(config, optics)
-    p_ion = config.ion.A * config.ion_momentum_per_nucleon
-    key = {41.0: "5x41", 100.0: "10x100", 275.0: "18x275"}
-    p_e = min(_beams.PROTON_CONFIG_ENERGIES,
-              key=lambda e: abs(config.ion.momentum_per_nucleon_at(e)
-                                - config.ion_momentum_per_nucleon))
-    dpp = 1e-4 * _ff.YR_PROTON_DIVERGENCE[key[p_e]][1]
-    disp = (POT_DISPERSION * dpp / POT_R12) if dispersion else 0.0
-    r = np.logspace(np.log10(0.25), np.log10(r_max), n_grid)
-    best = None
-    for rr in r:
-        sx = sh / rr ** 0.5
-        sx_eff = np.hypot(sx, disp)
-        acc = rp_hole_acceptance(slope_b, n_sigma * sx_eff * p_ion,
-                                 n_sigma * sv * p_ion)["acc"]
-        prod = acc / rr ** 0.5
-        if best is None or prod > best["product"]:
-            best = {"r_h": float(rr), "sigma_x": float(sx),
-                    "sigma_x_eff": float(sx_eff), "sigma_y": float(sv),
-                    "env_x": float(n_sigma * sx_eff),
-                    "env_y": float(n_sigma * sv), "acceptance": float(acc),
-                    "lumi_fraction": float(1.0 / rr ** 0.5),
-                    "product": float(prod), "p_ion": float(p_ion),
-                    "n_sigma": float(n_sigma)}
-    return best
+    return _ff.tagging_optics_point(config, slope_b=slope_b, n_sigma=n_sigma,
+                                    r_max=r_max, n_grid=n_grid,
+                                    dispersion=dispersion, optics=optics)
 
 
 # --- Minkowski helpers -----------------------------------------------------
@@ -1086,23 +1019,8 @@ def rp_measure(Pprime, P, sigma_theta_xy, n_sigma=10.0, rng=None,
 
 def rp_hole_acceptance(slope_b, cut_x, cut_y, shape="rectangle", nphi=3600):
     """Azimuthal acceptance of an exponential coherent recoil spectrum
-    dN/d2pT ~ exp(-B pT^2) outside a near-beam cutout with half-widths
-    (cut_x, cut_y) in pT [GeV]: eps(phi) = exp(-B rho(phi)^2) with
-    rho the cutout boundary along phi.  Returns
-    {"phi", "eps", "acc", "a2", "a4"}: the total acceptance and the
-    cos 2phi / cos 4phi Fourier coefficients <cos n phi> of the TAGGED
-    sample -- the fake modulation a single-fill fit would attribute to
-    physics (a2 = 0 only for cut_x = cut_y; a4 != 0 even then)."""
-    phi = (np.arange(nphi) + 0.5) * 2.0 * np.pi / nphi
-    c, s = np.abs(np.cos(phi)), np.abs(np.sin(phi))
-    if shape == "rectangle":
-        rho = np.minimum(cut_x / np.maximum(c, 1e-300),
-                         cut_y / np.maximum(s, 1e-300))
-    elif shape == "ellipse":
-        rho = 1.0 / np.sqrt((c / cut_x) ** 2 + (s / cut_y) ** 2)
-    else:
-        raise ValueError("shape must be 'rectangle' or 'ellipse'")
-    eps = np.exp(-slope_b * rho * rho)
-    return {"phi": phi, "eps": eps, "acc": float(eps.mean()),
-            "a2": float((eps * np.cos(2.0 * phi)).mean() / eps.mean()),
-            "a4": float((eps * np.cos(4.0 * phi)).mean() / eps.mean())}
+    outside a near-beam cutout -- polli_fastsim.farforward.hole_acceptance,
+    re-exported (2026-08-28) so that the fast simulation and the
+    reconstruction chain share one implementation."""
+    from polli_fastsim import farforward as _ff
+    return _ff.hole_acceptance(slope_b, cut_x, cut_y, shape=shape, nphi=nphi)

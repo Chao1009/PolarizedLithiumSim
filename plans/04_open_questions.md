@@ -270,16 +270,23 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
     … Oct. 2025"). The old 32 mm block gives 32/30.6 m = 1.046 mrad
     against the 1.03 measured — agreement to 1.5%, so measurement and
     file reading confirm each other. The current 16 mm block implies
-    roughly half that, *below* the 0.727 mrad 10σ envelope; at 5 × 41 the
-    per-energy insertion moves the other way (29.6 mm inner edge).
+    roughly half that, 0.52 mrad, *below* the 0.92 mrad Yellow Report
+    high-acceptance envelope at 18 × 275 (plans/10) but 4× the 0.12 mrad
+    tagging-optics envelope; at 5 × 41 the per-energy insertion moves the
+    other way (29.6 mm inner edge).
     **Every aperture-conditional number — the tagged fractions, the
     sign-flipped ⟨cos 2β⟩, "the coherent programme is a low-energy
     programme" — is therefore conditioned on a superseded geometry and
     must be re-measured** (plans/09 B1, priority). What a closer approach
     is WORTH is unaffected and now curved rather than tabulated:
-    `nearbeam_aperture_scan.py` prices every aperture, and the chain says
-    the gain is ×26 at 5 × 41, ×569 at 10 × 100, and at mid energy the
-    difference between a_t = 0.48 ± 1.45 and four clean bins.
+    `nearbeam_aperture_scan.py` prices every aperture per configuration.
+    On the Yellow Report divergences (2026-08-28, plans/10 A4) the
+    machine envelope binds at every configuration and a closer approach
+    alone buys nothing; under the tagging optics of Report 1 §6.1 a layer
+    that follows the 0.33 / 0.17 / 0.12 mrad envelope is the difference
+    between no tag and 0.41 / 0.31 / 0.32 with four clean |t| bins each
+    (`nearbeam_reach_gain.py`; the earlier ×26 / ×569 were artefacts of the
+    73 μrad divergence).
 21. **Hadronic-method y resolution at y = 0.01–0.05 for e + light ions**
     (same note). Three of the four inclusive sweet spots sit at
     y = 0.010–0.025 where the electron alone gives δy/y = 50–120%; the

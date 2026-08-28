@@ -168,7 +168,7 @@ automatically.
 
 ```bash
 cd evgen   && python3 -m pytest tests/ -q     # 225 passed, ~40 s
-cd fastsim && python3 -m pytest tests/ -q     # 57 passed, ~3 s
+cd fastsim && python3 -m pytest tests/ -q     # 62 passed, ~6 s
 python3 tools/consistency_check.py --verbose  # 22 checks, whole repository
 ```
 
@@ -209,20 +209,27 @@ python3 scripts/money_polemc.py        --outdir out      # money plot 3 (polariz
 python3 scripts/tagging_acceptance.py
 ```
 
-The number the proposal asks for.  Expected, at the β = 0.30 central
-short-range scale, high-acceptance / high-divergence optics:
+The number the proposal asks for.  Since 2026-08-28 the script evaluates
+every channel at each beam configuration and at four optics — the Yellow
+Report high-acceptance and high-divergence rows of that configuration
+(plans/10; the envelope is a rectangle 10(σ_h, σ_v) in angle applied to
+each fragment's azimuth), the lithium tagging optics of Report 1 §6.1,
+and the legacy proton-derived 73 μrad for reproduction.  Expected at the
+β = 0.30 central short-range scale, 5 × 41 / 10 × 100 / 18 × 275:
 
 ```
-6Li α-tag (137.5 GeV/u)   tagged 0.019 / 0.015
-6Li d-tag                 tagged 0.091 / 0.060
-7Li α-tag (117.9 GeV/u)   tagged 0.979 / 0.966
-7Li t-tag                 tagged 0.006 / 0.004
+6Li α-tag   YR high-acceptance  0.017 / 0.015 / 0.017    tagging optics  0.353 / 0.273 / 0.281    legacy 73 μrad  0.204 / 0.029 / 0.019
+6Li d-tag   YR high-acceptance  0.078 / 0.062 / 0.073    tagging optics  0.55 / 0.49 / 0.50
+7Li α-tag   YR high-acceptance  0.967 / 0.967 / 0.973    tagging optics  0.986 / 0.990 / 0.991
+7Li t-tag   YR high-acceptance  0.033 / 0.004 / 0.006
 ```
 
 The ⁶Li α is beam-blind (rigidity ratio 0.99813, inside the ±5% near-beam
-band) and is recovered only through the p_T tail, which is why its number
-is small and why §5.2 matters: the tail is the least trustworthy part of
-the cluster model.
+band): at the Yellow Report optics its near-beam tail is inside the
+envelope at every configuration and what survives is the slice that falls
+below R = 0.95 into the Roman-Pot window; the tagging optics (1/7–1/13 of
+the luminosity) recovers the tail.  §5.2 still matters — the tail is the
+least trustworthy part of the cluster model.
 
 ### 3.3 The July money-Δ production, and the R that changes it
 
@@ -452,27 +459,32 @@ python3 scripts/nearbeam_sensor_budget.py --outdir .   # 1 s
 python3 scripts/nearbeam_zid_power.py     --outdir .   # 48 s
 ```
 
-Three questions, three scripts. The first prices *every* near-beam
-aperture — coherent tagged fraction and α-tag acceptance against the
-half-width in angle, per optics, with the measured ePIC aperture and the
-10σ envelope marked. The second runs the full coherent chain at both
-apertures and reports what the *measurement* does, not just the
-acceptance. The third asks whether a superconducting nanowire can be the
-thing that delivers a closer approach: energy deposits in a 12 nm NbN
-film, the hot-spot firing-threshold model of charge identification
-(Figure 3 of the report), the sizing, and the channel count at each
-available granularity.
+Three questions, three scripts, all on the per-configuration Yellow
+Report divergences of plans/10 since 2026-08-28. The first prices *every*
+near-beam aperture — coherent tagged fraction and α-tag acceptance against
+the horizontal half-width in angle, per configuration, with three markers:
+the measured ePIC silicon aperture, the 10σ envelope of the Yellow Report
+high-acceptance optics, and the envelope of the lithium tagging optics
+(Report 1 §6.1). The second runs the full coherent chain at the tagging
+optics of each configuration with the pots fixed at the silicon aperture
+and with the pots following the envelope, and reports what the
+*measurement* does. The third asks whether a superconducting nanowire can
+be the thing that delivers a closer approach: energy deposits in a 12 nm
+NbN film, the hot-spot firing-threshold model of charge identification
+(Figure 3 of the report), the sizing strip at the tagging envelope, and
+the channel count at each available granularity.
 
 The coherent script also grew `--near-beam-mrad`, which replaces the
 measured *horizontal* aperture and keeps the measured vertical:
 
 ```bash
 python3 scripts/money_cos2phi_coherent_reco.py --config 1 \
-        --rp-aperture measured --cut-scale-x 1.0 --near-beam-mrad 0.727
+        --rp-aperture measured --cut-scale-x 1.0 --near-beam-mrad 1.8
 ```
 
-(This is the near-beam study's geometry on the legacy 73 μrad divergence;
-the published 6R is `--optics tagging`, §4.3.)  `--cut-scale-x 1.0` matters. The default 2.5 comes from the
+(1.8 mrad is the Yellow Report high-acceptance envelope at 10 × 100; the
+published 6R is `--optics tagging`, §4.3, whose pots follow the 0.17 mrad
+tagging envelope.)  `--cut-scale-x 1.0` matters. The default 2.5 comes from the
 pre-measurement belief in a wide horizontal slot, and on top of a
 measured geometric aperture it imposes a 25σ horizontal retraction that
 binds *before* the geometry does — hiding the whole effect.
@@ -678,8 +690,8 @@ trust anything downstream of it.
 |---|---|---|
 | CT18NLO F₂ᵖ(0.1, 10) | see §1.3 | 0.4274 |
 | R1998 at (0.1, 5) | `python3 -c "from polli_fastsim.structure import r1998; print(r1998(0.1,5))"` | 0.1844 |
-| ⁶Li α-tag, β = 0.30 | `scripts/tagging_acceptance.py` | 0.019 (HA) / 0.015 (HD) |
-| ⁷Li α-tag, β = 0.30 | same | 0.979 / 0.966 |
+| ⁶Li α-tag, β = 0.30 | `scripts/tagging_acceptance.py` | YR high-acceptance 0.017 / 0.015 / 0.017, tagging optics 0.353 / 0.273 / 0.281, legacy 73 μrad 0.204 / 0.029 / 0.019 (5 × 41 / 10 × 100 / 18 × 275) |
+| ⁷Li α-tag, β = 0.30 | same | 0.967 / 0.967 / 0.973 (YR HA), 0.986 / 0.990 / 0.991 (tagging) |
 | A_bag triple (frozen R) | `scripts/money_delta_20260729.py --emit-a-bag-reference` | −0.317767 / −0.310041 / −0.296750 |
 | A_bag triple (published R) | `… --r-model r1998 --emit-a-bag-reference` | −0.237040 / −0.235825 / −0.234926 |
 | L₅σ (frozen R) | `scripts/money_delta_realistic.py --configs low,mid,top` | 135.31 / 131.26 / 274.64 fb⁻¹/u (script-internal pre-2026-08-27 configs at 27.5 / 50 / 137.5 GeV/u, superseded by plans/10; only TOP is a machine configuration) |
@@ -703,9 +715,10 @@ trust anything downstream of it.
 | … top config | `--config 2` | 0.23 / 0.19 / 0.21 / 0.18 |
 | unfolding model dependence (moment_B prior) | `scripts/money_cos2phi_reco.py --unfold-scan` | bin-by-bin (−4.1, +8.0, −5.5, +4.9)% → folded (−1.5, −1.8, −0.3, +0.5)% |
 | coherent tagged fraction | `scripts/coherent_optics_scan.py` | 32% / 3.0% / 4×10⁻⁵ / 2×10⁻⁷ at 0.10 / 0.22 / 0.45 / 0.60 GeV |
-| near-beam gain, coherent | `scripts/nearbeam_aperture_scan.py` | silicon → 0.727 mrad: 9.8×10⁻⁷ → 7.5×10⁻² (5 × 41), 7.7×10⁻¹⁶ → 1.4×10⁻⁵ (10 × 100), 1.9×10⁻¹⁷ → 2.0×10⁻⁹ (18 × 275) |
-| near-beam gain, α tag | same | 0.012 → 0.21, 0.0016 → 0.019, 0.0012 → 0.0054 |
-| near-beam gain, through the chain | `scripts/nearbeam_reach_gain.py` | 5 × 41: acc 3.3×10⁻⁶ → 7.8×10⁻², 0 → 4 \|t\| bins (a_t ± 0.003–0.02); 10 × 100: 0 → 9.2×10⁻⁵, 0 → 1 bin |
+| coherent tag at the three half-widths | `scripts/nearbeam_aperture_scan.py` | silicon / YR HA envelope / tagging envelope: 9.8×10⁻⁷ / 7.2×10⁻⁸ / 0.42 (5 × 41), 7.7×10⁻¹⁶ / 6.2×10⁻²⁷ / 0.32 (10 × 100), 1.9×10⁻¹⁷ / 3.9×10⁻¹⁴ / 0.33 (18 × 275) |
+| α tag (routed) at the three half-widths | same | 0.018 / 0.017 / 0.35, 0.015 / 0.015 / 0.27, 0.015 / 0.015 / 0.28 |
+| the chain at the tagging optics | `scripts/nearbeam_reach_gain.py --n-mc 2000000` | pots at the silicon: acc 0, 0 bins at every configuration; pots following: acc 0.41 / 0.31 / 0.32, N_tag 2.5 / 2.9 / 6.0 ×10⁶/yr, 4 of 4 \|t\| bins, δa_t 0.0035–0.018 / 0.0034–0.0135 / 0.0023–0.0151 |
+| sizing strip at the tagging envelope | `scripts/nearbeam_sensor_budget.py` | d50 / d90 / d99 = 183 / 504 / 842 μrad (5 × 41), 69 / 194 / 328 (10 × 100), 50 / 141 / 239 (18 × 275); α at 137.5 GeV/u 77 / 269 / 624 |
 | tagging optics, priced | `scripts/tagging_optics.py` | horizontal-only optimum β*_x/β*_x,HA = 49.7 / 175.6 / 89.3, ε = 0.422 / 0.322 / 0.332, L/L_HA = 1/7.1 / 1/13.3 / 1/9.5, N_tag/yr = 2.6×10⁶ / 3.0×10⁶ / 6.1×10⁶, 5σ floor/yr = 1.7 / 2.1 / 1.6% per unit P_zz, shape term 9.3 / 8.3 / 10.7σ/yr |
 | 6R at the tagging optics, 5 × 40.8 | `scripts/money_cos2phi_coherent_reco.py --config 0 --optics tagging --n-mc 6000000 [--ensemble 20]` | σ_θ = 33/380 μrad, cutout 0.33 × 3.8 mrad, acc 0.411, N_tag 2.52×10⁶/yr at L/L_HA = 1/7.1, ⟨cos 2β⟩ = −0.27; a_t 0.0899 ± 0.0035 / 0.118 ± 0.005 / 0.131 ± 0.009 / 0.104 ± 0.018 (1 yr; inj. 0.090 / 0.118 / 0.147 / 0.180), 0.0892 / 0.1202 / 0.1465 / 0.183 at 10 yr; ensemble means 0.0899 / 0.1170 / 0.139 / 0.114 |
 | 6R at the tagging optics, 18 × 137.5 | `… --config 2 --optics tagging --n-mc 6000000` | acc 0.324, N_tag 5.99×10⁶/yr; a_t 0.1005 ± 0.0023 / 0.133 ± 0.003 / 0.177 ± 0.006 / 0.221 ± 0.015 (inj. 0.100 / 0.137 / 0.179 / 0.228) |

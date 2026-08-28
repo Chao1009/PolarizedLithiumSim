@@ -63,12 +63,48 @@ PROTON_REFERENCE_MOMENTUM = 275.0  # GeV, the momentum the cuts are quoted at
 class Optics:
     """Near-beam envelope of an optics setting, as the ANGLE it subtends.
 
-    `sigma_theta` is the beam angular divergence at the IP; a fragment at
-    beam rigidity clears the envelope when theta > n_sigma sigma_theta.
+    `sigma_theta` is the HORIZONTAL beam angular divergence at the IP and
+    `sigma_theta_v` the vertical one (None = isotropic, the legacy form).
+    The Roman Pots are planar, so the envelope a fragment at beam rigidity
+    has to clear is a RECTANGLE of half-widths (n_sigma sigma_h,
+    n_sigma sigma_v) in angle: it is tagged when |theta_x| > n sigma_h OR
+    |theta_y| > n sigma_v.  Since 2026-08-28 the per-configuration Yellow
+    Report values are available through `yr_optics(config)` and the
+    lithium tagging optics through `tagging_optics(config)`; the two
+    module-level constants below are the proton-derived legacy.
     """
     name: str
-    sigma_theta: float          # rad
+    sigma_theta: float          # rad, horizontal
     n_sigma: float = 10.0
+    sigma_theta_v: float = None  # rad, vertical; None = isotropic
+    lumi_fraction: float = 1.0   # luminosity relative to high acceptance
+
+    @property
+    def sigma_v(self):
+        return (self.sigma_theta if self.sigma_theta_v is None
+                else self.sigma_theta_v)
+
+    @property
+    def isotropic(self):
+        return (self.sigma_theta_v is None
+                or abs(self.sigma_theta_v - self.sigma_theta) < 1e-15)
+
+    @property
+    def envelope(self):
+        """(n sigma_h, n sigma_v) [rad]: the cutout half-widths."""
+        return (self.n_sigma * self.sigma_theta, self.n_sigma * self.sigma_v)
+
+    def clears(self, theta, phi=None):
+        """Boolean: does a fragment at polar angle `theta` (from the ion
+        axis) and azimuth `phi` clear the envelope?  With `phi` None the
+        cut is circular in theta at n sigma_h -- exact for an isotropic
+        optics, and the only option when the azimuth is not known."""
+        theta = np.asarray(theta, dtype=float)
+        cx, cy = self.envelope
+        if phi is None or self.isotropic:
+            return theta > cx
+        phi = np.asarray(phi, dtype=float)
+        return (np.abs(theta * np.cos(phi)) > cx) | (np.abs(theta * np.sin(phi)) > cy)
 
     @property
     def pt_cut_near_beam(self):
@@ -78,8 +114,8 @@ class Optics:
         return self.pt_cut_for(PROTON_REFERENCE_MOMENTUM)
 
     def pt_cut_for(self, momentum):
-        """Transverse-momentum threshold for a fragment of total momentum
-        `momentum` [GeV] -- e.g. A * p_per_nucleon for a nucleus."""
+        """Transverse-momentum threshold (horizontal) for a fragment of
+        total momentum `momentum` [GeV] -- e.g. A * p_per_nucleon."""
         return self.n_sigma * self.sigma_theta * np.asarray(momentum,
                                                             dtype=float)
 
@@ -106,8 +142,8 @@ HIGH_DIVERGENCE = Optics("high-divergence", 0.45 / (10.0 * 275.0))    # 164 urad
 # option -- the two rows are identical -- and that the divergence is
 # isotropic at 275 and 100 GeV but 220/380 at 41.
 YR_PROTON_DIVERGENCE = {
-    "18x275": ((119.0, 119.0, 65.0, 65.0), 6.8),    # 1160-bunch column
-    "10x100": ((206.0, 206.0, 180.0, 180.0), 9.7),
+    "18x275": ((150.0, 150.0, 65.0, 65.0), 6.8),    # e 18 x p 275, 290 bunches
+    "10x100": ((220.0, 220.0, 180.0, 180.0), 9.7),  # e 10 x p 100 (e 5: 206/206)
     "5x41":   ((220.0, 380.0, 220.0, 380.0), 10.3),
 }
 YR_GOLD_DIVERGENCE = {                              # strong hadron cooling
@@ -141,14 +177,14 @@ def yr_divergence_for(config, a_over_z=2.0, optics="high-acceptance"):
     return (1e-6 * h * f, 1e-6 * v * f), 1e-4 * dpp
 
 
-def route_charged(R, theta, pT, optics=HIGH_ACCEPTANCE):
+def route_charged(R, theta, pT, optics=HIGH_ACCEPTANCE, phi=None):
     """Classify charged fragments into far-forward systems.
 
     Returns an integer array: 0 lost, 1 RP, 2 OMD, 3 B0, 4 RP-near-beam
-    (R ~ 1, accepted only outside the angular envelope
-    theta > n_sigma sigma_theta).  `pT` is no longer used for the
-    near-beam decision -- the envelope is angular, and theta is exact per
-    fragment where a pT threshold needs the fragment momentum.
+    (R ~ 1, accepted only outside the angular envelope -- a rectangle of
+    half-widths n_sigma (sigma_h, sigma_v) when the fragment azimuth `phi`
+    is given, a circle at n_sigma sigma_h otherwise; Optics.clears).  `pT`
+    is not used for the near-beam decision: the envelope is angular.
     """
     R = np.asarray(R, dtype=float)
     theta = np.asarray(theta, dtype=float)
@@ -162,7 +198,7 @@ def route_charged(R, theta, pT, optics=HIGH_ACCEPTANCE):
     near = np.abs(R - 1.0) < NEAR_BEAM_BAND
     in_rp = small & ~near & (R >= RP_R_WINDOW[0]) & (R <= RP_R_WINDOW[1])
     in_omd = small & (R >= OMD_R_WINDOW[0]) & (R < OMD_R_WINDOW[1])
-    rp_tail = small & near & (theta > optics.n_sigma * optics.sigma_theta)
+    rp_tail = small & near & optics.clears(theta, phi)
     out[in_omd] = 2
     out[in_rp] = 1
     out[rp_tail] = 4
@@ -187,9 +223,149 @@ def neutral_summary(theta):
             "lost": float(np.sum(route == 0)) / n}
 
 
-def acceptance_summary(R, theta, pT, optics=HIGH_ACCEPTANCE):
+def acceptance_summary(R, theta, pT, optics=HIGH_ACCEPTANCE, phi=None):
     """Fraction of spectators in each far-forward system."""
-    route = route_charged(R, theta, pT, optics)
+    route = route_charged(R, theta, pT, optics, phi=phi)
     n = float(len(route))
     return {label: float(np.sum(route == code)) / n
             for code, label in ROUTE_LABELS.items()}
+
+
+# --- per-configuration optics (2026-08-28) ---------------------------------
+
+#: Far-forward transport constants read off the ePIC geometry scan
+#: (tools/fullsim, 18 x 275): the horizontal lever from an IP angle to the
+#: pot-plane position and the dispersion at the pots.
+POT_R12 = 30.6        # m
+POT_DISPERSION = 0.30  # m
+
+
+def yr_config_key(config):
+    """Which Yellow Report configuration ("5x41", "10x100", "18x275") a
+    BeamConfig belongs to: the proton energy whose gamma-matched (or
+    rigidity-capped) per-nucleon momentum reproduces the ion's."""
+    from . import beams as _beams
+    key = {41.0: "5x41", 100.0: "10x100", 275.0: "18x275"}
+    p_e = min(_beams.PROTON_CONFIG_ENERGIES,
+              key=lambda e: abs(config.ion.momentum_per_nucleon_at(e)
+                                - config.ion_momentum_per_nucleon))
+    return key[p_e]
+
+
+def sigma_theta_for(config, optics="high-acceptance"):
+    """(sigma_theta_h, sigma_theta_v) [rad] for a beam configuration.
+
+    Two steps, both from plans/10:
+
+    1.  The PROTON divergence of that machine configuration, from Yellow
+        Report Table 10.1 (YR_PROTON_DIVERGENCE).
+    2.  The species step.  An ion is GAMMA-MATCHED to its proton
+        configuration unless the ring rigidity caps it first
+        (beams.Ion.momentum_per_nucleon_at).  A gamma-matched ion has the
+        SAME beta*gamma as the proton, hence the same geometric emittance at
+        equal eps_N, hence the SAME divergence -- no penalty.  A
+        rigidity-capped one sits at lower beta*gamma and picks up
+        sqrt(beta*gamma_p / beta*gamma_ion), which for 6Li at the top
+        configuration is sqrt(2).
+
+    So the correction is not a blanket factor: it is 1.00 at the two lower
+    configurations and 1.41 at the top, and it rides on top of a proton
+    divergence that itself varies 65 -> 180 -> 220 microrad.  (Moved here
+    from polligen.reco on 2026-08-28 so that the fast simulation's own
+    spectator routing can use it; reco.sigma_theta_for delegates.)
+    """
+    from . import beams as _beams
+    key = yr_config_key(config)
+    p_e = {"5x41": 41.0, "10x100": 100.0, "18x275": 275.0}[key]
+    (hd_h, hd_v, ha_h, ha_v), _ = YR_PROTON_DIVERGENCE[key]
+    h, v = (ha_h, ha_v) if optics == "high-acceptance" else (hd_h, hd_v)
+    g_p = ((p_e ** 2 + _beams.PROTON_MASS ** 2) ** 0.5) / _beams.PROTON_MASS
+    bg_p = (g_p ** 2 - 1.0) ** 0.5
+    bg_i = config.ion_momentum_per_nucleon / config.ion.mass_per_nucleon
+    f = (bg_p / bg_i) ** 0.5
+    return 1e-6 * h * f, 1e-6 * v * f
+
+
+def yr_optics(config, optics="high-acceptance", n_sigma=10.0):
+    """The Yellow Report optics of a beam configuration as an `Optics`:
+    the per-configuration, anisotropic divergence of `sigma_theta_for`
+    with the 10 sigma envelope, for the species of `config`."""
+    h, v = sigma_theta_for(config, optics)
+    return Optics("%s %s" % (yr_config_key(config), optics), h, n_sigma, v)
+
+
+def hole_acceptance(slope_b, cut_x, cut_y, shape="rectangle", nphi=3600):
+    """Azimuthal acceptance of an exponential coherent recoil spectrum
+    dN/d2pT ~ exp(-B pT^2) outside a near-beam cutout with half-widths
+    (cut_x, cut_y) in pT [GeV]: eps(phi) = exp(-B rho(phi)^2) with rho the
+    cutout boundary along phi.  Returns {"phi", "eps", "acc", "a2", "a4"}:
+    the total acceptance and the cos 2phi / cos 4phi Fourier coefficients
+    <cos n phi> of the TAGGED sample about the horizontal axis -- the
+    fake modulation a single-fill fit would attribute to physics (a2 = 0
+    only for cut_x = cut_y; a4 != 0 even then).  polligen.reco re-exports
+    this as rp_hole_acceptance."""
+    phi = (np.arange(nphi) + 0.5) * 2.0 * np.pi / nphi
+    c, s = np.abs(np.cos(phi)), np.abs(np.sin(phi))
+    if shape == "rectangle":
+        rho = np.minimum(cut_x / np.maximum(c, 1e-300),
+                         cut_y / np.maximum(s, 1e-300))
+    elif shape == "ellipse":
+        rho = 1.0 / np.sqrt((c / cut_x) ** 2 + (s / cut_y) ** 2)
+    else:
+        raise ValueError("shape must be 'rectangle' or 'ellipse'")
+    eps = np.exp(-slope_b * rho * rho)
+    return {"phi": phi, "eps": eps, "acc": float(eps.mean()),
+            "a2": float((eps * np.cos(2.0 * phi)).mean() / eps.mean()),
+            "a4": float((eps * np.cos(4.0 * phi)).mean() / eps.mean())}
+
+
+def tagging_optics_point(config, slope_b=50.0, n_sigma=10.0, r_max=2000.0,
+                         n_grid=400, dispersion=True, optics="high-acceptance"):
+    """The lithium TAGGING OPTICS of Report 1 Section 6.1: the working
+    point that maximises (tagged fraction) x (luminosity) when the
+    HORIZONTAL beta* alone is raised by r over the high-acceptance value,
+    the vertical plane is held, and the Roman Pots follow the n_sigma
+    envelope in both planes.
+
+    Returns a dict with r_h (beta*_x / beta*_x,HA), sigma_x (the horizontal
+    RMS angle at the IP the de-squeeze leaves), sigma_x_eff (the same with
+    the beam's momentum spread through the pot dispersion added in
+    quadrature -- the angular smearing a pot-plane measurement sees, and
+    the quantity the envelope is n_sigma of), sigma_y, env_x / env_y (the
+    envelope half-widths in angle), acceptance, lumi_fraction
+    (= 1/sqrt(r_h)), p_ion, and `optics`: the working point as an
+    `Optics` (sigma_x_eff, sigma_y, the luminosity fraction), so that the
+    spectator routing can be evaluated at it.  Identical to the scan of
+    evgen/scripts/tagging_optics.py (same grid, same acceptance), pinned
+    by a test.
+    """
+    sh, sv = sigma_theta_for(config, optics)
+    p_ion = config.ion.A * config.ion_momentum_per_nucleon
+    dpp = 1e-4 * YR_PROTON_DIVERGENCE[yr_config_key(config)][1]
+    disp = (POT_DISPERSION * dpp / POT_R12) if dispersion else 0.0
+    r = np.logspace(np.log10(0.25), np.log10(r_max), n_grid)
+    best = None
+    for rr in r:
+        sx = sh / rr ** 0.5
+        sx_eff = np.hypot(sx, disp)
+        acc = hole_acceptance(slope_b, n_sigma * sx_eff * p_ion,
+                              n_sigma * sv * p_ion)["acc"]
+        prod = acc / rr ** 0.5
+        if best is None or prod > best["product"]:
+            best = {"r_h": float(rr), "sigma_x": float(sx),
+                    "sigma_x_eff": float(sx_eff), "sigma_y": float(sv),
+                    "env_x": float(n_sigma * sx_eff),
+                    "env_y": float(n_sigma * sv), "acceptance": float(acc),
+                    "lumi_fraction": float(1.0 / rr ** 0.5),
+                    "product": float(prod), "p_ion": float(p_ion),
+                    "n_sigma": float(n_sigma)}
+    best["optics"] = Optics("%s tagging (beta*_x x %.0f)"
+                            % (yr_config_key(config), best["r_h"]),
+                            best["sigma_x_eff"], n_sigma, best["sigma_y"],
+                            best["lumi_fraction"])
+    return best
+
+
+def tagging_optics(config, **kw):
+    """The tagging optics of `tagging_optics_point` as an `Optics`."""
+    return tagging_optics_point(config, **kw)["optics"]

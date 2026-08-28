@@ -17,7 +17,7 @@ brings to the EIC, in support of the ANL polarized ⁶,⁷Li ion-source program
 | [07_plb_letter_gluonometry.md](07_plb_letter_gluonometry.md) | The PLB-class simulation letter: scope decision (gluonometry, inclusive + coherent), gap analysis vs referees, work packages WP1–WP7 (grid SFs, reco closure, RC bound, coherent curves, paper production), skeleton, risk register, timeline to the INT program (submit Jan 2027) |
 | [../docs/reproduction_manual.md](../docs/reproduction_manual.md) | **How to reproduce any of it**: environment (Python, PDF grids, PYTHIA 8, eic-shell, a headless browser), every command with its measured runtime and expected output, the third-party generators (PYTHIA 8, BeAGLE over xrootd, ePIC/npsim), the numbers to check against, and what cannot be reproduced here and why |
 | [08_simulation_chain_completion.md](08_simulation_chain_completion.md) | Completing the simulation chain (2026-08-25): the 23 gaps that survived an adversarial audit of the reconstruction chain, the kernel, the hadronic final state and the fast simulation — ordered, with the convention items reserved for the author (D1, D7, D9) and the externally blocked tail (D2–D8) separated out |
-| [09_nearbeam_nanowire_far_forward.md](09_nearbeam_nanowire_far_forward.md) | A near-beam layer for the far-forward lithium tags (2026-08-26): what a closer approach is worth (×26 / ×569 / still-dead per optics, and mid-energy going from unusable to the best-covered configuration), whether a superconducting nanowire can deliver it, the hot-spot firing-threshold answer to open question #19, the obstacle table, and the correction that the ePIC pot geometry has moved since the snapshot `tools/fullsim` measured — report in `reports/nanowire_far_forward.html` |
+| [09_nearbeam_nanowire_far_forward.md](09_nearbeam_nanowire_far_forward.md) | A near-beam layer for the far-forward lithium tags (2026-08-26; §9.0 re-derived 2026-08-28 on the Yellow Report divergences — at the published optics the machine binds everywhere and a closer approach buys nothing; at the tagging optics a layer that follows the 0.12–0.33 mrad envelope is the difference between no tag and a 32–42% tag), whether a superconducting nanowire can deliver it, the hot-spot firing-threshold answer to open question #19, the obstacle table, and the correction that the ePIC pot geometry has moved since the snapshot `tools/fullsim` measured — report in `reports/nanowire_far_forward.html` |
 | [10_beam_divergence_light_ions.md](10_beam_divergence_light_ions.md) | **The beam energies and the divergence the whole far-forward programme rests on** (2026-08-27): every far-forward acceptance is exp(−B(10σ_θ·A·p_u)²). Two corrections. **The energies**: EIC ions are γ-matched, not rigidity-scaled — the rings must share a revolution period, so ⁶Li sits at **40.8 / 99.5 / 137.5 GeV/u**, not 20.5 / 50 / 137.5. **The divergence**: σ_θ was one energy-independent, isotropic, proton-derived 72.7 µrad; YR Tables 10.1/10.2 give it per configuration and optics, and the species step applies *only* where rigidity binds — so ⁶Li carries the proton's **220/380 and 180/180 µrad** at the two lower configurations and pays √2 only at the top (**92/92**). Together these cost the coherent tag six to twenty-four orders of magnitude, and the recovery needs a two-ring β* de-squeeze the machine may not have |
 
 ## The physics in three lines
@@ -52,6 +52,57 @@ brings to the EIC, in support of the ANL polarized ⁶,⁷Li ion-source program
    with partial snakes; ~138/~117 GeV/u top energies.
 5. **Calendar anchor**: INT program on polarized ion beams at EIC,
    March 22 – April 2, 2027 — target for Phase-1 money plots.
+
+## Development run 12 (2026-08-28): the divergence fixed everywhere, Reports 3 and 4 rewritten as papers
+
+The last place the single proton-derived 72.7 µrad still drove a published
+number was the fast simulation's spectator routing — the 1.85% ⁶Li α-tag
+of the README — and the near-beam scripts of plans/09.  Both now run on
+the per-configuration optics (plans/10 A3, A4 ☑):
+
+- `farforward.Optics` carries (σ_h, σ_v) and a luminosity fraction;
+  `route_charged` / `acceptance_summary` take each fragment's azimuth and
+  apply the rectangular 10(σ_h, σ_v) envelope; `yr_optics(config)` and
+  `tagging_optics(config)` build the Yellow Report rows and the Report 1
+  §6.1 optimum; `sigma_theta_for`, `hole_acceptance`, `tagging_optics_point`
+  moved from `polligen.reco` into `farforward` and reco delegates
+  (`fastsim/tests/test_optics_20260828.py`, 5 tests).
+- **⁶Li α-tag** at the Yellow Report optics: 1.7 / 1.5 / 1.7% at
+  5 × 41 / 10 × 100 / 18 × 275 — the near-beam tail is inside the envelope
+  at every configuration and only the slice below R = 0.95 survives; the
+  tagging optics recovers 35 / 27 / 28% at 1/7–1/13 of the luminosity.
+  The legacy 73 µrad gave 20 / 2.9 / 1.9%; the old 1.85% was close at the
+  top energy by coincidence (92 ≈ 73 µrad) and 12× wrong at the bottom.
+  ⁷Li α: 97% at every optics.
+- **Near-beam study re-derived** (`nearbeam_aperture_scan.py`,
+  `nearbeam_reach_gain.py`, `nearbeam_sensor_budget.py`): the ×26 / ×569
+  gains are withdrawn — at the published optics the machine binds at
+  every configuration (coherent 7×10⁻⁸ / 6×10⁻²⁷ / 4×10⁻¹⁴ at the
+  envelope); at the tagging optics the silicon at 1.0–2.0 mrad tags zero
+  and pots following the 0.33 / 0.17 / 0.12 mrad envelope tag 0.41 / 0.31
+  / 0.32 with four clean |t| bins each (δa_t 0.0035 / 0.0034 / 0.0023 in
+  the lowest).  The gain lives in a strip d50 = 183 / 69 / 50 µrad wide.
+  The energy ordering reverses: the top configuration leads.
+- A fact-check workflow (51 agents) on the two reports then caught: the
+  Yellow Report high-divergence rows were read from the wrong columns
+  (e5 × p100 and the 1160-bunch 275 GeV; now 220/220 and 150/150, so ⁶Li
+  212/212 at the top), the two near-beam scripts computed the α tag
+  differently (both now route through `farforward.acceptance_summary`:
+  0.35 / 0.27 / 0.28 at the tagging optics), the β* ask at 5 × 41 is ≈ 45 m
+  (0.9 m × 49.7) and not the superseded isotropic 13 m, the ⁶Li deuteron
+  spectator sits at R ≈ 1 (not 0.5), and the α + d merge column of Report 4
+  was reversed.  Report 1 §6.3 now quotes the tagging-optics closure.
+- `coherent_optics_scan.py` panel (d) is per-configuration YR curves with
+  the tagging points; `eic_beam_figures.py` marks the legacy line.
+- **Report 3** (`reports/eic_epic_reference.html`) rewritten as a paper
+  with a new §5 / Table 6 — the lithium tags at each optics — and §4.2
+  stating the tagging optics as the programme's one machine request;
+  **Report 4** (`reports/nanowire_far_forward.html`) rewritten as a paper
+  on the corrected divergence: the layer and the optics are multiplicative
+  levers, the nanowire verdict unchanged, the charge-ID and geometry
+  sections condensed.
+- Docs: README α-tag line, `fastsim/README`, `docs/reproduction_manual.md`
+  §3.2 / §4.6 / §7, plans/04 #20, plans/09 §9.0, `tools/fullsim/README`.
 
 ## Development run 11 (2026-08-28): the toolchain reviewed, and Report 2 rewritten as a paper
 

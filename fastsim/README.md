@@ -54,12 +54,15 @@ yes | python3 -m parton install EPPS21nlo_CT18Anlo_Li6   # money_delta_20260729
 ## First results (TOY inputs, statistical only — headline numbers)
 
 - **Tagging acceptance at IP6** (cluster model, β=0.3 GeV central):
-  ⁷Li α-tag ≈ **96–99% into the Roman Pots** (optics-robust);
-  ⁶Li α-tag ≈ **3–9%** (high-acceptance optics; tail-dominated, ×3 model
-  spread) collapsing to 1–2% with high-divergence optics; ⁷Li t-tag ~ 0.
-  Caveat (code review 2026-08-25, S8): these apply the 0.20 GeV *proton*
-  p_T threshold to the α; the 10σ envelope is angular, i.e. 0.40 GeV for
-  a 4 × 137.5 GeV α, which gives ≈ 0.7–2.7%.
+  ⁷Li α-tag ≈ **97% into the Roman Pots** at every configuration and
+  optics; ⁶Li α-tag ≈ **1.5–1.7%** at the Yellow Report optics of each
+  configuration (the near-beam tail is inside the 10σ rectangle
+  10(σ_h, σ_v) = 2.2×3.8 / 1.8×1.8 / 0.92×0.92 mrad; what survives is the
+  off-rigidity slice below R = 0.95) and **27–35%** at the lithium tagging
+  optics of Report 1 §6.1 at 1/7–1/13 of the luminosity; ⁷Li t-tag ~ 0
+  (`scripts/tagging_acceptance.py`, 2026-08-28, plans/10). The 3–9% and
+  1.85% quoted earlier applied a proton p_T threshold, then one
+  proton-derived 73 μrad divergence, at every configuration.
 - **Gluonometry**: 5σ on Δ/F₁ = 10⁻³ (Sather–Schmidt scale) at
   **~66–155 fb⁻¹/u** (LOW/MID/TOP = 67.5 / 65.8 / 155.1 fb⁻¹/u; caveat
   2026-08-27 — `money_delta_realistic.py` carries its own pre-correction

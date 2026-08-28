@@ -57,6 +57,7 @@ sys.path.insert(0, str(_SCRIPTS.parent.parent / "fastsim"))
 from polligen import nearbeam as nb  # noqa: E402
 from polligen import reco  # noqa: E402
 from polli_fastsim import beams  # noqa: E402
+from polli_fastsim import farforward as ff  # noqa: E402
 from polli_fastsim import spectator as sp  # noqa: E402
 
 # --- the devices, from the papers (the FILM physics is polligen.nearbeam) ---
@@ -125,15 +126,24 @@ def alpha_edge_profile(p_per_nucleon, theta_new, fracs, n=200000, rng=None):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--slope-b", type=float, default=50.0)
-    ap.add_argument("--near-beam-mrad", type=float,
-                    default=1e3 * 10.0 * reco.SIGMA_THETA_HA)
+    ap.add_argument("--near-beam-mrad", type=float, default=None,
+                    help="horizontal half-width the near-beam layer reaches "
+                         "[mrad]; default: the 10 sigma envelope of the "
+                         "tagging optics of each configuration "
+                         "(farforward.tagging_optics_point; 2026-08-28), "
+                         "which is what the layer exists to reach")
     ap.add_argument("--vertical-mm", type=float, default=20.0,
                     help="vertical extent of a near-beam insert")
     ap.add_argument("--n-spectator", type=int, default=200000)
     ap.add_argument("--outdir", default=".")
     args = ap.parse_args()
-    th_nb = 1e-3 * args.near_beam_mrad
     beta_gamma = 137.5 / 0.9315               # 6Li at top rigidity, beta ~ 1
+
+    def near_beam(cfg):
+        """The horizontal half-width the layer reaches [rad]."""
+        if args.near_beam_mrad is not None:
+            return 1e-3 * args.near_beam_mrad
+        return ff.tagging_optics_point(cfg, slope_b=args.slope_b)["env_x"]
 
     print("== 1. signal in one %s film (beta*gamma = %.0f) =="
           % (nb.NBN.name, beta_gamma))
@@ -183,17 +193,25 @@ def main():
              DARK_COUNT_WALL))
 
     print("\n== 3. sizing: where a closer approach's gain lives ==")
-    print("%-9s %8s %11s %11s %9s %9s"
-          % ("optics", "p_ion", "gain", "d50 [urad]", "d90", "d99"))
+    print("(the layer reaches the tagging optics' 10 sigma envelope from the "
+          "measured silicon aperture; vertical = the larger of the measured "
+          "aperture and the high-acceptance 10 sigma_v)")
+    print("%-9s %8s %10s %11s %11s %9s %9s"
+          % ("optics", "p_ion", "to [mrad]", "gain", "d50 [urad]", "d90", "d99"))
     prof = {}
     for name, pu in CONFIGS:
+        cfg = beams.default_configs("6Li")[[c[0] for c in CONFIGS].index(name)]
         p_ion = 6.0 * pu
         meas = reco.RP_APERTURE_MEASURED[name.replace(" ", "")]
-        g, d = gain_profile(th_nb, meas[0], p_ion, args.slope_b, meas[1],
+        th_nb = near_beam(cfg)
+        ty = max(meas[1], ff.yr_optics(cfg).envelope[1])
+        g, d = gain_profile(th_nb, meas[0], p_ion, args.slope_b, ty,
                             (0.50, 0.90, 0.99))
         prof[name] = (g, d)
-        print("%-9s %8.1f %11.3e %11.0f %9.0f %9.0f"
-              % (name, p_ion, g, 1e6 * d[0.50], 1e6 * d[0.90], 1e6 * d[0.99]))
+        print("%-9s %8.1f %10.2f %11.3e %11.0f %9.0f %9.0f"
+              % (name, p_ion, 1e3 * th_nb, g, 1e6 * d[0.50], 1e6 * d[0.90],
+                 1e6 * d[0.99]))
+    th_nb = near_beam(beams.default_configs("6Li")[2])
     a_prof = alpha_edge_profile(137.5, th_nb, (0.50, 0.90, 0.99),
                                 n=args.n_spectator)
     print("6Li alpha spectator at 137.5 GeV/u: d50 %.0f, d90 %.0f, d99 %.0f "
@@ -218,18 +236,27 @@ def main():
           "the microwire can.  The area answer and the Z-ID answer are "
           "the SAME device.")
 
-    print("\n== 4. the alpha tag, per optics ==")
-    print("%-9s %13s %13s %8s" % ("optics", "at aperture", "at 10 sigma",
-                                  "gain"))
+    print("\n== 4. the alpha tag, per optics (routed through the far-forward "
+          "systems; rectangular envelope, vertical as above) ==")
+    print("%-9s %13s %14s %14s %8s" % ("optics", "silicon", "YR envelope",
+                                       "tagging optics", "gain"))
     for name, pu in CONFIGS:
+        cfg = beams.default_configs("6Li")[[c[0] for c in CONFIGS].index(name)]
         meas = reco.RP_APERTURE_MEASURED[name.replace(" ", "")]
+        env = ff.yr_optics(cfg).envelope
+        ty = max(meas[1], env[1])
+        th_nb = near_beam(cfg)
         k = sp.spectator_lab_kinematics(sp.LI6_ALPHA_TAG, pu,
                                         args.n_spectator, beta=0.30,
                                         rng=np.random.default_rng(7))
-        a_old = float((k["theta"] > meas[0]).mean())
-        a_new = float((k["theta"] > th_nb).mean())
-        print("%-9s %13.4f %13.4f %8.2f"
-              % (name, a_old, a_new, a_new / max(a_old, 1e-12)))
+        # the routed tag (any far-forward system), the same quantity as
+        # tagging_acceptance.py and nearbeam_aperture_scan.py
+        acc = lambda hx: 1.0 - ff.acceptance_summary(                # noqa: E731
+            k["R"], k["theta"], k["pT"], ff.Optics("cut", hx / 10.0, 10.0, ty / 10.0),
+            phi=k["phi"])["lost"]
+        a_old, a_env, a_new = acc(meas[0]), acc(env[0]), acc(th_nb)
+        print("%-9s %13.4f %14.4f %14.4f %8.2f"
+              % (name, a_old, a_env, a_new, a_new / max(a_old, 1e-12)))
 
     zid_figure(dep, args.outdir)
 

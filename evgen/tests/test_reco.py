@@ -288,7 +288,7 @@ def test_sigma_theta_for_reproduces_the_yellow_report_for_protons():
     assert [round(1e6 * x) for x in reco.sigma_theta_for(mid)] == [180, 180]
     assert [round(1e6 * x) for x in reco.sigma_theta_for(lo)] == [220, 380]
     assert [round(1e6 * x) for x in
-            reco.sigma_theta_for(top, "high-divergence")] == [119, 119]
+            reco.sigma_theta_for(top, "high-divergence")] == [150, 150]
 
 
 def test_sigma_theta_species_step_only_applies_where_rigidity_binds():

@@ -105,8 +105,10 @@ logic*, not final acceptances (plans/03 step 2.2 proper).
 > etc. Oct. 2025"). The old 32 mm block gives 32 mm / 30.6 m = 1.046 mrad
 > against the 1.03 mrad measured below — agreement to 1.5%, which is the
 > check that this scan and the file reading confirm each other. The
-> current 16 mm block implies roughly half that, *below* the 0.727 mrad
-> 10σ envelope; at 5 × 41 the per-energy insertion moves the other way
+> current 16 mm block implies roughly half that, 0.52 mrad, *below* the
+> 0.92 mrad 10σ envelope of the Yellow Report high-acceptance optics at
+> 18 × 275 (plans/10) and 4× the 0.12 mrad envelope of the lithium tagging
+> optics; at 5 × 41 the per-energy insertion moves the other way
 > (29.6 mm inner edge). **Re-run this scan in the current container
 > before quoting any of the numbers below** — plans/09 B1, priority. What
 > a closer approach is *worth* does not depend on it:

@@ -110,14 +110,14 @@ and there it does pick up √2.
 | ⁶Li | p_ion | high acceptance h/v | high divergence h/v | Δp/p |
 |---|---|---|---|---|
 | **40.8 GeV/u** (5 × 41) | 245 GeV | **220 / 380 µrad** | 220 / 380 | 10.3×10⁻⁴ |
-| **99.5 GeV/u** (10 × 100) | 597 GeV | **180 / 180** | 206 / 206 | 9.7×10⁻⁴ |
-| **137.5 GeV/u** (18 × 275) | 825 GeV | **92 / 92** | 168 / 168 | 6.8×10⁻⁴ |
+| **99.5 GeV/u** (10 × 100) | 597 GeV | **180 / 180** | 220 / 220 | 9.7×10⁻⁴ |
+| **137.5 GeV/u** (18 × 275) | 825 GeV | **92 / 92** | 212 / 212 | 6.8×10⁻⁴ |
 
 **Is equal ε_N defensible?** Gold is the published test. Scaling the 275 GeV
 proton to Au at 110 GeV/u by 1/√(βγ) alone predicts 236 µrad against an
 observed 218 (h) and 379 (v) — ε_N(Au)/ε_N(p) = **0.85 horizontally, 2.6
 vertically**. Intrabeam scattering at fixed beam current goes as Z³/A² =
-**0.75 for ⁶Li against 1 for a proton and 17× that for gold**, and RHIC
+**0.75 for ⁶Li against 1 for a proton and 12.7 for gold, 17× lithium's**, and RHIC
 deuterons showed no measurable IBS growth while gold grew 20–45%/h. Lithium
 is a proton-class ion.
 
@@ -213,17 +213,31 @@ anisotropic (220/380). `recopseudo.CoherentResponse` accepts the pair,
 --optics tagging` / `high-acceptance` thread it through (2026-08-28); the
 legacy scalar remains the script's default for reproduction only.
 
-### A3 — publish the sensitivity band, not a single number ☐
-Every acceptance and reach figure in the programme should carry the
-divergence band of §10.3, or state explicitly which row it assumes.
-`coherent_optics_scan.py` already scans a σ_θ list; extend it to the
-published ion rows and make the band the headline rather than a footnote.
+### A3 — publish the sensitivity band, not a single number ☑
+Done 2026-08-28 the other way round: instead of a band, every far-forward
+figure now states its optics per configuration.  `farforward.yr_optics`
+(the Yellow Report high-acceptance / high-divergence rows, a rectangular
+10(σ_h, σ_v) envelope applied to each fragment's azimuth) and
+`farforward.tagging_optics` (the Report 1 §6.1 optimum, with its
+luminosity fraction) are the two optics every script evaluates;
+`coherent_optics_scan.py` panel (d) is per-configuration YR curves with
+the tagging-optics points, `tagging_acceptance.py` tabulates the spectator
+tags at both plus the legacy 73 µrad for reproduction (Report 3 Table 6).
+`sigma_theta_for` and `hole_acceptance` live in `farforward` and
+`polligen.reco` delegates to them, pinned by
+`fastsim/tests/test_optics_20260828.py`.
 
-### A4 — re-derive the near-beam study's gains on the band ☐
-plans/09 §9.0 quotes ×26 / ×569 gains from closing the aperture to 10σ.
-Those are ratios at fixed σ_θ and survive a change of σ_θ better than the
-absolute acceptances do — but the *absolute* numbers in that table move
-with §10.3 and must be re-quoted.
+### A4 — re-derive the near-beam study's gains on the band ☑
+Re-derived 2026-08-28 (plans/09 §9.0, Report 4 §2).  The ×26 / ×569 gains
+are withdrawn: at the Yellow Report optics the envelope is at or inside
+the silicon at every configuration and a closer approach buys nothing
+(coherent 7×10⁻⁸ / 6×10⁻²⁷ / 4×10⁻¹⁴ at the envelope).  At the tagging
+optics the envelope is 0.33 / 0.17 / 0.12 mrad and the silicon at
+1.0–2.0 mrad tags zero; pots that follow the envelope tag 0.42 / 0.32 /
+0.33 of coherent recoils and 0.35 / 0.27 / 0.28 of α spectators at
+1/7–1/13 of the luminosity, with four clean |t| bins per configuration
+through the chain (`nearbeam_reach_gain.py`).  The layer and the optics
+are multiplicative levers.
 
 ### D1 — σ_θ (h and v) and Δp/p at the IP for a ⁶Li / ⁷Li fill · **C-AD / ePIC FF WG**
 **Provisionally answered in §10.3** by scaling the Yellow Report's own

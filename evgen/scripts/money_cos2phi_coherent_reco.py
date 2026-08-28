@@ -128,9 +128,11 @@ def main():
                          "with this half-width [mrad], keeping the measured "
                          "vertical: what a near-beam layer reaching closer "
                          "than the silicon package would buy (plans/09; "
-                         "0.727 mrad = the 10 sigma envelope of the "
-                         "high-acceptance optics).  Needs --rp-aperture "
-                         "measured")
+                         "the Yellow Report high-acceptance 10 sigma_h "
+                         "envelope is 2.2 / 1.8 / 0.92 mrad per "
+                         "configuration, the tagging optics' 0.33 / 0.17 "
+                         "/ 0.12 -- farforward.yr_optics, "
+                         "tagging_optics).  Needs --rp-aperture measured")
     ap.add_argument("--envelope-split", type=float, default=0.0,
                     help="RELATIVE difference of the Roman-Pot cutout "
                          "half-width (along --split-axis) between the "
