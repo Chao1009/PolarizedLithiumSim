@@ -24,6 +24,11 @@ Defaults: L = 10 fb^-1/nucleon, Pzz = 0.80, unpolarised electrons,
           pol_ion_vector = 0 (focus on the tensor sector).
 These mirror the money_delta.py docstring convention without depending on it.
 
+`--lumi` is the PROGRAMME luminosity and `--run-share` this observable's
+share of it (plans/07 WP2): the errors scale as 1/sqrt(lumi x share) and
+the published maps are at share 1, which a non-default share cannot
+overwrite (it appends its own key to every file name).
+
 Usage:
   python3 scripts/coverage_and_stat_maps.py --ion 6Li --pdf toy
   python3 scripts/coverage_and_stat_maps.py --ion 7Li --pdf grid \\
@@ -89,7 +94,8 @@ def _cfg_tag(cfg) -> str:
 
 # ── Helper: run full projection at a given luminosity ─────────────────────── #
 
-def _project_at_lumi(cfg, backends, pzz: float, lumi_fb: float):
+def _project_at_lumi(cfg, backends, pzz: float, lumi_fb: float,
+                     run_share: float = 1.0):
     """Run fom.project_rates + project_observables and expose theta_e.
 
     Parameters
@@ -97,7 +103,8 @@ def _project_at_lumi(cfg, backends, pzz: float, lumi_fb: float):
     cfg      : BeamConfig
     backends : dict  (as returned by get_backends)
     pzz      : float  ion tensor polarization
-    lumi_fb  : float  integrated luminosity [fb^-1/nucleon]
+    lumi_fb  : float  programme integrated luminosity [fb^-1/nucleon]
+    run_share: float  this observable's share of it (plans/07 WP2)
 
     Returns
     -------
@@ -114,6 +121,7 @@ def _project_at_lumi(cfg, backends, pzz: float, lumi_fb: float):
     """
     sc = fom.Scenario(
         lumi_fb_per_nucleon=lumi_fb,
+        run_share=run_share,
         pol_electron=0.0,
         pol_ion_vector=0.0,
         pol_ion_tensor=pzz,
@@ -515,8 +523,13 @@ def main():
     ap.add_argument("--pdf", default="toy", choices=["toy", "grid"],
                     help="PDF backend: 'toy' or 'grid' (CT18NLO/NNPDFpol11_100)")
     ap.add_argument("--lumi", type=float, default=L_DEFAULT_FB,
-                    help="integrated luminosity [fb^-1/nucleon] (default: %(default)s; "
-                         "leave at 10 for the deliverable figures)")
+                    help="programme integrated luminosity [fb^-1/nucleon] "
+                         "(default: %(default)s; leave at 10 for the "
+                         "deliverable figures)")
+    ap.add_argument("--run-share", type=float, default=1.0, dest="run_share",
+                    help="this observable's share of that programme "
+                         "luminosity (plans/07 WP2; default: %(default)s, "
+                         "which the deliverable figures assume)")
     ap.add_argument("--pzz", type=float, default=PZZ_DEFAULT,
                     help="tensor polarization Pzz (default: %(default)s)")
     ap.add_argument("--n-theta-bins", type=int, default=N_THETA_BINS,
@@ -531,6 +544,8 @@ def main():
                     help="run numerical reproducibility assertion for err_a_cos2phi "
                          "(off by default)")
     args = ap.parse_args()
+    if not args.run_share > 0:
+        ap.error("--run-share must be positive")
 
     outdir = pathlib.Path(args.outdir)
     outdir.mkdir(parents=True, exist_ok=True)
@@ -538,12 +553,18 @@ def main():
     backends = get_backends(args.pdf)
     ion_name = args.ion
     lumi_fb  = args.lumi
+    run_share = args.run_share
     pzz      = args.pzz
     n_theta_bins = args.n_theta_bins
+    # a non-default share writes its own files: the deliverable maps are
+    # the share-1 ones
+    share_key = fom.run_share_tag(run_share)
+    sfx = ("_" + share_key) if share_key else ""
 
     print(f"# coverage_and_stat_maps.py")
     print(f"# ion={ion_name}  pdf={args.pdf}  L={lumi_fb:g} fb^-1/u  "
           f"Pzz={pzz:g}  n_theta_bins={n_theta_bins}")
+    print(f"# {fom.run_share_header(lumi_fb, run_share)}")
     print(f"# outdir={outdir}")
 
     # Accumulate per-config results for the combined panels.
@@ -558,7 +579,8 @@ def main():
         _validate_sanitizer_parity(cfg)
 
         # ── Full projection ──────────────────────────────────────────────── #
-        proj, obs, theta_e = _project_at_lumi(cfg, backends, pzz, lumi_fb)
+        proj, obs, theta_e = _project_at_lumi(cfg, backends, pzz, lumi_fb,
+                                              run_share=run_share)
 
         # ── Angle sanity check (plan validation item 4) ─────────────────── #
         _validate_angle_sanity(cfg, proj, theta_e)
@@ -596,17 +618,17 @@ def main():
 
         # ── Write per-config PNGs ────────────────────────────────────────── #
         # Output (1): (x, Q^2) coverage
-        p1 = outdir / f"coverage_{ion_name}_{cfgtag}.png"
+        p1 = outdir / f"coverage_{ion_name}_{cfgtag}{sfx}.png"
         plot_xq2_coverage(proj, cfg, p1, lumi_fb=lumi_fb)
         print(f"    wrote {p1}")
 
         # Output (2): err_cos2phi on (x, Q^2)
-        p2 = outdir / f"errcos2phi_xq2_{ion_name}_{cfgtag}.png"
+        p2 = outdir / f"errcos2phi_xq2_{ion_name}_{cfgtag}{sfx}.png"
         plot_err_cos2phi_xq2(proj, obs, cfg, p2, pzz=pzz, lumi_fb=lumi_fb)
         print(f"    wrote {p2}")
 
         # Output (3): err_cos2phi on (x, theta_e)
-        p3 = outdir / f"errcos2phi_theta_{ion_name}_{cfgtag}.png"
+        p3 = outdir / f"errcos2phi_theta_{ion_name}_{cfgtag}{sfx}.png"
         plot_err_cos2phi_theta(proj, theta_e, cfg, pzz, p3,
                                lumi_fb=lumi_fb, n_theta_bins=n_theta_bins)
         print(f"    wrote {p3}")
@@ -617,15 +639,15 @@ def main():
         errtheta_data.append((cfg, proj, theta_e))
 
     # ── Combined 1×3 summary panels ─────────────────────────────────────── #
-    p_all_cov = outdir / f"coverage_{ion_name}_all.png"
+    p_all_cov = outdir / f"coverage_{ion_name}_all{sfx}.png"
     _combined_cov_panel(cov_data, p_all_cov, lumi_fb=lumi_fb)
     print(f"  wrote {p_all_cov}")
 
-    p_all_xq2 = outdir / f"errcos2phi_xq2_{ion_name}_all.png"
+    p_all_xq2 = outdir / f"errcos2phi_xq2_{ion_name}_all{sfx}.png"
     _combined_errxq2_panel(errxq2_data, p_all_xq2, pzz=pzz, lumi_fb=lumi_fb)
     print(f"  wrote {p_all_xq2}")
 
-    p_all_theta = outdir / f"errcos2phi_theta_{ion_name}_all.png"
+    p_all_theta = outdir / f"errcos2phi_theta_{ion_name}_all{sfx}.png"
     _combined_errtheta_panel(errtheta_data, p_all_theta,
                               pzz=pzz, lumi_fb=lumi_fb,
                               n_theta_bins=n_theta_bins)

@@ -22,22 +22,34 @@ A2. **Why ³He is quoted at 166 GeV/u in old documents** — eRHIC-era
     Sec. 5.5; eic.jlab.org/Requirements). Li rigidity scaling (137.5/117.9
     GeV/u) therefore stands, pending C-AD blessing of Li specifically.
 A3. **Far-forward routing of Li fragments** — verified windows (plans/03
-    §2.2): ⁷Li α → Roman Pots (R = 0.86); tritons → **no IP6 coverage**
-    (R > 1, both beams); ⁶Li α/d → beam-blind below RP pT cutoff
+    §2.2): ⁷Li α → Roman Pots (R = 0.86); the ⁷Li triton at R = 1.29 →
+    **RP-inner + ZDC** (measured 2026-08-28), the ⁶Li ³He+t triton at
+    R = 1.50 still **lost**, 152 mm at the pot plane against a 144 mm
+    module edge; ⁶Li α/d → beam-blind below RP pT cutoff
     (R = 0.998 and 1.005 from the physical nuclear masses since
     2026-08-28, not the 1.000 the A·Z ratio gives — the two fragments are
     separated by 0.7% of rigidity, which is inside the ±5% near-beam band
     and so still undispersed, but they are not the same trajectory);
     p → OMD; n/γ → ZDC. IR-8 secondary focus (RPs 44–45.5 m) recovers R ≈ 1
     at pT → 0. *Remaining question:* none at concept level — quantitative
-    acceptance is exactly Phase-2 step 2.2.  *Caveat on the tritons
-    (2026-08-28):* "no coverage" is the routing's own answer —
-    `farforward.route_charged` has no R > 1 branch, so an over-rigid
-    fragment is lost by construction — and the 2026-06-12 particle-gun
-    scan of `tools/fullsim` contradicts it, putting the ⁷Li triton on the
-    inner side of the Roman-Pot planes and then in the ZDC. Unverified
-    against a beam envelope, a divergence or a reconstruction; open as
-    plans/03 §2.2 "Tritons at IP6 — revisit" ◐.
+    acceptance is exactly Phase-2 step 2.2.  *The tritons, settled
+    2026-08-28:* "no coverage" was the routing's own answer — `route_charged`
+    carried no R > 1 branch, so an over-rigid fragment was lost by
+    construction — and the particle-gun scan of `tools/fullsim`
+    contradicted it. `farforward.over_rigid_route` is that scan's answer:
+    the pot dispersion carries a fragment that bends less than the beam to
+    +x and the ⁷Li triton lands on Roman-Pot silicon at every
+    configuration, then in the ZDC, so `route_charged` returns route 6,
+    "RP-inner (over-rigid)". The re-measurement in the current geometry
+    (git 9aaa2969, 2026-08-28) settles it: dx = +66 mm at station 1 and
+    +70 to +72 at station 2, 60 of 60 events at all three configurations,
+    with a ZDC deposit in 80–98% of them, and the ⁷Li t tag is
+    78 / 92 / 94% against the 0.033 / 0.004 / 0.005 the routing-as-lost
+    picture gave. plans/03 §2.2 "Tritons at IP6 — revisit" is closed ☑.
+    What the scan still does not carry is a beam envelope and a
+    reconstruction, and the triton's own R12 is 8% larger than the beam's,
+    which opens an acceptance hole between θx = −1.55 and −2.53 mrad that
+    no purely angular routing can see; plans/09 B1 records it.
 A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
     C-12 Fermi-momentum parameterization, Woods–Saxon geometry without
     α+d/α+t clustering, FLUKA evaporation untuned for A<12, code frozen
@@ -83,11 +95,17 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
    requirement.  *2026-08-28 (run 11), re-measured at the tagging optics
    of Report 1 §6.1, where the coherent channel is now measured:* a 10⁻³
    change of the binding (horizontal) half-width between the fills moves
-   a_t by **−0.8 / −0.5 / −0.1 / −0.3 %** in the four |t| bins, and 10⁻²
-   by −7.6 / −4.5 / −3.6 / −2.9 %, with a_e untouched (Report 2
-   Table 6).  The tagging cutout's horizontal edge sits in a shallow part
-   of the recoil spectrum and all four bins stay live, so the
-   amplification is gone: per-mille stability now costs per-mille.
+   a_t by **−5.5 / −2.2 / −1.4 / −0.8 / −0.5 / −0.3 / −0.4 %** in the
+   seven |t| bins of the window adopted 2026-08-28, and 10⁻² by −54.1 /
+   −25.3 / −13.8 / −7.7 / −4.6 / −3.6 / −3.1 %, with a_e untouched
+   (Report 2 Table 6); the worst bin at the other two configurations is
+   −12.5 % (10 × 99.5) and −10.1 % (18 × 137.5), always the lowest.  The
+   tagging cutout's horizontal edge sits in a shallow part of the recoil
+   spectrum and every bin stays live, so the ×100 amplification is gone,
+   but the requirement is now edge-of-window dependent: per-mille
+   stability costs 0.2–1.4 % in the four bins above 0.05 GeV² and
+   1.4–12.5 % in the three below it, so 10⁻⁴ is what those three would
+   need.
    Bunch-by-bunch alternation remains a requirement of the measurement
    — it is what makes the acceptance cancel at all — but fill-by-fill
    running is no longer excluded by this systematic at the tagging
@@ -104,12 +122,40 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
 
 ## Still open — generator / theory
 
-6. **⁶Li effective-polarization convention** (factor 2.4 in the g₁ FOM):
-   slides' P_p = P_n = 1/3 (per-nucleon-normalized) vs cluster-model
-   whole-nucleus ≈ 0.81 (= 0.87 P_d × 0.93 D-state). ⁷Li is settled:
-   P_p = +0.866, P_n = −0.037.
-   *Engage:* I. Cloët (ANL, local). *Default in code:* 1/3 (conservative),
-   switch after resolution.
+6. **⁶Li effective-polarization convention** (a factor 1.23 in the g₁ FOM
+   since 2026-08-28, a factor 2.4 before it): slides' P_p = P_n = 1/3
+   (per-nucleon-normalized) vs cluster-model whole-nucleus ≈ 0.81
+   (= 0.87 P_d × 0.93 D-state). ⁷Li is settled: P_p = +0.866,
+   P_n = −0.037.
+   *Engage:* I. Cloët (ANL, local). *Default in code:* 1/3, which under the
+   per-nucleon convention is Z·P_p = N·P_n = 1 whole-nucleus, i.e. the
+   **larger and therefore optimistic** end of the pair — the opposite of
+   what it was when the same slot was read as a whole-nucleus number.
+   Switch after resolution.
+   *2026-08-28: the STRUCTURAL half of this is closed (plans/08 D7).
+   `ToyG1.g1_nucleus` now weights by Z and N exactly as `NuclearF2.f2a`
+   does, every `Ion` slot is per-nucleon, and `beams.LI7` holds the verified
+   VMC sums divided by Z and N so that the published ⁷Li path is
+   bit-for-bit unchanged (`fastsim/tests/test_polarized_normalisation.py`).
+   The ⁶Li 1/3 was being diluted a second time by the callers' 1/A; with
+   that gone, per-nucleon g₁(⁶Li)/g₁(d) is 0.358 instead of 0.119, against
+   the cluster picture's 0.29.  The same change gives ³He's proton term the
+   ×2 the Bissey numbers intend and the struck triton of `polligen.tagged`
+   its second neutron.  The VALUE — 1/3 against 0.81 — is untouched and
+   still this item, but the gap it spans is now 1.23 rather than 2.4 and
+   the default sits at the optimistic end of it, which is worth saying out
+   loud in any FOM that quotes a ⁶Li g₁.  Nothing published moves with it:
+   `fom.project_observables`' err_azz and err_g1_over_f1 are counting
+   errors that carry no eff_pol, `phase_space_map.py` defaults to ⁷Li, and
+   every published cos 2φ / Δ figure runs the transverse categories at
+   θ_S = π/2 with unpolarized electrons, where the g₁ term enters only
+   through cos θ_S = 0 — w_avg and a₂ are bit-for-bit unchanged there.  The
+   tripling shows up only in the longitudinal vector-L term (w_avg at
+   θ_S = 0 moves from 0.000365 … 0.001409 to 0.000197 … 0.002148 across
+   (x, Q²) = (0.005, 1.1) … (0.28, 25)), i.e. in `closure_fom.py`'s A_∥
+   panel, whose estimator variance is 1/(P_e P_z)²N to O(A_∥²) ≤ 2×10⁻⁵ —
+   below its own Monte-Carlo band.  The measurement is recorded in
+   `fastsim/polli_fastsim/beams.py` beside the constant.*
 7. **BeAGLE light-ion guidance / maintenance.** See A4.
    *Engage:* M. Baker, A. Jentsch, Z. Tu, W. Chang.
    *Fallback:* cluster-IA toy fragmenter (Phase-1 step 1.5.3).
@@ -120,6 +166,16 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
 8. **Nuclear (n)PDFs at A = 6,7.** EPPS21/nNNPDF coverage to confirm;
    polarized nuclear PDFs don't exist → effective-polarization convolution
    + CBT/TMT medium curves as scenarios.
+   *2026-08-28: the CBT and TMT curves are no longer scenarios — both are
+   digitized from the published figures (plans/02 step 1.2.2,
+   `fastsim/polli_fastsim/data/SOURCES.md`).  Two limits remain and are
+   this item: CBT computes ⁷Li at Q² = 5 GeV² while TMT computes nuclear
+   matter at Q² = 10, so the comparison needs a target/scale transfer (a
+   single valence strength factor, 0.397 for TMT, applied to CBT's own ⁷Li
+   unpolarized baseline), and the UNPOLARIZED ratio the whole construction
+   rests on is still the hand-written 12-point table awaiting EPPS21.  A
+   second ⁷Li-specific polarized-EMC calculation, from either camp, would
+   remove both — that is what to ask Cloët for.*
 9. **b₁ and Δ theory for ⁶Li specifically.** Confirmed literature gaps:
    no b₁ prediction for any A > 2; no EIC Δ projection for any target.
    First-mover opportunity — co-author with theory.
@@ -138,6 +194,10 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
     can adopt; needed by the doubly polarized generator (plans/05 §5.2).
     *Engage:* Cloët, Cosyn — co-author opportunity.
     *Default:* rank ≤ 2 truncation, rank-2 shapes as scenarios.
+    *2026-08-28:* the rank-2 *kernel* is already isotope-generic
+    (Q_NN = (1,−1,−1,1) and c_eff = 3T for J = 3/2, verified), so what
+    this item blocks is the structure function and not the machinery —
+    scoped, with the rest of a ⁷Li channel, in plans/09 B3a.
 15. **VMC two-cluster overlaps with m-dependence** (α+d S/D for ⁶Li,
     α+t P for ⁷Li) to replace the two-parameter radial forms whose tail
     dominates tagged acceptances (e+d control: BeAGLE tails 2–13× Hulthén).
@@ -162,7 +222,12 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
     (Q(⁶Li) = −0.0806 fm²). *Default:*
     `polligen/coherent.CoherentScenario` bands (f₀ = 0.04 ×2÷2,
     B = 50 ± 10 GeV⁻², deformation + flat-gluonic modulation) —
-    plans/06.
+    plans/06.  *2026-08-28:* the ⁷Li version of the ask (an α + t
+    density, and the rank-2 slope amplitude beyond linear order) is the
+    same conversation with the same group: ε_B0 cannot be rescaled to
+    ⁷Li — the linear form gives −2.2 to −4.5, |ΔB₀| > B and c₂ > 1
+    inside the tagged window — so ⁷Li has no scenario until the
+    amplitude exists.  Scoped in plans/09 B3a.
 
 ## Still open — detector / software
 
@@ -180,12 +245,16 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
     whether a light-ion *tagging* optics can exist at all, since nothing
     else recovers the coherent channel.  The **transfer-matrix** half
     stays with the ePIC FF WG and is written down as plans/09 **D3**:
-    R₁₂ = 30.6 m and the pot dispersion D = 0.30 m were measured at
-    18 × 275 only and are carried to the other configurations for want of
-    per-optics values, R₃₄ is unmeasured, and the 10σ offsets in
-    `beamline_*.xml` are marked a *"rough extrapolation"* at 5 × 41 —
-    which is why plans/09 works in angle and quotes millimetres for one
-    optics alone.
+    R₁₂, R₃₄ and the pot dispersion D were measured at all three
+    configurations on 2026-08-28 (`farforward.POT_LEVERS`: 19.24 / 21.25 /
+    29.97 m, — / 3.35 / 2.93 m and 0.311 / 0.287 / 0.292 m), so plans/09
+    quotes millimetres everywhere; R₁₁, R₂₁, R₂₂ and D′ remain unmeasured,
+    the 10σ offsets in `beamline_*.xml` are still marked a *"rough
+    extrapolation"* at 5 × 41, and what the FF WG is now asked is the
+    lattice question: `beamline_5x41.xml` (41 GeV proton) and
+    `beamline_5x41_He4.xml` (Z/A = 0.5, 82 GV) give R₁₂ = 19.24 and 29.81 m
+    at the same ring setting, a factor 1.55 in every millimetre and 0.64 in
+    the 5 × 41 aperture.
 12. **Geant4/DD4hep light-ion & excited-ion primaries** (10LZZZAAAI codes
     from BeAGLE; DD4hep had fixes ~PR #920; `sanitize_hepmc3.py` exists).
     Verify in Phase-2 step 2.1.4.
@@ -237,9 +306,9 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
     *Better still, and free:* the background #19 exists to reject is
     ⁶Li → α + d, and that is **two hits**. The relative momentum
     (κ = 60.7 MeV/c) is transverse and unboosted, so the α (4p_u) and the
-    d (2p_u) take opposite kicks and land a median 15.1 / 18.5 / 38.4 mm
-    apart at 18×275 / 10×100 / 5×41 — **30 to 77 pixels of the existing
-    500 µm pitch**, and 13 to 159 over the 16–84% band. An intact ⁶Li is
+    d (2p_u) take opposite kicks and land a median 10.9 / 10.7 / 25.8 mm
+    apart at 18×275 / 10×100 / 5×41 — **21 to 52 pixels of the existing
+    500 µm pitch**, and 6 to 107 over the 16–84% band. An intact ⁶Li is
     one hit. And the second fragment is a *veto*: conditioned on an α
     that fakes a coherent tag, the partner deuteron is recorded in **84%**
     of events at the tagging optics (0.04–0.29 at the published ones,
@@ -315,35 +384,41 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
     jug_xl-nightly, 84 points in p_T × azimuth) **inverts the aspect
     ratio**. The pot silicon does surround a horizontal slot, as the
     2026-08-25 entry says; but the far-forward optics image an IP angle
-    onto the pot plane with R₁₂ ≈ 30.6 m horizontally against a few
-    metres vertically, so what clears the slot is the HORIZONTAL angle:
-    the boundary is |θ_x| ≳ 2.0 / 1.35 / 1.03 mrad in the 5×41 / 10×100 /
-    18×275 optics (p_T = A p_u |θ_x| = 0.49 / 0.81 / 0.85 GeV for the ⁶Li
+    onto the pot plane with R₁₂ = 19.24 / 21.25 / 29.97 m horizontally
+    against R₃₄ = — / 3.35 / 2.93 m vertically (re-measured 2026-08-28), a
+    factor 6.3 at 10 × 100 and 10.2 at 18 × 275, so what clears the slot is
+    the HORIZONTAL angle: the boundary
+    is |θ_x| ≳ 2.50 / 1.51 / 0.53 mrad in the 5×41 / 10×100 /
+    18×275 optics (p_T = A p_u |θ_x| = 0.61 / 0.90 / 0.44 GeV for the ⁶Li
     at the γ-matched 40.8 / 99.5 / 137.5 GeV/u; the 0.25 / 0.41 / 0.85
-    this entry carried until 2026-08-28 priced the same edges at the
-    retired rigidity-scaled momenta and made the low configuration look
-    3.4× rather than 1.7× more permissive), against |θ_y| ≳ 1.8–3 mrad.
+    this entry carried until 2026-08-28 priced the September-2024 edges at
+    the retired rigidity-scaled momenta), against |θ_y| ≳ 0.92–2.12 mrad
+    where the vertical plane is open at all, and nothing at 5 × 41.
     In `rp_measure` terms
-    that is `cut_scale_xy ≈ (1, 2.3)`, not (2.5, 1) — a factor ≈ 5.8 the
+    that is `cut_scale_xy ≈ (1, 1.4–1.7)` where both axes are open, not
+    (2.5, 1) — a factor 3.5–4.4 the
     wrong way — and the fake ⟨cos 2β⟩ about the vertical spin axis is
     therefore large and **negative**, not positive. The tagged fraction
     falls with it (B = 50 GeV⁻², `evgen/scripts/nearbeam_aperture_scan.py`,
-    re-run 2026-08-28 at the γ-matched momenta): **9.8×10⁻⁷ / 7.7×10⁻¹⁶ /
-    1.9×10⁻¹⁷** through the measured aperture at 40.8 / 99.5 / 137.5
-    GeV/u, against **7.2×10⁻⁸ / 6.2×10⁻²⁷ / 3.9×10⁻¹⁴** through the
+    re-run 2026-08-28 at the γ-matched momenta and on the re-measured
+    aperture): **9.4×10⁻¹⁰ / 2.0×10⁻¹⁹ / 1.2×10⁻⁵** through the measured
+    aperture at 40.8 / 99.5 / 137.5
+    GeV/u, against **7.2×10⁻⁸ / 6.2×10⁻²⁷ / 7.1×10⁻¹⁴** through the
     Yellow Report high-acceptance envelope on the scan's own convention
     (the envelope horizontally, the larger of silicon and envelope
     vertically; the pure 10σ envelope in both planes gives 7.2×10⁻⁸ /
     1.2×10⁻²⁶ / 7.8×10⁻¹⁴ — the two are different quantities sharing a
-    name, `tools/fullsim/README.md`).  **Which of the two binds is the
-    correction of 2026-08-28:** the measured edge is 0.91× / 0.75× /
-    1.12× the envelope's horizontal half-width, so the ENVELOPE binds at
-    the two lower configurations and the silicon only marginally at the
-    top — the opposite of the "2.8× / 1.9× / 1.4×, the envelope is never
-    binding" that plans/08 §8.4 obtained by pricing the same edges
-    against the retired single 73 μrad.  The 1.4×10⁻² and 5×10⁻⁵ this
-    entry carried until then were the measured aperture at the retired
-    rigidity-scaled 20.5 and 50 GeV/u.
+    name, `tools/fullsim/README.md`).  **Which of the two binds changed twice
+    on 2026-08-28.** Priced against the retired single 73 μrad, plans/08
+    §8.4 read 2.8× / 1.9× / 1.4× and concluded the envelope is never
+    binding; the per-configuration envelopes turned that into
+    0.91× / 0.75× / 1.12× on the September-2024 aperture; and the
+    re-measurement in the current geometry makes it **1.14× / 0.84× /
+    0.58×**, so the SILICON binds at 5 × 41 and the machine at the other
+    two, by eight orders of magnitude at the top (1.2×10⁻⁵ at the silicon
+    against 7.1×10⁻¹⁴ at the envelope).  The 1.4×10⁻² and 5×10⁻⁵
+    this entry carried until then were the September-2024 aperture at the
+    retired rigidity-scaled 20.5 and 50 GeV/u.
     *2026-08-26 (the chain, run on it — `money_cos2phi_coherent_reco.py
     --rp-aperture measured`):* at the LOW configuration the measurement
     survives. Acceptance 37.7% → 1.42%, N_tag 8.3×10⁶ → 3.1×10⁵, the
@@ -354,8 +429,12 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
     factor 6–34. a_e is still recovered: 0.0073 ± 0.0045 and
     0.0091 ± 0.0045 against an injected 0.0100. At MID and TOP the
     aperture leaves no accepted recoil in the binned window at all.
-    (This chain entry is itself at the retired rigidity-scaled menu:
-    "LOW" is 20.5 GeV/u, superseded by plans/10.)
+    (This chain entry is itself at the retired rigidity-scaled menu —
+    "LOW" is 20.5 GeV/u, superseded by plans/10 — and at the
+    September-2024 aperture: 37.7% → 1.42% and +0.426 → −0.772 were
+    computed against a 2.0 mrad edge that measures 2.50 mrad in the
+    current geometry, so the whole chain entry must be re-run before it is
+    quoted again, plans/09 B1.)
     **The conclusion drawn here — "so the coherent programme is a
     low-energy programme … for a second and stronger reason" — is
     withdrawn (2026-08-28).** It rested on the measured aperture binding
@@ -382,23 +461,26 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
     for reasons of physical geometry."); and the 1 mm aluminium RF
     shields are **commented out** ("we don't know if we will even need it
     … Oct. 2025"). The old 32 mm block gives 32/30.6 m = 1.046 mrad
-    against the 1.03 measured — agreement to 1.5%, so measurement and
-    file reading confirm each other. The current 16 mm block implies
-    roughly half that, 0.52 mrad, *below* the 0.92 mrad Yellow Report
-    high-acceptance envelope at 18 × 275 (plans/10) but 4× the 0.12 mrad
-    tagging-optics envelope; at 5 × 41 the per-energy insertion moves the
-    other way (29.6 mm inner edge).
-    **Every aperture-conditional number — the tagged fractions, the
-    sign-flipped ⟨cos 2β⟩, "the coherent programme is a low-energy
-    programme" — is therefore conditioned on a superseded geometry and
-    must be re-measured** (plans/09 B1, priority). What a closer approach
+    against the 1.03 then measured — agreement to 1.5%, so measurement and
+    file reading confirm each other. The current 16 mm block **measures
+    0.53 mrad** against the 0.52 predicted here, *below* the 0.9169 mrad
+    Yellow Report high-acceptance envelope at 18 × 275 (plans/10) but 4×
+    the 0.12 mrad tagging-optics envelope; at 5 × 41 the per-energy
+    insertion moves the other way (29.6 mm inner edge) and the aperture
+    **measures 2.50 mrad**, outside the 2.20 mrad envelope.
+    **The re-measurement is done** (2026-08-28, plans/09 B1,
+    `tools/fullsim/README.md`): #20 is now measured rather than assumed,
+    and every aperture-conditional number in this file has been moved onto
+    it except the reconstructed-chain entry below, which is flagged. What a closer approach
     is WORTH is unaffected and now curved rather than tabulated:
     `nearbeam_aperture_scan.py` prices every aperture per configuration.
     On the Yellow Report divergences (2026-08-28, plans/10 A4) the
-    machine envelope binds at every configuration and a closer approach
-    alone buys nothing; under the tagging optics of Report 1 §6.1 a layer
+    machine envelope binds at 10 × 100 and 18 × 275 and the re-measured
+    silicon at 5 × 41 (2.50 against 2.20 mrad), so a closer approach alone
+    buys a factor 77 there and nothing at the other two; under the tagging
+    optics of Report 1 §6.1 a layer
     that follows the 0.33 / 0.17 / 0.12 mrad envelope is the difference
-    between no tag and 0.41 / 0.31 / 0.32 with four clean |t| bins each
+    between no tag and 0.41 / 0.31 / 0.32 with seven clean |t| bins each
     (`nearbeam_reach_gain.py`; the earlier ×26 / ×569 were artefacts of the
     73 μrad divergence).
 21. **Hadronic-method y resolution at y = 0.01–0.05 for e + light ions**
@@ -431,7 +513,7 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
     0 → 25 → 50 → 100 MeV turns into 0.20 → 0.32 → 0.54 → 1.01 at y = 0.005.
     Reco purity at the sweet spots falls from 0.64–0.68 to 0.40–0.73 with
     the real final state.
-    *2026-08-27 (acceptance, `hfs_acceptance.py`, Report 2 §3 Figure 4):*
+    *2026-08-27 (acceptance, `hfs_acceptance.py`, Report 2 §3 Figure 2):*
     78 / 86 / 82 / 91% of Σ_h is captured at the four mid sweet spots;
     19 / 8 / 16 / 7% escapes forward beyond |η| = 3.7 (the target-
     fragmentation side of a W ≈ 6–10 GeV system), 1–6% is below threshold.

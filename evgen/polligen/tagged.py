@@ -78,13 +78,24 @@ import numpy as np
 _trapezoid = getattr(np, "trapezoid", None) or np.trapz
 
 from polli_fastsim import beams, spectator
-from polli_fastsim.farforward import route_charged, yr_optics
+from polli_fastsim.farforward import route_charged, yr_config_key, yr_optics
 
 from . import bookkeeping as bk
 from .sample import InclusiveSampler
 from .spin import clebsch_gordan, m_values
 
-# struck-cluster DIS targets that are not beam species
+# Struck-cluster DIS targets that are not beam species.  TRITON mirrors
+# beams.HE3 under p <-> n, and its constants are PER NUCLEON like every
+# other Ion slot since plans/08 D7: with Z = 1 and N = 2, ToyG1.g1_nucleus
+# gives g1(t) = 0.86 g1p + 2 x (-0.028) g1n.  The second neutron used to
+# be dropped, which moved the tagged_polarimetry_7li g1t/F1t overlay by
+# +8.4% at x = 0.005 falling to -0.7% at x = 0.7.  No published number
+# reads that overlay, but the alpha-tag acceptances the same script
+# tabulates DO move, in the fourth decimal, because the accepted sample is
+# cross-section-weighted and the cross section carries g1 of the struck
+# triton: Roman-Pot tag 0.9614 / 0.9676 / 0.9726 -> 0.9620 / 0.9678 /
+# 0.9728 at the Yellow Report optics (docs/reproduction_manual.md 4.1,
+# plans/08 D7).  The figure was regenerated with the change.
 TRITON = beams.Ion("t", 3, 1, 0.5, eff_pol_p=0.86, eff_pol_n=-0.028)
 NEUTRON = beams.Ion("n", 1, 0, 0.5, eff_pol_p=0.0, eff_pol_n=1.0)
 
@@ -394,7 +405,8 @@ def acceptance_weights(model, config, optics, n_phi=64, theta_s=0.0,
     lab = boost_spectator(model.channel, kk.ravel(), cc.ravel(), pp.ravel(),
                           config.ion_momentum_per_nucleon, theta_s, phi_s)
     route = route_charged(lab["R"], lab["theta"], lab["pT"], optics,
-                          phi=lab["phi_spec"])
+                          phi=lab["phi_spec"],
+                          pot_config=yr_config_key(config))
     return ((route == 1) | (route == 4)).reshape(kk.shape).mean(axis=2)
 
 
@@ -550,7 +562,8 @@ class TaggedSampler:
             # near-beam envelope is a rectangle (Optics.clears), and
             # without phi it degenerates to a circle at n sigma_h
             out["route"] = route_charged(out["R"], out["theta"], out["pT"],
-                                         self.optics, phi=out["phi_spec"])
+                                         self.optics, phi=out["phi_spec"],
+                                         pot_config=yr_config_key(self.config))
         out["category"] = category.name
         out["lam_e"] = category.lam_e
         return out

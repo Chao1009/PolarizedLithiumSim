@@ -57,8 +57,14 @@ def test_routing_logic():
     assert ff.route_charged(0.50, 1e-3, 0.05, optics) == 2
     # 7Li spectator proton: R = 3/7 = 0.4286, below the OMD low edge
     assert ff.route_charged(3.0 / 7.0, 1e-3, 0.05, optics) == 0
-    # triton from 7Li: R=1.29 -> lost
-    assert ff.route_charged(9.0 / 7.0, 1e-3, 0.05, optics) == 0
+    # triton from 7Li: R = 1.29 -> RP-inner, MEASURED 2026-08-28.  It was
+    # asserted "lost" here because route_charged had no R > 1 branch at
+    # all; the far-forward scan of plans/09 B1 puts an R = 1.286 triton on
+    # the silicon in 60 of 60 events at every configuration, at
+    # dx = +66 mm on the inner side of the bend.  The 6Li 3He + t triton at
+    # R = 1.5044 is still lost -- 152 mm, past the last module at 144.
+    assert ff.route_charged(9.0 / 7.0, 1e-3, 0.05, optics) == 6
+    assert ff.route_charged(1.5044, 1e-3, 0.05, optics) == 0
     # B0 window
     assert ff.route_charged(0.857, 8e-3, 0.05, optics) == 3
 
@@ -101,8 +107,15 @@ def test_li7_alpha_tag_efficient_li6_suppressed():
     # tag (1.5% against 0.3% at the legacy 73 urad envelope).  Nothing
     # reaches the off-momentum detectors or B0.  (Until 2026-08-28 this
     # was written as `... == ... or True`, which asserts nothing.)
-    assert acc6["RomanPots"] + acc6["RP (pT tail, R~1)"] == pytest.approx(
+    # (and since 2026-08-28 a third piece: the HIGH-R side of the same k
+    # distribution, which the measured pot dispersion carries past the
+    # central blind block onto the pots' inner half -- plans/09 B1.  It
+    # is 1.2 points at 137.5 GeV/u, comparable to the low-R slice, and it
+    # was routed "lost" by construction before the triton was measured.)
+    assert (acc6["RomanPots"] + acc6["RP (pT tail, R~1)"]
+            + acc6["RP-inner (over-rigid)"]) == pytest.approx(
         1.0 - acc6["lost"], abs=1e-12)
+    assert acc6["RP-inner (over-rigid)"] > 0.005
     assert acc6["RomanPots"] == pytest.approx(float(np.mean(k6["R"] < 0.95)),
                                               abs=1e-12)
     assert acc6["RomanPots"] > 4.0 * acc6["RP (pT tail, R~1)"]
@@ -122,6 +135,7 @@ def test_li7_alpha_tag_efficient_li6_suppressed():
     assert accphi["OMD"] == acc6["OMD"] and accphi["B0"] == acc6["B0"]
     assert 0.0 < accphi["RP (pT tail, R~1)"] < acc6["RP (pT tail, R~1)"]
     assert (accphi["RomanPots"] + accphi["RP (pT tail, R~1)"]
+            + accphi["RP-inner (over-rigid)"]
             == pytest.approx(1.0 - accphi["lost"], abs=1e-12))
     # and it is the square, not some third shape: reproduce it by hand
     env = ff.HIGH_ACCEPTANCE.envelope[0]

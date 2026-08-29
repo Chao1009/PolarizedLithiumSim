@@ -40,7 +40,8 @@ import numpy as np
 
 from polli_fastsim import fom
 from polli_fastsim.farforward import (NEAR_BEAM_BAND, OMD_R_WINDOW,
-                                      RP_R_WINDOW, route_charged)
+                                      RP_R_WINDOW, over_rigid_route,
+                                      route_charged)
 from polli_fastsim.spectator import nucleus_mass
 
 M_LI6 = 5.6015  # GeV (6.0151228 u atomic minus 3 m_e)
@@ -251,12 +252,23 @@ def recoil_lab(t_abs, phi_t, p_per_nucleon, x_pom=0.0):
 def tag_acceptance_sampled(scenario, optics, p_per_nucleon, n=200000,
                            rng=None, x_pom=0.0):
     """Monte-Carlo cross-check of tag_acceptance through the actual
-    far-forward router (route 4 = RP near-beam pT tail)."""
+    far-forward router (route 4 = RP near-beam pT tail).
+
+    No `pot_config` is passed and none is needed: the coherent recoil is
+    the INTACT nucleus, R = |p|/p_beam with p_z = (1 - x_pom) p_beam, so
+    R - 1 is +pT^2/2p_beam^2 ~ 1e-7 at x_pom = 0 and negative for any
+    x_pom > 0.  It never reaches the R > 1.05 over-rigid branch, which is
+    the only place the per-configuration blind block enters, so the
+    routing here is configuration-independent by construction.  Contrast
+    the SPECTATOR samples (`spectator.LI6_ALPHA_TAG` and its partner),
+    where 1.6% and 11% of the distribution is over-rigid and the
+    configuration must be passed."""
     rng = rng or np.random.default_rng(20260713)
     t = scenario.sample_t(n, rng)
     phi_t = rng.uniform(0.0, 2.0 * np.pi, size=n)
     lab = recoil_lab(t, phi_t, p_per_nucleon, x_pom=x_pom)
     route = route_charged(lab["R"], lab["theta"], lab["pT"], optics)
+    assert np.all(lab["R"] < 1.0 + NEAR_BEAM_BAND)
     return float(np.mean(route == 4))
 
 
@@ -297,6 +309,45 @@ LI6_BREAKUP = (
     ("3He+t", 15.79, (("3He", 3, 2), ("t", 3, 1))),
 )
 
+# The same for 7Li (plans/09 B3, written 2026-08-28 once the far-forward
+# scan had measured where the over-rigid triton goes -- until then a table
+# with no measured destination behind it was deliberately not written).
+# Separation energies recomputed here from `spectator.NUCLEUS_MASS`, which
+# is AME2020 with the electrons removed, and they reproduce the evaluated
+# values: S(alpha t) = 2.4675 MeV (plans/01 SS248 quotes 2.468),
+# S_n = 7.2511, S(alpha d n) = S(alpha t) + S(t -> d n) = 8.7247,
+# S_p = 9.975 (6He, whose mass the table does not carry).
+#
+# 7Li is 3p + 4n, so there is no alpha + p + n channel -- that combination
+# is 6Li.  The three-body continuation of alpha + t is alpha + d + n, and
+# the four-body one alpha + p + 2n at 10.949 MeV.
+#
+# One caveat carried in the open: 6He is not in `spectator.NUCLEUS_MASS`,
+# so `fragment_rigidity(6, 2, 7, 3)` falls back to A * M_U and returns
+# 1.2831 where the physical AME2020 mass (5.60553 GeV nuclear) gives
+# 1.2868 -- 0.3% low.  The destination is insensitive to it: both put the
+# fragment on the pots' inner half at every configuration (the window is
+# R = 1.06-1.5 at 18 x 275 -- `farforward.over_rigid_route`).
+LI7_BREAKUP = (
+    ("alpha+t", 2.468, (("alpha", 4, 2), ("t", 3, 1))),
+    ("6Li+n", 7.251, (("6Li", 6, 3), ("n", 1, 0))),
+    ("alpha+d+n", 8.725, (("alpha", 4, 2), ("d", 2, 1), ("n", 1, 0))),
+    ("6He+p", 9.975, (("6He", 6, 2), ("p", 1, 1))),
+)
+
+#: Breakup tables keyed by (A, Z) of the beam.
+BREAKUP_TABLES = {(6, 3): LI6_BREAKUP, (7, 3): LI7_BREAKUP}
+
+
+def breakup_table(beam_a=6, beam_z=3):
+    """The lowest-lying particle decompositions of the beam nucleus."""
+    try:
+        return BREAKUP_TABLES[(int(beam_a), int(beam_z))]
+    except KeyError:
+        raise KeyError("no breakup table for (A, Z) = (%s, %s); "
+                       "BREAKUP_TABLES carries %s"
+                       % (beam_a, beam_z, sorted(BREAKUP_TABLES)))
+
 
 def fragment_rigidity(a, z, beam_a=6, beam_z=3):
     """Rigidity ratio R of a beam-velocity fragment.
@@ -319,12 +370,30 @@ def fragment_rigidity(a, z, beam_a=6, beam_z=3):
     return (nucleus_mass(z, a) / z) / (nucleus_mass(beam_z, beam_a) / beam_z)
 
 
-def fragment_route_label(a, z):
+def fragment_route_label(a, z, beam_a=6, beam_z=3, config="18x275"):
     """Far-forward destination of a beam-velocity fragment at IP6, from
-    the rigidity windows alone (theta << 5 mrad for Fermi-motion pT)."""
+    the rigidity windows alone (theta << 5 mrad for Fermi-motion pT).
+
+    `beam_a` / `beam_z` name the BEAM the fragment came from; the 6Li
+    defaults are what every caller written before 2026-08-28 assumed, and
+    passing 7 / 3 is what makes the function answer the 7Li question
+    instead of calling an intact 7Li "lost (over-rigid)" on
+    R = m(7Li)/m(6Li) = 1.166 (plans/09 B3).
+
+    An over-rigid fragment (R > 1 + NEAR_BEAM_BAND) is no longer "lost" by
+    construction.  It bends LESS than the beam, so the pot dispersion
+    carries it to the inner side of the bend, +x in the ePIC frame, and
+    the far-forward scan of 2026-08-28 (tools/fullsim) finds an R = 1.286
+    triton on the Roman Pots in 60 of 60 events at every configuration, at
+    dx = +66 mm at station 1 and +70 to +72 mm at station 2 -- inside the
+    outer module band, which runs from |x| = 48 mm to 144 mm with no
+    vertical insertion at any configuration.  What decides it is whether
+    the dispersive displacement clears the configuration's central blind
+    block and stays inside the last module: `farforward.over_rigid_route`
+    is that test, and `config` selects the blind block."""
     if z == 0:
         return "ZDC"
-    r = fragment_rigidity(a, z)
+    r = fragment_rigidity(a, z, beam_a=beam_a, beam_z=beam_z)
     if abs(r - 1.0) < NEAR_BEAM_BAND:
         return "RP pT-tail only (beam-blind)"
     if RP_R_WINDOW[0] <= r <= RP_R_WINDOW[1]:
@@ -332,16 +401,25 @@ def fragment_route_label(a, z):
     if OMD_R_WINDOW[0] <= r < OMD_R_WINDOW[1]:
         return "OMD"
     if r > 1.0 + NEAR_BEAM_BAND:
-        return "lost (over-rigid)"
+        return ("RP-inner (over-rigid)"
+                if over_rigid_route(r, config=config)
+                else "lost (over-rigid)")
     return "lost"
 
 
-def veto_table():
+def veto_table(beam_a=6, beam_z=3, config="18x275"):
     """{channel: [(fragment, R, destination), ...]} for the incoherent-
-    background veto discussion (plans/06)."""
+    background veto discussion (plans/06).
+
+    Beam-generic since 2026-08-28: `veto_table(7, 3)` gives the 7Li table
+    of `LI7_BREAKUP`, whose leading channel alpha + t is the one the 7Li
+    alpha tag rides on and whose triton the far-forward scan now routes
+    rather than assumes."""
     out = {}
-    for name, _thr, frags in LI6_BREAKUP:
-        out[name] = [(fname, fragment_rigidity(a, z),
-                      fragment_route_label(a, z))
+    for name, _thr, frags in breakup_table(beam_a, beam_z):
+        out[name] = [(fname, fragment_rigidity(a, z, beam_a=beam_a,
+                                               beam_z=beam_z),
+                      fragment_route_label(a, z, beam_a=beam_a,
+                                           beam_z=beam_z, config=config))
                      for fname, a, z in frags]
     return out

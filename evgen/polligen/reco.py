@@ -732,8 +732,14 @@ def _harmonic_rank_guard(a, cols, live, nbins, label="(alpha, beta)"):
     expected information for the likelihood -- so the two estimators fail
     on the same designs and report the same cause (they must: the Fisher
     information of the profiled likelihood is the same Gram matrix as the
-    weighted design, up to weights)."""
-    if np.linalg.matrix_rank(a) < a.shape[1]:
+    weighted design, up to weights).
+
+    Returns the MEASURED rank, so a caller can report it rather than
+    infer it from the fact that no exception was raised (2026-08-28
+    review): the fitters put it in their result as "design_rank" next to
+    "n_par"."""
+    rank = int(np.linalg.matrix_rank(a))
+    if rank < a.shape[1]:
         raise np.linalg.LinAlgError(
             "the %d-column harmonic design is rank-deficient: %d of %d "
             "%s bins carry weight, and the cutout has emptied "
@@ -741,6 +747,7 @@ def _harmonic_rank_guard(a, cols, live, nbins, label="(alpha, beta)"):
             "Loosen the cutout, widen the bins, or drop columns "
             "(with_sin=False)."
             % (a.shape[1], live, nbins, label, "/".join(cols)))
+    return rank
 
 
 def harmonic_ratio_fit_2d(counts, lumis, pzz, alpha_edges, beta_edges,
@@ -762,8 +769,12 @@ def harmonic_ratio_fit_2d(counts, lumis, pzz, alpha_edges, beta_edges,
     and their pattern identifies which of the two is misaligned.
 
     Returns {"const", "a_e", "a_t", "a_m", "err_e", "err_t", "err_m",
-    "cov", "sigma_p2", "pbar"} (+ "a_e_s", "a_t_s", "a_m_s" and their
-    errors with with_sin)."""
+    "cov", "sigma_p2", "pbar", "design_rank", "n_par"} (+ "a_e_s",
+    "a_t_s", "a_m_s" and their errors with with_sin).  "design_rank" is
+    the rank `_harmonic_rank_guard` measured on the weighted design and
+    "n_par" its column count; they are equal whenever the fit returns at
+    all, and are carried so a diagnostic can PRINT the measured rank
+    instead of restating the number of parameters twice."""
     n = np.asarray(counts, dtype=float)
     nf, ka, kb = n.shape
     r, var, sig2, pbar = spin_state_ratio(n.reshape(nf, ka * kb), lumis, pzz)
@@ -776,7 +787,7 @@ def harmonic_ratio_fit_2d(counts, lumis, pzz, alpha_edges, beta_edges,
     wgt = 1.0 / np.sqrt(np.maximum(var_t, 1e-300))
     a = design * wgt[:, None]
     live = int(np.count_nonzero(np.isfinite(var_t) & (var_t > 0.0)))
-    _harmonic_rank_guard(a, cols, live, ka * kb)
+    rank = _harmonic_rank_guard(a, cols, live, ka * kb)
     coef, *_ = np.linalg.lstsq(a, t * wgt, rcond=None)
     cov = np.linalg.inv(a.T @ a)
     err = np.sqrt(np.diag(cov))
@@ -785,7 +796,8 @@ def harmonic_ratio_fit_2d(counts, lumis, pzz, alpha_edges, beta_edges,
     # "err_const", so code written to that contract raised KeyError on the
     # default (published) estimator
     out = {"const": coef[0], "err_const": err[0], "cov": cov,
-           "sigma_p2": sig2, "pbar": pbar}
+           "sigma_p2": sig2, "pbar": pbar,
+           "design_rank": rank, "n_par": int(a.shape[1])}
     for i, c in enumerate(cols, start=1):
         out["a_" + c] = coef[i]
         out["err_" + c] = err[i]
@@ -1000,12 +1012,15 @@ def harmonic_likelihood_fit_2d(counts, lumis, pzz, alpha_edges, beta_edges,
     "expected" (default) is the conditional Fisher information at the
     observed bin totals, "observed" the Hessian at the solution; over
     Poisson draws of the sparsest published bin the two agree to 0.01% on
-    average at 48 counts per (alpha, beta) cell (0.5% worst case) and to
+    average at 48 counts per (alpha, beta) cell -- the sparsest bin of the
+    four-bin window published when this was measured, 46 in the sparsest
+    bin of the seven-bin window published now -- (0.5% worst case) and to
     0.5% at one count per cell, where the observed form can fluctuate by
     14% -- which is why the expected one is the default.
 
     Returns {"const", "a_e", "a_t", "a_m", "err_const", "err_e", "err_t",
-    "err_m", "cov", "sigma_p2", "pbar", "n_iter", "nll", "grad_max"} (+
+    "err_m", "cov", "sigma_p2", "pbar", "n_iter", "nll", "grad_max",
+    "design_rank", "n_par"} (+
     "a_e_s", "a_t_s", "a_m_s" and their errors with `with_sin`), with
     `cov` ordered (const, e, t, m [, e_s, t_s, m_s]) as in the ratio fit.
     `nll` is the conditional -ln L of (6) at the solution and `grad_max`
@@ -1036,8 +1051,8 @@ def harmonic_likelihood_fit_2d(counts, lumis, pzz, alpha_edges, beta_edges,
     # counts and the two estimators fail on the same designs
     nb = n.sum(axis=0)
     w0 = nb * sig2 / (1.0 + u) ** 2
-    _harmonic_rank_guard(design * np.sqrt(np.maximum(w0, 0.0))[:, None],
-                         cols, int(np.count_nonzero(nb > 0.0)), ka * kb)
+    rank = _harmonic_rank_guard(design * np.sqrt(np.maximum(w0, 0.0))[:, None],
+                                cols, int(np.count_nonzero(nb > 0.0)), ka * kb)
     theta, n_iter, grad, q, d = _profile_likelihood_newton(
         n, lw, p, design, u, max_iter=max_iter, tol=tol)
     if cov == "observed":
@@ -1053,7 +1068,8 @@ def harmonic_likelihood_fit_2d(counts, lumis, pzz, alpha_edges, beta_edges,
                              out=np.zeros_like(q))).sum())
     out = {"const": theta[0], "err_const": err[0], "cov": covm,
            "sigma_p2": sig2, "pbar": pbar, "n_iter": n_iter, "nll": nll,
-           "grad_max": float(np.max(np.abs(grad)))}
+           "grad_max": float(np.max(np.abs(grad))),
+           "design_rank": rank, "n_par": int(design.shape[1])}
     for i, c in enumerate(cols, start=1):
         out["a_" + c] = theta[i]
         out["err_" + c] = err[i]
@@ -1333,25 +1349,112 @@ def tag_pt_cut(sigma_theta, p_per_nucleon, a_beam=6, n_sigma=10.0):
 
 # Geometric aperture of the ePIC Roman Pots for a track at beam rigidity,
 # measured by shooting an intact 6Li through the epic-main geometry and
-# reading where the hits start (tools/fullsim/README.md, 2026-08-26).
-# Half-widths in ANGLE at the IP, per optics configuration; the pots are
-# positioned per ring, so the aperture is not one number.
+# reading where the hits start.  Half-widths in ANGLE at the IP, per
+# optics configuration; the pots are positioned per ring, so the aperture
+# is not one number.
 #
 # It is not the beam envelope and does not scale with it: the beamline
-# images an IP angle onto the pot plane with a horizontal lever of
-# R12 = 30.6 m against a vertical few metres, so what clears the pots'
-# horizontal slot is theta_x, and the boundary is a property of the
-# optics and the mechanics.  The envelope and the aperture are separate
-# constraints and a track must clear BOTH; `rp_measure` takes the larger
-# per axis.
+# images an IP angle onto the pot plane with a horizontal lever
+# R12 = 19.24 / 21.25 / 29.97 m against a vertical R34 of 2.6-3.4 m, so
+# what clears the pots' horizontal slot is theta_x, and the boundary is a
+# property of the optics and the mechanics.  The envelope and the
+# aperture are separate constraints and a track must clear BOTH;
+# `rp_measure` takes the larger per axis.
 #
-# Caveats, unchanged from the measurement: one event per scan point, 30
-# degree azimuthal steps, no beam envelope in the scan, and a
-# September-2024 epic-main whose pot stations have already moved once.
+# The 2026-08-26 provenance THIS BLOCK USED TO CARRY -- one event per scan
+# point, 30 degree azimuthal steps, a single R12 = 30.6 m, and a
+# September-2024 epic-main -- belongs to `RP_APERTURE_SEP2024` below and
+# to nothing else.  The table that follows was measured differently: 0.05
+# mrad ladders at four azimuths, per-configuration levers regressed in the
+# same scan, in epic-main 9aaa2969.
+#
+# RE-MEASURED 2026-08-28 in the CURRENT geometry (eic_xl-nightly,
+# epic-main 9aaa296976d3ad9de404f775ae89fc17a068c07c) -- plans/09 B1.  The
+# table below replaces the September-2024 (2.0, 3.0), (1.35, 3.0),
+# (1.03, 2.3) mrad, which plans/09 SS9.4 had already flagged as measured
+# in a superseded geometry.  Each half-width is the silicon band
+# threshold divided by the lever regressed in the same scan, and the
+# first accepted angle of a 0.05 mrad ladder reproduces it to 1-4%:
+#
+#   c_x = 48 / 19.24 = 2.50 ,  32 / 21.25 = 1.51 ,  16 / 29.97 = 0.53 mrad
+#   c_y = --                ,  7.1 / 3.35 = 2.12 ,  2.7 / 2.93 = 0.92 mrad
+#
+# At 18 x 275 both half-widths shrink -- x by 1.9x, y by 2.5x -- which is
+# the 16 x 16 mm module and the 2.7 mm insertion of the current geometry
+# replacing the 32 mm module and 7 mm insertion of September 2024.
+# plans/09 SS9.4 predicted 0.52 mrad from 16 mm / 30.6 m; the scan gives
+# 0.53.  At 5 x 41 the aperture gets WORSE, also as predicted, because the
+# per-energy insertion retracts the pots for the larger low-energy beam.
+#
+# THE 5 x 41 VERTICAL PLANE IS SHUT, and c_y there encodes that rather
+# than a measured edge.  The insertion holds the central silicon off to
+# |y| >= 29.6 mm and the intermediate bands to 27.5 and 18.0, so the whole
+# 0.20-6.00 mrad vertical ladder produced exactly three Roman-pot rows at
+# phi = 90 and none at phi = 270.  Only one of the three sits above the
+# 29.6 mm module edge -- theta = 3.35 mrad, y = +30.94 mm -- and it is a
+# SINGLE hit in a SINGLE plane (S1L2, n = 1, dx = -0.91 mm) with both its
+# 0.05 mrad neighbours empty and B0 firing only from 4.55 mrad up.  That
+# is an isolated grazing hit, not an edge, and quoting it as c_y would be
+# anti-conservative: `rp_measure` accepts on |theta_x| > c_x OR
+# |theta_y| > c_y, so a too-small c_y OVER-ACCEPTS (0.04% of the 5 x 41
+# alpha spectator sample, 1.5% of its tag, would be admitted on a vertical
+# angle that reaches no silicon).
+#
+# c_y is therefore the smallest angle at which any 5 x 41 silicon could
+# possibly be reached: 29.6 mm divided by the LARGEST vertical lever
+# measured anywhere in the scan (R34 = 3.35 m at 10 x 100), = 8.84 mrad.
+# It is a strict lower bound on a plane that is shut in practice -- the
+# beam pipe is reached first, no spectator or coherent recoil of this
+# programme comes near it, and the acceptance integral is identical to
+# the one an infinite c_y gives to six digits (2.105e-3 either way).  A
+# finite number is used rather than `inf` so that every downstream caller
+# that prints or plots the cutout keeps working.
 RP_APERTURE_MEASURED = {
+    "5x41": (2.50e-3, 8.84e-3),
+    "10x100": (1.51e-3, 2.12e-3),
+    "18x275": (0.53e-3, 0.92e-3),
+}
+
+#: The September-2024 table, kept reachable so that a number published
+#: against it can be reproduced: `rp_aperture_for(cfg, table=
+#: RP_APERTURE_SEP2024)`.  Do not use it for anything new.
+RP_APERTURE_SEP2024 = {
     "5x41": (2.0e-3, 3.0e-3),
     "10x100": (1.35e-3, 3.0e-3),
     "18x275": (1.03e-3, 2.3e-3),
+}
+
+#: THE LIGHT-ION-LATTICE ALTERNATIVE, reachable the same way:
+#: `rp_aperture_for(cfg, table=RP_APERTURE_MEASURED_LIGHT_ION_LATTICE)`.
+#:
+#: `RP_APERTURE_MEASURED` stands on the ePIC baseline compact files, and
+#: at 5 x 41 that means the 41 GeV PROTON lattice
+#: (`compact/fields/beamline_5x41.xml`, which `epic_craterlake_5x41.xml`
+#: includes).  `beamline_5x41_He4.xml` is the Z/A = 0.5 lattice at 82 GV
+#: and gives R12 = 29.81 m instead of 19.24, hence 48 mm / 29.81 m =
+#: 1.61 mrad instead of 2.50 -- a factor 1.55, and the largest single
+#: systematic on the 5 x 41 row (`farforward.POT_LEVERS_LIGHT_ION_LATTICE`,
+#: RESULTS section 6, `lad_he4_5x41`: measured first-hit edge 1.60 mrad on
+#: +x and 1.70 on -x against the 1.61 the arithmetic gives).  The vertical
+#: is shut there too -- no accepted row in 0.2-6.0 mrad -- so c_y carries
+#: the same 8.84 mrad bound.
+#:
+#: ONLY 5 x 41 WAS CHECKABLE.  10 x 100 is None: the only Z/A = 0.5 file
+#: near that setting is `beamline_10x110_H2.xml` at 220 GV against the 6Li
+#: fill's 199 GV, so a scan there confounds energy with lattice and was
+#: not run.  18 x 275 repeats the baseline row because the 18 x 275
+#: compact file IS the Yellow Report 275 GeV magnet set that the He4 file
+#: scales -- which is why the He4 5 x 41 run reproduces the 18 x 275
+#: levers to 1%.
+#:
+#: Which of the two files a 6Li fill at 81.6 GV would actually run in is
+#: the open question this measurement hands to the far-forward working
+#: group (plans/09 B1).  The baseline table is the published default; the
+#: ratio of the two is the systematic to carry.
+RP_APERTURE_MEASURED_LIGHT_ION_LATTICE = {
+    "5x41": (1.61e-3, 8.84e-3),
+    "10x100": None,
+    "18x275": RP_APERTURE_MEASURED["18x275"],
 }
 
 
@@ -1375,7 +1478,12 @@ def rp_aperture_for(config, table=None):
     The three 6Li momenta are derived from `beams`, not hard-coded -- they
     moved on 2026-08-27 when the two lower configurations were corrected
     from rigidity-scaled (20.5, 50) to gamma-matched (40.8, 99.5) GeV/u
-    (plans/10)."""
+    (plans/10).  `table` is the aperture table to read; the default is the
+    2026-08-28 re-measurement on the ePIC baseline compact files,
+    `RP_APERTURE_SEP2024` reproduces anything published against the old
+    geometry, and `RP_APERTURE_MEASURED_LIGHT_ION_LATTICE` prices the
+    Z/A = 0.5 lattice alternative at 5 x 41 (it returns None at 10 x 100,
+    where no such file exists at the right energy)."""
     from polli_fastsim import beams as _beams
     from polli_fastsim import farforward as _ff
     table = table or RP_APERTURE_MEASURED
@@ -1414,10 +1522,24 @@ def rp_measure(Pprime, P, sigma_theta_xy, n_sigma=10.0, rng=None,
     half-widths in angle (rad), and the cutout becomes the larger of the
     two per axis: a track has to clear the beam envelope AND the
     mechanics.  `RP_APERTURE_MEASURED` is that aperture, measured in the
-    ePIC geometry, and it dominates the envelope at every configuration
-    -- and inverts its aspect, because it is theta_x that clears the
-    slot.  None keeps the envelope alone, which is what every number
-    published before 2026-08-26 used.
+    ePIC geometry.  None keeps the envelope alone, which is what every
+    number published before 2026-08-26 used.
+
+    THE ASPECT IS STILL THE WRONG WAY ROUND FROM cut_scale_xy, and by
+    less than it was.  The re-measurement of 2026-08-28 (plans/09 B1) puts
+    the aperture at (c_x, c_y) = (0.53, 0.92) mrad at 18 x 275, (1.51,
+    2.12) at 10 x 100 and 2.50 mrad horizontal with the vertical SHUT at
+    5 x 41: TALLER THAN IT IS WIDE wherever both axes are open, by
+    1.4-1.7x, where cut_scale_xy =
+    (2.5, 1.0) models a slot 2.5x wider than tall.  The factor is 3.5-4.4
+    rather than the 5.8 the September-2024 numbers gave, but the SIGN of
+    the aspect -- which is what sets the sign of the acceptance-induced
+    cos 2phi_t and is the half of this that does not depend on the
+    geometry version -- is unchanged.  The reason is optics, not
+    mechanics: the far-forward line images an IP angle onto the pot plane
+    with R12 = 19-30 m horizontally against R34 = 2.6-3.4 m vertically,
+    ~9x stiffer in x, so a horizontal kick clears a horizontal slot far
+    sooner than a vertical one clears a vertical gap.
 
     Returns dict with theta_x/y, pT, phi_t, t_reco = -pT^2 (x_L set to 1),
     the acceptance mask and the cut half-widths in GeV.
@@ -1425,7 +1547,9 @@ def rp_measure(Pprime, P, sigma_theta_xy, n_sigma=10.0, rng=None,
     Two idealisations are stated rather than modelled.  The pots measure a
     POSITION at the pot plane, x = R_12 theta_x + D delta, and the recoil
     is off-momentum by delta = -x_P (x_L = 1 - x_P): at the ePIC dispersion
-    (D ~ 0.3 m against R_12 = 30.6 m, tools/fullsim) an x_P = 0.01 recoil
+    (D = 0.292 m against R_12 = 29.97 m at 18 x 275, and 0.311 / 19.24 and
+    0.287 / 21.25 at the two lower configurations, tools/fullsim) an
+    x_P = 0.01 recoil
     is displaced by the same amount as a 0.1 mrad angle, i.e. below the
     divergence of every configuration; that degeneracy, and the beam's own
     momentum spread that enters the same way, are what `sigma_pos_over_l`

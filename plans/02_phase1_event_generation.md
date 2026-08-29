@@ -82,6 +82,14 @@ itself stays open, and no other open item's marker was moved.*
 ±40% (`scripts/validate_inputs.py`). Scenario curves added: CBT 2× / TMT 1×
 polarized-EMC, HERMES-like vs convolution b1. Remaining below.*
 
+*2026-08-28: items 2 and 3 below are done for the polarized-EMC and b₁
+curves — all four are digitized from the published figures into
+`fastsim/polli_fastsim/data/` by `tools/digitize_figure.py`
+(`data/SOURCES.md`), the two money plots draw them by default and keep the
+old shapes behind `--emc-mode constant` / `--transfer legacy`.  Item 1
+(EPPS21 for the unpolarized ratio) and the Wang gluon-spin curves are the
+remainder.*
+
 1. Unpolarized: LHAPDF inside eic-shell (container ships LHAPDF6) or the
    pure-python `parton` package locally; CT18NNLO + EPPS21/nNNPDF3.0 nuclear
    ratios for ⁶,⁷Li (A=6,7 grids exist in EPPS21? if not, interpolate A or
@@ -94,11 +102,38 @@ polarized-EMC, HERMES-like vs convolution b1. Remaining below.*
    question becomes "at what lumi/P do we discriminate the camps at 5σ".
    Gluon-spin EMC curves from Wang et al. (arXiv:2109.03591) for the
    dg₁/dlnQ² observable.
+   ☑ *2026-08-28 for the two camps: CBT Fig. 6 (⁷Li, Q² = 5 GeV², both the
+   Eq.-23 and Eq.-26 curves and the unpolarized one) and TMT Fig. 4
+   (nuclear matter, Q² = 10 GeV²) are in `cbt_polemc_7Li_Q5.csv` and
+   `tmt_polemc_nm_Q10.csv`.  Because the two are different targets at
+   different scales, they are compared as the ratio of EMC effects applied
+   to one common ⁷Li baseline — CBT's own unpolarized curve — with a
+   valence strength factor of 1 for CBT and 0.397 for TMT.  That factor is
+   fitted in 0.35 < x < 0.65 and applied at every x, so the comparison is a
+   statement about the two papers only inside that window: the published
+   polarized curves agree to better than 0.008 over 0.028 < x < 0.30, while
+   inside the window the transferred TMT depletion tracks ⁷Li's own
+   unpolarized one to within 0.005 against CBT's roughly twice it, so ΔR
+   separates by 0.040 at x = 0.36 falling to 0.011 at 0.65.  The answer to
+   the FOM question is 2.7σ in the best bin of that window at 100 fb⁻¹/u,
+   not 5σ; the 3.7σ the unrestricted scan returns at x = 0.141 is carried by
+   the transfer, not by the calculations, and `money_polemc.py` prints both.
+   Wang's Figure 3 is NOT digitized:
+   the dg₁/dlnQ² observable has no money plot (`refs/2109.03591.pdf` and
+   `data/SOURCES.md` record where the curves are).*
 3. b₁ model: deuteron convolution (Cosyn–Dong–Kumano–Sargsian PRD 95:074036,
    |b₁| < 10⁻³ at x ≳ 0.2) vs Miller pion+hidden-color (PRC 89:045203,
    reproduces HERMES b₁ ~ 0.1 at x ~ 0.01) as the two scenario curves,
    rescaled by ⅓·P_d ≈ 0.29 for the ⁶Li embedded deuteron (our model — no
    ⁶Li b₁ theory exists; engage Cloët/Cosyn/Miller to publish one).
+   ☑ *2026-08-28: both digitized (`b1_miller.csv` from PRC 89:045203 Fig. 5,
+   `b1_cdks_q2p5.csv` from PRD 95:074036 Fig. 4 theory-1 SD+DD, plus the two
+   Q² sets), and they are now ABSOLUTE b₁ rather than a shape times F₁, so
+   `toy_b1`/`b1_convolution` ignore the F₁ they are handed (`mode='toy'`
+   restores the shapes).  The ⅓·P_d rescaling became ⅓ × 0.921947 = 0.3073:
+   the rank-2 tensor transfer, not the vector 0.87 (plans/08 D9).  The two
+   camps are no longer a factor ten apart — Miller reaches 11σ per bin at
+   x ≈ 0.07 while CDKS stays under 0.2σ everywhere.*
    Δ model: normalize shapes to ∫xΔdx = −0.012·α_s (Sather–Schmidt bag
    estimate, the LOI12-16-006 reference point) + flat Δ/F₁ ∈
    {10⁻³, 3×10⁻³, 10⁻²} scenarios; lattice φ-meson moment
@@ -120,9 +155,28 @@ by toy-MC closure (`tests/test_closure.py`). First numbers: gluonometry
 100 fb⁻¹/u; δA_zz ~ 10⁻³/x-bin at 10 fb⁻¹/u. To finalize: rerun on grid
 inputs + adopted binning, add the items below.*
 
+*2026-08-28: the CBT-vs-TMT line above is retired.  It was the two camps as
+the constants 2 and 1 on a hand-written EMC table, which made them separate
+as |1 − R_EMC(x)| and therefore grow with x.  On the digitized curves the
+separation is 0.044 / 0.040 / 0.034 / 0.059 at x = 0.09 / 0.28 / 0.45 / 0.71
+against δΔR = 0.0423 / 0.0405 / 0.0600 / 0.1893 on grid inputs at
+10 fb⁻¹/u — 3.3 / 3.1 / 1.8 / 1.0 σ at 100 fb⁻¹/u.  The replacement headline
+is the valence window in which the transfer is defined and the two published
+curves genuinely differ: best bin x = 0.355, 0.84σ at 10 fb⁻¹/u and 2.66σ at
+100.  The x ≈ 0.5–0.7 of the old line is inside that window; what is retired
+is the 5σ, not the location.*
+
 For each observable, produce the "money plots":
 1. **Polarized EMC (⁷Li first):** projected δ(ΔR(x)) vs x for the energy
    scan; overlay CBT prediction and JLab E12-14-001 projected errors —
+   *2026-08-28: the CBT overlay is now the digitized Eq.-23 curve of their
+   Fig. 6 rather than a 2× stand-in (`money_polemc.py`); both panels shade
+   the valence window 0.35 < x < 0.65 in which the TMT → ⁷Li transfer is
+   defined, and the upper panel also draws TMT's published nuclear-matter
+   curve untransferred as a dotted line, because the significance panel is
+   otherwise read as claiming a low-x discrimination the two published
+   curves do not have — untransferred, TMT lies on top of CBT below
+   x ≈ 0.3; the E12-14-001 projected errors are still not overlaid.*
    demonstrate the order-of-magnitude x–Q² extension and Q²-lever arm
    (gluon-spin EMC via dg₁/dlnQ²). Quote vs P_z ∈ {0.5, 0.7, 0.9} and
    lumi ∈ {1, 10, 100} fb⁻¹/u.
@@ -180,10 +234,12 @@ a 1.8–2.8% band as the window is opened to Q² ≥ 0.15–0.02 GeV², where th
 truncated low-Q² feed-in saturates, i.e. **≤ 2.9%** — inside the ≤5% gate of
 plans/07 WP4, so **Phase 2 does not need a full RC treatment for the unpolarized
 sector**. A HERA-style E − p_z window would bring it to ≤ 0.25% while keeping
-87% of the non-radiative rate. What remains uncharted and is flagged to
+87% (25% Gaussian y stand-in) / 98% (PYTHIA, calibrated Σ) of the
+non-radiative rate; it is a documented contingency and is not applied.
+What remains uncharted and is flagged to
 theory colleagues is unchanged: RC on the tensor observables A_zz / cos 2φ′
 (plans/05 §5.5) — no unpolarized study stands in for it. Written up in Report 2
-§7 and its Table 2 row; 25 tests in `evgen/tests/test_radiative.py` and
+§7 and its Table 2 row; 30 tests in `evgen/tests/test_radiative.py` and
 `test_reco.py`.
 
 ## Step 1.5 ◐ BeAGLE e+Li breakup & tagging study (4–6 weeks, core novelty)
@@ -273,16 +329,17 @@ need analogous care.
    - **Rigidity routing** (corrected, R = (A_f·Z_beam)/(A_beam·Z_f); see
      plans/03 §2.2 table): ⁷Li beam → α at R = 0.86 lands **in the Roman
      Pots** (x_L window 0.6–0.95) — the IP6-friendly tag; p → OMD; n → ZDC;
-     t → **no IP6 coverage** (R = 1.29; a routing assumption — the fast
-     simulation has no R > 1 branch, and the 2026-06-12 gun scan found an
-     over-rigid path that is unverified with a beam envelope, plans/03
-     §2.2). ⁶Li beam → α/d at R ≈ 1 (0.998 / 1.005) are
+     t → **Roman-Pot silicon on the inner side of the bend** (R = 1.29;
+     "no IP6 coverage" was a routing assumption until 2026-08-28, when
+     `farforward.over_rigid_route` gave the fast simulation the R > 1
+     branch the `tools/fullsim` gun scan had asked for — still without a
+     beam envelope or a reconstruction, plans/03 §2.2, plans/09 B1). ⁶Li beam → α/d at R ≈ 1 (0.998 / 1.005) are
      **beam-blind** below the RP pT cutoff (0.2–0.45 GeV/c by optics):
      fold the soft cluster pT(α) spectrum with the 10σ cutoff — this single
      number decides whether ⁶Li d-cluster tagging works at IP6 or needs
      the IR-8 secondary focus; ³He → RP (R = 0.75); p → OMD.
-     ☑ *2026-08-28: the number is in — the ⁶Li α tag is 1.7 / 1.5 / 1.6% at the
-     Yellow Report optics of the three configurations and 35 / 27 / 28% at a
+     ☑ *2026-08-28: the number is in — the ⁶Li α tag is 1.9 / 1.7 / 2.6% at the
+     Yellow Report optics of the three configurations and 35 / 28 / 29% at a
      lithium tagging optics costing 1/7–1/13 of the luminosity
      (`fastsim/out/tagging_acceptance.txt`, Report 3 Table 6); the near-beam cut
      is now the angular 10(σ_h, σ_v) envelope, not the 0.2–0.45 GeV/c p_T cutoff
@@ -367,7 +424,7 @@ with 1.4 → 1.6 → 1.7. Total ≈ 3–4 months of focused effort; BeAGLE acces
 |---|---|
 | BeAGLE invalid for A=6,7 breakup (C-12 n(k), no cluster geometry, frozen code) | validation step 1.5.3 incl. cluster-IA cross-check; fallback: cluster-model toy fragmenter (α+d / α+t momentum densities + flat E*) good enough for acceptance maps — *2026-08-28: the fallback carries every published tagging number, but of step 1.5.3 only the e+d control ran; still owed and unblocked are the Tu et al. 2005.14706 comparison and the flat-E\* fragmenter (no E\* code exists)* |
 | BeAGLE access (FLUKA license, "no mere mortal" build) | prebuilt BNL/JLab/CVMFS installs; start access requests immediately |
-| ⁶Li α-tag beam-blind at IP6 (R = 1.0 vs RP pT cutoff) | quantify pT-tail acceptance early (step 1.5.4); lead the tagging story with ⁷Li (α → RP works); document IR-8 secondary-focus case — *2026-08-28: quantified per configuration and per optics (1.5–1.7% at the YR optics, 27–35% at the tagging optics) and IR-8 priced; Report 0 §5.4/Table 3 still states the number on the retired 73/164 µrad optics and needs re-deriving* |
+| ⁶Li α-tag beam-blind at IP6 (R = 1.0 vs RP pT cutoff) | quantify pT-tail acceptance early (step 1.5.4); lead the tagging story with ⁷Li (α → RP works); document IR-8 secondary-focus case — *2026-08-28: quantified per configuration and per optics (1.7–2.6% at the YR optics, 28–35% at the tagging optics) and IR-8 priced; Report 0 §5.4/Table 3 still states the number on the retired 73/164 µrad optics and needs re-deriving* |
 | No nuclear PDF grids at A=6,7 | interpolate EPPS21 in A; or convolution from d/³He/⁴He — *superseded (2026-08-28): A = 6 grids exist and are in use (EPPS21nlo_CT18Anlo_Li6, nNNPDF30 A6, compared against each other in the money-Δ line); the risk survives for ⁷Li alone, where LHAPDF has nothing* |
 | Transverse ion polarization at IP unavailable | gluonometry FOM quoted conditional on rotator configuration; raise early with EPIOS/C-AD (04_open_questions) — *2026-08-28: the conditional quoting is done (`money_delta.py` docstring, Report 1 §3.1 and Table 4 #8); the raise itself has not happened — plans/04 #2 records owner and default, no contact yet* |
 | Tensor (λ=0) bunches operationally undefined | source RF transitions can prepare m=0; needs machine fill-pattern concept — document requirement, don't solve — ☑ *2026-08-28: documented past the ask — plans/04 #3 carries the requirement plus the measured consequence (a 10⁻³ inter-fill difference of the cos 2φ′ harmonic fakes 5.6×10⁻⁴), which turns bunch-by-bunch alternation into a requirement of the measurement (Reports 1 and 2)* |

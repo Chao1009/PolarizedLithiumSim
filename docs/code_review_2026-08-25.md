@@ -350,7 +350,7 @@ beyond |η| = 3.5, consistent with the selection.
 | Spin-state ratio R = σ_P²T/(1 + P̄T), δÂ = √(2/N)/σ_P/dilution | derived in the report | `reco.spin_state_ratio`, `harmonic_ratio_fit`, `err_harmonic_ratio` | consistent; verified numerically (§5.1: unbiased under a common ε(φ′), analytic error reproduced) |
 | Roman-Pot 10σ cut, pT_cut = 10σ_θ·A·p_u | YR (0.20/0.45 GeV for 275 GeV protons); Jentsch DIS 2023 slide 20 (beam effects dominate) | `reco.tag_pt_cut`, `rp_measure` | consistent; σ_θ proton-derived placeholder (plans/04 #11/#20) |
 | Far-forward windows (B0 5.5–20 mrad, OMD 0–5 mrad ξ 0.45–0.65, RP 0–5 mrad ξ 0.6–0.95, ZDC 0–4 mrad) | Jentsch–Tu–Weiss Table I (refs/2108.08314.pdf, verified 2026-08-25) | `polli_fastsim.farforward` | consistent |
-| Slot-like cutout (wide in x, tight in y) | Jentsch DIS 2023 slide 15 | `rp_measure(cut_scale_xy=(2.5, 1))` | shape as documented; dimensions illustrative (#20) |
+| Slot-like cutout (wide in x, tight in y) | Jentsch DIS 2023 slide 15 | `rp_measure(cut_scale_xy=(2.5, 1))` | shape **contradicted by measurement** (2026-08-28, `tools/fullsim`, plans/09 B1): the ePIC aperture is (c_x, c_y) = 1.51/2.12 and 0.53/0.92 mrad at 10 × 100 and 18 × 275, i.e. 1.4–1.7× *taller* than it is wide wherever both axes are open, where `cut_scale_xy = (2.5, 1)` models 2.5× wider than tall; at 5 × 41 the vertical plane is shut and the aspect is not defined. The sign of the acceptance-induced cos 2φ follows the aspect (#20) |
 | Deformation coefficient c₂ = 2a₂ | Mäntysaari et al. Eq. (9) (refs/2408.13213v1.pdf) | `coherent.cos2phi_coefficient_deformation` | consistent (money plot 6 injects a₂: conservative ×2, stated) |
 | u₁, u₂ y-factors and bounds | Nikolaev–Pronyaev–Zakharov Eq. (1); ZEUS NPB 816:1 Sec. 10.2 | `money_cos2phi_coherent_reco.py` defaults | consistent; defaults at the 1σ edge |
 | t = −(p_T² + M²x_P²)/(1 − x_P), t_min | light-cone kinematics | `reco.recoil_fourvector`, `t_from_fourvectors` | consistent (test) |
@@ -648,6 +648,12 @@ transfer factor and no 2/6 factor against errors computed with
 P_zz = 0.6/0.8 and no 2/6 factor, while the Δ line folds 1/3 into P_zz
 and omits the 0.87 (`delta_models.py:39–50` acknowledges the mismatch):
 the b₁ signal-to-error ratio is ×3 inconsistent with the Δ convention.
+*Done 2026-08-28 (plans/08 D9):* `polarized.b1_li6_from_deuteron` carries
+`LI6_B1_RANK2_TRANSFER = 0.921947` — the rank-2 tensor dilution of the α–d
+wave function, b₁ being a tensor structure function, where 0.87 is the
+rank-1 vector one — beside `LI6_B1_PER_NUCLEON = 2/6`, so the b₁ line folds
+the same 2/6 the Δ line does; the `delta_models.py` paragraph is retired and
+`money_b1.py --transfer legacy` reproduces the old curve under its own stem.
 
 **S7 — LOW (reference):** `farforward.py:27` OMD window R ∈ [0.40, 0.60]
 against Jentsch–Tu–Weiss Table I ζ = 0.45–0.65 (`refs/2108.08314.pdf`,

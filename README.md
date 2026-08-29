@@ -39,11 +39,11 @@ long it takes, what the answer should be, and what cannot be reproduced
 here and why.
 
 ```bash
-# fast simulation (81 tests; PDF-grid tests need the `parton` package
+# fast simulation (111 tests; PDF-grid tests need the `parton` package
 # with CT18NLO, EPPS21nlo_CT18Anlo_Li6 and NNPDFpol11_100 installed)
 cd fastsim && python -m pytest tests/ -q
 
-# event generator (276 tests)
+# event generator (305 tests)
 cd evgen && python -m pytest tests/ -q
 
 # money plots (outputs land next to the scripts' working directory)
@@ -55,23 +55,51 @@ python scripts/money_tagged_azz.py --events 400000    # tagged tensor asymmetry
 
 ## Headline results so far
 
+Every projection below is quoted at the full 10 fb⁻¹/u programme year in
+its own configuration — its own spin states, its own far-forward optics,
+its own isotope — so the reaches are alternatives and not a programme.
+How a real year divides between them is unspecified by any EIC document
+and ours to propose (priced in `plans/07` WP2); a share *f* multiplies
+every statistical error by 1/√*f*, leaves a luminosity quoted as a reach
+where it is, and multiplies the years to it by 1/*f*.  It is a flag
+(`--run-share` in `fastsim/`, `--lumi-fraction` in `evgen/`), default 1.0.
+
 - **Gluonometry**: with the sum-rule-constrained Δ model
   (`delta_models`, moment_A, table-α_s) the sweet-spot cos 2φ amplitudes are (0.44–0.95)×10⁻² against per-bin δA = (1.4–4.5)×10⁻⁴ already at the 1-year program (10 fb⁻¹/u), across Q² = 1.1–14 GeV² at x = 0.011–0.14 (e10 × ⁶Li 99.5 GeV/u, 2026-08-27) — the measurement resolves the interpretation-A-vs-B ansatz spread, not just a null.
 - **Coherent intact-⁶Li tag**: the recoil is exactly beam-blind
-  (A/Z = 2), so the only handle is its angle against the 10σ envelope and the pot aperture. With the Yellow Report divergences (a rectangular 10(σ_h, σ_v) envelope) and the measured ePIC aperture the tag does not survive at IP6 at any configuration (7×10⁻⁸ / 6×10⁻²⁷ / 4×10⁻¹⁴ at the envelope, plans/10, Report 4); it needs the lithium tagging optics of Report 1 §6.1 — the horizontal β* raised 50 / 176 / 89× with pots that follow the 0.33 / 0.17 / 0.12 mrad envelope, tagging 0.42 / 0.32 / 0.33 at 1/7–1/13 of the luminosity, 2.5–6.0×10⁶ recoils per year — or the IR-8 secondary focus. For a 0.20 GeV near-beam envelope (13.5%): 1.7×10⁷ / 1.7×10⁸ tagged events in the 1-/10-year programs; modulation amplitude anchored on the polarized-deuteron CGC calculation (sign flip vs d predicted).
+  (A/Z = 2), so the only handle is its angle against the 10σ envelope and the pot aperture. With the Yellow Report divergences (a rectangular 10(σ_h, σ_v) envelope) and the measured ePIC aperture the tag does not survive at IP6 at any configuration (7×10⁻⁸ / 6×10⁻²⁷ / 7×10⁻¹⁴ at the envelope, plans/10, Report 4); it needs the lithium tagging optics of Report 1 §6.1 — the horizontal β* raised 50 / 176 / 89× with pots that follow the 0.33 / 0.17 / 0.12 mrad envelope, tagging 0.42 / 0.32 / 0.33 at 1/7–1/13 of the luminosity, 2.5–6.0×10⁶ recoils per year — or the IR-8 secondary focus. For a 0.20 GeV near-beam envelope (13.5%): 1.7×10⁷ / 1.7×10⁸ tagged events in the 1-/10-year programs; modulation amplitude anchored on the polarized-deuteron CGC calculation (sign flip vs d predicted).
 - **Tagging inverts between isotopes at IP6**: ⁷Li α-tag works
-  (97% to the Roman Pots at every configuration and optics); ⁶Li α-tag is beam-blind — at the Yellow Report optics of each configuration (220/380, 180/180, 92/92 μrad h/v, plans/10) its near-beam tail is inside the 10σ envelope and only the ≈ 1.5% that falls below R = 0.95 into the Roman-Pot window survives (1.7 / 1.5 / 1.6% at 5 × 41 / 10 × 100 / 18 × 275); the lithium tagging optics of Report 1 §6.1 recovers 35 / 27 / 28% at 1/7–1/13 of the luminosity (2026-08-28, `fastsim/scripts/tagging_acceptance.py`; the 1.85% quoted before applied one proton-derived 73 μrad at every configuration);
+  (97% to the Roman Pots at every configuration and optics); ⁶Li α-tag is beam-blind — at the Yellow Report optics of each configuration (220/380, 180/180, 92/92 μrad h/v, plans/10) its near-beam tail is inside the 10σ envelope and what survives is the ≈ 1.5% that falls below R = 0.95 into the Roman-Pot window together with an over-rigid branch on the inner side of the bend (1.9 / 1.7 / 2.6% in all at 5 × 41 / 10 × 100 / 18 × 275); the lithium tagging optics of Report 1 §6.1 recovers 35 / 28 / 29% at 1/7–1/13 of the luminosity (2026-08-28, `fastsim/scripts/tagging_acceptance.py`; the 1.85% quoted before applied one proton-derived 73 μrad at every configuration);
   tritons need IR-8.
 - **The hadronic final state is PYTHIA 8, not a toy** (2026-08-26): 8 M
   events over the three beam configurations, generated natively
   (`tools/pythia8`).  Σ-method δy/y at the four sweet spots is 0.32 / 0.22 / 0.29 / 0.15 at the mid configuration (2026-08-27, corrected spots; library regenerated 2026-08-28 without PYTHIA's default m̂ ≥ 4 GeV floor, which had removed x < 16/s) — the toy was optimistic everywhere — and each configuration's own spots resolve to 0.38–0.11 (low) and 0.23–0.18 (top), so the x ≈ 0.14 bins belong to the **low-energy** configuration.
 - **The Roman-Pot aperture for an intact ⁶Li is measured, and it is
-  horizontal** (2026-08-26): npsim cannot shoot a nucleus, so
-  `tools/fullsim/ion_gun_hepmc.py` feeds one through the ePIC geometry as
-  HepMC.  The boundary is |θ_x| ≳ 2.0 / 1.35 / 1.03 mrad in the
-  5×41 / 10×100 / 18×275 optics against |θ_y| ≳ 1.8–3 mrad — the opposite
-  aspect to the slot the coherent chain assumes, which flips the sign of
-  the acceptance-induced ⟨cos 2β⟩ (plans/04 #20).
+  horizontal** (re-measured 2026-08-28 in the current ePIC geometry,
+  `epic-main` git 9aaa2969): npsim cannot shoot a nucleus, so
+  `tools/fullsim/ion_gun_hepmc.py` feeds one through the geometry as
+  HepMC.  The boundary is |θ_x| ≳ 2.50 / 1.51 / 0.53 mrad in the
+  5×41 / 10×100 / 18×275 optics against |θ_y| ≳ (shut) / 2.12 / 0.92 mrad
+  — the opposite aspect to the slot the coherent chain assumes, which
+  flips the sign of the acceptance-induced ⟨cos 2β⟩ (plans/04 #20).  The
+  transport is measured with it: (R₁₂, R₃₄, D) = 19.24 / — / 0.311,
+  21.25 / 3.35 / 0.287 and 29.97 / 2.93 / 0.292 m, a horizontal lever
+  6.3× the vertical at 10 × 100 and 10.2× at 18 × 275, and the pot's outer
+  edge at 2.85 / 3.85 / 4.00 mrad rather
+  than the 5 mrad the acceptance tables assume.  Which of the two
+  constraints binds is now per configuration: the silicon at 5 × 41
+  (2.50 against a 2.20 mrad envelope), the machine at the other two, by
+  eight orders of magnitude at 18 × 275 (0.53 against 0.92).  The 5 × 41
+  row stands on the ePIC baseline proton lattice; the Z/A = 0.5 file at
+  the ⁶Li fill point gives 1.61 mrad instead (48 mm / 29.81 m, the
+  threshold the code applies; first hit at 1.60 on +x, 1.70 on −x), a
+  ×0.64 systematic (plans/09 B1, D3).
+- **The over-rigid ⁷Li triton is taggable** (2026-08-28): it lands on
+  Roman-Pot silicon at dx = +66 mm in 60 of 60 events at every
+  configuration, with a zero-degree-calorimeter deposit behind it in
+  80–98%, so "no IP6 coverage" is withdrawn, `farforward.route_charged`
+  has an over-rigid branch, the ⁷Li α + t double tag exists, and the t tag
+  runs 78 / 92 / 94% against the 3.3 / 0.4 / 0.5% it was published at.
 - **The coherent estimator is unbiased at any count** (2026-08-28): the
   bin-wise spin-state ratio carries an O(1/ν) offset that biased a_t by
   −34% in the sparsest |t| bin at one year; the acceptance-profiled
@@ -80,8 +108,9 @@ python scripts/money_tagged_azz.py --events 400000    # tagged tensor asymmetry
 - **The α + d background has a second handle** (2026-08-28): given an α
   that fakes a coherent tag, its partner deuteron is in the pots 84–85% of
   the time at the tagging optics (12 / 2 / 25% at the Yellow Report
-  optics), 15–38 mm away and merged into one 500 μm pixel in at most
-  4 × 10⁻⁴ of recorded pairs, none at all at the Yellow Report envelope
+  optics), 11–26 mm away on the measured per-configuration levers and
+  merged into one 500 μm pixel in at most
+  4 × 10⁻³ of recorded pairs, none at all at the Yellow Report envelope
   (`nearbeam_two_hit.py`, plans/09 B4).  The tagged observables now run
   on the same optics: the ⁶Li α tag admits nothing below k = 0.15 GeV/c
   at any published optics and half its sample there at the tagging

@@ -226,8 +226,10 @@ def test_alpha_deuteron_breakup_is_two_hits_tens_of_pixels_apart():
     lever alone, no dispersion.  It is a LOWER bound and it is NOT what the
     documents quote.  The measurement draws both fragments from one
     relative momentum at kappa = 60.7 MeV/c and adds the pot dispersion,
-    giving medians of 15.1 / 18.5 / 38.4 mm at 18 x 275 / 10 x 100 / 5 x 41
-    (fastsim/tests/test_two_hit.py, plans/09 B4).  Until 2026-08-28 this
+    giving medians of 10.9 / 10.7 / 25.8 mm at 18 x 275 / 10 x 100 / 5 x 41,
+    an ordering that stopped being monotone in the beam energy when R12
+    was measured per configuration (fastsim/tests/test_two_hit.py,
+    plans/09 B4).  Until 2026-08-28 this
     test was evaluated at the retired rigidity-scaled 50 and 20.5 GeV/u,
     and plans/04 #19 quoted its output as the answer."""
     k_gev, r12_m, pitch_mm = 0.040, 30.6, 0.5
@@ -332,7 +334,13 @@ def test_rp_aperture_resolves_for_both_isotopes_at_every_configuration():
     from polligen import reco
     from polli_fastsim import beams
 
-    expect = ((2.0e-3, 3.0e-3), (1.35e-3, 3.0e-3), (1.03e-3, 2.3e-3))
+    # re-measured 2026-08-28 in the current epic-main (plans/09 B1,
+    # tools/fullsim): band threshold / measured lever, 48/19.24,
+    # 32/21.25, 16/29.97 horizontally and 7.1/3.35, 2.7/2.93 vertically,
+    # each reproduced by the first accepted angle of a 0.05 mrad ladder to
+    # 1-4%.  The September-2024 triple (2.0, 3.0), (1.35, 3.0), (1.03,
+    # 2.3) is kept reachable as reco.RP_APERTURE_SEP2024.
+    expect = ((2.50e-3, 8.84e-3), (1.51e-3, 2.12e-3), (0.53e-3, 0.92e-3))
     for iso in ("6Li", "7Li"):
         got = [reco.rp_aperture_for(c) for c in beams.default_configs(iso)]
         assert got == list(expect), iso
@@ -348,6 +356,93 @@ def test_rp_aperture_resolves_for_both_isotopes_at_every_configuration():
     assert reco.rp_aperture_for(20.5) is None          # the retired energy
     assert reco.rp_aperture_for(117.9) is None         # 7Li, momentum path
 
+    # the superseded table is still reachable for reproducing a number
+    # published against it, and is NOT what the default returns
+    for cfg, want in zip(beams.default_configs("6Li"),
+                         ((2.0e-3, 3.0e-3), (1.35e-3, 3.0e-3),
+                          (1.03e-3, 2.3e-3))):
+        assert reco.rp_aperture_for(
+            cfg, table=reco.RP_APERTURE_SEP2024) == want
+    # every half-width moved, and at 18 x 275 both shrank -- the 16 mm
+    # module and the 2.7 mm insertion replacing 32 mm and 7 mm
+    assert reco.RP_APERTURE_MEASURED["18x275"][0] < 0.6 * 1.03e-3
+    assert reco.RP_APERTURE_MEASURED["18x275"][1] < 0.5 * 2.3e-3
+    # and the cutout is TALLER THAN IT IS WIDE at every configuration,
+    # which is the sign statement rp_measure's docstring rests on
+    for cx, cy in reco.RP_APERTURE_MEASURED.values():
+        assert cy > cx
+
+
+def test_the_5x41_vertical_plane_is_shut_not_a_3mrad_edge():
+    """The 5 x 41 c_y encodes a SHUT plane, and it has to, because
+    `rp_measure` accepts on |theta_x| > c_x OR |theta_y| > c_y: a c_y that
+    is too small over-accepts.
+
+    The scan gave three Roman-pot rows in the whole 0.20-6.00 mrad vertical
+    ladder at phi = 90 and none at phi = 270, and the only one above the
+    29.6 mm module edge -- theta = 3.35 mrad, y = +30.94 mm -- is a single
+    hit in a single plane with both its 0.05 mrad neighbours empty.  That
+    is an isolated grazing hit, not an edge.  c_y is instead the smallest
+    angle at which any 5 x 41 silicon could be reached at all: 29.6 mm over
+    the largest vertical lever measured anywhere (R34 = 3.35 m at
+    10 x 100)."""
+    import numpy as np
+
+    from polligen import reco
+    from polli_fastsim import beams
+    from polli_fastsim import farforward as ff
+    from polli_fastsim import spectator as sp
+
+    cx, cy = reco.RP_APERTURE_MEASURED["5x41"]
+    assert cy > 8.0e-3                       # shut, not 3.35 mrad
+    assert cy == pytest.approx(29.6e-3 / ff.POT_LEVERS["10x100"][1], rel=0.01)
+    assert np.isfinite(cy)                   # finite, so callers can print it
+    # nothing this programme produces reaches it: no 6Li alpha spectator at
+    # 5 x 41 is tagged on the vertical alone
+    cfg = beams.default_configs("6Li")[0]
+    k = sp.spectator_lab_kinematics(sp.LI6_ALPHA_TAG,
+                                    cfg.ion_momentum_per_nucleon, 200000,
+                                    beta=0.30, rng=np.random.default_rng(7))
+    thx = np.abs(k["theta"] * np.cos(k["phi"]))
+    thy = np.abs(k["theta"] * np.sin(k["phi"]))
+    assert not np.any((thy > cy) & (thx <= cx))
+    # the retired 3.35 mrad row WOULD have admitted some of them
+    assert np.any((thy > 3.35e-3) & (thx <= cx))
+
+
+def test_the_light_ion_lattice_alternative_is_reachable_and_priced():
+    """The 5 x 41 aperture depends on WHICH compact file the ring is run
+    from, by a factor 1.55, and the alternative has to be reachable in code
+    rather than only in prose (`beamline_5x41_He4.xml`, the Z/A = 0.5
+    lattice, against the 41 GeV proton lattice the ePIC baseline
+    includes)."""
+    from polligen import reco
+    from polli_fastsim import farforward as ff
+
+    base_r12 = ff.POT_LEVERS["5x41"][0]
+    alt_r12 = ff.POT_LEVERS_LIGHT_ION_LATTICE["5x41"][0]
+    assert alt_r12 == pytest.approx(29.81, abs=0.05)
+    assert alt_r12 / base_r12 == pytest.approx(1.55, abs=0.02)
+    # the vertical is shut in both, and 10 x 100 could not be checked
+    assert ff.POT_LEVERS_LIGHT_ION_LATTICE["5x41"][1] is None
+    assert ff.POT_LEVERS_LIGHT_ION_LATTICE["10x100"] is None
+    # the He4 file is the Yellow Report 275 GeV magnet set scaled, so it
+    # reproduces the 18 x 275 lattice to 1% -- and the 18 x 275 row of the
+    # alternative IS the baseline row
+    assert ff.POT_LEVERS_LIGHT_ION_LATTICE["18x275"] == ff.POT_LEVERS["18x275"]
+    assert abs(alt_r12 / ff.POT_LEVERS["18x275"][0] - 1.0) < 0.01
+
+    alt = reco.RP_APERTURE_MEASURED_LIGHT_ION_LATTICE
+    assert alt["5x41"][0] == pytest.approx(48e-3 / alt_r12, rel=0.01)
+    assert (reco.RP_APERTURE_MEASURED["5x41"][0] / alt["5x41"][0]
+            == pytest.approx(1.55, abs=0.03))
+    assert alt["10x100"] is None
+    assert alt["18x275"] == reco.RP_APERTURE_MEASURED["18x275"]
+    # and it is reachable through the lookup, like the September-2024 table
+    from polli_fastsim import beams
+    cfg = beams.default_configs("6Li")[0]
+    assert reco.rp_aperture_for(cfg, table=alt) == alt["5x41"]
+
 
 def test_li7_alpha_tag_is_optics_blind_and_the_tagging_optics_is_a_net_loss():
     """The B3 result in one assertion.  The 7Li alpha sits at rigidity
@@ -356,7 +451,7 @@ def test_li7_alpha_tag_is_optics_blind_and_the_tagging_optics_is_a_net_loss():
     optics and 0.98-0.99 at the tagging optics -- x1.02 -- bought at 1/8 to
     1/15 of the luminosity.  For 7Li the tagging optics is therefore a
     factor 8-15 NET LOSS, the exact inverse of 6Li, where the same optics
-    turns a 1.5% tag into a 27-35% one.  6Li and 7Li want different machine
+    turns a 1.7-2.6% tag into a 28-35% one.  6Li and 7Li want different machine
     optics and are different runs."""
     import numpy as np
     from polli_fastsim import beams, farforward as ff, spectator as sp
@@ -383,3 +478,109 @@ def test_li7_alpha_tag_is_optics_blind_and_the_tagging_optics_is_a_net_loss():
         assert 8.0 < loss < 16.0                   # luminosity paid
         assert gain / loss < 0.15, i               # a net loss, decisively
 
+
+# --- the 7Li breakup table and the over-rigid route (plans/09 B1, B3) ------
+
+
+def test_the_breakup_tables_are_beam_generic_and_7li_has_one():
+    """plans/09 B3 held the 7Li table back deliberately: "a routing table
+    with no amplitude behind it is the half-built channel this section
+    refuses ... the far-forward stream is measuring the triton's
+    destination in this run".  It has been measured (B1), so the table
+    exists, and `fragment_route_label` / `veto_table` take the beam.
+
+    Before this, `fragment_route_label` hard-coded 6Li through
+    `fragment_rigidity`'s defaults and answered the wrong question on a
+    7Li fragment: it called an INTACT 7Li "lost (over-rigid)" on
+    R = m(7Li)/m(6Li) = 1.166 and the 7Li alpha "RP pT-tail only", which
+    is the 6Li alpha's destination."""
+    from polligen import coherent as coh
+
+    li7 = coh.veto_table(7, 3)
+    assert set(li7) == {"alpha+t", "6Li+n", "alpha+d+n", "6He+p"}
+    frag = {name: {f: (r, d) for f, r, d in rows}
+            for name, rows in li7.items()}
+
+    # the tag channel: the alpha lands mid-window and the triton, measured
+    # 2026-08-28, lands on the pots' INNER half rather than nowhere
+    r_a, dest_a = frag["alpha+t"]["alpha"]
+    assert r_a == pytest.approx(0.85571, abs=5e-6) and dest_a == "RomanPots"
+    r_t, dest_t = frag["alpha+t"]["t"]
+    assert r_t == pytest.approx(1.28971, abs=5e-6)
+    assert dest_t == "RP-inner (over-rigid)"
+    assert frag["6Li+n"]["n"][1] == "ZDC"
+    assert frag["6Li+n"]["6Li"][1] == "RomanPots"
+    # 6He is not in spectator.NUCLEUS_MASS and falls back on A * M_U,
+    # 0.3% low; the destination does not notice
+    r_he6 = frag["6He+p"]["6He"][0]
+    assert r_he6 == pytest.approx(1.283, abs=1e-3)
+    assert frag["6He+p"]["6He"][1] == "RP-inner (over-rigid)"
+
+    # separation energies from AME2020 through spectator.NUCLEUS_MASS
+    thr = {name: t for name, t, _f in coh.LI7_BREAKUP}
+    assert thr["alpha+t"] == pytest.approx(2.468, abs=0.002)   # plans/01
+    assert thr["6Li+n"] == pytest.approx(7.251, abs=0.002)
+    assert thr["alpha+d+n"] == pytest.approx(8.725, abs=0.002)
+    assert thr["6He+p"] == pytest.approx(9.975, abs=0.002)
+    # 7Li is 3p + 4n: there is no alpha + p + n channel, that is 6Li
+    assert "alpha+p+n" not in thr
+    assert "alpha+p+n" in dict((n, t) for n, t, _f in coh.LI6_BREAKUP)
+
+    # the 6Li table is unchanged, and its 3He + t triton at R = 1.504 is
+    # still lost: 152 mm at the pot plane, past the last module at 144
+    li6 = coh.veto_table()
+    assert li6 == coh.veto_table(6, 3)
+    assert li6["3He+t"][1][2] == "lost (over-rigid)"
+
+    # and an intact 7Li is at beam rigidity when the beam IS 7Li
+    assert coh.fragment_rigidity(7, 3, beam_a=7, beam_z=3) == 1.0
+    assert "beam-blind" in coh.fragment_route_label(7, 3, beam_a=7, beam_z=3)
+    # on the 6Li defaults the same call answers the wrong question: an
+    # intact 7Li reads R = m(7Li)/m(6Li) = 1.166 and is routed over-rigid
+    assert "over-rigid" in coh.fragment_route_label(7, 3)
+
+    with pytest.raises(KeyError):
+        coh.breakup_table(4, 2)
+
+
+
+def test_the_reach_gain_min_count_guard_drops_the_empty_bin_and_keeps_a_full_one():
+    """`nearbeam_reach_gain.py` used to fit every |t| bin it was given.
+
+    At 18 x 275 the measured silicon aperture tags 268 recoils a year and
+    231 of them land in one bin, whose fit returned a_t = -1.56 +- 2.22
+    against an injected +0.42 -- a point with the shape of a measurement
+    and none of the content, and the only thing setting the vertical
+    range of panel (a).  Since 2026-08-28 a bin is fitted only if it
+    expects at least `MIN_TAGGED_PER_BIN` tagged recoils at one year, the
+    expectation being the bin's share of the equally weighted accepted
+    response recoils times the row's N_tag.  This pins both directions of
+    that threshold and the arithmetic behind it.
+    """
+    import importlib
+    import pathlib as _pl
+    import sys as _sys
+    _sys.path.insert(0, str(_pl.Path(__file__).resolve().parents[1]
+                            / "scripts"))
+    reach = importlib.import_module("nearbeam_reach_gain")
+
+    assert reach.MIN_TAGGED_PER_BIN > 231.0     # the bin it exists to retire
+
+    # nine accepted recoils, one of them in 0.17-0.25 and eight in
+    # 0.05-0.08, against the 268 tagged/yr of the silicon row at 18 x 275
+    t_reco = np.array([0.06] * 8 + [0.20])
+    sparse = reach.expected_tagged_in_bin(268.0, t_reco, 0.17, 0.25)
+    full = reach.expected_tagged_in_bin(268.0, t_reco, 0.05, 0.08)
+    assert sparse == pytest.approx(268.0 / 9.0)
+    assert full == pytest.approx(268.0 * 8.0 / 9.0)
+    assert sparse < reach.MIN_TAGGED_PER_BIN     # dropped
+    # the same shape at the tagging optics' 6.0e6 tagged/yr keeps both
+    rich_sparse = reach.expected_tagged_in_bin(6.0e6, t_reco, 0.17, 0.25)
+    assert rich_sparse >= reach.MIN_TAGGED_PER_BIN
+    assert full * (6.0e6 / 268.0) >= reach.MIN_TAGGED_PER_BIN
+
+    # half-open bins: the upper edge belongs to the next bin, and an
+    # empty response expects nothing rather than dividing by zero
+    edge = reach.expected_tagged_in_bin(1.0e6, np.array([0.08]), 0.05, 0.08)
+    assert edge == 0.0
+    assert reach.expected_tagged_in_bin(1.0e6, np.array([]), 0.05, 0.08) == 0.0

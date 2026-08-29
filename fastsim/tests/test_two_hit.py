@@ -23,28 +23,41 @@ from polli_fastsim import beams
 from polli_fastsim import farforward as ff
 from polli_fastsim import spectator as sp
 
-#: median alpha-d separation at the pot plane [mm], R12 = 30.6 m, pot
-#: dispersion D = 0.30 m, beta = 0.30, seed 7, in configuration order
+#: median alpha-d separation at the pot plane [mm] on the PER-CONFIGURATION
+#: levers measured on 2026-08-28 (`farforward.POT_LEVERS`, tools/fullsim,
+#: plans/09 B1: R12 = 19.24 / 21.25 / 29.97 m, R34 = -- / 3.35 / 2.93,
+#: D = 0.311 / 0.287 / 0.292), beta = 0.30, seed 7, in configuration order
 #: (5 x 41, 10 x 100, 18 x 275).  These are the numbers Report 4 Table 5,
 #: plans/09 SS9.2 and the reproduction manual carry, and
 #: tools/consistency_check.py compares the documents against this table.
-#: They have been wrong twice, in two different ways.  Table 5 published
-#: 73.4 / 30.1 / 10.9 mm until 2026-08-28: the two lower rows were computed
-#: at the pre-2026-08-27 rigidity-scaled 20.5 and 50 GeV/u and were a
-#: factor 2 high, which no energy-drift check could see because the stale
-#: energy survives only inside a derived millimetre.  The correction to
-#: 36.7 / 15.1 / 10.9 mm the same day then dropped the DISPERSIVE
-#: displacement, on the argument that two fragments within 0.7% of beam
-#: rigidity share it -- they do not, because they take opposite k_z and
-#: their rigidities move in opposite directions (see
-#: `farforward.separation_at_pots`).  Restoring it adds 5 / 23 / 39%.
-MEDIAN_SEPARATION_MM = {"5x41": 38.4, "10x100": 18.5, "18x275": 15.1}
+#: They have been wrong three times, in three different ways.  Table 5
+#: published 73.4 / 30.1 / 10.9 mm until 2026-08-28: the two lower rows
+#: were computed at the pre-2026-08-27 rigidity-scaled 20.5 and 50 GeV/u
+#: and were a factor 2 high, which no energy-drift check could see because
+#: the stale energy survives only inside a derived millimetre.  The
+#: correction to 36.7 / 15.1 / 10.9 mm the same day then dropped the
+#: DISPERSIVE displacement, on the argument that two fragments within 0.7%
+#: of beam rigidity share it -- they do not, because they take opposite
+#: k_z and their rigidities move in opposite directions (see
+#: `farforward.separation_at_pots`); restoring it gave 38.4 / 18.5 /
+#: 15.1.  And those three carried ONE 18 x 275 lever pair, R12 = 30.6 m
+#: with R34 taken equal to it, at every configuration.  The scan of
+#: plans/09 B1 measured both per configuration and the millimetres fall
+#: again: R12 is a third smaller at the two lower configurations, and R34
+#: is 2.9-3.4 m rather than 30.6, an order of magnitude, so the vertical
+#: half of every separation collapses.  Hence 25.8 / 10.7 / 10.9 mm, and
+#: the ordering 5 x 41 > 10 x 100 no longer implies 10 x 100 > 18 x 275:
+#: the two upper configurations are now equal to 4%, because 18 x 275's
+#: larger R12 offsets its smaller angles.
+MEDIAN_SEPARATION_MM = {"5x41": 25.8, "10x100": 10.7, "18x275": 10.9}
 
-#: median alpha-d separation with the ANGULAR lever alone [mm]: what the
-#: same table said between the two corrections.  Pinned so that the size of
-#: the dispersive term stays visible and cannot be dropped again in
-#: silence.
-ANGULAR_ONLY_SEPARATION_MM = {"5x41": 36.7, "10x100": 15.1, "18x275": 10.9}
+#: median alpha-d separation with the ANGULAR lever alone [mm].  Pinned so
+#: that the size of the dispersive term stays visible and cannot be dropped
+#: again in silence -- and it is now the SMALLER half at the two upper
+#: configurations, 6.2 mm of angle against a 8.8-9.3 mm median dispersive
+#: displacement, the roles having swapped with the measurement of R34:
+#: on the single 30.6 m lever the angular term was the dominant one.
+ANGULAR_ONLY_SEPARATION_MM = {"5x41": 23.1, "10x100": 6.2, "18x275": 6.2}
 
 
 def _breakup(config, n=200_000, seed=7):
@@ -137,16 +150,23 @@ def test_the_separation_medians_report_4_table_5_quotes():
     sampling spread at 200k events."""
     for cfg in beams.default_configs("6Li"):
         ev = _breakup(cfg)
-        sep_mm = 1e3 * ff.separation_at_pots(ev["spectator"], ev["partner"])
+        sep_mm = 1e3 * ff.separation_at_pots(ev["spectator"], ev["partner"],
+                                             config=cfg)
         med = float(np.median(sep_mm))
         assert med == pytest.approx(MEDIAN_SEPARATION_MM[ff.yr_config_key(cfg)],
                                     rel=0.03), cfg.label()
     # the ordering is the boost: the separation is an ANGLE times R12, and
     # the angle goes as 1/p_u, so the low-energy configuration is the widest
     meds = [float(np.median(ff.separation_at_pots(_breakup(c)["spectator"],
-                                                  _breakup(c)["partner"])))
+                                                  _breakup(c)["partner"],
+                                                  config=c)))
             for c in beams.default_configs("6Li")]
-    assert meds[0] > meds[1] > meds[2]
+    # the ordering is no longer monotone: it was, while one R12 was applied
+    # at every configuration and the separation was pure 1/p_u; with the
+    # measured levers 18 x 275's larger R12 (30.0 against 21.2 m) cancels
+    # its smaller angles and the two upper rows tie to 4%.
+    assert meds[0] > meds[1] and meds[0] > meds[2]
+    assert abs(meds[1] - meds[2]) < 0.10 * meds[1]
 
 
 def test_the_dispersive_term_is_the_same_size_as_the_angular_one():
@@ -160,23 +180,25 @@ def test_the_dispersive_term_is_the_same_size_as_the_angular_one():
         ev = _breakup(cfg)
         a, d = ev["spectator"], ev["partner"]
         key = ff.yr_config_key(cfg)
-        full = float(np.median(1e3 * ff.separation_at_pots(a, d)))
-        ang = float(np.median(1e3 * ff.separation_at_pots(a, d,
+        r12, r34, disp = ff.pot_levers_for(cfg)
+        full = float(np.median(1e3 * ff.separation_at_pots(a, d, config=cfg)))
+        ang = float(np.median(1e3 * ff.separation_at_pots(a, d, r12=r12,
+                                                          r34=r34,
                                                           dispersion=0.0)))
         assert ang == pytest.approx(ANGULAR_ONLY_SEPARATION_MM[key], rel=0.03)
         assert full == pytest.approx(MEDIAN_SEPARATION_MM[key], rel=0.03)
         assert full > ang
         # the rigidity difference itself, and its k = 0 offset
         dr = np.asarray(a["R"]) - np.asarray(d["R"])
-        assert float(np.median(np.abs(1e3 * ff.POT_DISPERSION * dr))) == \
+        assert float(np.median(np.abs(1e3 * disp * dr))) == \
             pytest.approx(9.2, rel=0.1)
         slope = np.polyfit(ev["kz"], a["R"], 1)[0]
         assert slope == pytest.approx(0.268, rel=0.02)
         assert np.polyfit(ev["kz"], d["R"], 1)[0] == pytest.approx(-0.536,
                                                                    rel=0.02)
     # and the fragment order does not matter
-    assert np.allclose(ff.separation_at_pots(a, d),
-                       ff.separation_at_pots(d, a))
+    assert np.allclose(ff.separation_at_pots(a, d, config=cfg),
+                       ff.separation_at_pots(d, a, config=cfg))
 
 
 def test_a_recorded_pair_merges_only_through_the_dispersion():
@@ -193,8 +215,11 @@ def test_a_recorded_pair_merges_only_through_the_dispersion():
     for cfg in beams.default_configs("6Li"):
         ev = _breakup(cfg)
         a, d = ev["spectator"], ev["partner"]
-        sep_mm = 1e3 * ff.separation_at_pots(a, d)
-        ang_mm = 1e3 * ff.separation_at_pots(a, d, dispersion=0.0)
+        r12, r34, _disp = ff.pot_levers_for(cfg)
+        r34e = r12 if r34 is None else r34
+        sep_mm = 1e3 * ff.separation_at_pots(a, d, config=cfg)
+        ang_mm = 1e3 * ff.separation_at_pots(a, d, r12=r12, r34=r34,
+                                             dispersion=0.0)
         assert float(sep_mm.min()) < 0.5          # they do exist ...
         for optics in (ff.yr_optics(cfg), ff.tagging_optics(cfg),
                        ff.HIGH_ACCEPTANCE):
@@ -205,11 +230,21 @@ def test_a_recorded_pair_merges_only_through_the_dispersion():
             rec = ((ra == 1) | (ra == 4)) & ((rd == 1) | (rd == 4))
             if rec.sum() < 50:
                 continue
-            scale = 3e3 * ff.POT_R12 * min(optics.envelope)
-            assert 0.90 * scale < float(ang_mm[rec].min()) < scale
-            assert float(ang_mm[rec].min()) > 20.0 * 0.5   # > 20 pixels
-            # with the dispersion the same pairs can close up, but rarely
-            assert float(np.mean(sep_mm[rec] < 0.5)) < 1e-3
+            # the scale needs the lever of the axis the recoil escapes
+            # through, and since 2026-08-28 those differ by ~9x: it is
+            # 3 min(R12 env_x, R34 env_y), not 3 R12 min(envelope).  At
+            # 10 x 100 the two read 18 and 115 mm and the measured minimum
+            # is 19, so the old form is not a scale at all any more.
+            scale = 3e3 * min(r12 * optics.envelope[0],
+                              r34e * optics.envelope[1])
+            assert 0.90 * scale < float(ang_mm[rec].min()) < 1.20 * scale
+            assert float(ang_mm[rec].min()) > 12.0 * 0.5   # > 12 pixels
+            # with the dispersion the same pairs can close up, but rarely.
+            # The measured levers raise this from < 1e-3 to 4e-3 at
+            # 18 x 275: the vertical lever collapsed by 10x and the
+            # dispersive term, which did not, can now cancel more of the
+            # angular one.
+            assert float(np.mean(sep_mm[rec] < 0.5)) < 5e-3
 
 
 def test_the_partner_veto_given_an_alpha_that_fakes_a_coherent_tag():

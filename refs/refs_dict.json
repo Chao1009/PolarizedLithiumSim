@@ -1,6 +1,6 @@
 {
  "_about": "Reference dictionary of the PolarizedLithiumSim program: the paper copies committed in refs/ (PDFs tracked in git since 2026-08-25; the EIC Yellow Report as four parts) and the few references without a free copy. Each entry: identifiers, title, where the local file is (';'-separated list for multi-part files; null = no free copy), the important content with equation/figure/page pointers, and where the reference is used in the repository. Search it with `python refs/find_ref.py <keyword>`; `--check` lists the local-copy status, `--fetch` re-downloads missing arXiv PDFs. Facts marked (repo-verified) were checked against the primary source during the dated fact-check passes recorded in plans/01 section 6, plans/06 section 6.5 and the reconstruction-chain report.",
- "_updated": "2026-08-26",
+ "_updated": "2026-08-28",
  "entries": {
   "cosyn2025-tensor-polarization-options": {
    "file": "refs/2410.12764v1.pdf",
@@ -1130,6 +1130,172 @@
    "used_in": [
     "reports/nanowire_far_forward.template.html (amplitude is binary -> Z-ID must be threshold-based; the area state of the art)",
     "plans/09_nearbeam_nanowire_far_forward.md"
+   ]
+  },
+  "cloet2006-polarized-emc": {
+   "file": "refs/nucl-th_0605061.pdf",
+   "arxiv": "nucl-th/0605061",
+   "journal": "Phys. Lett. B 642 (2006) 210",
+   "title": "Spin-dependent structure functions in nuclear matter and the polarized EMC effect",
+   "authors": [
+    "I. C. Cloet",
+    "W. Bentz",
+    "A. W. Thomas"
+   ],
+   "year": 2006,
+   "keywords": [
+    "polarized EMC",
+    "CBT",
+    "NJL",
+    "g1",
+    "7Li",
+    "9Be",
+    "11B",
+    "27Al",
+    "spin-dependent",
+    "nuclear matter",
+    "medium modification",
+    "ratio-of-effects"
+   ],
+   "key_content": [
+    "Eq. (23): R^{3/2 3/2}_{As} = polarized-to-naive ratio for a stretched J = 3/2 nucleus with the FULL spin-3/2 sum -- this is the definition plans/01:79 gives Delta R_A. Eq. (26): R^{(3/2 1)}_{As}, the alternative normalization. The two differ by up to 0.06 at x = 0.8.",
+    "FIG. 6 (page 7 of the arXiv PDF, upper-left panel): 7Li at Q^2 = 5 GeV^2, x in 0..1, ratio 0.6..1.2 -- blue dashed = unpolarized EMC effect, red solid = R^{(3/2 1)}_{As} (Eq. 26), red dotted = R^{3/2 3/2}_{As} (Eq. 23), 9Be points overlaid. DIGITIZED into fastsim/polli_fastsim/data/cbt_polemc_7Li_Q5.csv (see that directory's SOURCES.md).",
+    "The '2x' slogan: the ratio of EMC effects r(x) = (1 - R_pol)/(1 - R_unpol) is NOT a constant 2 -- on the digitized Eq.-23 curve it is 2.25 / 1.69 / 1.41 / 1.14 at x = 0.40 / 0.45 / 0.50 / 0.60 and falls below 1 above x ~ 0.65, where the two curves cross.",
+    "The polarized curve sits BELOW the unpolarized one at low x (0.927 vs 1.024 at x = 0.10) and above it at x > 0.8; the curves converge at x ~ 0.62-0.65."
+   ],
+   "used_in": [
+    "fastsim/polli_fastsim/polarized.py cbt_polarized_emc_ratio (mode='digitized')",
+    "fastsim/polli_fastsim/data/cbt_polemc_7Li_Q5.csv",
+    "reports/polarized_li_primer.template.html Sec. 5.3 and Table 3",
+    "plans/01_findings_physics_case.md Sec. 2.3, plans/02 step 1.2.2"
+   ]
+  },
+  "tronchin2018-polarized-emc": {
+   "file": "refs/1806.00481.pdf",
+   "arxiv": "1806.00481",
+   "journal": "Phys. Lett. B 783 (2018) 247",
+   "title": "Polarized EMC effect in the QMC model",
+   "authors": [
+    "S. Tronchin",
+    "H. H. Matevosyan",
+    "A. W. Thomas"
+   ],
+   "year": 2018,
+   "keywords": [
+    "polarized EMC",
+    "TMT",
+    "QMC",
+    "quark-meson coupling",
+    "g1",
+    "nuclear matter",
+    "counter-model",
+    "medium modification"
+   ],
+   "key_content": [
+    "Figure 4 (page 9 of the arXiv PDF): isospin-symmetric nuclear matter at Q^2 = 10 GeV^2, x in 0..1, ratio 0.6..1.2 -- blue solid = unpolarized EMC ratio, purple dashed = polarized (spin) EMC ratio. Both stop at x ~ 0.75. DIGITIZED into fastsim/polli_fastsim/data/tmt_polemc_nm_Q10.csv.",
+    "The QMC result: the polarized and unpolarized EMC effects are COMPARABLE, not a factor 2 apart. The digitized ratio-of-effects (1 - R_pol)/(1 - R_unpol) is 1.01 / 1.00 / 1.08 at x = 0.40 / 0.50 / 0.60, i.e. ~1 across the valence region, against CBT's 2.25 / 1.41 / 1.14.",
+    "Different target and scale from CBT (nuclear matter at Q^2 = 10 GeV^2 vs 7Li at Q^2 = 5 GeV^2), which is why the repository compares the two in the ratio-of-effects form applied to one common 7Li unpolarized baseline rather than subtracting the published R values."
+   ],
+   "used_in": [
+    "fastsim/polli_fastsim/polarized.py tmt_polarized_emc_ratio (mode='digitized')",
+    "fastsim/polli_fastsim/data/tmt_polemc_nm_Q10.csv",
+    "reports/polarized_li_primer.template.html Sec. 5.3 and Table 3",
+    "plans/02_phase1_event_generation.md step 1.2.2"
+   ]
+  },
+  "cosyn2017-b1-convolution": {
+   "file": "refs/1702.05337.pdf",
+   "arxiv": "1702.05337",
+   "journal": "Phys. Rev. D 95 (2017) 074036",
+   "title": "Deuteron tensor structure function b1",
+   "authors": [
+    "W. Cosyn",
+    "Yu-Bing Dong",
+    "S. Kumano",
+    "M. Sargsian"
+   ],
+   "year": 2017,
+   "keywords": [
+    "b1",
+    "tensor structure function",
+    "deuteron",
+    "convolution",
+    "CDKS",
+    "Close-Kumano sum rule",
+    "HERMES",
+    "standard convolution"
+   ],
+   "key_content": [
+    "FIG. 4 (page 9 of the arXiv PDF): x b1(x) at Q^2 = 2.5 GeV^2 -- theory 1 (blue) and theory 2 (green), each split into S-D interference (SD), D-D (DD) and their sum by dash pattern. DIGITIZED (the two sums) into fastsim/polli_fastsim/data/b1_cdks_q2p5.csv.",
+    "FIG. 5 (page 10): the same sums at Q^2 = 1.0, 2.5 and 5.0 GeV^2 -- the Q^2 handle. DIGITIZED into fastsim/polli_fastsim/data/b1_cdks_q2set.csv.",
+    "The standard convolution gives |b1| < 10^-3 at x >~ 0.2, an order of magnitude below the HERMES data, which is the 'convolution' camp of the repository's two b1 scenarios.",
+    "Close-Kumano sum rule int b1 dx = 0 holds for a convolution model with no tensor-polarized sea; the digitized sum integrates to ~1e-4 over the covered range (test_digitized_curves.py reports it)."
+   ],
+   "used_in": [
+    "fastsim/polli_fastsim/polarized.py b1_convolution (mode='digitized')",
+    "fastsim/polli_fastsim/data/b1_cdks_q2p5.csv, b1_cdks_q2set.csv",
+    "reports/polarized_li_primer.template.html Sec. 5.2 ref [45] and Table 3"
+   ]
+  },
+  "miller2014-b1-pion-hidden-color": {
+   "file": "refs/1311.4561.pdf",
+   "arxiv": "1311.4561",
+   "journal": "Phys. Rev. C 89 (2014) 045203",
+   "title": "Pionic and hidden-color, six-quark contributions to the deuteron b1 structure function",
+   "authors": [
+    "G. A. Miller"
+   ],
+   "year": 2014,
+   "keywords": [
+    "b1",
+    "tensor structure function",
+    "deuteron",
+    "pion",
+    "hidden color",
+    "six-quark",
+    "HERMES",
+    "Miller"
+   ],
+   "key_content": [
+    "FIG. 5 (page 10 of the arXiv PDF): the total b1 = b1(pion) + b1(6q) that reproduces the HERMES data, single curve. DIGITIZED into fastsim/polli_fastsim/data/b1_miller.csv.",
+    "FIG. 6 (page 11): 100 b1(x) at Q^2 = 1.17, 1.76, 2.12 and 3.25 GeV^2 -- the Q^2 handle. DIGITIZED into fastsim/polli_fastsim/data/b1_miller_q2set.csv.",
+    "A hidden-color six-quark probability of only 0.15% suffices to reproduce the HERMES b1, which is the 'HERMES-like' camp of the repository's two b1 scenarios."
+   ],
+   "used_in": [
+    "fastsim/polli_fastsim/polarized.py toy_b1 (mode='digitized')",
+    "fastsim/polli_fastsim/data/b1_miller.csv, b1_miller_q2set.csv",
+    "reports/polarized_li_primer.template.html Sec. 5.2 ref [46] and Table 3"
+   ]
+  },
+  "wang2021-gluon-spin-emc": {
+   "file": "refs/2109.03591.pdf",
+   "arxiv": "2109.03591",
+   "journal": "J. Phys. G 49 (2022) 03LT01",
+   "title": "Polarized gluon EMC effect",
+   "authors": [
+    "X. G. Wang",
+    "W. Bentz",
+    "I. C. Cloet",
+    "A. W. Thomas"
+   ],
+   "year": 2021,
+   "keywords": [
+    "gluon spin",
+    "polarized EMC",
+    "g1",
+    "Q2 evolution",
+    "7Li",
+    "dg1/dlnQ2",
+    "Wang"
+   ],
+   "key_content": [
+    "Figure 3 (page 8 of the arXiv PDF): left panel F_2A/F_2N and g_A/g_p, right panel g_1A/g_1p (solid) and Delta g_A/Delta g_p (dashed) -- the polarized GLUON EMC effect is larger than the unpolarized one, with 7Li named the most promising case.",
+    "Not digitized in this repository (the dg1/dlnQ2 observable has no money plot yet); the entry records where the curves are for plans/02 step 1.2.2."
+   ],
+   "used_in": [
+    "plans/01_findings_physics_case.md Sec. 2.3 (gluon sector)",
+    "plans/02_phase1_event_generation.md step 1.2.2",
+    "reports/polarized_li_primer.template.html Sec. 5.3 ref [22]"
    ]
   }
  }

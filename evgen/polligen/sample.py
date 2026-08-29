@@ -44,8 +44,12 @@ class InclusiveSampler:
                                  nuclear_f2=kernel.nf2)
         self.proj = proj
         self.s = proj.extras["s"]
-        # per-cell unpolarized cross section [pb]: divide out the scenario lumi
-        lumi_pb = self.scenario.lumi_fb_per_nucleon * 1e3
+        # per-cell unpolarized cross section [pb]: divide out the scenario
+        # lumi.  It is the EFFECTIVE luminosity that went into n_events --
+        # programme luminosity x run-plan share -- and dividing by the
+        # programme figure alone would leave the share multiplying a cross
+        # section, which is not a quantity a run plan can move (2026-08-28).
+        lumi_pb = self.scenario.lumi_effective_fb_per_nucleon * 1e3
         self.cell_xsec_pb = proj.n_events / lumi_pb
         self.accept = proj.accepted & (self.cell_xsec_pb > 0)
         self.flat_idx = np.flatnonzero(self.accept.ravel())

@@ -14,7 +14,21 @@ level (plans/07 WP3 -> WP5) -- money plot 6 re-derived with
     defaults (proton-derived 73 microrad, a 2.5 : 1 slot) reproduce the
     pre-2026-08-27 figure and are kept only for that;
   * the Roman-Pot emulation: divergence smearing of the recoil angle,
-    |t| = pT^2 reconstructed with x_L = 1, reco t bins;
+    |t| = pT^2 reconstructed with x_L = 1, reco t bins.  The PUBLISHED
+    binning (2026-08-28) is the seven bins of
+    `recopseudo.T_EDGES_PUBLISHED`, 0.017 to 0.25 GeV^2: the aperture
+    floor at the tagging optics is |t|_min = 0.0064 / 0.0098 / 0.0094
+    GeV^2 at the three configurations, so the window is an ANALYSIS
+    choice above it, and it stops at 0.017 because a 0.006-0.017 bin
+    empties a third to a half of its beta cells.  a_t is quoted at the
+    bin's t_ref, the rate-weighted mean TRUE |t|, and in the four bins
+    whose t_ref falls below 0.05 GeV^2 -- 0.017-0.028 through 0.05-0.08,
+    at t_ref = 0.023, 0.029, 0.036 and 0.045 -- it is the linear-in-|t|
+    deformation model extrapolated below the lowest digitized anchor
+    point (coherent.MANTYSAARI_A2_DEUTERON starts at 0.05).  The retired
+    four-bin window's own lowest bin was already one of those four, so
+    the wider window deepens the extrapolation rather than introducing
+    it.  The run-13 window is `--t-edges 0.05,0.08,0.12,0.17,0.25`;
   * the TWO azimuths: alpha = phi_e - phi_S (electron) and beta =
     phi_t - phi_S (recoil); the deformation term modulates cos 2beta and
     the gluon-transversity term cos 2alpha; the unpolarized lepton-plane
@@ -34,6 +48,15 @@ level (plans/07 WP3 -> WP5) -- money plot 6 re-derived with
     from the spin-averaged counts of the same data against the response's
     acceptance shape and propagates their covariance into the harmonic
     errors, instead of assuming ZEUS's values.
+
+Three luminosity factors multiply and are NOT the same object:
+`--lumi-1yr` is the PROGRAMME luminosity of one EIC year; `--lumi-fraction`
+is this observable's share of it in the run plan (plans/07 WP2), ours to
+propose and 1.0 in every published number; and the optics fraction
+L/L_HA = 1/7 - 1/13 (`reco.tagging_optics_point`, printed beside it) is
+what the de-squeezed beta*_x costs at fixed wall time.  Inside all three,
+the flip plan divides the luminosity 0.5 / 0.5 between the two spin
+states.
 
 Panels: (a) raw spin-sorted yields vs beta (acceptance-dominated);
 (b) the acceptance-free modulation T projected on beta and on alpha with
@@ -75,9 +98,10 @@ def output_stem(args):
     published one -- the bug `money_tagged_azz.output_stem` fixed for the
     tagged scripts on 2026-08-28."""
     base = "money_cos2phi_coherent_reco_6Li"
+    share_key = fom.run_share_tag(getattr(args, "lumi_fraction", 1.0))
     if (args.config == 0 and args.optics == "tagging"
             and args.fit == "ratio" and not args.u_in_situ
-            and args.t_edges is None):
+            and args.t_edges is None and not share_key):
         return base
     keys = ["c%d" % args.config, args.optics]
     if args.fit != "ratio":
@@ -86,7 +110,26 @@ def output_stem(args):
         keys.append("uinsitu")
     if args.t_edges is not None:
         keys.append("tedges")
+    if share_key:                      # a run-plan share is a non-default run
+        keys.append(share_key)
     return "%s_%s" % (base, "_".join(keys))
+
+
+def t_edges_for(args):
+    """The reconstructed |t| edges of one run.  `args.t_edges is None`
+    is the PUBLISHED sentinel -- the one `output_stem` keys on -- and it
+    resolves to the seven-bin window adopted on 2026-08-28,
+    `recopseudo.T_EDGES_PUBLISHED` (0.017-0.25 GeV^2).  The run-13
+    window survives as `--t-edges 0.05,0.08,0.12,0.17,0.25`
+    (`recopseudo.T_EDGES_LEGACY`), which appends its key to the stem."""
+    if args.t_edges is None:
+        return list(rp.T_EDGES_PUBLISHED)
+    edges = [float(v) for v in args.t_edges.split(",")]
+    if len(edges) < 2 or any(hi <= lo for lo, hi in zip(edges[:-1],
+                                                        edges[1:])):
+        raise SystemExit("--t-edges wants at least two increasing edges, "
+                         "not %r" % (args.t_edges,))
+    return edges
 
 
 def main():
@@ -94,6 +137,14 @@ def main():
     ap.add_argument("--config", type=int, default=1, choices=(0, 1, 2))
     ap.add_argument("--lumi-1yr", type=float, default=10.0)
     ap.add_argument("--lumi-10yr", type=float, default=100.0)
+    ap.add_argument("--lumi-fraction", type=float, default=1.0,
+                    dest="lumi_fraction",
+                    help="this observable's share of the PROGRAMME "
+                         "luminosity (plans/07 WP2; default 1.0, which "
+                         "every published number assumes).  Distinct from "
+                         "the optics fraction L/L_HA of --optics tagging, "
+                         "which is printed beside it, and from the 0.5/0.5 "
+                         "spin-state share of the flip plan")
     ap.add_argument("--pzz", type=float, default=0.60)
     ap.add_argument("--eps-b0", type=float, default=-0.08)
     ap.add_argument("--amp", type=float, default=0.01,
@@ -237,10 +288,14 @@ def main():
                          "(plans/08 A12)")
     ap.add_argument("--t-edges", default=None,
                     help="comma-separated reconstructed |t| bin edges in "
-                         "GeV^2, replacing the published "
-                         "0.05,0.08,0.12,0.17,0.25.  The window BELOW 0.05 "
-                         "that the published binning discards is what "
-                         "plans/08 8.4 prices")
+                         "GeV^2, replacing the published seven-bin "
+                         "0.017,0.028,0.039,0.05,0.08,0.12,0.17,0.25 "
+                         "(recopseudo.T_EDGES_PUBLISHED, adopted "
+                         "2026-08-28).  The run-13 window is "
+                         "--t-edges 0.05,0.08,0.12,0.17,0.25 "
+                         "(recopseudo.T_EDGES_LEGACY); a bin reaching "
+                         "below 0.017 empties beta cells and is what "
+                         "plans/08 8.4 rules out")
     ap.add_argument("--n-mc", type=int, default=600000,
                     help="response recoils; the published Table 3 uses "
                          "6e6 so that the template basis's own MC "
@@ -249,10 +304,13 @@ def main():
     ap.add_argument("--outdir", default=".")
     args = ap.parse_args()
 
+    if not args.lumi_fraction > 0:
+        ap.error("--lumi-fraction must be positive")
     config = beams.default_configs("6Li")[args.config]
     rng = np.random.default_rng(args.seed)
     sc = coh.CoherentScenario(amp=args.amp, eps_b0=args.eps_b0)
     scenario = fom.Scenario(lumi_fb_per_nucleon=args.lumi_1yr,
+                            run_share=args.lumi_fraction,
                             pol_ion_tensor=args.pzz)
     lumi_ratio = args.lumi_10yr / args.lumi_1yr
     lumi_scale = 1.0                        # luminosity of the optics vs HA
@@ -282,6 +340,11 @@ def main():
         optics_note = ("Yellow Report high-acceptance divergence %.0f/%.0f "
                        "microrad" % (1e6 * sx, 1e6 * sy))
     print("optics:", optics_note)
+    print("run plan: programme %g fb^-1/u/yr x share %g -> %g fb^-1/u "
+          "delivered; optics L/L_HA = %.4f on top of it; spin-state share "
+          "0.5 / 0.5 within it"
+          % (args.lumi_1yr, args.lumi_fraction,
+             args.lumi_1yr * args.lumi_fraction, lumi_scale))
     proj, n_coh, tagged = coh.project_coherent(
         config, scenario, sc, optics_list=(HIGH_ACCEPTANCE,),
         sigma_theta_list=(args.sigma_theta,))
@@ -373,12 +436,7 @@ def main():
     def a_t_rot(t):
         return a_t_func(t) * np.cos(2.0 * d_t)
 
-    t_edges = ([0.05, 0.08, 0.12, 0.17, 0.25] if args.t_edges is None
-               else [float(v) for v in args.t_edges.split(",")])
-    if len(t_edges) < 2 or any(hi <= lo for lo, hi
-                               in zip(t_edges[:-1], t_edges[1:])):
-        raise SystemExit("--t-edges wants at least two increasing edges, "
-                         "not %r" % (args.t_edges,))
+    t_edges = t_edges_for(args)
     fits1, fits10, kept_edges = [], [], []
     for tlo, thi in zip(t_edges[:-1], t_edges[1:]):
         # A cutout tight enough to empty part of the circle leaves the
@@ -414,7 +472,7 @@ def main():
         window = ("the cutout leaves NO accepted recoil at all"
                   if cresp.t_reco.size == 0 else
                   "the cutout leaves |t| = %.3f to %.3f GeV^2, outside the "
-                  "%.2f-%.2f window binned here"
+                  "%.3f-%.3f window binned here"
                   % (float(cresp.t_reco.min()), float(cresp.t_reco.max()),
                      t_edges[0], t_edges[-1]))
         raise SystemExit(
@@ -486,7 +544,9 @@ def main():
     ax1.set_xticklabels(["0", r"$\pi$", r"$2\pi$"])
     ax1.set_xlabel(r"$\beta=\phi_t-\phi_S$ (reconstructed)")
     ax1.set_ylabel(r"$N_f(\beta)/\langle N_f\rangle$")
-    ax1.set_title(r"(a) raw spin-sorted yields, $|t|\in[%.2f,%.2f]$: the "
+    # three decimals: the published window's lowest bin is 0.017-0.028,
+    # which two would round to the same pair of labels
+    ax1.set_title(r"(a) raw spin-sorted yields, $|t|\in[%.3f,%.3f]$: the "
                   r"cutout dominates" % kept_edges[0], fontsize=9)
     ax1.legend(fontsize=7, loc="upper right")
     ax1.tick_params(labelsize=8)
@@ -625,6 +685,26 @@ def main():
               % (tlo, thi, f1["n"], tr["a_t"], f1["a_t"], f1["err_t"],
                  f10["a_t"], f10["err_t"], tr["a_e"], f1["a_e"], f1["err_e"],
                  f10["a_e"], f10["err_e"], f1["a_m"], f1["err_m"]))
+        # the design diagnostic the |t| window was chosen on (plans/08
+        # 8.4): how many beta bins the acceptance leaves populated in
+        # this |t| bin, the counts per (alpha, beta) cell that set the
+        # ratio's low-count bias, and the condition number of the
+        # weighted design the fit solves -- sigma_max/sigma_min of that
+        # design is sqrt(cond) of the returned covariance, since
+        # cov = (A^T A)^-1 has eigenvalues 1/sigma_i^2.  `rank` is the
+        # rank reco._harmonic_rank_guard MEASURED on that weighted
+        # design (fit key "design_rank"), not the parameter count
+        # restated twice -- it printed n/n unconditionally until the
+        # 2026-08-28 review
+        mu1 = np.asarray(f1["expected"])
+        cov1 = np.asarray(f1.get("cov_stat", f1["cov"]))
+        n_beta_live = int((mu1.sum(axis=(0, 1)) > 0.0).sum())
+        n_cells = mu1.shape[1] * mu1.shape[2]
+        print("    design: %.0f counts per (alpha, beta) cell, %d of %d "
+              "beta bins populated, cond %.2f, rank %d/%d"
+              % (mu1.sum() / n_cells, n_beta_live, mu1.shape[2],
+                 np.sqrt(np.linalg.cond(cov1)),
+                 f1["design_rank"], f1["n_par"]))
         if args.u_in_situ:
             print("    in-situ (u1, u2) = (%.4f +- %.4f, %.4f +- %.4f) "
                   "against generated (%.4f, %.4f); propagated into a_e it "

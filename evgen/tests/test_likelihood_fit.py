@@ -395,6 +395,30 @@ def test_rank_guard_names_its_cause_from_both_estimators():
         assert "7-column" in msg
 
 
+def test_the_reported_design_rank_is_measured_and_not_the_parameter_count(
+        sparse_bin, monkeypatch):
+    """The per-bin `design:` line of money plot 6R prints `rank r/n`, and
+    Report 2 SS4.5 and plans/08 item 4 read "rank 7/7" off it.  Until the
+    2026-08-28 review both numbers were the parameter count, so the field
+    was a tautology that could never have reported a deficiency.  Both
+    fitters now return the rank `_harmonic_rank_guard` MEASURED on the
+    weighted design as "design_rank", beside its column count "n_par":
+    pinned here by making the measurement disagree with the column count,
+    which the tautology cannot do."""
+    counts, edges, _truth, kw = sparse_bin
+    ae, be = edges
+    for fit in (reco.harmonic_ratio_fit_2d, reco.harmonic_likelihood_fit_2d):
+        out = fit(counts, FRAC, PZZ, ae, be, **kw)
+        assert out["n_par"] == 7          # const + e/t/m + the three sin
+        assert out["design_rank"] == 7
+        no_sin = dict(kw, with_sin=False)
+        assert fit(counts, FRAC, PZZ, ae, be, **no_sin)["n_par"] == 4
+        # the guard is the only caller of matrix_rank in polligen.reco
+        monkeypatch.setattr(np.linalg, "matrix_rank", lambda a: 99)
+        assert fit(counts, FRAC, PZZ, ae, be, **kw)["design_rank"] == 99
+        monkeypatch.undo()
+
+
 def test_a_stalled_newton_is_named_rather_than_returned(sparse_bin):
     """A fill with no counts anywhere leaves the profiled likelihood with
     no interior maximum: the positivity guard halves the Newton step

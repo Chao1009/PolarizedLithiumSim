@@ -368,6 +368,157 @@ def test_empz_cut_removes_the_hard_radiation(sampler, bound_inputs):
     assert "E - p_z cut" in txt and ("PASS" in txt or "FAIL" in txt)
 
 
+def test_empz_retention_is_a_strong_function_of_the_bin(sampler):
+    """What an analysis bin pays for the window is not what the whole
+    selected sample pays.  The rejected events are the ones with a hard
+    photon, which the reconstruction moves to high y; a bin at y = 0.012
+    keeps 0.97 of its rate where one at y = 0.76 keeps 0.18, either side
+    of the 0.82 global number.  Quoting the global retention as the cost
+    at a sweet spot is therefore wrong by an order of magnitude, which is
+    what the per-bin column exists to prevent.
+
+    The per-bin number has to be taken BEFORE the cut is applied, because
+    `mask_reco` carries an `eff > 0` factor."""
+    proj = fom.project_rates(CONFIG, fom.Scenario(q2_min=1.0, y_min=0.01,
+                                                  y_max=0.95), nx=24, nq2=18)
+    xe, qe = proj.x_edges, proj.q2_edges
+    lo_y, hi_y = (16, 0), (8, 6)     # y = 0.012 and y = 0.76
+    edges = [(xe[i], xe[i + 2], qe[j], qe[j + 2]) for i, j in (lo_y, hi_y)]
+    on = _response(sampler, isr=rad.ISRModel(seed=20260828), n_mc=300)
+    keep = rad.empz_keep_mask(on, 0.85, 1.15)
+    per = rad.empz_bin_retention(on, edges, 0.85, 1.15)
+    # hand recomputation of the first bin, from the arrays alone
+    we = on.w * on.eff
+    mr = on.mask_reco(*edges[0])
+    assert per[0] == pytest.approx(float(we[mr & keep].sum())
+                                   / float(we[mr].sum()), rel=1e-12)
+    y_bar = [float(np.average(on.y_nominal[on.mask_reco(*e)],
+                              weights=we[on.mask_reco(*e)])) for e in edges]
+    assert y_bar[0] < 0.02 < 0.5 < y_bar[1]
+    glob = rad.apply_empz_cut(on, 0.85, 1.15)
+    assert per[0] > glob > per[1]
+    assert per[0] > 0.9 and per[1] < 0.3
+    # and after the cut every bin retention is identically 1: the reason
+    # `empz_bin_retention` is called on the pre-cut response
+    assert rad.empz_bin_retention(on, edges, 0.85, 1.15) == \
+        pytest.approx([1.0] * len(edges))
+
+
+def test_format_bound_prints_the_per_bin_retention(sampler, bound_inputs):
+    """The table carries the per-bin retention beside the global pair, so
+    a reader cannot quote the global number as the cost in a bin."""
+    edges, cat = bound_inputs
+
+    def build(isr):
+        return _response(sampler, isr=isr, n_mc=150)
+
+    bound = rad.migration_bound(build, edges, cat,
+                                isr=rad.ISRModel(seed=20260828),
+                                empz_cut=(0.85, 1.15))
+    for r in bound["rows"]:
+        assert 0.0 < r["empz_keep_off"] <= 1.0
+        assert 0.0 < r["empz_keep_on"] <= 1.0
+        assert r["empz_keep_on"] < r["empz_keep_off"]   # radiation is what
+    txt = rad.format_bound(bound)                       # the window removes
+    assert "keep off" in txt and "keep on" in txt
+    assert "%8.4f" % bound["rows"][0]["empz_keep_off"] in txt
+    # without the cut the columns are absent rather than blank
+    plain = rad.format_bound(rad.migration_bound(
+        build, edges, cat, isr=rad.ISRModel(seed=20260828)))
+    assert "keep off" not in plain
+
+
+def test_empz_loss_sits_at_high_y(sampler):
+    """WHERE the window's loss sits is the reason it is not adopted as a
+    default.  E - p_z is reconstructed as E'(1 - cos theta)/(1 - y_Sigma),
+    whose resolution carries 1/(1 - y), so an UNRADIATED event is
+    rejected at high y on the hadronic y resolution alone: the
+    non-radiative retention is 1.00 and 0.998 in the two bands below
+    y = 0.2 and falls to 0.78 and 0.27 above it, which is where the
+    global number comes from.  The tensor analysis bins live at
+    y = 0.01-0.03 and pay none of it.  With radiation on, the low-y bands
+    lose the radiative tail as well -- that loss is the mitigation, not a
+    cost."""
+    off = _response(sampler, n_mc=300)
+    on = _response(sampler, isr=rad.ISRModel(seed=20260828), n_mc=300)
+    yk = rad.empz_y_retention(off, lo=0.85, hi=1.15)
+    assert yk["bands"] == rad.EMPZ_Y_BANDS
+    assert float(yk["share"].sum()) == pytest.approx(1.0, abs=1e-9)
+    assert yk["keep"][0] > 0.999 and yk["keep"][1] > 0.99
+    assert all(a >= b for a, b in zip(yk["keep"][:-1], yk["keep"][1:]))
+    assert yk["keep"][-1] < 0.5
+    # the whole non-radiative loss is above y = 0.2
+    lost = (1.0 - yk["keep"]) * yk["share"]
+    assert lost[:2].sum() < 0.02 * lost.sum()
+    # and the global number is a rate-weighted average of the bands
+    glob = rad.apply_empz_cut(off, 0.85, 1.15)
+    assert glob == pytest.approx(float((yk["keep"] * yk["share"]).sum()),
+                                 rel=1e-9)
+    # with radiation the low-y bands lose the radiative tail as well
+    on_k = rad.empz_y_retention(on, lo=0.85, hi=1.15)["keep"]
+    assert on_k[0] < 0.96 * yk["keep"][0]
+
+
+def test_empz_band_shares_declare_what_they_cover(sampler):
+    """The published band shares sum to one and the global retention is
+    their weighted mean; both identities hold only over bands that span
+    the selected rate, so the fraction they span is returned rather than
+    assumed.  Normalising the shares by the total instead would let a
+    band list that misses part of the rate -- or a selection leaking
+    outside [0, 1) -- rescale the published shares with no diagnostic."""
+    off = _response(sampler, n_mc=300)
+    full = rad.empz_y_retention(off, lo=0.85, hi=1.15)
+    assert full["covered"] == pytest.approx(1.0, abs=1e-12)
+    assert float(full["share"].sum()) == pytest.approx(1.0, abs=1e-12)
+
+    part = rad.empz_y_retention(off, bands=(0.0, 0.05, 0.2), lo=0.85,
+                                hi=1.15)
+    assert float(part["share"].sum()) == pytest.approx(1.0, abs=1e-12)
+    assert part["covered"] == pytest.approx(float(full["share"][:2].sum()),
+                                            rel=1e-12)
+    assert part["covered"] < 0.9          # the y > 0.2 rate is outside
+    assert part["keep"] == pytest.approx(full["keep"][:2], rel=1e-12)
+
+    glob = rad.apply_empz_cut(off, 0.85, 1.15)
+    for yk in (full, part):
+        assert yk["covered"] * float((yk["keep"] * yk["share"]).sum()) \
+            == pytest.approx(glob if yk is full else
+                             float((full["keep"][:2] *
+                                    full["share"][:2]).sum()), rel=1e-9)
+
+
+def test_seed_averaged_retention_carries_its_error(sampler, bound_inputs):
+    """The published retention is a seed average like the bound itself:
+    `migration_bound_seeds` averages the global pair, its per-bin
+    companions and the y bands, and the formatter prints the standard
+    error beside the global pair."""
+    edges, cat = bound_inputs
+    seeds = (11, 22, 33)
+
+    def build(seed, isr):
+        return _response(sampler, isr=isr, seed=seed, n_mc=100)
+
+    out = rad.migration_bound_seeds(build, edges, cat, seeds,
+                                    isr_seed=20260828,
+                                    empz_cut=(0.85, 1.15))
+    k = np.array([run["empz_keep"] for run in out["runs"]], dtype=float)
+    assert out["empz_keep"] == pytest.approx(tuple(k.mean(axis=0)), rel=1e-12)
+    assert out["empz_keep_sem"] == pytest.approx(
+        tuple(k.std(axis=0, ddof=1) / np.sqrt(3.0)), rel=1e-12)
+    for i, r in enumerate(out["rows"]):
+        vals = np.array([run["rows"][i]["empz_keep_on"]
+                         for run in out["runs"]])
+        assert r["empz_keep_on"] == pytest.approx(float(vals.mean()),
+                                                  rel=1e-12)
+        assert r["empz_keep_on_sem"] > 0.0
+    assert out["empz_y"][0]["keep"] == pytest.approx(
+        np.mean([run["empz_y"][0]["keep"] for run in out["runs"]], axis=0))
+    txt = rad.format_bound(out)
+    assert "keeps %.4f +- %.4f" % (out["empz_keep"][0],
+                                   out["empz_keep_sem"][0]) in txt
+    assert "retention in bands of nominal y" in txt
+
+
 def test_hard_rescalings_are_unity_without_radiation(sampler):
     kern = sampler.kernel
     x = np.array([0.01, 0.05, 0.2])

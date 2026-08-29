@@ -40,11 +40,15 @@ fakes a coherent tag in only 1e-4 to 2e-3 of breakups and a 4e5 sample
 conditions on a few dozen events.  (It did: the 0.05 published for the
 10 x 100 veto on 2026-08-28 rested on four successes out of 77.)
 
-Millimetres carry two caveats throughout.  R12 = 30.6 m and the pot
-dispersion D = 0.30 m were measured on the ePIC geometry at 18 x 275
-alone and are applied at every configuration for want of per-optics
-values; the vertical lever R34 has never been measured (plans/09 D3,
-`farforward.separation_at_pots`).  And the millimetres inherit the
+Millimetres carry one caveat since 2026-08-28 where they carried two.
+(R12, R34, D) are now measured PER CONFIGURATION -- 19.2 / -- / 0.31,
+21.2 / 3.35 / 0.29 and 30.0 / 2.93 / 0.30 m (plans/09 B1,
+`farforward.POT_LEVERS`) -- in place of the single 18 x 275 pair
+R12 = 30.6, D = 0.30 m with R34 taken equal to R12, which made the two
+lower configurations 45-60% too wide.  R34 remains unmeasured at 5 x 41,
+where the 29.6 mm insertion shuts the vertical plane altogether and one
+row of a 0.2-6.0 mrad ladder is accepted, and falls back on R12 there.
+And the millimetres inherit the
 cluster density's short-range scale beta, which is 0.30 GeV here and
 uncertain to 0.20-0.40: that band moves the medians by -12% to +9%
 -- but not the veto fractions, which move by less than 0.03.  Nothing in the
@@ -93,23 +97,28 @@ def optics_menu(config):
             ("legacy 73 urad", ff.HIGH_ACCEPTANCE))
 
 
-def route(frag, optics, theta_outer=None):
+def route(frag, optics, theta_outer=None, pot_config="18x275"):
+    """`pot_config` is the machine configuration whose blind block the
+    over-rigid branch tests against (48 / 32 / 16 mm); it must be passed
+    per configuration, since 18 x 275 is the most permissive of the
+    three."""
     return ff.route_charged(frag["R"], frag["theta"], frag["pT"], optics,
-                            phi=frag["phi"], theta_outer=theta_outer)
+                            phi=frag["phi"], theta_outer=theta_outer,
+                            pot_config=pot_config)
 
 
-def seen(frag, optics, theta_outer=None):
+def seen(frag, optics, theta_outer=None, pot_config="18x275"):
     """Is the fragment in a Roman-Pot acceptance -- the main window below
     R = 0.95 or the near-beam tail outside the envelope?"""
-    r = route(frag, optics, theta_outer)
+    r = route(frag, optics, theta_outer, pot_config)
     return (r == 1) | (r == 4)
 
 
-def fakes_coherent_tag(frag, optics, theta_outer=None):
+def fakes_coherent_tag(frag, optics, theta_outer=None, pot_config="18x275"):
     """Is the fragment a NEAR-BEAM tag, i.e. does it look like the intact
     6Li recoil the coherent channel counts?  Route 4 alone: the main
     window below R = 0.95 is off rigidity and is not a coherent fake."""
-    return route(frag, optics, theta_outer) == 4
+    return route(frag, optics, theta_outer, pot_config) == 4
 
 
 def wilson(k, n):
@@ -129,6 +138,7 @@ def counting_pass(config, n_total, seed, beta):
     recorded pairs and how many of those land inside one pixel; plus the
     veto against each outer bound at the tagging optics."""
     menu = optics_menu(config)
+    key = ff.yr_config_key(config)
     acc = {label: dict(n=0, both=0, d_only=0, a_only=0, fake=0, veto=0,
                        rec=0, merge=0, min_sep=np.inf, min_ang=np.inf)
            for label, _ in menu}
@@ -143,11 +153,14 @@ def counting_pass(config, n_total, seed, beta):
                                        config.ion_momentum_per_nucleon, n,
                                        beta=beta, rng=rng)
         alpha, deut = ev["spectator"], ev["partner"]
-        sep_mm = 1e3 * ff.separation_at_pots(alpha, deut)
-        ang_mm = 1e3 * ff.separation_at_pots(alpha, deut, dispersion=0.0)
+        r12, r34, _d = ff.pot_levers_for(config)
+        sep_mm = 1e3 * ff.separation_at_pots(alpha, deut, config=config)
+        ang_mm = 1e3 * ff.separation_at_pots(alpha, deut, r12=r12, r34=r34,
+                                             dispersion=0.0)
         for label, opt in menu:
-            ha, hd = seen(alpha, opt), seen(deut, opt)
-            fake = fakes_coherent_tag(alpha, opt)
+            ha = seen(alpha, opt, pot_config=key)
+            hd = seen(deut, opt, pot_config=key)
+            fake = fakes_coherent_tag(alpha, opt, pot_config=key)
             a = acc[label]
             a["n"] += n
             a["both"] += int(np.sum(ha & hd))
@@ -163,9 +176,10 @@ def counting_pass(config, n_total, seed, beta):
                 a["min_sep"] = min(a["min_sep"], float(pair.min()))
                 a["min_ang"] = min(a["min_ang"], float(ang_mm[rec].min()))
         for th in OUTER_SCAN:
-            f = fakes_coherent_tag(alpha, tag, theta_outer=th)
+            f = fakes_coherent_tag(alpha, tag, theta_outer=th, pot_config=key)
             scan[th][0] += int(np.sum(f))
-            scan[th][1] += int(np.sum(f & seen(deut, tag, theta_outer=th)))
+            scan[th][1] += int(np.sum(f & seen(deut, tag, theta_outer=th,
+                                               pot_config=key)))
     return acc, scan
 
 
@@ -192,12 +206,27 @@ def main():
              % (args.events, args.veto_events),
              "# both fragments from ONE relative momentum k "
              "(spectator.breakup_lab_kinematics); routed with their azimuth",
-             "# millimetres use R12 = %.1f m and the pot dispersion D = "
-             "%.2f m, BOTH MEASURED AT 18 x 275 ONLY and applied at every "
-             "configuration (plans/09 D3); R34 unmeasured, taken equal to "
-             "R12; and they inherit beta (0.20-0.40 moves the medians by "
-             "-12%% to +9%%).  The acceptance itself is angular and does not "
-             "depend on any of them." % (ff.POT_R12, ff.POT_DISPERSION)]
+             "# millimetres use the PER-CONFIGURATION levers measured on "
+             "2026-08-28 (farforward.POT_LEVERS, tools/fullsim, plans/09 "
+             "B1): (R12, R34, D) = " + " ; ".join(
+                 "%s %.1f / %s / %.2f m"
+                 % (k, v[0], "--" if v[1] is None else "%.2f" % v[1], v[2])
+                 for k, v in ff.POT_LEVERS.items())
+             + ".  Until then one 18 x 275 pair, R12 = 30.6 and D = 0.30 m, "
+             "was applied at every configuration and R34 was taken equal to "
+             "R12; the lower configurations' millimetres were 45-60% high. "
+             " R34 is not measurable at 5 x 41 -- the 29.6 mm insertion "
+             "shuts the vertical plane -- and falls back on R12 there.  "
+             "They also inherit beta (0.20-0.40 moves the medians by -12% "
+             "to +9%).  The acceptance itself is angular and does not "
+             "depend on any of them.",
+             "# the MEASURED outer edge of the pot acceptance is "
+             + " / ".join("%.2f" % (1e3 * ff.theta_rp_outer_for(k))
+                          for k in ("5x41", "10x100", "18x275"))
+             + " mrad (5 x 41 / 10 x 100 / 18 x 275), not the 5 mrad the "
+             "acceptance tables assume and not the 144 mm / R12 = 7.5 / "
+             "6.8 / 4.8 mrad the module arithmetic gives: past it the ion "
+             "has struck the pipe.  Read the veto scan below against it."]
 
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11.6, 4.5))
     cfgs = beams.default_configs("6Li")
@@ -209,8 +238,10 @@ def main():
                                        rng=np.random.default_rng(args.seed))
         alpha, deut = ev["spectator"], ev["partner"]
         tag_opt = ff.tagging_optics(cfg)
-        sep_mm = 1e3 * ff.separation_at_pots(alpha, deut)
-        ang_mm = 1e3 * ff.separation_at_pots(alpha, deut, dispersion=0.0)
+        r12, r34, disp = ff.pot_levers_for(cfg)
+        sep_mm = 1e3 * ff.separation_at_pots(alpha, deut, config=cfg)
+        ang_mm = 1e3 * ff.separation_at_pots(alpha, deut, r12=r12,
+                                             r34=r34, dispersion=0.0)
         q16, q50, q84 = np.percentile(sep_mm, [16, 50, 84])
         a16, a50, a84 = np.percentile(ang_mm, [16, 50, 84])
         acc, scan = counting_pass(cfg, args.veto_events, args.seed, args.beta)
@@ -227,10 +258,14 @@ def main():
                      % (q16, q50, q84, q16 / PIXEL_PITCH_MM,
                         q50 / PIXEL_PITCH_MM, q84 / PIXEL_PITCH_MM,
                         1e3 * PIXEL_PITCH_MM))
+        d_mm = np.abs(1e3 * disp * (np.asarray(alpha["R"])
+                                    - np.asarray(deut["R"])))
         lines.append("      angular lever alone (no dispersion): %.1f / %.1f "
-                     "/ %.1f mm -- the D (R_a - R_d) term is 2.6 / 9.2 / "
-                     "22.7 mm and does NOT cancel between the fragments"
-                     % (a16, a50, a84))
+                     "/ %.1f mm -- the D (R_a - R_d) term is %.1f / %.1f / "
+                     "%.1f mm at this configuration's D = %.2f m and does "
+                     "NOT cancel between the fragments"
+                     % ((a16, a50, a84)
+                        + tuple(np.percentile(d_mm, [16, 50, 84])) + (disp,)))
         lines.append("   %-20s %-16s %8s %8s %8s %8s | %10s %14s %9s | %8s %9s"
                      % ("optics", "envelope [mrad]", "both", "d only",
                         "alpha only", "neither", "P(a fakes)",
@@ -255,7 +290,7 @@ def main():
                      "pair stays about 3 R12 min(envelope) apart -- back to "
                      "back with theta_d ~ 2 theta_alpha -- and no recorded "
                      "pair could merge at all: %s (a scale, not a bound; the "
-                     "measured minima run 4-5%% under it because "
+                     "measured minima run 4-26%% under it because "
                      "theta_d/theta_alpha is 1.987 only as k -> 0).  The "
                      "dispersive term is free to cancel the angular one, and "
                      "does.  Over ALL breakups the minimum is %.2f mm and "
@@ -264,7 +299,7 @@ def main():
                      "all of them, which is the merge column."
                      % (1e3 * PIXEL_PITCH_MM,
                         " ; ".join("%s scale %.0f mm, min %s"
-                                   % (label, 3e3 * ff.POT_R12
+                                   % (label, 3e3 * ff.pot_levers_for(cfg)[0]
                                       * min(opt.envelope),
                                       "%.1f" % acc[label]["min_ang"]
                                       if acc[label]["rec"] else "no pair")
@@ -273,8 +308,9 @@ def main():
                         float(np.mean(sep_mm < PIXEL_PITCH_MM))))
 
         # the veto, and what the pot's outer edge does to it
-        fake = fakes_coherent_tag(alpha, tag_opt)
-        s = sep_mm[fake & seen(deut, tag_opt)]
+        key = ff.yr_config_key(cfg)
+        fake = fakes_coherent_tag(alpha, tag_opt, pot_config=key)
+        s = sep_mm[fake & seen(deut, tag_opt, pot_config=key)]
         lines.append("   given an alpha near-beam tag at the tagging optics: "
                      "separation 16/50/84%% = %.0f / %.0f / %.0f mm"
                      % tuple(np.percentile(s, [16, 50, 84])))
@@ -282,14 +318,16 @@ def main():
                  for t in OUTER_SCAN]
         lines.append("   partner-veto efficiency vs the pot outer edge: "
                      + " ".join("%.1f mrad (%.0f mm): %.2f"
-                                % (1e3 * t, 1e3 * ff.POT_R12 * t, v)
+                                % (1e3 * t, 1e3 * ff.pot_levers_for(cfg)[0] * t,
+                                   v)
                                 for t, v in zip(OUTER_SCAN, curve)))
 
         bins = np.logspace(-2.0, 2.7, 110)
         ax1.hist(sep_mm, bins=bins, histtype="step", lw=1.0, color=col,
                  alpha=0.45, density=True,
                  label="%s, all breakups (median %.1f mm)" % (name, q50))
-        rec = sep_mm[seen(alpha, tag_opt) & seen(deut, tag_opt)]
+        rec = sep_mm[seen(alpha, tag_opt, pot_config=key)
+                     & seen(deut, tag_opt, pot_config=key)]
         ax1.hist(rec, bins=bins, histtype="stepfilled", lw=1.6, color=col,
                  alpha=0.20, density=True)
         ax1.hist(rec, bins=bins, histtype="step", lw=1.7, color=col,
@@ -308,8 +346,10 @@ def main():
              bbox=dict(fc="white", ec="none", alpha=0.75, pad=1.0),
              transform=ax1.get_xaxis_transform())
     ax1.set_xscale("log")
-    ax1.set_xlabel("α–d separation at the pot plane [mm], R₁₂ = %.1f m, "
-                   "D = %.2f m" % (ff.POT_R12, ff.POT_DISPERSION))
+    ax1.set_xlabel("α–d separation at the pot plane [mm], per-configuration "
+                   "R₁₂ = %s m, D = %s m"
+                   % (" / ".join("%.1f" % v[0] for v in ff.POT_LEVERS.values()),
+                      " / ".join("%.2f" % v[2] for v in ff.POT_LEVERS.values())))
     ax1.set_ylabel("breakups per unit log separation")
     ax1.set_title("(a) a recorded pair is two hits tens of pixels apart; the "
                   "pairs that could merge\nare mostly the collinear ones "

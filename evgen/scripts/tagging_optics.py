@@ -68,6 +68,8 @@ import matplotlib.pyplot as plt  # noqa: E402
 from polligen import coherent as coh  # noqa: E402
 from polligen import reco  # noqa: E402
 from polli_fastsim import beams, fom  # noqa: E402
+from polli_fastsim.farforward import POT_DISPERSION as _FF_D  # noqa: E402
+from polli_fastsim.farforward import POT_R12 as _FF_R12  # noqa: E402
 sys.path.insert(0, str(_SCRIPTS))
 from money_cos2phi_coherent import best_superbin  # noqa: E402  (the paper's own bin)
 
@@ -79,8 +81,18 @@ KEYS = ("5x41", "10x100", "18x275")
 # entry exists and 0.20 is this programme's interpolation
 # (coherent_optics_scan.py).
 IR8_LI6_INTERPOLATED = 0.20
-R12 = 30.6          # m, IP angle -> pot-plane x, measured at 18 x 275 (tools/fullsim)
-D_POT = 0.30        # m, dispersion at the pots from the alpha/triton positions (tools/fullsim)
+# Pot-plane transport.  Re-measured 2026-08-28 in the current epic-main
+# (plans/09 B1, tools/fullsim, farforward.POT_LEVERS): R12 = 19.24 / 21.25
+# / 29.97 m and D = 0.311 / 0.287 / 0.292 m at 5 x 41 / 10 x 100 /
+# 18 x 275, against the single 18 x 275 pair 30.6 / 0.30 m of September
+# 2024 that this script applied at every configuration.  The default stays
+# the 18 x 275 pair -- which is now 29.97 / 0.292 -- so that only that one
+# row moves; `--per-config-levers` uses each configuration's own, which
+# raises D/R12 by 63% at 5 x 41 and 38% at 10 x 100 and is priced in the
+# banner it prints.  It is opt-in because eps at 10 x 100 falls 22% under
+# it and `money_cos2phi_coherent_reco.py` runs on the same optimum.
+R12 = _FF_R12       # m, IP angle -> pot-plane x, measured at 18 x 275
+D_POT = _FF_D       # m, dispersion at the pots (alpha / 6Li / triton fit)
 
 
 def rect_acceptance(slope_b, cx_gev, cy_gev):
@@ -121,6 +133,9 @@ def main():
                     help="flat exotic-glue amplitude per unit P_zz to time (5 sigma)")
     ap.add_argument("--r-max", type=float, default=2000.0)
     ap.add_argument("--no-dispersion", action="store_true")
+    ap.add_argument("--per-config-levers", action="store_true",
+                    help="use each configuration's own measured (R12, D) "
+                         "instead of the 18 x 275 pair (plans/09 B1)")
     ap.add_argument("--outdir", default=".")
     args = ap.parse_args()
     outdir = pathlib.Path(args.outdir)
@@ -151,7 +166,11 @@ def main():
 
         from polli_fastsim import farforward as _ff
         dpp = 1e-4 * _ff.YR_PROTON_DIVERGENCE[key][1]
-        disp = 0.0 if args.no_dispersion else D_POT * dpp / R12      # rad, in quadrature
+        if args.per_config_levers:
+            r12_c, _r34_c, d_c = _ff.pot_levers_for(cfg)
+        else:
+            r12_c, d_c = R12, D_POT
+        disp = 0.0 if args.no_dispersion else d_c * dpp / r12_c  # rad, in quadrature
 
         def env_h(rr):                       # horizontal 10 sigma envelope at r_h = rr
             return 10 * ((sh / rr ** 0.5) ** 2 + disp ** 2) ** 0.5

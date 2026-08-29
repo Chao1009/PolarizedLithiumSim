@@ -240,9 +240,23 @@ class PartonF2:
     (CT18NLO, 7Li, >= 100 events at 10 fb^-1/u): charm + bottom carry 7.8%
     of F2A event-weighted over all of them, 10% at x = 1e-3 to 1e-2 and up
     to 25% at the highest Q2 there, but only 0.65% at x = 0.3-0.5 and 0.23%
-    at 0.5-0.7 -- the region where the polarized-EMC discrimination lives,
-    which is why the mixed scheme costs the headline nothing.
-    `tests/test_grids.py` pins the two flavour sets against each other.
+    at 0.5-0.7.
+
+    WHETHER THAT COSTS THE HEADLINE ANYTHING depends on which x the
+    polarized-EMC discrimination is read at, and after the 2026-08-28
+    digitization those are two different windows.  Where the two published
+    calculations genuinely differ is the valence window 0.35 < x < 0.65
+    (`polarized.POLEMC_VALENCE_WINDOW`), and there the share is 0.31% at
+    x = 0.35 falling to 0.03% at 0.65 at Q2 = 4 GeV2 (0.51% to 0.05% at
+    Q2 = 10) -- one to two orders of magnitude below the 0.03-0.04
+    separation in DR, so the mixed scheme costs that headline nothing.
+    The same projection also plots low-x bins, where the share is 2.60% at
+    x = 0.09 and 1.43% at 0.14 at Q2 = 4 (4.26% and 2.39% at Q2 = 10) --
+    comparable to the 4.7% relative separation drawn there, which is a
+    second reason (besides the valence-window transfer of
+    `polarized.tmt_published_emc_ratio`) not to read the low-x bins as the
+    discriminating ones.  `tests/test_grids.py` pins the two flavour sets
+    against each other and both ends of this statement.
     """
 
     _E2 = {1: 1 / 9, 2: 4 / 9, 3: 1 / 9, 4: 4 / 9, 5: 1 / 9}

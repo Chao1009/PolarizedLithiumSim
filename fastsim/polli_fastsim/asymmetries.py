@@ -57,7 +57,38 @@ def depolarization_d(y, x, q2, r_func=None):
 
 
 def a_parallel(g1, f1, y, x, q2, r_func=None):
-    """Longitudinal double-spin asymmetry, A1 ~= g1/F1 approximation."""
+    """Longitudinal double-spin asymmetry, A1 ~= g1/F1 approximation.
+
+    Massless kinematics: this is the gamma -> 0 limit of the exact
+    A_par = D_gamma (A1 + eta A2) with gamma^2 = 4 M^2 x^2/Q^2,
+    A1 = (g1 - gamma^2 g2)/F1, A2 = gamma (g1 + g2)/F1 and
+    eta = eps gamma y/[1 - (1-y) eps] (E143 PRD 58:112003).  Everything
+    published is this function; the exact form lives behind
+    `polligen.xsec.InclusiveKernel(..., target_mass=True)`, default off.
+
+    What the limit drops, measured with g2 = g2_WW by
+    `evgen/scripts/target_mass_bound.py` (toy backends, the published
+    ones).  At the small y of the analysis the whole correction
+    collapses to a multiplicative (1 + gamma^2) on A_par, independent of
+    g2, and the W^2 >= 10 GeV^2 cut of `fom.Scenario` caps it everywhere
+    at gamma^2 <= M^2/(W2_min - M^2) = 0.0965, with grid maxima 0.0854 /
+    0.0577 / 0.0258 for 6Li at 5 x 40.8, 10 x 99.5 and 18 x 137.5 GeV/u
+    (0.0854 / 0.0577 / 0.0332 for 7Li).  On the two observables built
+    from A_par it is much smaller than that, and it has a sign: the
+    exact A_par is (1 + gamma^2) times this one, so inverting it with
+    the massless D leaves g1/F1 -- and the polarized-EMC Delta-R built
+    from it -- HIGH, by 0.12 / 0.44 / 0.71 / 1.06 % at
+    x = 0.089 / 0.282 / 0.447 / 0.708
+    (inverse-variance weighted over Q2 and the three energies, i.e. with
+    the weights of the published error bars), and 2.1 % at most on the
+    sigma-weighted tagged-triton A_par overlay of the published 7Li
+    configuration (5.0 % at 5 x 40.8, both in the top x bin).  The eta A2
+    piece alone is 0.08-0.17 % and 0.56 % there: it is HALF the
+    correction, and above x ~ 0.5 the half that vanishes, because
+    g2_WW -> -g1 kills A2 while the -gamma^2 g2/F1 inside A1 survives.
+    M is the free-nucleon mass; the bound-nucleon one moves gamma^2 by
+    1.0 %.
+    """
     d = depolarization_d(y, x, q2, r_func=r_func)
     return d * g1 / np.maximum(f1, 1e-30)
 

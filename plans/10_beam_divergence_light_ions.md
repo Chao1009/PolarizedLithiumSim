@@ -197,7 +197,8 @@ lattice (R₁₁σ* ≪ R₁₂σ_θ at the pots), which is the first thing to a
 
 **But the detector must follow.** At the tagging optics the horizontal
 10σ envelope is 0.33 / 0.17 / 0.12 mrad while the measured silicon edge is
-2.00 / 1.35 / 1.03 mrad (`tools/fullsim`), six to nine times outside it, so
+2.50 / 1.51 / 0.53 mrad (`tools/fullsim`, re-measured 2026-08-28 in the
+current ePIC geometry), 7.6 / 8.9 / 4.4 times outside it, so
 the geometry pins the acceptance and the whole β\* gain is wasted unless the
 pots follow the envelope in. The two levers are
 strictly multiplicative, and the second one is the near-beam granularity
@@ -279,20 +280,25 @@ said only "near-beam envelope", now carry "(legacy)".
 
 ### A4 — re-derive the near-beam study's gains on the band ☑
 Re-derived 2026-08-28 (plans/09 §9.0, Report 4 §2).  The ×26 / ×569 gains
-are withdrawn: at the Yellow Report optics the envelope is the binding
-constraint at the two lower configurations (2.2 mrad horizontally against
-a 2.0 mrad silicon edge, and 1.8 against 1.35) and the silicon only
-marginally at the top (0.92 against 1.03), so a closer approach buys
-nothing worth having (coherent 7.2×10⁻⁸ / 6.2×10⁻²⁷ / 3.9×10⁻¹⁴ at the
-envelope — `nearbeam_aperture_scan.py`'s column, i.e. the envelope
-horizontally and the larger of silicon and envelope vertically, which is
-how the pots move; the pure envelope in both planes would read
-7.2×10⁻⁸ / 1.2×10⁻²⁶ / 7.8×10⁻¹⁴).  At the tagging
+are withdrawn: at the Yellow Report optics, and on the aperture
+re-measured in the current ePIC geometry on 2026-08-28, the silicon binds
+at 5 × 41 (2.50 mrad horizontally against a 2.20 mrad envelope) and the
+machine at the other two (1.51 against 1.80, and 0.53 against 0.92), so a
+nearer sensor buys ×77 at the low configuration and exactly nothing at
+the other two, none of it worth having (coherent
+7.2×10⁻⁸ / 6.2×10⁻²⁷ / 7.1×10⁻¹⁴ at the envelope —
+`nearbeam_aperture_scan.py`'s column, i.e. the envelope horizontally and
+the larger of silicon and envelope vertically, which is how the pots
+move; the pure envelope in both planes would read
+7.2×10⁻⁸ / 1.2×10⁻²⁶ / 7.8×10⁻¹⁴, and the scan's silicon column,
+9.4×10⁻¹⁰ / 2.0×10⁻¹⁹ / 1.2×10⁻⁵, is the aperture alone and therefore
+inside the beam at the two upper configurations, where it is not a
+reachable number).  At the tagging
 optics the envelope is 0.33 / 0.17 / 0.12 mrad and the silicon at
-1.0–2.0 mrad tags zero; pots that follow the envelope tag 0.42 / 0.32 /
-0.33 of coherent recoils and 0.35 / 0.27 / 0.28 of α spectators at
-1/7–1/13 of the luminosity, with four clean |t| bins per configuration
-through the chain (`nearbeam_reach_gain.py`).  The layer and the optics
+0.53–2.50 mrad tags zero; pots that follow the envelope tag 0.42 / 0.32 /
+0.33 of coherent recoils and 0.35 / 0.28 / 0.29 of α spectators at
+1/7–1/13 of the luminosity, with all seven bins of the published |t|
+window per configuration through the chain (`nearbeam_reach_gain.py`).  The layer and the optics
 are multiplicative levers.
 
 ### D1 — σ_θ (h and v) and Δp/p at the IP for a ⁶Li / ⁷Li fill · **C-AD / ePIC FF WG**
@@ -337,12 +343,12 @@ high-acceptance / high-divergence choice actually names.
   file answers it.
 * **plans/09** — neither the absolute tagged fractions nor the gains
   survive.  The ×26 / ×569 are withdrawn with them (A4): the recoil must
-  clear the larger of the envelope and the aperture per plane, and at the
-  published optics the envelope is the larger at 5 × 41 (2.2 mrad against
-  a 2.0 mrad silicon edge) and at 10 × 100 (1.8 against 1.35), so
-  approaching closer buys exactly nothing there; at 18 × 275 it buys the
-  ×2.01×10³ the aperture scan prints (3.9×10⁻¹⁴ against 1.9×10⁻¹⁷) on a
-  tagged fraction of 2×10⁻¹⁷, which is nothing that matters.  The
+  clear the larger of the envelope and the aperture per plane, and on the
+  re-measured aperture the envelope is the larger at 10 × 100 (1.80 mrad
+  against a 1.51 mrad silicon edge) and at 18 × 275 (0.92 against 0.53),
+  so approaching closer buys exactly nothing there; at 5 × 41 it buys the
+  ×77 the aperture scan prints (7.2×10⁻⁸ against 9.4×10⁻¹⁰) on a tagged
+  fraction of 9×10⁻¹⁰, which is nothing that matters.  The
   near-beam layer pays only *under a tagging optics*, where it is the
   difference between no coherent tag at all and 32–42%.
 * **reports/1 (cos 2φ projections) and reports/3 (detector study)** —

@@ -68,7 +68,9 @@ SNSPD_THRESHOLD_EV = nb.SNSPD_THRESHOLD_EV
 DEVICE_UM = 30.0               # nanowire active area per device, square
 SMSPD_MM = 1.0                 # arXiv:2510.11725, 8 pixels per 1 x 1 mm^2
 SMSPD_W_NM = 1000.0            # its wire width
-R12_M = 30.6                   # IP angle -> pot-plane x, MEASURED at 18x275
+R12_M = 29.97                  # IP angle -> pot-plane x, MEASURED at 18x275
+                               # (2026-08-28, farforward.POT_LEVERS; 19.24
+                               # and 21.25 m at the two lower ones)
 
 SPECIES = (("6Li", 3), ("alpha", 2), ("d", 1), ("p", 1))
 WIRE_WIDTHS_NM = (250.0, 400.0, 600.0, 800.0, 1000.0, 1500.0, 2000.0)
@@ -222,8 +224,16 @@ def main():
 
     print("\n== 3b. what a strip costs in channels ==")
     for span_mm, label in (
+            # 9.3 mm is (1.03 - 0.727) mrad x 30.6 m: the Sep-2024
+            # silicon aperture down to the RETIRED single 72.7 urad
+            # envelope.  Kept so the published channel count stays
+            # reproducible; the row below is its current-geometry
+            # replacement, against the tagging envelope.
             (9.3, "9.3 mm, the Sep-2024 geometry's gap at 18x275 "
                   "(R12 = %.1f m)" % R12_M),
+            (12.4, "12.4 mm, the gap in the CURRENT geometry at 18x275 -- "
+                   "the measured 0.53 mrad silicon aperture down to the "
+                   "0.12 mrad tagging envelope at R12 = %.1f m" % R12_M),
             (3.0, "3.0 mm, a minimal near-beam strip")):
         area = 2.0 * span_mm * args.vertical_mm       # two sides of the beam
         print("  %s -> %.0f mm2 total" % (label, area))
@@ -250,10 +260,14 @@ def main():
                                         args.n_spectator, beta=0.30,
                                         rng=np.random.default_rng(7))
         # the routed tag (any far-forward system), the same quantity as
-        # tagging_acceptance.py and nearbeam_aperture_scan.py
+        # tagging_acceptance.py and nearbeam_aperture_scan.py.  pot_config
+        # is the configuration whose blind block the OVER-RIGID branch
+        # tests against (48 / 32 / 16 mm); leaving it at the 18 x 275
+        # default inflates the two lower rows by 50%.
+        key = name.replace(" ", "")
         acc = lambda hx: 1.0 - ff.acceptance_summary(                # noqa: E731
             k["R"], k["theta"], k["pT"], ff.Optics("cut", hx / 10.0, 10.0, ty / 10.0),
-            phi=k["phi"])["lost"]
+            phi=k["phi"], pot_config=key)["lost"]
         a_old, a_env, a_new = acc(meas[0]), acc(env[0]), acc(th_nb)
         print("%-9s %13.4f %14.4f %14.4f %8.2f"
               % (name, a_old, a_env, a_new, a_new / max(a_old, 1e-12)))

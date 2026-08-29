@@ -8,7 +8,13 @@ Table I; arXiv:2409.02811; details in plans/03 step 2.2):
   OMD          z = 25.50/27.00 m  theta < 5 mrad  R in [0.45, 0.65], no cut
   B0           5.5 < theta < 20 mrad, any charged
   ZDC          theta < 4 mrad, neutrals
-  no coverage  R > ~1.05 (bends less than beam), or 5-5.5 mrad gap
+  RP-inner     R > ~1.05 (bends less than beam): the OVER-RIGID branch,
+               route code 6, whenever the dispersive displacement clears
+               the per-configuration blind block (48 / 32 / 16 mm) and
+               stays inside the last module at 144 mm -- see
+               `over_rigid_route` below, measured 2026-08-28
+  no coverage  the 5-5.5 mrad gap, and a dispersive displacement past the
+               last module (e.g. R = 1.504)
 
 The z positions above are read from the CURRENT eic/epic main branch
 (2026-08-27): roman_pots_eRD24_design.xml gives 32547.3 / 34245.5 mm and
@@ -50,7 +56,8 @@ THETA_RP_MAX = 5.0e-3
 #: matrix quotes and it is what the routing has always used, so the default
 #: keeps every published number where it is; the constant exists because a
 #: real pot is a tiling of 16 x 16 mm modules a few tens of millimetres
-#: across, not a 153 mm disc (5 mrad x R12 = 30.6 m), and any topology
+#: across, not a 150 mm disc (5 mrad x R12 = 29.97 m at 18 x 275; 96 and
+#: 106 mm at 5 x 41 and 10 x 100), and any topology
 #: question involving a SECOND fragment is dominated by where that edge is
 #: (plans/09 B1, D3).  Pass `theta_outer` to `route_charged` to price it.
 THETA_RP_OUTER = THETA_RP_MAX
@@ -200,19 +207,43 @@ YR_GOLD_DIVERGENCE = {                              # strong hadron cooling
 
 
 def route_charged(R, theta, pT, optics=HIGH_ACCEPTANCE, phi=None,
-                  theta_outer=None):
+                  theta_outer=None, pot_config="18x275"):
     """Classify charged fragments into far-forward systems.
 
     Returns an integer array: 0 lost, 1 RP, 2 OMD, 3 B0, 4 RP-near-beam
     (R ~ 1, accepted only outside the angular envelope -- a rectangle of
     half-widths n_sigma (sigma_h, sigma_v) when the fragment azimuth `phi`
-    is given, a circle at n_sigma sigma_h otherwise; Optics.clears).  `pT`
-    is not used for the near-beam decision: the envelope is angular.
+    is given, a circle at n_sigma sigma_h otherwise; Optics.clears), 6
+    RP-inner (over-rigid).  `pT` is not used for the near-beam decision:
+    the envelope is angular.
 
     `theta_outer` replaces THETA_RP_OUTER as the outer edge of the pot and
     off-momentum acceptance; the default leaves it at THETA_RP_MAX, where
-    every published number was computed.  The B0 window is untouched by it
-    -- a fragment between the pot edge and 5.5 mrad is lost, as it is now.
+    every published number was computed (`theta_rp_outer_for` gives the
+    measured edge, 2.9-4.0 mrad, for callers that want to price it).  The
+    B0 window is untouched by it -- a fragment between the pot edge and
+    5.5 mrad is lost, as it is now.
+
+    THE OVER-RIGID BRANCH (2026-08-28, plans/09 B1).  Until then every
+    R > 1 + NEAR_BEAM_BAND fragment fell through to "lost" by
+    construction, and Report 3 Table 6 said so in as many words: "the
+    triton (R = 1.29) is over-rigid, with no window in route_charged,
+    which carries no R > 1 branch ... its 'no coverage' is a routing
+    assumption rather than a measurement".  It is now measured, and it was
+    wrong: the pot dispersion carries an over-rigid fragment to the INNER
+    side of the bend and an R = 1.286 triton is on the silicon in 60 of 60
+    events at every configuration (`over_rigid_route`, which holds the
+    numbers).  `pot_config` selects the configuration whose blind block
+    the displacement has to clear; it defaults to 18 x 275, the most
+    permissive of the three, and the fragments this changes are the 7Li
+    triton at R = 1.290 (now RP-inner at all three) and NOT the 6Li 3He+t
+    triton at R = 1.504, whose 151 mm displacement is past the last
+    module and which stays lost.  `phi` enters the branch when it is
+    given -- an over-rigid fragment can be pushed back into the central
+    block by a horizontal angle of the opposite sign, which is a real
+    measured hole: theta_x in -1.7 to -2.7 mrad in this model at
+    18 x 275, and -1.55 to -2.53 mrad in the scan it was fitted to
+    (`lad_triton_18x275`; RESULTS section 5).
     """
     R = np.asarray(R, dtype=float)
     theta = np.asarray(theta, dtype=float)
@@ -227,14 +258,18 @@ def route_charged(R, theta, pT, optics=HIGH_ACCEPTANCE, phi=None,
     in_rp = small & ~near & (R >= RP_R_WINDOW[0]) & (R <= RP_R_WINDOW[1])
     in_omd = small & (R >= OMD_R_WINDOW[0]) & (R < OMD_R_WINDOW[1])
     rp_tail = small & near & optics.clears(theta, phi)
+    theta_x = theta * np.cos(phi) if phi is not None else 0.0
+    over = (small & (R > 1.0 + NEAR_BEAM_BAND)
+            & over_rigid_route(R, theta_x, pot_config))
     out[in_omd] = 2
     out[in_rp] = 1
     out[rp_tail] = 4
+    out[over] = 6
     return out
 
 
 ROUTE_LABELS = {0: "lost", 1: "RomanPots", 2: "OMD", 3: "B0",
-                4: "RP (pT tail, R~1)"}
+                4: "RP (pT tail, R~1)", 6: "RP-inner (over-rigid)"}
 
 
 def route_neutral(theta):
@@ -252,10 +287,21 @@ def neutral_summary(theta):
 
 
 def acceptance_summary(R, theta, pT, optics=HIGH_ACCEPTANCE, phi=None,
-                       theta_outer=None):
-    """Fraction of spectators in each far-forward system."""
+                       theta_outer=None, pot_config="18x275"):
+    """Fraction of spectators in each far-forward system.
+
+    `pot_config` is passed straight to `route_charged` and MUST be set by
+    any caller that works one machine configuration at a time: the
+    over-rigid branch tests the pot-plane displacement against that
+    configuration's blind block (48 / 32 / 16 mm), and the default
+    18 x 275 is the most permissive of the three.  Leaving it at the
+    default while sweeping configurations inflates the R > 1.05 share at
+    5 x 41 and 10 x 100 by a factor 8 (0.0097 -> 0.0011 and 0.0015 of the
+    6Li alpha-tag sample), which is the single-number-everywhere error
+    this measurement exists to remove.
+    """
     route = route_charged(R, theta, pT, optics, phi=phi,
-                          theta_outer=theta_outer)
+                          theta_outer=theta_outer, pot_config=pot_config)
     n = float(len(route))
     return {label: float(np.sum(route == code)) / n
             for code, label in ROUTE_LABELS.items()}
@@ -263,15 +309,239 @@ def acceptance_summary(R, theta, pT, optics=HIGH_ACCEPTANCE, phi=None,
 
 # --- per-configuration optics (2026-08-28) ---------------------------------
 
-#: Far-forward transport constants read off the ePIC geometry scan
-#: (tools/fullsim, 18 x 275): the horizontal lever from an IP angle to the
-#: pot-plane position and the dispersion at the pots.
-POT_R12 = 30.6        # m
-POT_DISPERSION = 0.30  # m
+# --- the pot-plane transport, measured per configuration (2026-08-28) -----
+#
+# `tools/fullsim`, plans/09 B1, in eic_xl-nightly / epic-main
+# 9aaa296976d3ad9de404f775ae89fc17a068c07c.  An intact 6Li was walked
+# along theta = 0.20-6.00 mrad in 0.05 steps at phi = 0/90/180/270 at each
+# ring's reference rigidity, and the first-crossing hit position regressed
+# against the IP angle plane by plane:
+#
+#   (R12, R34, D)  =  d x / d theta_x ,  d y / d theta_y ,  d x / d R
+#
+# R12 residual rms 0.67-0.82 mm over 42-141 rows per plane, and the fitted
+# intercept lands on the pot centre to 0.6 mm at every configuration and
+# in every plane -- the check that the regression measures transport and
+# not a mis-set reference orbit.  Hits are assigned to planes in the
+# ROTATED station frame (the stations are tilted -0.04545 rad about y);
+# assigning on global z instead, as the reader did until the same day,
+# double-counts every hit beyond |dx| ~ 110 mm into both layers of its
+# station and moves these levers by 0.04-0.1%.
+#
+# Three things this replaces.  R12 = 30.6 m was ONE number, measured at
+# 18 x 275 in the September-2024 geometry and applied everywhere: the
+# lower configurations are 19.2 and 21.3 m, a third of it, so every
+# millimetre quoted at 5 x 41 and 10 x 100 before today was 45-60% high.
+# R34 had never been measured at all and defaulted to R12: it is 2.6-3.4 m,
+# an order of magnitude smaller, and the far-forward line is ~9x stiffer
+# in x than in y -- which is why the pot aperture is a horizontal slot
+# even though the pots insert vertically.  And D = 0.30 m, which WAS a
+# single 18 x 275 number, survives: 0.31 / 0.29 / 0.29 m measured.
+#
+# R34 is None at 5 x 41 and that is a measurement, not a gap.  The
+# per-energy insertion there holds the central silicon off to |y| >= 29.6
+# mm and the intermediate bands to 27.5 and 18.0, so a vertical kick needs
+# theta_y ~ 10 mrad to reach any sensor: the whole vertical ladder
+# returned one accepted row in 0.2-6.0 mrad.  The vertical plane at 5 x 41
+# is shut, and `separation_at_pots` falls back on R12 there with a warning
+# in its docstring rather than inventing a lever.
+POT_LEVERS = {
+    "5x41":   (19.24, None, 0.311),
+    "10x100": (21.25, 3.35, 0.287),
+    "18x275": (29.97, 2.93, 0.292),
+}
+
+#: THE LIGHT-ION-LATTICE ALTERNATIVE at 5 x 41, and the size of the
+#: systematic the choice of compact file carries.
+#:
+#: `epic-main` ships two different lattices for the 5 x 41 ring setting.
+#: `compact/fields/beamline_5x41.xml` is the 41 GeV PROTON one and is what
+#: `epic_craterlake_5x41.xml` includes, so it is what every scan in this
+#: repository and every number in POT_LEVERS stands on.
+#: `compact/fields/beamline_5x41_He4.xml` is the Z/A = 0.5 one -- 82 GV,
+#: FieldScaleFactor 82/275 on the Yellow Report 275 GeV magnet set -- and
+#: is the lattice a 6Li fill at the gamma-matched 40.8 GeV/u (81.6 GV)
+#: might actually run in.  They are NOT a field scale of one another
+#: (Q1APF_GradientMax -15.38 against -72.61 T/m), and the transport
+#: differs by a factor 1.55: R12 29.81 m against 19.24, and the
+#: horizontal silicon edge 1.60-1.70 mrad against 2.50 (RESULTS section
+#: 6, `lad_he4_5x41`, 6Li at 40.8 GeV/u, theta 0.2-6.0 mrad step 0.1).
+#: D = 0.23 m from the ladder intercept x0 = -1.13 mm at delta = -0.0049,
+#: a one-point number good to ~20%.  R34 is None for the same reason as
+#: the baseline: the vertical plane is shut at 5 x 41.
+#:
+#: 10 x 100 is None because it CANNOT be checked: the only Z/A = 0.5 file
+#: near that setting is `beamline_10x110_H2.xml` at 220 GV against the
+#: 6Li fill's 199 GV, so a scan there would confound energy with lattice.
+#: 18 x 275 carries the baseline triple unchanged, and that is not a
+#: placeholder: the 18 x 275 compact file IS the Yellow Report 275 GeV
+#: magnet set that the He4 file scales, which is why the He4 5 x 41 run
+#: reproduces the 18 x 275 levers to 1%.
+#:
+#: Which file is right is the open question for the far-forward working
+#: group (plans/09 B1); the baseline is what the published numbers use,
+#: and the ratio of the two tables is the systematic to carry.
+POT_LEVERS_LIGHT_ION_LATTICE = {
+    "5x41":   (29.81, None, 0.23),
+    "10x100": None,
+    "18x275": POT_LEVERS["18x275"],
+}
+
+#: Second-order pot dispersion, x = D delta + D2 delta^2 [m].  Irrelevant
+#: inside the near-beam band (0.6 mm at |delta| = 0.05) and NOT irrelevant
+#: for an over-rigid fragment: at the triton's delta = 0.286 it is -18 mm
+#: against a linear +84, and dropping it misses the measured +66 mm by a
+#: quarter.  `over_rigid_route` uses it; nothing else does.
+#:
+#: D and D2 are one FIT and come from one station: `mkdisp.py` puts the
+#: quadratic through the three rigidities each configuration provides at
+#: theta = 0 -- alpha R = 0.857 and triton R = 1.286 from the frag guns,
+#: intact 6Li R = 1.000 from the ladder's fitted intercept.  Station 1,
+#: the plane R12 is regressed on, except at 5 x 41 where the R = 0.857
+#: alpha reaches no station-1 silicon (the 32-48 mm band is held off to
+#: |y| >= 18 mm there) and only station 2 has three points.  The two
+#: stations disagree by 8% in D and up to 14% in D2 -- 0.292 / -0.215 at
+#: station 1 against 0.315 / -0.249 at station 2 at 18 x 275 -- which is
+#: real (station 2 has the longer lever) and is why the pair must not be
+#: mixed across stations, as it was until 2026-08-28.
+POT_DISPERSION_2 = {"5x41": -0.190, "10x100": -0.206, "18x275": -0.215}
+
+#: |R - 1| over which the quadratic above was fitted and may be used.
+MEASURED_DELTA_MAX = 0.30
+
+#: Horizontal half-width of the silicon band a track at y ~ 0 must clear,
+#: per configuration [m]: the central block is 16 mm wide and the bands
+#: outside it are held off vertically by the per-energy insertion, so the
+#: first band with a zero y offset starts at 48 / 32 / 16 mm
+#: (compact/fields/beamline_*.xml).  The outer edge of the last module is
+#: 144 mm at every configuration.
+POT_BLIND_HALF_WIDTH = {"5x41": 0.048, "10x100": 0.032, "18x275": 0.016}
+POT_OUTER_HALF_WIDTH = 0.144
+
+#: Outer angular edge of the pot acceptance, MEASURED as the last theta
+#: of a DEBRIS-FREE contiguous run: the run is broken by a gap of more
+#: than 0.30 mrad and each row must carry at most 3 hits in the plane and
+#: sit within 2 mm of the fitted transport line.  Taken as the smaller of
+#: the +x and -x sides.  It is NOT 144 mm / R12 -- that arithmetic gives
+#: 7.5 / 6.8 / 4.8 mrad and the ion strikes the pipe or the magnet
+#: aperture first, at |dx| = 54-127 mm.  On the under-rigid (-x) side at
+#: 5 x 41 the primary survives only 0.35 mrad past the inner edge.
+#:
+#: IT IS NOT THE LAST ROW WITH A PRIMARY.  Isolated on-line rows survive
+#: 0.05-0.35 mrad beyond it, and the cleanliness cut rather than the
+#: transport is what ends the run: at 5 x 41, phi = 180, theta = 2.90 mrad
+#: the S1L1 hit is at dx = -55.0 mm against a fitted -55.6 (a primary) but
+#: carries 13 hits in the plane; at 18 x 275, phi = 180, theta = 4.35 mrad
+#: all four planes give a consistent on-line row (-130.8 / -131.2 /
+#: -132.6 / -132.8 mm) past the 4.00 mrad quoted here.  The constant is
+#: therefore the last angle at which a SINGLE clean track is reconstructed
+#: through debris, which is the quantity a partner-fragment veto needs,
+#: and it is conservative by up to one 0.05 mrad step plus one gap.
+THETA_RP_OUTER_MEASURED = {"5x41": 2.85e-3, "10x100": 3.85e-3,
+                           "18x275": 4.00e-3}
+
+#: The 18 x 275 values under the old scalar names, so every caller and
+#: every published number written before 2026-08-28 keeps working.  Note
+#: that POT_R12 moves 30.6 -> 29.97 m (2%) because it is now regressed on
+#: 138 rows of the current geometry rather than read off four hit
+#: positions of the September-2024 one.
+POT_R12, POT_R34, POT_DISPERSION = POT_LEVERS["18x275"]
+
+
+def pot_levers_for(config):
+    """(R12, R34, D) at a machine configuration.
+
+    `config` may be a `beams.BeamConfig` of any species -- the transport
+    is a property of the ring, not of the beam in it -- a configuration
+    key ("5x41", "10x100", "18x275"), or a bare 6Li per-nucleon momentum
+    in GeV/u, which resolves at the gamma-matched 40.8 / 99.5 / 137.5 and
+    raises off them rather than interpolating.  R34 is None at 5 x 41; see
+    POT_LEVERS.
+    """
+    if isinstance(config, str):
+        return POT_LEVERS[config]
+    if hasattr(config, "ion_momentum_per_nucleon"):
+        return POT_LEVERS[yr_config_key(config)]
+    from . import beams as _beams
+    for cfg, key in zip(_beams.default_configs("6Li"),
+                        ("5x41", "10x100", "18x275")):
+        if abs(float(config) - cfg.ion_momentum_per_nucleon) < 1e-3:
+            return POT_LEVERS[key]
+    raise KeyError("no measured pot levers at %s GeV/u; the scan covers "
+                   "the three 6Li configurations only "
+                   "(tools/fullsim, plans/09 B1)" % config)
+
+
+def theta_rp_outer_for(config):
+    """The MEASURED outer angular edge of the pot acceptance [rad].
+
+    Not the default of `route_charged`: THETA_RP_OUTER stays at
+    THETA_RP_MAX so that no published acceptance moves under this
+    measurement (`test_two_hit.py`).  Pass this value as `theta_outer` to
+    price the real edge -- it is what the partner-fragment veto of
+    plans/09 B4 depends on most.
+    """
+    if isinstance(config, str):
+        return THETA_RP_OUTER_MEASURED[config]
+    if hasattr(config, "ion_momentum_per_nucleon"):
+        return THETA_RP_OUTER_MEASURED[yr_config_key(config)]
+    from . import beams as _beams
+    for cfg, key in zip(_beams.default_configs("6Li"),
+                        ("5x41", "10x100", "18x275")):
+        if abs(float(config) - cfg.ion_momentum_per_nucleon) < 1e-3:
+            return THETA_RP_OUTER_MEASURED[key]
+    raise KeyError("no measured outer edge at %s GeV/u" % config)
+
+
+def over_rigid_route(R, theta_x=0.0, config="18x275"):
+    """Does an over-rigid fragment (R > 1) land on Roman-pot silicon?
+
+    Measured 2026-08-28 (tools/fullsim, plans/09 B1) and it is the answer
+    to Report 3 Table 6's open assumption.  An over-rigid fragment bends
+    LESS than the beam, so the pot dispersion carries it to +x, the inner
+    side of the bend, and an R = 1.286 triton is on the pots in 60 of 60
+    events at EVERY configuration -- dx = +66 mm at station 1, +70 to
+    +72 mm at station 2, inside the 48-144 mm outer band, which carries no
+    vertical insertion anywhere, so the hit needs no pT at all.  It
+    deposits in the ZDC in 80 / 83 / 98% of the same events.  The
+    repository routed every R > 1.05 fragment as lost.
+
+    The test is on the pot-plane displacement, x = D delta + D2 delta^2 +
+    R12 theta_x with delta = R - 1: silicon between the configuration's
+    blind half-width (48 / 32 / 16 mm) and the last module at 144 mm.
+    The second-order term is what makes the arithmetic reproduce the
+    measurement -- at 18 x 275, D = 0.292 m and D2 = -0.215 m give
+    0.292 x 286 - 0.215 x 286^2/1000 = 83.5 - 17.6 = 65.9 mm against
+    66.3 measured.  `theta_x` is the signed horizontal IP angle; leaving
+    it 0 asks the theta << dispersion question, which is the one the
+    rigidity-window routing asks.  It also exposes the measured HOLE: at
+    18 x 275 the triton's +66 mm is cancelled by theta_x in -1.7 to
+    -2.7 mrad (this model, scanned in 0.01 mrad steps) and it disappears
+    into the central block there.  The scan the model is fitted to loses
+    the triton after -1.50 mrad and recovers it at -2.50, i.e. -1.55 to
+    -2.53 mrad; the 0.15-0.2 mrad difference is the triton's own R12
+    being 8% stiffer than the beam's, which the model does not carry.
+    """
+    r12, _r34, disp = POT_LEVERS[config]
+    d2 = POT_DISPERSION_2[config]
+    delta = np.asarray(R, dtype=float) - 1.0
+    # The quadratic is fitted on delta = -0.143, 0, +0.286 and MUST NOT be
+    # extrapolated: it turns over at delta = -D/(2 D2) ~ 0.6, which is a
+    # three-point artefact and not a dispersion.  Outside the measured
+    # range fall back on the linear term, which is monotone in delta as a
+    # dispersion has to be.  The one fragment this decides is the 6Li
+    # 3He + t triton at R = 1.5044: linear puts it at 152 mm, past the
+    # last module at 144, so it stays "lost (over-rigid)" -- unmeasured
+    # and routed as it always was.
+    in_range = np.abs(delta) <= MEASURED_DELTA_MAX
+    x = np.where(in_range, disp * delta + d2 * delta * delta, disp * delta)
+    x = x + r12 * np.asarray(theta_x, dtype=float)
+    ax = np.abs(x)
+    return (ax >= POT_BLIND_HALF_WIDTH[config]) & (ax <= POT_OUTER_HALF_WIDTH)
 
 
 def separation_at_pots(frag_a, frag_b, r12=POT_R12, r34=None,
-                       dispersion=POT_DISPERSION):
+                       dispersion=POT_DISPERSION, config=None):
     """Transverse distance [m] at the pot plane between two fragments that
     leave the IP at (theta, phi) carrying rigidity ratio R.
 
@@ -306,18 +576,30 @@ def separation_at_pots(frag_a, frag_b, r12=POT_R12, r34=None,
     first (the breakup azimuth is uniform), so the separation distribution
     is invariant under D -> -D.
 
-    R12 = 30.6 m and D = 0.30 m are SINGLE values measured on the ePIC
-    geometry at 18 x 275 (tools/fullsim) and applied here at every
-    configuration for want of per-optics numbers; R34, the vertical lever,
-    has never been measured at all and defaults to R12.  All three are
-    plans/09 D3, and every millimetre this function produces inherits
-    them: read the lower-energy rows as scaling, not as transport.
+    Pass `config` (a BeamConfig, a key, or a 6Li GeV/u) to use the
+    per-configuration levers `POT_LEVERS` measured on 2026-08-28, which is
+    what plans/09 D3 asked for and what every caller should now do; the
+    bare defaults keep the 18 x 275 numbers, which is where R12 = 30.6 m
+    and D = 0.30 m came from and where they were applied at EVERY
+    configuration until then.  The correction is large and it runs the
+    unintuitive way: R12 is 19.2 and 21.2 m at 5 x 41 and 10 x 100, a
+    third smaller than 30.0 m at the top, so the millimetres the lower
+    configurations carried were 45-60% HIGH.  R34 is now measured at two
+    of the three -- 3.35 and 2.93 m, an order of magnitude under R12, the
+    far-forward line being ~9x stiffer in x than in y -- and is None at
+    5 x 41, where the 29.6 mm insertion shuts the vertical plane
+    altogether and there is nothing to regress; there the fallback r34 =
+    r12 remains, and it is the one place a millimetre in this function is
+    still an assumption.
     Nothing in the ROUTING depends on any of it -- the acceptance is
     decided in angle (`route_charged`), which is the same assumption from
     the other side (plans/04 #11: a near-beam fragment is taken to be
     dispersion-blind, though its own D (R - 1) is 0.6 mm for the alpha and
     1.4 mm for the deuteron) -- so this enters figures and tables only.
     """
+    if config is not None:
+        r12, r34_m, dispersion = pot_levers_for(config)
+        r34 = r12 if r34_m is None else r34_m
     r34 = r12 if r34 is None else r34
     ta, tb = np.asarray(frag_a["theta"]), np.asarray(frag_b["theta"])
     pa, pb = np.asarray(frag_a["phi"]), np.asarray(frag_b["phi"])
@@ -409,6 +691,7 @@ def hole_acceptance(slope_b, cut_x, cut_y, shape="rectangle", nphi=3600):
 
 
 def tagging_optics_point(config, slope_b=50.0, n_sigma=10.0, r_max=2000.0,
+                         per_config_levers=False,
                          n_grid=400, dispersion=True, optics="high-acceptance"):
     """The lithium TAGGING OPTICS of Report 1 Section 6.1: the working
     point that maximises (tagged fraction) x (luminosity) when the
@@ -431,7 +714,38 @@ def tagging_optics_point(config, slope_b=50.0, n_sigma=10.0, r_max=2000.0,
     sh, sv = sigma_theta_for(config, optics)
     p_ion = config.ion.A * config.ion_momentum_per_nucleon
     dpp = 1e-4 * YR_PROTON_DIVERGENCE[yr_config_key(config)][1]
-    disp = (POT_DISPERSION * dpp / POT_R12) if dispersion else 0.0
+    # The pot dispersion turns the beam's momentum spread into an apparent
+    # ANGLE at the IP, D dp/p / R12.
+    #
+    # MEASURED PER CONFIGURATION SINCE 2026-08-28 (POT_LEVERS, plans/09
+    # B1) AND NOT YET APPLIED HERE BY DEFAULT.  D/R12 is 1.62e-2 /
+    # 1.35e-2 / 9.74e-3 m/m per configuration.  READ THE DEFAULT BRANCH
+    # CAREFULLY: POT_R12 and POT_DISPERSION are now POT_LEVERS["18x275"],
+    # so the default is 0.292 / 29.97 = 9.74e-3, i.e. the MEASURED
+    # 18 x 275 pair -- the third of those three numbers, not a legacy one.
+    # It lands 0.6% BELOW the 0.30 / 30.6 = 9.80e-3 that Report 1 SS6.1,
+    # the reproduction manual and every published tagging number were
+    # priced with, so no published tagging number moves under the
+    # re-measurement: the 18 x 275 optimum is r_h = 89.3, eps = 0.332,
+    # L/L_HA = 1/9.5 before and after.  That agreement is a result, not a
+    # coincidence to be relied on -- the two levers each moved by 2% and
+    # their ratio did not.
+    #
+    # What `per_config_levers=True` buys is therefore the two LOWER
+    # configurations, where the smearing is 66% and 39% larger than the
+    # 18 x 275 default.  It moves the optimum measurably -- r_h 49.7 /
+    # 175.6 / 89.3 -> 46.5 / 164.1 / 89.3, eps 0.423 / 0.323 / 0.332 ->
+    # 0.374 / 0.251 / 0.332, L/L_HA 1/7.1 / 1/13.3 / 1/9.5 -> 1/6.8 /
+    # 1/12.8 / 1/9.5, identical at 18 x 275 by construction -- and the
+    # 22% drop in eps at 10 x 100 propagates through
+    # `money_cos2phi_coherent_reco.py` into Reports 1, 3 and 4.  It is
+    # therefore OPT-IN until the coherent chain is re-run with it, which
+    # is the one open item plans/09 B1 hands on rather than closes.
+    if per_config_levers:
+        r12_c, _r34_c, disp_c = pot_levers_for(config)
+    else:
+        r12_c, disp_c = POT_R12, POT_DISPERSION
+    disp = (disp_c * dpp / r12_c) if dispersion else 0.0
     r = np.logspace(np.log10(0.25), np.log10(r_max), n_grid)
     best = None
     for rr in r:

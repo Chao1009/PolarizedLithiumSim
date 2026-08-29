@@ -9,6 +9,30 @@ polarization 0.7. Ion polarizations default to the ECRP source targets
 (Pz >= 0.90, Pzz >= 0.80) degraded to in-ring placeholders (0.7/0.6) --
 ring transport survival is an open accelerator-physics question tracked
 in plans/03_open_questions.md.
+
+Run-plan share: `lumi_fb_per_nucleon` is the PROGRAMME luminosity ("one
+EIC year" = 10 fb^-1/u) and `run_share` is the fraction of it this
+observable is given.  The two are kept apart, rather than folded into one
+number, so that a projection can say "10 fb^-1/u of programme, 1/3 of it
+here": the programme figure is the machine's, the share is ours to
+propose (plans/07 WP2).  Every published number is at run_share = 1.
+
+Three shares stack multiplicatively and are deliberately NOT the same
+object:
+
+  run_share              the programme share -- how a year divides between
+                         observables, isotopes and running configurations
+                         (this field).
+  Optics.lumi_fraction   the optics penalty of a running configuration --
+                         what a de-squeezed beta*_x costs at fixed wall
+                         time (farforward.Optics; 1/7 - 1/13 for the
+                         lithium tagging optics).
+  SpinCategory.lumi_fraction
+                         the INTRA-observable spin share -- how one
+                         measurement's own luminosity divides between its
+                         fill states (evgen.polligen.bookkeeping; 0.5/0.5
+                         for a tensor flip plan).  It sums to one within a
+                         run plan and is not a programme decision.
 """
 
 from dataclasses import dataclass, field
@@ -31,6 +55,11 @@ from .structure import NuclearF2, dsigma_dx_dq2
 @dataclass
 class Scenario:
     lumi_fb_per_nucleon: float = 10.0
+    # fraction of the programme luminosity given to THIS observable in
+    # THIS configuration (see the module docstring).  Statistical errors
+    # scale as 1/sqrt(run_share); any luminosity at which a target
+    # significance is reached is invariant under it.
+    run_share: float = 1.0
     pol_electron: float = 0.70
     pol_ion_vector: float = 0.70   # P_z in the ring (placeholder)
     pol_ion_tensor: float = 0.60   # P_zz in the ring (placeholder)
@@ -42,6 +71,37 @@ class Scenario:
     eta_min: float = -3.5
     eta_max: float = 3.5
     e_prime_min: float = 0.5  # GeV
+
+    def __post_init__(self):
+        if not self.run_share > 0:
+            raise ValueError("run_share must be positive (it multiplies the "
+                             "luminosity); got %r" % (self.run_share,))
+
+    @property
+    def lumi_effective_fb_per_nucleon(self):
+        """Luminosity this observable actually receives [fb^-1/nucleon]."""
+        return self.lumi_fb_per_nucleon * self.run_share
+
+
+def run_share_tag(run_share):
+    """Filename key for a non-default run-plan share ('' at share 1).
+
+    Published figures are made at run_share = 1; a run at any other share
+    appends this key so it cannot overwrite them (the same guard as
+    `money_tagged_azz.output_stem`)."""
+    if abs(float(run_share) - 1.0) < 1e-12:
+        return ""
+    return ("share%g" % float(run_share)).replace(".", "p")
+
+
+def run_share_header(lumi_fb_per_nucleon, run_share):
+    """One-line description of the programme luminosity and this
+    observable's share of it, for a script header."""
+    return ("run share %g of the %g fb^-1/u programme -> %g fb^-1/u "
+            "delivered (published numbers are at share 1; errors scale as "
+            "1/sqrt(share), any luminosity to a target significance does "
+            "not)" % (run_share, lumi_fb_per_nucleon,
+                      lumi_fb_per_nucleon * run_share))
 
 
 @dataclass
@@ -84,7 +144,9 @@ def project_rates(config, scenario, nx=40, nq2=30, x_range=(1e-4, 1.0),
 
     dx = np.diff(x_edges)[:, None]
     dq2 = np.diff(q2_edges)[None, :]
-    lumi_pb = scenario.lumi_fb_per_nucleon * 1e3  # fb^-1 -> pb^-1
+    # the ONE luminosity line: programme luminosity x this observable's
+    # share of the run plan (plans/07 WP2)
+    lumi_pb = scenario.lumi_effective_fb_per_nucleon * 1e3  # fb^-1 -> pb^-1
     n_events = np.where(mask, xsec * dx * dq2 * lumi_pb, 0.0)
 
     return BinnedProjection(x_edges, q2_edges, X, Q2, mask, n_events,
@@ -105,6 +167,21 @@ def project_observables(config, scenario, proj, g1_model, b1_func, delta_func):
     g1 = g1_model.g1_nucleus(config.ion, X, Q2) / config.ion.A
     apar = a_parallel(g1, f1, y, X, Q2, r_func=r_func)
     dapar = err_a_parallel(N, scenario.pol_electron, scenario.pol_ion_vector)
+    # Dividing by the MASSLESS D inverts the massless A_par, so the
+    # extraction comes out HIGH by a factor (1 + gamma^2): the exact
+    # A_par = D_gamma (A1 + eta A2) is (1 + gamma^2) times the massless
+    # one at these y, and feeding that larger asymmetry to the massless
+    # inversion returns a correspondingly larger g1A/F1A (see
+    # a_parallel's docstring).
+    # That leaves Delta-R high by 0.12 / 0.44 / 0.71 / 1.06 % at
+    # x = 0.089 / 0.282 / 0.447 / 0.708 -- inverse-variance weighted with
+    # exactly the weights below, which give the published statistical
+    # 4.77 / 5.11 / 6.19 / 12.37 % at 10 fb^-1/u, so the bias is 9-40x
+    # smaller -- measured by evgen/scripts/target_mass_bound.py, whose
+    # block 3 reproduces both columns.  It is a bias, not a spread, so it
+    # does not enter these error bars; removing it means
+    # dividing by D_gamma (1 + gamma^2 kappa + ...) instead, which is a
+    # change to a published pipeline and the author's call.
     d_g1f1 = dapar / depolarization_d(y, X, Q2, r_func=r_func)
     out["a_par"] = apar
     out["err_a_par"] = dapar

@@ -287,8 +287,14 @@ def test_hadronic_methods_reproduce_the_exact_kinematics_by_hand():
 def test_tagging_optics_point_reproduces_the_priced_optimum():
     """reco.tagging_optics_point must give the optimum that
     scripts/tagging_optics.py prints (r_h = 49.7 / 175.6 / 89.3,
-    eps = 0.422 / 0.322 / 0.332, L/L_HA = 1/7.1 / 1/13.3 / 1/9.5)."""
-    expect = ((49.7, 0.422, 7.1, 0.33, 3.80), (175.6, 0.322, 13.3, 0.17, 1.80),
+    eps = 0.423 / 0.323 / 0.332, L/L_HA = 1/7.1 / 1/13.3 / 1/9.5)."""
+    # None of the three moved under the 2026-08-28 re-measurement: the pot
+    # dispersion enters as the RATIO D / R12, and the re-measured 18 x 275
+    # pair is 0.292 / 29.97 m against 0.30 / 30.6 (plans/09 B1) -- both
+    # levers 2% smaller, their ratio 0.6%.  The two lower rows keep the
+    # 18 x 275 scalars by default; their own measured levers are opt-in
+    # (tagging_optics_point(per_config_levers=True)).
+    expect = ((49.7, 0.423, 7.1, 0.33, 3.80), (175.6, 0.323, 13.3, 0.17, 1.80),
               (89.3, 0.332, 9.5, 0.12, 0.92))
     for cfg, (r_h, eps, one_over_l, env_x, env_y) in zip(beams.default_configs("6Li"), expect):
         t = reco.tagging_optics_point(cfg)

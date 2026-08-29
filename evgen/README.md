@@ -15,29 +15,30 @@ next. Imports `../fastsim/polli_fastsim` — nothing there is duplicated.
 
 ```bash
 cd evgen
-python3 -m pytest tests/ -q            # 276 tests
+python3 -m pytest tests/ -q            # 305 tests
 python3 scripts/closure_fom.py --ion 6Li --events 200000 --trials 200
 python3 scripts/closure_fom.py --ion 7Li --events 200000 --trials 200
-python3 scripts/money_tagged_azz.py --events 400000       # money plot 4 (--config, --optics)
+python3 scripts/money_tagged_azz.py --events 400000       # money plot 4 (--config, --optics, --lumi-fraction)
 python3 scripts/tagged_polarimetry_7li.py --events 300000 # 7Li polarimetry + tagged EMC (--config, --optics)
 python3 scripts/money_cos2phi.py                          # money plot 5
 python3 scripts/money_cos2phi_coherent.py                 # money plot 6
 python3 scripts/money_delta_extraction.py                 # money plot 7
 python3 scripts/phase_space_bins.py       # (x,Q2) rate maps + binning
 python3 scripts/reco_chain_figures.py     # reconstruction-chain figures
-python3 scripts/money_cos2phi_reco.py          # money plots 5R + 7R (reco level)
-python3 scripts/money_cos2phi_coherent_reco.py --config 0 --optics tagging --n-mc 6000000 # money plot 6R (reco level, tagging optics)
+python3 scripts/money_cos2phi_reco.py          # money plots 5R + 7R (reco level; --lumi-fraction)
+python3 scripts/money_cos2phi_coherent_reco.py --config 0 --optics tagging --n-mc 6000000 # money plot 6R (reco level, tagging optics; --lumi-fraction)
 python3 scripts/coherent_optics_scan.py   # WP5: the coherent tag vs the near-beam envelope
 python3 scripts/tagging_optics.py         # report 1 §6.1: a lithium tagging optics at IP6, priced in luminosity
 python3 scripts/hfs_acceptance.py --config 1 --sample samples/pythia8_e10_p99.5_dis.npz samples/pythia8_e10_n99.5_dis.npz  # report 2 §3: where the hadronic E - p_z sum goes
+python3 scripts/target_mass_bound.py       # how big is the γ² term A∥ drops? (prints, no figure)
 python3 scripts/eic_beam_figures.py       # report 3: the ion energy menu and the divergence
 python3 scripts/nearbeam_aperture_scan.py # plans/09: what every near-beam aperture is worth (--isotope 7Li for the 7Li alpha panel)
-python3 scripts/nearbeam_reach_gain.py    # plans/09: the coherent chain at both apertures
+python3 scripts/nearbeam_reach_gain.py    # plans/09: the coherent chain at both apertures (--lumi-fraction)
 python3 scripts/nearbeam_sensor_budget.py # plans/09: hot-spot Z-ID, sizing, channel count
 python3 scripts/nearbeam_zid_power.py     # plans/09: how much charge information Z-ID needs
 python3 scripts/nearbeam_two_hit.py       # plans/09 B4: two-hit topology of 6Li -> alpha + d, and the partner-fragment veto
 python3 ../reports/build_report.py --pdf  # assemble reports/ pages
-python3 ../tools/consistency_check.py     # 23 checks: does everything still agree?
+python3 ../tools/consistency_check.py     # 24 checks: does everything still agree?
 #   reports are numbered in reading order:
 #   -> 0 polarized_li_primer.html/pdf (educational physics primer)
 #   -> 1 cos2phi_money_plots_report.html/pdf (the projected measurements)
@@ -48,13 +49,21 @@ python3 ../tools/consistency_check.py     # 23 checks: does everything still agr
 #   build time (matplotlib mathtext, no JS/fonts in the output)
 ```
 
+Every per-year number below assumes the full 10 fb⁻¹/u programme year in
+its own configuration — spin states, far-forward optics and isotope — which
+is `--lumi-fraction 1`, the default of the scripts that take it.  A run plan
+that gives an observable a share *f* multiplies its statistical errors by
+1/√*f* and the years to a target significance by 1/*f*, leaving any
+luminosity quoted as a reach where it is; the options are priced in
+plans/07 WP2 and the arithmetic is pinned by `tests/test_run_share.py`.
+
 ## Modules
 
 | module | content |
 |---|---|
 | `polligen/nearbeam.py` | plans/09: thin-film energy deposit; the hot-spot firing threshold I_th/I_c = 1 − 2r_s/w with r_s ∝ z (anchored on Argonne's *extrapolated* 134 nm, arXiv:2312.13405); and a sampled Landau with `zid_fake_rate`, which says how much charge information the ⁶Li/α separation actually needs — one bit per plane costs a factor 1.4 against the Neyman-Pearson optimum, and the nanowire loses on fill factor instead |
 | `polligen/spin.py` | ρ(m,m′) for J = 1, 3/2: Wigner-d/CG, populations ↔ normalized (vector, tensor, octupole) moments, arbitrary quantization axis, spin-temperature (max-entropy) fills |
-| `polligen/xsec.py` | doubly polarized inclusive master formula: HJM spin-1 tensor sector (b₁/b₂, Δ cos 2φ), vector sector A∥ = D·g1/F1 (+ γ-suppressed g_T term, g₂ = g₂^WW), spin-3/2 rank-0/1 exact + rank-2 scenario slots |
+| `polligen/xsec.py` | doubly polarized inclusive master formula: HJM spin-1 tensor sector (b₁/b₂, Δ cos 2φ), vector sector A∥ = D·g1/F1 (+ γ-suppressed g_T term, g₂ = g₂^WW), spin-3/2 rank-0/1 exact + rank-2 scenario slots; the exact finite-γ A∥ = D_γ(A₁ + ηA₂) behind `target_mass=True` (default off; what it removes is ≤ 0.6% at the published sweet spots — `scripts/target_mass_bound.py`) |
 | `polligen/bookkeeping.py` | run plans (helicity flips, tensor thirds, transverse fills), relative-luminosity offsets + first-order bias formulas, polarimetry smearing, per-(run,bunch) rng streams |
 | `polligen/sample.py` | grid inverse-CDF sampler: per-spin-state Poisson rates (φ-averaged modulation shifts counting rates), φ accept-reject, Mode-W weight matrices |
 | `polligen/estimators.py` | analysis-side estimators: helicity-flip, tensor thirds, cos 2φ moment + binned LSQ fit (holey-φ robust), luminosity-corrected yields |
@@ -102,8 +111,8 @@ optics the ⁶Li α tag admits only the high-k tail, and the tagging optics
 is what turns money plot 4 from a one-point measurement into a curve.  And
 the accepted sample is not at θ_k = 90°: the surviving off-rigidity window
 slice is longitudinal (⟨|cos θ_k|⟩ = 0.79) while the near-beam tail the
-tagging optics opens is transverse (0.40), so the folded A_zz reads +0.43
-and −0.08 at k ≈ 0.33 GeV/c where the 90° curve says −0.48.  The ±0.5
+tagging optics opens is transverse (0.40), so the folded A_zz reads +0.49
+and −0.07 at k ≈ 0.33 GeV/c where the 90° curve says −0.48.  The ±0.5
 swing the pre-2026-08-28 figure showed between its two optics was that
 θ_k sculpting, not the wave function (plans/09 B2).
 
@@ -179,11 +188,12 @@ quantifies the findings with `polligen/reco.py`:
   per-configuration divergence (plans/10) — but that is the analytic
   CIRCULAR cut at the horizontal 10σ.  The envelope is a rectangle
   10(σ_h, σ_v) and the measured silicon aperture is a second constraint
-  per axis: taking the larger of the two per axis gives 7.2×10⁻⁸ /
-  6.2×10⁻²⁷ / 1.9×10⁻¹⁷, and the aperture scan's envelope-only column
-  7.2×10⁻⁸ / 6.2×10⁻²⁷ / 3.9×10⁻¹⁴ against 9.8×10⁻⁷ / 7.7×10⁻¹⁶ /
-  1.9×10⁻¹⁷ for the silicon alone (`scripts/nearbeam_aperture_scan.py`,
-  Report 3 Table 6).
+  per axis: taking the larger of the two per axis gives 9.4×10⁻¹⁰ /
+  6.2×10⁻²⁷ / 7.1×10⁻¹⁴, and the aperture scan's envelope-only column
+  7.2×10⁻⁸ / 6.2×10⁻²⁷ / 7.1×10⁻¹⁴ against 9.4×10⁻¹⁰ / 2.0×10⁻¹⁹ /
+  1.2×10⁻⁵ for the silicon alone, on the aperture re-measured 2026-08-28
+  (2.50 / 1.51 / 0.53 mrad against the September-2024 2.00 / 1.35 / 1.03;
+  `scripts/nearbeam_aperture_scan.py`, Report 3 Table 6, plans/09 B1).
 
 ### Reconstructed-level closure (money plots 5R / 7R / 6R, same day)
 
@@ -208,24 +218,35 @@ mixed method 25%, ε(φ′) harmonic + 10⁻³ rel-lumi offset on):
   pots following the 10σ envelope 0.33 × 3.8 mrad, L/L_HA = 1/7.1 — with
   the Yellow Report divergences and the measured pot aperture no recoil
   survives at any configuration): acceptance 41%, N_tag = 2.5×10⁶/yr, the
-  cutout fakes ⟨cos 2β⟩ = −0.27; the template fit recovers
-  a_t(t_ref) = 0.0899 ± 0.0035 / 0.118 ± 0.005 (inj. 0.090 / 0.118) in the
-  two |t| bins with > 10⁵ recoils and a_e = 0.010 on average (a 20-experiment
-  ensemble: means 0.0092 ± 0.0007 and 0.0097 ± 0.0008 against 0.010 injected;
-  the single-seed 0.0155 ± 0.0026 of the first bin is a 2σ fluctuation, not
-  the "residual template bias" earlier text called it); below 10⁵ recoils the
-  bin-wise ratio of Poisson counts is biased low (−5% and −37% at one year)
-  and closes at ten years.  **`--fit likelihood`** — the acceptance-profiled
+  cutout fakes ⟨cos 2β⟩ = −0.27.  The published binning is the seven bins
+  of `recopseudo.T_EDGES_PUBLISHED`, 0.017–0.25 GeV² (adopted 2026-08-28;
+  Report 2 §7, plans/08 item 4), of which five carry more than 10⁵ recoils
+  (5.8 / 4.2 / 3.0 / 4.2 / 1.8 × 10⁵), and they combine to a one-year
+  δa_e = 0.00119.  The template fit recovers a_t(t_ref) = 0.0466 ± 0.0053 /
+  0.0563 ± 0.0047 / 0.0672 ± 0.0048 / 0.0915 ± 0.0035 / 0.1099 ± 0.0048 /
+  0.1384 ± 0.0085 / 0.1215 ± 0.0174 against 0.045 / 0.059 / 0.071 / 0.090 /
+  0.118 / 0.147 / 0.180 injected, and a_e = 0.010 on average: in the lowest
+  bin one seed gives 0.0130 ± 0.0022 and the 20-experiment ensemble a mean
+  of 0.0092 with a spread of 0.0020, so the single-seed high value is a
+  fluctuation and not the "residual template bias" earlier text called it.
+  Below 10⁵ recoils the bin-wise ratio of Poisson counts is biased low
+  (−4.1% and −35.8% on twenty one-year draws, at 189 and 46 counts per
+  (α, β) cell) and closes at ten years.  **`--fit likelihood`** — the
+  acceptance-profiled
   conditional-multinomial Poisson likelihood of `reco.harmonic_likelihood_fit_2d`
   (plans/08 A12) — removes that bias outright: on the same twenty draws its
-  means are 0.0902 / 0.1176 / 0.146 / 0.173 against 0.0898 / 0.1181 / 0.1473 /
-  0.1803 injected, where the ratio gives −4% and −34% in the last two bins.
+  means are 0.0432 / 0.0585 / 0.0700 / 0.0896 / 0.1179 / 0.1476 / 0.1755
+  against 0.0451 / 0.0586 / 0.0711 / 0.0898 / 0.1181 / 0.1473 / 0.1803
+  injected.  **`--t-edges`** takes any increasing list and appends `tedges`
+  to the output stem, so the pre-2026-08-28 window
+  (`recopseudo.T_EDGES_LEGACY`, `0.05,0.08,0.12,0.17,0.25`) stays
+  reproducible without overwriting a published figure.
   **`--u-in-situ`** measures (u₁, u₂) from the data
   (`reco.unpolarized_insitu_fit_2d`, plans/08 A3) instead of assuming the
   ZEUS values: δu₂ = 0.0016–0.0136 per |t| bin in one year, 1.8–15× inside
-  the ZEUS 1σ of 0.024, which takes the u₂ systematic on a_e from 7–9% to
+  the ZEUS 1σ of 0.024, which takes the u₂ systematic on a_e from 3–9% to
   negligible in quadrature.  18 × 137.5 gives 6.0×10⁶ tagged per year and
-  four unbiased bins.  u₁ = 0.05, u₂ = 0.02 sit at the ZEUS LPS 1σ bounds
+  seven bins, six of them unbiased.  u₁ = 0.05, u₂ = 0.02 sit at the ZEUS LPS 1σ bounds
   (NPB 816:1); see `refs/README.md` for the sources.
   **Convention (verified in the paper's Eq. 9):** arXiv:2408.13213 expands
   1 + 2Σ a_n cos nΦ with Φ the vector-meson (recoil) azimuth relative to
@@ -253,7 +274,7 @@ python3 scripts/hfs_resolution.py --config 1     --sample samples/pythia8_e10_p9
 python3 scripts/money_cos2phi_reco.py --y-source hfs --hfs-sample <the same pair> --hfs-calibrate --unfold folded --tag _hfscal --outdir .   # the published 5R/7R
 ```
 
-**Where Σ_h goes (2026-08-27, `hfs_acceptance.py`, Report 2 §3 Figure 4):** at the mid
+**Where Σ_h goes (2026-08-27, `hfs_acceptance.py`, Report 2 §3 Figure 2):** at the mid
 sweet spots 78 / 86 / 82 / 91% of the true Σ_h is within the acceptance and
 above threshold, 69 / 74 / 73 / 85% is captured through the full response, 19 /
 8 / 16 / 7% escapes forward beyond |η| = 3.7 (the target-fragmentation side of

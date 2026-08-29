@@ -299,7 +299,12 @@ def test_tagged_events_complete_and_routed(li6_sampler):
     assert set(np.unique(ev["m_struck"])) <= {-1.0, 0.0, 1.0}
     # spectator kinematics present and physical
     assert np.all(ev["pT"] >= 0) and np.all(ev["p_lab"] > 0)
-    assert np.all((ev["route"] >= 0) & (ev["route"] <= 4))
+    # 6 is the over-rigid RP-inner branch added on 2026-08-28 (plans/09
+    # B1); 5 is the neutral ZDC code and never appears for a charged tag
+    from polli_fastsim import farforward as _ff
+    assert np.all(np.isin(ev["route"], list(_ff.ROUTE_LABELS)))
+    assert np.all((ev["route"] >= 0) & (ev["route"] <= 6)
+                  & (ev["route"] != 5))
     # 6Li alpha spectator is BEAM-BLIND: R ~ 1 (rigidity 2 p_u vs beam
     # 2 p_u), so it reaches the Roman Pots only through the pT tail
     # outside the near-beam envelope or through the off-rigidity slice
@@ -528,7 +533,8 @@ def test_the_alpha_tag_is_not_the_sub_0p6_histogram():
     k_edges = np.linspace(0.0, 0.6, 13)
     menu = mod.optics_menu(cfg, "high-acceptance")
     folded, n_gen = mod.folded_asymmetry(s, plan, 60_000, k_edges, menu,
-                                         np.random.default_rng(5))
+                                         np.random.default_rng(5),
+                                         ff.yr_config_key(cfg))
     (_a, n, k_acc2), = folded.values()
     assert n.sum() < k_acc2.size            # the histogram truncates
     tag = k_acc2.size / n_gen
@@ -583,8 +589,69 @@ def test_the_published_figure_stems_are_guarded_by_config_AND_optics():
     assert len({coh(_A(**kw)) for kw in variants}) == len(variants)
 
     reach = importlib.import_module("nearbeam_reach_gain").output_stem
-    assert reach(_A(fit="ratio")) == "nearbeam_reach_gain_6Li"
-    assert reach(_A(fit="likelihood")) != "nearbeam_reach_gain_6Li"
+    assert reach(_A(fit="ratio", t_edges=None)) == "nearbeam_reach_gain_6Li"
+    for kw in (dict(fit="likelihood", t_edges=None),
+               dict(fit="ratio", t_edges="0.05,0.08,0.12,0.17,0.25"),
+               dict(fit="likelihood", t_edges="0.05,0.25")):
+        assert reach(_A(**kw)) != "nearbeam_reach_gain_6Li", kw
+    assert (reach(_A(fit="ratio", t_edges="0.05,0.08,0.12,0.17,0.25"))
+            == "nearbeam_reach_gain_6Li_tedges")
+    assert (reach(_A(fit="likelihood", t_edges="0.05,0.25"))
+            == "nearbeam_reach_gain_6Li_likelihood_tedges")
+
+
+def test_the_published_coherent_t_window_is_the_seven_bin_one():
+    """The reconstructed |t| window of the coherent intact-6Li cos 2beta
+    channel became the seven bins 0.017-0.25 GeV^2 on 2026-08-28 (plans/08
+    8.4): the three bins added below 0.05 carry most of the tagged sample
+    and nearly halve the combined one-year delta(a_e), 0.00205 -> 0.00119
+    at 5 x 40.8.  Both coherent scripts must default to the SAME list, the
+    default must stay expressed as `--t-edges` unset (the sentinel the
+    published stems key on), and the run-13 four-bin window must stay
+    reproducible behind the flag -- under a stem of its own, so that it
+    cannot overwrite either published PNG."""
+    import importlib
+    import pathlib as _pl
+    import sys as _sys
+    from polligen import recopseudo as _rp
+    _sys.path.insert(0, str(_pl.Path(__file__).resolve().parents[1]
+                            / "scripts"))
+
+    class _A:
+        def __init__(self, **kw):
+            self.__dict__.update(kw)
+
+    assert _rp.T_EDGES_PUBLISHED == (0.017, 0.028, 0.039, 0.05, 0.08,
+                                     0.12, 0.17, 0.25)
+    assert _rp.T_EDGES_LEGACY == (0.05, 0.08, 0.12, 0.17, 0.25)
+    # the lowest published edge clears the tagging-optics aperture floor
+    # |t|_min = (A p_u env_x)^2 = 0.0064 / 0.0098 / 0.0094 GeV^2, and the
+    # window that would reach down to it (0.006) is the one plans/08 rules
+    # out on empty beta cells, conditioning and envelope-split sensitivity
+    assert _rp.T_EDGES_PUBLISHED[0] > 0.0098
+    coh = importlib.import_module("money_cos2phi_coherent_reco")
+    reach = importlib.import_module("nearbeam_reach_gain")
+    assert reach.T_EDGES == _rp.T_EDGES_PUBLISHED
+    legacy = ",".join("%g" % v for v in _rp.T_EDGES_LEGACY)
+    for mod in (coh, reach):
+        assert mod.t_edges_for(_A(t_edges=None)) == list(
+            _rp.T_EDGES_PUBLISHED)
+        assert mod.t_edges_for(_A(t_edges=legacy)) == list(
+            _rp.T_EDGES_LEGACY)
+        for bad in ("0.05", "0.08,0.05", "0.05,0.05"):
+            with pytest.raises(SystemExit):
+                mod.t_edges_for(_A(t_edges=bad))
+    # the truth-level money plot 6 shades the same window
+    truth = importlib.import_module("money_cos2phi_coherent")
+    assert truth.T_WINDOW == (_rp.T_EDGES_PUBLISHED[0],
+                              _rp.T_EDGES_PUBLISHED[-1])
+    # ... and the legacy window keeps a stem of its own in BOTH scripts
+    published = dict(config=0, optics="tagging", fit="ratio",
+                     u_in_situ=False, t_edges=None)
+    assert (coh.output_stem(_A(**dict(published, t_edges=legacy)))
+            == "money_cos2phi_coherent_reco_6Li_c0_tagging_tedges")
+    assert (reach.output_stem(_A(fit="ratio", t_edges=legacy))
+            == "nearbeam_reach_gain_6Li_tedges")
 
 
 def test_li7_two_samplers_agree_once_the_acceptance_definition_matches():
@@ -599,8 +666,12 @@ def test_li7_two_samplers_agree_once_the_acceptance_definition_matches():
     from polli_fastsim import farforward as ff, spectator as sp
 
     # the tagged generator's Roman-Pot tag, per configuration (the numbers
-    # tagged_polarimetry_7li.py prints as acc(RP))
-    published = (0.9614, 0.9676, 0.9726)
+    # tagged_polarimetry_7li.py prints as acc(RP)).  They moved by +0.0006
+    # / +0.0002 / +0.0002 on 2026-08-28 when TRITON became per-nucleon like
+    # every other Ion slot (plans/08 D7): the accepted sample is weighted by
+    # a cross section that carries g1 of the struck triton, whose neutron
+    # term gained its second neutron.
+    published = (0.9620, 0.9678, 0.9728)
     b0_expected = (0.011, 0.000, 0.000)
     for i, cfg in enumerate(beams.default_configs("7Li")):
         k = sp.spectator_lab_kinematics(sp.LI7_ALPHA_TAG,
@@ -608,16 +679,107 @@ def test_li7_two_samplers_agree_once_the_acceptance_definition_matches():
                                         200_000, beta=0.30,
                                         rng=np.random.default_rng(7))
         o = ff.yr_optics(cfg, "high-acceptance")
-        r = ff.route_charged(k["R"], k["theta"], k["pT"], o, phi=k["phi"])
+        r = ff.route_charged(k["R"], k["theta"], k["pT"], o, phi=k["phi"],
+                             pot_config=ff.yr_config_key(cfg))
         rp = (r == 1) | (r == 4)
         assert float(np.mean(r == 3)) == pytest.approx(b0_expected[i],
                                                        abs=0.002), i
-        # the two definitions differ by the B0, up to a 3e-5 off-momentum
-        # sliver (route 2) that neither mask nor argument turns on
+        # the two definitions differ by the B0 and, since 2026-08-28, by
+        # the over-rigid RP-inner branch (route 6): the 7Li alpha at
+        # R = 0.856 cannot reach it, but the high-k tail of the same
+        # distribution can, at 3e-3 (plans/09 B1).  Up to a 3e-5
+        # off-momentum sliver (route 2) that neither mask nor argument
+        # turns on.
         assert (float(np.mean(r != 0)) - float(np.mean(rp))
-                == pytest.approx(float(np.mean(r == 3)), abs=1e-4)), i
+                == pytest.approx(float(np.mean(r == 3))
+                                 + float(np.mean(r == 6)), abs=1e-4)), i
         # like for like, inside the tagged model's k grid
         inside = k["k"] <= 1.2
         assert float(np.mean(inside)) > 0.99
         assert float(np.mean(rp[inside])) == pytest.approx(published[i],
                                                            abs=0.003), i
+
+
+# --- plans/08 D9 and the plans/05 §5.4 deuteron-limit gate ------------------
+
+
+def test_li6_b1_rank2_transfer_constant_is_pinned_to_the_model(li6):
+    """`polarized.LI6_B1_RANK2_TRANSFER` is not a free number: it is the
+    tagged model's own rank-2 dilution for the alpha-tagged embedded
+    deuteron, and the closed form 1 - (9/10) P_D at P_D = P_D_LI6.  The
+    0.87 it replaces on the b1 money plot is the VECTOR dilution
+    1 - (3/2) P_D -- the wrong rank for a tensor structure function, which
+    is the whole of plans/08 D9.  The test lives in evgen because it needs
+    both packages; the constant lives in fastsim, which imports nothing
+    from the generator."""
+    from polli_fastsim import polarized
+
+    tzz = li6.tensor_dilution()
+    assert polarized.LI6_B1_RANK2_TRANSFER == pytest.approx(tzz, abs=1e-4)
+    assert tzz == pytest.approx(1.0 - 0.9 * tagged.P_D_LI6, abs=1e-4)
+    assert polarized.LI6_B1_LEGACY_TRANSFER == pytest.approx(
+        li6.vector_dilution(), abs=2e-3)
+    # what the money plot multiplies the deuteron b1 by, signal and error
+    # now on the same per-nucleon footing as delta_models' dilution = 1/3
+    assert polarized.b1_li6_from_deuteron(1.0) == pytest.approx(
+        0.921947 / 3.0, abs=1e-6)
+    assert polarized.b1_li6_from_deuteron(
+        1.0, polarized.LI6_B1_LEGACY_TRANSFER, 1.0) == pytest.approx(0.87)
+
+
+def test_cosyn_weiss_tensor_gate():
+    """plans/05 §5.4, deuteron limit of tagged mode, quantitatively.
+
+    Cosyn-Weiss II (arXiv:2603.23700) page 35 gives the closed form its
+    FIG. 13 only illustrates.  Their Eq. (6.12) is a ratio of quadratic
+    forms in the S- and D-wave radials times an angular factor
+    (1 - 3 cos^2 theta_k) = -2 P2(cos theta_k); the ratio "takes values in
+    [-2, 1]", the quadratic form peaks at +1 where f2/f0 = sqrt(2)
+    (Eq. 6.13), which for AV18 is k = 0.30 GeV, and the angular factor runs
+    from +1 at theta_k = pi/2 to -2 at theta_k = 0, pi.  TABLE II lists the
+    extremal settings (A_T|| = -2 at k = 0.3 GeV, theta_k = 0; +1 at
+    k = 0.3 GeV, theta_k = pi/2).
+
+    Our `azz_tensor_curve` computes A_zz^wf = (n_+1 + n_-1 - 2 n_0) /
+    (n_+1 + n_-1 + n_0) in c.m. variables, which maps onto theirs as
+    A_T|| = -2 A_zz^wf.  This gate is the quantitative version of the
+    plans/05 row that used to read "met qualitatively"; no digitization is
+    needed, because the paper states the analytic result."""
+    m = tagged.TaggedModel(tagged.deuteron_channel())
+    p2 = 0.5 * (3.0 * m.c ** 2 - 1.0)
+
+    # (a) the P2(cos theta_k) angular factor, exactly: A_zz^wf / P2 is
+    #     independent of the angle bin at fixed k.  Cells within 1e-3 of
+    #     the P2 zero at cos theta_k = 1/sqrt(3) are excluded, where the
+    #     ratio is unbounded and says nothing; the report and the manual
+    #     state the exclusion rather than claiming the full range.
+    ik = int(np.argmin(np.abs(m.k - 0.30)))
+    assert m.k[ik] == pytest.approx(0.3012, abs=5e-4)
+    ratios = np.array([tagged.azz_tensor_curve(m, ic)[ik] / p2[ic]
+                       for ic in range(m.c.size) if abs(p2[ic]) > 1e-3])
+    assert ratios.max() - ratios.min() < 1e-5
+    assert ratios.mean() == pytest.approx(0.99940, abs=1e-4)
+
+    # (b) the k-envelope: the quadratic form reaches its maximum 1 at
+    #     f2/f0 = sqrt(2), which CW put at k = 0.30 GeV for AV18
+    ic0 = int(np.argmax(np.abs(m.c)))               # nearest cell to theta=0
+    envelope = tagged.azz_tensor_curve(m, ic0) / p2[ic0]
+    j = int(np.argmax(envelope))
+    assert envelope[j] == pytest.approx(1.0, abs=1e-3)
+    assert m.k[j] == pytest.approx(0.3098, abs=5e-4)
+    assert m.k[j] == pytest.approx(0.30, abs=0.02)  # against CW's 0.30 GeV
+
+    # (c) A_T|| = -2 A_zz^wf against CW TABLE II's +1 and -2.  The grid's
+    #     outermost cos theta_k cell is 0.9896, not 1, so the exact extremes
+    #     are recovered through the P2 factorization pinned in (a).
+    ic90 = int(np.argmin(np.abs(m.c)))
+    a_par_90 = -2.0 * tagged.azz_tensor_curve(m, ic90)[j]
+    a_par_0 = -2.0 * tagged.azz_tensor_curve(m, ic0)[j]
+    assert a_par_90 == pytest.approx(0.9997, abs=1e-3)     # CW: +1
+    assert a_par_0 == pytest.approx(-1.9378, abs=2e-3)     # cell centre
+    assert -2.0 * envelope[j] * 1.0 == pytest.approx(-2.0, abs=3e-3)
+    assert -2.0 * envelope[j] * (-0.5) == pytest.approx(1.0, abs=3e-3)
+    # and the whole curve stays inside CW's stated range [-2, 1]
+    for ic in range(m.c.size):
+        a = -2.0 * tagged.azz_tensor_curve(m, ic)
+        assert np.nanmin(a) > -2.001 and np.nanmax(a) < 1.001

@@ -16,7 +16,9 @@ It checks five kinds of agreement:
                come from (Yellow Report 10.1 / 10.2).
   DRIFT        stale values that a correction should have removed --
                principally the pre-2026-08-27 rigidity-scaled 6Li
-               energies and the 2x-pessimistic P_zz propagation.
+               energies and the 2x-pessimistic P_zz propagation -- and
+               statements a rewrite must not drop, such as the run-plan
+               share every per-year reach is quoted at.
   ARTEFACTS    that every figure a report embeds exists, is newer than the
                script that makes it, and is registered in build_report.py;
                that every sample matches a configuration energy; that the
@@ -247,7 +249,14 @@ def _():
     displacement between the two fragments (farforward.separation_at_pots)
     and came out 5-39% low.  Pinned in fastsim/tests/test_two_hit.py at the
     same numbers, together with the angular-only column; 400k events per
-    configuration, seed 7, ~1 s."""
+    configuration, seed 7, ~1 s.
+
+    Third error, 2026-08-28 (plans/09 B1): the recomputation itself was
+    calling `separation_at_pots` with its DEFAULTS, which are the 18 x 275
+    levers, so it validated the documents against the same single-lever
+    arithmetic the documents used and could not see that R12 and R34 are
+    per configuration.  It now passes `config=cfg`.  The current values
+    are 25.8 / 10.7 / 10.9 mm."""
     import numpy as np
     from polli_fastsim import beams
     from polli_fastsim import farforward as ff
@@ -258,7 +267,8 @@ def _():
                                        cfg.ion_momentum_per_nucleon, 400_000,
                                        rng=np.random.default_rng(7))
         computed[ff.yr_config_key(cfg)] = float(np.median(
-            1e3 * ff.separation_at_pots(ev["spectator"], ev["partner"])))
+            1e3 * ff.separation_at_pots(ev["spectator"], ev["partner"],
+                                        config=cfg)))
     docs = (("reports/nanowire_far_forward.template.html",
              r'<tr><td>%s</td><td class="mono">([\d.]+) mm</td>'),
             ("plans/09_nearbeam_nanowire_far_forward.md",
@@ -324,6 +334,45 @@ def _():
                            % (pathlib.Path(f).name,
                               txt[max(0, m.start() - 60):m.start() + 60]
                               .replace("\n", " ")))
+    return bad
+
+
+# The sentence every report that quotes a per-year reach has to carry.  A
+# pending entry exempts a report a rewrite has not reached yet, and is
+# REMOVED the moment the sentence lands: the check fails on an entry whose
+# template already has it, so the exemption cannot quietly become
+# permanent.  All five reports carry it as of 2026-08-28, so the map is
+# empty; keep it, because the next report added starts out without.
+RUNPLAN_STATEMENT = "each projection assumes the full luminosity"
+RUNPLAN_PENDING = {}
+
+
+@check("drift: every report quoting a per-year reach states the run-plan share")
+def _():
+    """Every projection in these reports gives its observable the whole of
+    the 10 fb^-1/u year in its own spin configuration, far-forward optics
+    and isotope, so the reaches of one table cannot be summed into a year.
+    That is a statement about the RUN PLAN, not about any one measurement,
+    and a rewrite that drops it turns a set of alternatives into a
+    programme.  Any report that quotes a luminosity per nucleon or a
+    per-year number therefore has to carry it (plans/07 WP2)."""
+    triggers = ("fb⁻¹/u", "one EIC year", "per year")
+    bad = []
+    for f in sorted(glob.glob(str(ROOT / "reports/*.template.html"))):
+        name = pathlib.Path(f).name
+        txt = pathlib.Path(f).read_text(errors="ignore")
+        has = RUNPLAN_STATEMENT in txt.lower()
+        if name in RUNPLAN_PENDING:
+            if has:
+                bad.append("%s now carries the run-plan statement -- remove "
+                           "its RUNPLAN_PENDING entry in %s (%s)"
+                           % (name, pathlib.Path(__file__).name,
+                              RUNPLAN_PENDING[name]))
+            continue
+        if any(s in txt for s in triggers) and not has:
+            hit = next(s for s in triggers if s in txt)
+            bad.append("%s quotes %r but does not say %r"
+                       % (name, hit, RUNPLAN_STATEMENT))
     return bad
 
 

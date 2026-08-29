@@ -25,16 +25,23 @@ optics-blind: this script's own Roman-Pot tag reads 0.961 / 0.968 / 0.973
 at the Yellow Report optics against 0.981 / 0.992 / 0.992 at the tagging
 optics, and the folded <P2> markers and A_par bars move by ~1%.
 
-(Report 3 Table 6 and `fastsim/out/tagging_acceptance.txt` quote 0.967 /
-0.966 / 0.971 and 0.986 / 0.990 / 0.991 for the same tag.  Those are the
-pure spectator model, and they are `1 - lost`, i.e. ANY far-forward
+(Report 3 Table 6 and `fastsim/out/tagging_acceptance.txt` quote 0.9690 /
+0.9683 / 0.9748 and 0.9877 / 0.9919 / 0.9941 for the same tag.  Those are
+the pure spectator model, and they are `1 - lost`, i.e. ANY far-forward
 system, while `accepted()` below is the Roman Pots alone.  At 5 x 40.8
 the B0 carries 1.1% of the 7Li alpha, so the like-for-like pure-model
 Roman-Pot numbers are 0.9568 / 0.9668 / 0.9721; restricted further to
 k <= 1.2 GeV/c, where the tagged model's momentum grid ends, they are
-0.9626 / 0.9683 / 0.9736 against this script's 0.9614 / 0.9676 / 0.9726
+0.9626 / 0.9683 / 0.9736 against this script's 0.9620 / 0.9678 / 0.9728
 -- agreement to 0.1 point at every configuration.  The headline block
-prints both definitions so the comparison can be made directly.)
+prints both definitions so the comparison can be made directly.  Those
+three numbers were 0.9614 / 0.9676 / 0.9726 before 2026-08-28: the
+accepted sample is cross-section-weighted and the cross section carries
+g1 of the struck triton, so making TRITON per-nucleon like every other
+Ion slot -- plans/08 D7, which gives its N = 2 neutrons their second
+term -- moves the tag in the fourth decimal.  The g1_t/F1_t overlay this
+figure draws moves by +8.4% at x = 0.005, +5.3% at 0.01, +2.4% at 0.03,
++0.8% at 0.1, -0.5% at 0.5 and -0.7% at 0.7.)
 
 The consequence is a programme statement, not a plot.  For 7Li the
 tagging optics buys x1.02 in acceptance for x1/8 to x1/15 in luminosity:
@@ -104,11 +111,19 @@ def output_stem(base, key, config, optics):
     return "%s_%s_%s" % (base, key, optics)
 
 
-def accepted(ev, optics):
+def accepted(ev, optics, pot_config):
     """RP mask (main window + near-beam tail) with the SPECTATOR's lab
-    azimuth, so the rectangular envelope is applied as a rectangle."""
+    azimuth, so the rectangular envelope is applied as a rectangle.
+
+    `pot_config` is the machine configuration whose blind block the
+    over-rigid branch tests against.  Routes 1 and 4 cannot themselves
+    move with it -- RP_R_WINDOW ends at R = 0.95 and the near-beam tail
+    at |R - 1| < 0.05, while the over-rigid branch starts at R > 1.05,
+    so the three are disjoint -- but it is passed because the call is
+    meant to be the configuration's routing and not the default one, and
+    because `1 - lost` in the headline block below DOES move with it."""
     route = route_charged(ev["R"], ev["theta"], ev["pT"], optics,
-                          phi=ev["phi_spec"])
+                          phi=ev["phi_spec"], pot_config=pot_config)
     return (route == 1) | (route == 4)
 
 
@@ -153,7 +168,7 @@ def main():
         cat = bk.SpinCategory("pol T=%.2f" % t, 1.5, pops)
         ev = sampler.sample_category(cat, n=n_per_point, rng=rng)
         for name, optics, _c, _m in menu:
-            c = ev["cos_theta_k"][accepted(ev, optics)]
+            c = ev["cos_theta_k"][accepted(ev, optics, key)]
             p2[name].append(float(np.mean(0.5 * (3 * c * c - 1.0))))
     slopes = {}
     for name, optics, colour, marker in menu:
@@ -178,7 +193,7 @@ def main():
     n_gen = sum(len(ev["x"]) for ev in evs.values())
     apar = {}
     for i, (name, optics, colour, marker) in enumerate(menu):
-        counts = {cname: np.histogram(ev["x"][accepted(ev, optics)],
+        counts = {cname: np.histogram(ev["x"][accepted(ev, optics, key)],
                                       bins=x_edges)[0]
                   for cname, ev in evs.items()}
         n_tot = counts["apar+"] + counts["apar-"]
@@ -217,14 +232,20 @@ def main():
     # --- headline numbers, computed before the figure is titled -------------
     # `acc` is the Roman-Pot tag this figure folds with (route 1 | 4);
     # `acc_ff` is 1 - lost, ANY far-forward system, which is the definition
-    # Report 3 Table 6 and fastsim/out/tagging_acceptance.txt tabulate.  The
-    # two differ only at 5 x 40.8, where the B0 takes 1.1% of the alpha.
+    # Report 3 Table 6 and fastsim/out/tagging_acceptance.txt tabulate.
+    # The two differ by the B0, which takes 1.1% of the alpha at 5 x 40.8
+    # and nothing at the other two, and -- since the per-configuration
+    # blind block reached this script on 2026-08-28 -- by the over-rigid
+    # RP-inner branch, which the high-k tail of the same distribution
+    # enters at a few times 1e-3.  Hence 0.9699 / 0.9690 / 0.9751 against
+    # 0.9620 / 0.9678 / 0.9728 at the Yellow Report optics.
     cat = bk.SpinCategory("acc", 1.5, (0.25, 0.25, 0.25, 0.25))
     ev_acc = sampler.sample_category(cat, n=100_000, rng=rng)
     head, ref = [], None
     for name, optics, _c, _m in menu:
         route = route_charged(ev_acc["R"], ev_acc["theta"], ev_acc["pT"],
-                              optics, phi=ev_acc["phi_spec"])
+                              optics, phi=ev_acc["phi_spec"],
+                              pot_config=key)
         acc = float(np.mean((route == 1) | (route == 4)))
         acc_ff = float(np.mean(route != 0))
         fom_ = acc * optics.lumi_fraction

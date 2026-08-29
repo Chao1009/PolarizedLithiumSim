@@ -43,10 +43,13 @@ physics is expressed here with the `dilution` factor multiplying Delta
 (default 1/3 for 6Li, the conservative Cloet convention already used in
 beams.LI6): P_zz = 0.8 with dilution = 1/3 reproduces their numbers
 exactly.  Do not set dilution != 1 AND use a per-nucleon-normalized
-P_zz at the same time.  Known residual inconsistency (audited
-2026-08-10): the scenario b1 curves (polarized.toy_b1) carry NO such
-dilution -- acceptable while b1 is a shape scenario, but the b1 and
-Delta conventions must be unified before any combined tensor fit.
+P_zz at the same time.  The b1 sector now uses the same convention
+(closed 2026-08-28, plans/08 D9): `polarized.b1_li6_from_deuteron`
+carries `LI6_B1_PER_NUCLEON = 2/6` alongside the rank-2 transfer
+0.921947, so a combined tensor fit sees one dilution, not two.  Before
+that the b1 money plot drew a signal with the VECTOR 0.87 and no
+per-nucleon factor at all against errors with neither -- a factor 2.83
+between signal and error.
 
 Assumption made explicit (2026-08-10 audit): the Sather-Schmidt moment
 was computed for a single bag (Delta++) target; applying it to the

@@ -107,7 +107,8 @@ def main():
                 for name, optics in optics_menu(config):
                     acc = ff.acceptance_summary(kin["R"], kin["theta"],
                                                 kin["pT"], optics,
-                                                phi=kin["phi"])
+                                                phi=kin["phi"],
+                                                pot_config=ff.yr_config_key(config))
                     tagged = 1.0 - acc["lost"]
                     env = optics.envelope
                     parts = "  ".join(f"{k}:{v:6.3f}" for k, v in acc.items()

@@ -837,6 +837,32 @@ def fold_shape_fit(resp, category, bins, base, x_ref=None,
 
 # --- coherent ------------------------------------------------------------
 
+# The PUBLISHED reconstructed |t| binning of the coherent intact-6Li
+# cos 2beta channel (adopted 2026-08-28; plans/08 8.4).  Seven bins from
+# 0.017 to 0.25 GeV^2: the three added below 0.05 carry most of the
+# tagged sample -- the fixed 0.05-0.25 window of run 13 discarded 67-74%
+# of it -- and they nearly halve the combined one-year delta(a_e),
+# 0.00205 -> 0.00119 at 5 x 40.8.  The window stops at 0.017 rather than
+# at the aperture floor (|t|_min = 0.0064 / 0.0098 / 0.0094 GeV^2 at the
+# tagging optics of the three configurations): a 0.006-0.017 bin has 8-12
+# of its 24 beta cells hard empty, a condition number of 9.8-20.4 against
+# 1.8-6.7 in the published bins, and a -27 to -76% a_t sensitivity to a
+# 1e-3 fill-to-fill envelope split, so it stays out.  a_t below 0.05 GeV^2 is
+# the linear-in-|t| deformation model extrapolated below the lowest
+# digitized anchor point of coherent.MANTYSAARI_A2_DEUTERON, which starts
+# at 0.05.  Counted per BIN this covers four of the seven, not three:
+# a_t is quoted at the bin's t_ref (the rate-weighted mean true |t|),
+# and resolution puts the 0.05-0.08 bin's t_ref at 0.045 -- so the
+# retired four-bin window's own lowest bin already sat below the anchor,
+# and the wider window deepens the extrapolation rather than introducing
+# it.  State that wherever a_t is quoted in those four bins.
+T_EDGES_PUBLISHED = (0.017, 0.028, 0.039, 0.05, 0.08, 0.12, 0.17, 0.25)
+
+# The run-13 window, kept reproducible behind `--t-edges` in both
+# coherent scripts (money_cos2phi_coherent_reco.py, nearbeam_reach_gain.py).
+T_EDGES_LEGACY = (0.05, 0.08, 0.12, 0.17, 0.25)
+
+
 class CoherentResponse:
     """Roman-Pot emulated response of the coherent recoil spectrum."""
 

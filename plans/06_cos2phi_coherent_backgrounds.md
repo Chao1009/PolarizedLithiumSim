@@ -84,7 +84,7 @@ disagreed with):
 |---|---|---|
 | **α + d** | 1.474 MeV | α: R = 0.998 → RP pT tail only (beam-blind); d: R = 1.005 → same |
 | α + p + n | 3.70 MeV | α beam-blind; p: R = 0.503 → OMD; n → ZDC |
-| ³He + t | 15.79 MeV | ³He: R = 0.752 → RP main window; t: R = 1.504 → lost (over-rigid) |
+| ³He + t | 15.79 MeV | ³He: R = 0.752 → RP main window; t: R = 1.504 → lost (over-rigid): 152 mm at the pot plane, past the 144 mm module edge, where the ⁷Li triton at R = 1.290 is 66 mm and IS on the silicon (plans/09 B1) |
 
 The **α+d channel is the killer**: both fragments sit within 0.5% of beam
 rigidity, deep inside the ±5% near-beam band and so undispersed, exactly
@@ -149,7 +149,11 @@ Handles, in order of power:
    Two limits: the 84% assumes pot acceptance out to θ = 5 mrad and
    falls to 0.00 / 0.31 / 0.56 (5 × 41 / 10 × 100 / 18 × 275) against a
    single 16 mm module, so it is a station-layout question (plans/09 B1,
-   D3); and it is a *veto*, so its inefficiency enters the coherent
+   D3) — the fractions are decided in angle and no lever enters them, but
+   a 0.5 mrad edge is 10 / 11 / 15 mm at the per-configuration R₁₂ and not
+   one number, and the MEASURED outer edge is 2.85 / 3.85 / 4.00 mrad
+   rather than the 5 mrad convention, which puts the veto at
+   0.80 / 0.84 / 0.84; and it is a *veto*, so its inefficiency enters the coherent
    normalisation and must be folded rather than assumed. Rank: below the
    |t|-shape fit only because of those two, and above everything after
    it.
@@ -266,10 +270,18 @@ subtraction with wrong-sign tracks / positron running). For the
   (plans/04 #10); for the coherent channel the QED radiative tail is
   item 6.2(3) and is calculable — flag both on every plot.
 - **Low-Q², high-x nuclear effects**: target-mass/γ² terms are absent
-  from the master formula (known fastsim caveat); the sweet spots sit
-  at x ≤ 0.15; the low-Q² spots have x ≤ 0.06 (γ² < 10⁻² at Q² ≈ 1
-  GeV²) and the x ≈ 0.14 spots sit at Q² ≥ 3 GeV² (γ² ≲ 3×10⁻²), so
-  this is a labeling caveat, not a bias, for money plot 5.
+  from the master formula *by default* — `polligen.xsec.InclusiveKernel`
+  carries the exact finite-γ A∥ behind `target_mass=True`, off in every
+  published number. The sweet spots sit at x ≤ 0.15 and their
+  γ² = 4M²x²/Q² is ≤ 0.0057 at the mid configuration and ≤ 0.0050 at
+  the top one, but reaches 0.0246 at the **low** configuration, whose
+  two Q² = 1.14 GeV² spots sit at x = 0.089 and 0.036 since the
+  γ-matched energies of 2026-08-27; the x ≈ 0.14 spots sit at
+  Q² ≥ 3.1 GeV² (γ² ≤ 0.023). Over the y = 0.010–0.124 of the twelve
+  spots the whole correction is a factor (1 + γ²) on A∥ to 4% or
+  better — so ≤ 0.6% mid and ≤ 2.5% low
+  (`evgen/scripts/target_mass_bound.py`) — and money plot 5 does not
+  measure A∥, so this stays a labeling caveat, not a bias.
 
 ## 6.3b Interpretational backgrounds to "exotic glue" (theory, verified)
 
@@ -386,18 +398,20 @@ the arXiv source (now in `coherent.MANTYSAARI_A2_DEUTERON`):
   default stands. The eSTARlight IR-8 study's intact-recoil efficiencies
   (d 47%, ³He 32%, ⁴He 29%, ⁷Li 17.8%) interpolate to ≈ 20% for ⁶Li at
   IR-8 — versus our 13.5% RP pT-tail estimate at IP6 (constant 0.20 GeV cut;
-  and versus the **measured** aperture of 2026-08-26, |θ_x| ≳ 2.0 / 1.35 /
-  1.03 mrad in the 5×41 / 10×100 / 18×275 optics, which at the γ-matched
-  40.8 / 99.5 / 137.5 GeV/u gives a tagged fraction of
-  **9.8×10⁻⁷ / 7.7×10⁻¹⁶ / 1.9×10⁻¹⁷** at B = 50 GeV⁻² and inverts
+  and versus the **measured** aperture of 2026-08-28, |θ_x| ≳ 2.50 / 1.51 /
+  0.53 mrad in the 5×41 / 10×100 / 18×275 optics, which at the γ-matched
+  40.8 / 99.5 / 137.5 GeV/u is p_T = 0.61 / 0.90 / 0.44 GeV and gives a
+  tagged fraction of
+  **9.4×10⁻¹⁰ / 2.0×10⁻¹⁹ / 1.2×10⁻⁵** at B = 50 GeV⁻² and inverts
   the cutout aspect this section assumes — `evgen/scripts/nearbeam_aperture_scan.py`,
   `tools/fullsim/README.md`, plans/04 #20.  The measured edge is
-  0.91× / 0.75× / 1.12× the horizontal half-width of the 10σ Yellow
-  Report high-acceptance envelope, so at the two lower configurations the
+  1.14× / 0.84× / 0.58× the horizontal half-width of the 10σ Yellow
+  Report high-acceptance envelope, so at the two upper configurations the
   ENVELOPE binds and the tagged fraction is 7.2×10⁻⁸ / 6.2×10⁻²⁷ /
-  3.9×10⁻¹⁴ instead; the 1.4×10⁻² / 2.7×10⁻³ this bullet carried until
-  2026-08-28 was the measured aperture at the retired rigidity-scaled
-  momenta, and the "envelope is never binding" pricing of plans/08 §8.4
+  7.1×10⁻¹⁴ instead, while at 5 × 41 the silicon is now the binding
+  constraint; the 1.4×10⁻² / 2.7×10⁻³ this bullet carried until
+  2026-08-28 was the September-2024 aperture at the retired
+  rigidity-scaled momenta, and the "envelope is never binding" pricing of plans/08 §8.4
   went with it.  Nothing published survives at either aperture: the
   channel exists only under the lithium tagging optics of Report 1 §6.1,
   which recovers 0.42 / 0.32 / 0.33 at 1/7.1 / 1/13.3 / 1/9.5 of the

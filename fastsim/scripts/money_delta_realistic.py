@@ -242,7 +242,8 @@ def _reach_solver():
 reach_from_terms = _reach_solver()
 
 
-def bin_terms_realistic(cfg, scale, pzz, base, variant="mid_x"):
+def bin_terms_realistic(cfg, scale, pzz, base, variant="mid_x",
+                        run_share=1.0):
     """Per-bin (sig² contribution, event count) at 1 fb⁻¹/nucleon, with the
     realistic ingredients.
 
@@ -261,7 +262,8 @@ def bin_terms_realistic(cfg, scale, pzz, base, variant="mid_x"):
     non-finite are dropped explicitly (they used to fall out of the
     min-events comparison by accident).
     """
-    sc = fom.Scenario(lumi_fb_per_nucleon=1.0, pol_ion_tensor=pzz, q2_min=2.0)
+    sc = fom.Scenario(lumi_fb_per_nucleon=1.0, run_share=run_share,
+                      pol_ion_tensor=pzz, q2_min=2.0)
     # R3: apply EMC ratio hook
     nf2_in = NuclearF2(cfg.ion, base=base, emc_ratio=unpolarized_emc_ratio)
     proj = fom.project_rates(cfg, sc, nuclear_f2=nf2_in)
@@ -281,18 +283,19 @@ def bin_terms_realistic(cfg, scale, pzz, base, variant="mid_x"):
 
 
 def sig2_per_fb_at_realistic(cfg, scale, pzz, base, variant="mid_x",
-                             min_events=10, lumi_fb=None):
+                             min_events=10, lumi_fb=None, run_share=1.0):
     """Sig² per fb⁻¹/nucleon with realistic ingredients, with the
     min-events floor applied at `lumi_fb` (None = the self-consistent
     reach)."""
     terms, n_events = bin_terms_realistic(cfg, scale, pzz, base,
-                                          variant=variant)
+                                          variant=variant,
+                                          run_share=run_share)
     if lumi_fb is None:
         lumi_fb = reach_from_terms(terms, n_events, min_events=min_events)
     return float(terms[n_events * lumi_fb >= min_events].sum())
 
 
-def bin_terms_toy(cfg, scale, pzz, base):
+def bin_terms_toy(cfg, scale, pzz, base, run_share=1.0):
     """Toy-backend per-bin terms for comparison (no EMC, no η eff, toy R,
     toy Δ shape).
 
@@ -300,7 +303,8 @@ def bin_terms_toy(cfg, scale, pzz, base):
     r_sigma_lt and toy_delta_gluon shape.  The `base` here may be
     CT18NLO; we only skip the EMC ratio and η efficiency.
     """
-    sc = fom.Scenario(lumi_fb_per_nucleon=1.0, pol_ion_tensor=pzz, q2_min=2.0)
+    sc = fom.Scenario(lumi_fb_per_nucleon=1.0, run_share=run_share,
+                      pol_ion_tensor=pzz, q2_min=2.0)
     nf2_in = NuclearF2(cfg.ion, base=base)  # no EMC ratio
     proj = fom.project_rates(cfg, sc, nuclear_f2=nf2_in)
 
@@ -317,9 +321,11 @@ def bin_terms_toy(cfg, scale, pzz, base):
     return terms[ok].ravel(), proj.n_events[ok].ravel()
 
 
-def sig2_per_fb_toy(cfg, scale, pzz, base, min_events=10, lumi_fb=None):
+def sig2_per_fb_toy(cfg, scale, pzz, base, min_events=10, lumi_fb=None,
+                    run_share=1.0):
     """Toy-backend sig² for comparison, floor at `lumi_fb`."""
-    terms, n_events = bin_terms_toy(cfg, scale, pzz, base)
+    terms, n_events = bin_terms_toy(cfg, scale, pzz, base,
+                                    run_share=run_share)
     if lumi_fb is None:
         lumi_fb = reach_from_terms(terms, n_events, min_events=min_events)
     return float(terms[n_events * lumi_fb >= min_events].sum())
@@ -332,6 +338,9 @@ def sig2_per_fb_toy(cfg, scale, pzz, base, min_events=10, lumi_fb=None):
 # x-axis: 15 log-spaced Δ/F₁ scale points
 SCALES = np.logspace(-3.3, -1.7, 15)
 S0 = 1e-3          # reference scale for the analytic rescaling
+# "one EIC year" in the Yellow Report accounting; the programme luminosity
+# a run-plan share divides (plans/07 WP2)
+L_PROGRAMME_FB = 10.0
 
 R_FUNCS = [
     ("R1998",         r1998),
@@ -370,7 +379,7 @@ TOY_PZZ = 0.80
 
 
 def build_realistic_plot(cfg, base, outdir, tag, title_beam, r_funcs=None,
-                         r_caption="R1998"):
+                         r_caption="R1998", run_share=1.0):
     """Build one realistic money plot for a given BeamConfig.
 
     Parameters
@@ -384,6 +393,12 @@ def build_realistic_plot(cfg, base, outdir, tag, title_beam, r_funcs=None,
     r_caption  : str   R = σ_L/σ_T caption for the central-curve legend and the
                        title; the default is the frozen July caption, so an
                        unpatched caller reproduces the published figure
+    run_share  : float this observable's share of the programme year
+                       (plans/07 WP2).  Every L_5σ below is the luminosity
+                       the measurement must ACCUMULATE and is exactly
+                       invariant under it; the share divides the programme
+                       luminosity, so the years to that reach scale as
+                       1/share.
 
     Returns
     -------
@@ -391,6 +406,12 @@ def build_realistic_plot(cfg, base, outdir, tag, title_beam, r_funcs=None,
     """
 
     print(f"\n  Config: {cfg.label()}")
+    print(f"  {fom.run_share_header(L_PROGRAMME_FB, run_share)}")
+
+    def _reach(terms, n_ev, **kw):
+        """L_5σ in fb⁻¹/u DELIVERED to this observable: share-invariant
+        (see money_delta.reach_fb)."""
+        return run_share * reach_from_terms(terms, n_ev, **kw)
 
     # ── Step 1: pre-compute sig² at S0 for every (variant, R, Pzz) combo ──
     # Total: 3 variants × 2 R-funcs × 2 Pzz = 12 combinations.
@@ -410,9 +431,10 @@ def build_realistic_plot(cfg, base, outdir, tag, title_beam, r_funcs=None,
                     print(f"    [{done}/{n_combos}] variant={variant}, R={r_name}, "
                           f"Pzz={pzz_label}({pzz:.3f}) …", end=" ", flush=True)
                     terms, n_ev = bin_terms_realistic(
-                        cfg, S0, pzz, base, variant=variant)
+                        cfg, S0, pzz, base, variant=variant,
+                        run_share=run_share)
                     combo_terms[(variant, r_name, pzz_label)] = (terms, n_ev)
-                    l5 = reach_from_terms(terms, n_ev)
+                    l5 = _reach(terms, n_ev)
                     combo_l5[(variant, r_name, pzz_label)] = l5
                     print(f"L_5σ(1e-3) = {l5:.2f} fb⁻¹/u")
 
@@ -422,14 +444,15 @@ def build_realistic_plot(cfg, base, outdir, tag, title_beam, r_funcs=None,
     # ── Step 2: toy-backend comparison (original toy R, no EMC, no η eff) ──
     print(f"    [toy] toy_delta_gluon, original R, P_zz={TOY_PZZ} …", end=" ", flush=True)
     # Use original r (not overridden)
-    terms_toy, n_ev_toy = bin_terms_toy(cfg, S0, TOY_PZZ, base)
-    print(f"L_5σ(1e-3) = {reach_from_terms(terms_toy, n_ev_toy):.2f} fb⁻¹/u")
+    terms_toy, n_ev_toy = bin_terms_toy(cfg, S0, TOY_PZZ, base,
+                                        run_share=run_share)
+    print(f"L_5σ(1e-3) = {_reach(terms_toy, n_ev_toy):.2f} fb⁻¹/u")
 
     # ── Step 3: build reach curves for all 12 combos ──
     # the amplitude is linear in the Δ/F₁ scale, so the per-bin terms scale
     # as (s/S0)² and only the min-events floor is re-solved per point
     def _curve(terms, n_ev):
-        return np.array([reach_from_terms(terms * (s / S0) ** 2, n_ev)
+        return np.array([_reach(terms * (s / S0) ** 2, n_ev)
                          for s in SCALES])
 
     all_curves = np.array([_curve(t, n) for t, n in combo_terms.values()])
@@ -480,7 +503,9 @@ def build_realistic_plot(cfg, base, outdir, tag, title_beam, r_funcs=None,
     fig.tight_layout()
 
     outdir.mkdir(parents=True, exist_ok=True)
-    outpath = outdir / f"money_delta_realistic_{tag}.png"
+    share_key = fom.run_share_tag(run_share)
+    outpath = outdir / ("money_delta_realistic_%s%s.png"
+                        % (tag, "_" + share_key if share_key else ""))
     fig.savefig(outpath, dpi=150)
     plt.close(fig)
     print(f"  wrote {outpath}")
@@ -489,7 +514,7 @@ def build_realistic_plot(cfg, base, outdir, tag, title_beam, r_funcs=None,
     l5_central = combo_l5[central_key]
     l5_band_lo = min(combo_l5.values())
     l5_band_hi = max(combo_l5.values())
-    l5_toy     = reach_from_terms(terms_toy, n_ev_toy)
+    l5_toy     = _reach(terms_toy, n_ev_toy)
 
     summary = {
         "tag":        tag,
@@ -564,6 +589,14 @@ def main():
              "is the published SLAC/E143 fit from polli_fastsim.structure.",
     )
     ap.add_argument(
+        "--run-share", type=float, default=1.0, dest="run_share",
+        help="this observable's share of the programme year (plans/07 WP2; "
+             "default 1.0, which every published number assumes). L_5sigma "
+             "is the luminosity the measurement must accumulate and is "
+             "invariant under it; a non-default share writes to its own "
+             "file so the published PNGs cannot be overwritten.",
+    )
+    ap.add_argument(
         "--configs",
         default=DEFAULT_CONFIGS,
         help=f"Comma-separated beam configurations from "
@@ -571,6 +604,8 @@ def main():
              f"the published money plot draws)",
     )
     args = ap.parse_args()
+    if not args.run_share > 0:
+        ap.error("--run-share must be positive")
     r_func, r_caption = R_MODELS[args.r_model]
     r_funcs = [("R1998", r_func),
                ("Christy-Bosted", r_christy_bosted)]
@@ -616,13 +651,15 @@ def main():
         print(f"Building realistic plot: {tag.upper()} config — {cfg.label()}")
         print(f"{'='*66}")
         _, summary = build_realistic_plot(cfg, base, outdir, tag, title_beam,
-                                          r_funcs=r_funcs, r_caption=r_caption)
+                                          r_funcs=r_funcs, r_caption=r_caption,
+                                          run_share=args.run_share)
         summaries.append(summary)
 
     # ── Summary table ─────────────────────────────────────────────────────
     print()
     print("=" * 72)
     print("SUMMARY TABLE  (Δ/F₁ = 1e-3, all values in fb⁻¹/nucleon)")
+    print(fom.run_share_header(L_PROGRAMME_FB, args.run_share))
     print("=" * 72)
     hdr = f"{'Config':<30} {'Central':>10} {'Band lo':>10} {'Band hi':>10} {'Toy (P_zz=0.8)':>16}"
     print(hdr)

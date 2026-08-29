@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
 """Produce x-Q2 phase-space / rate / FOM maps for e+6Li and e+7Li.
 
-Usage:  python3 scripts/phase_space_map.py [--ion 7Li] [--lumi 10] [--outdir out]
+Usage:  python3 scripts/phase_space_map.py [--ion 7Li] [--lumi 10]
+                [--run-share 1.0] [--outdir out]
+
+`--lumi` is the programme luminosity and `--run-share` this observable's
+share of it (plans/07 WP2); rates scale as their product and every
+published map is at share 1.
 
 Outputs per beam configuration:
   - x-Q2 coverage + event-rate heat map (log axes)
@@ -47,13 +52,26 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--ion", default="7Li", choices=list(beams.IONS))
     ap.add_argument("--lumi", type=float, default=10.0,
-                    help="integrated luminosity per nucleon [fb^-1]")
+                    help="programme integrated luminosity per nucleon "
+                         "[fb^-1] (default: %(default)s, one EIC year)")
+    ap.add_argument("--run-share", type=float, default=1.0, dest="run_share",
+                    help="this observable's share of that programme "
+                         "luminosity (plans/07 WP2; default 1.0, which the "
+                         "published maps assume)")
     ap.add_argument("--outdir", default="out")
     args = ap.parse_args()
+    if not args.run_share > 0:
+        ap.error("--run-share must be positive")
 
     outdir = pathlib.Path(args.outdir)
     outdir.mkdir(parents=True, exist_ok=True)
-    scenario = fom.Scenario(lumi_fb_per_nucleon=args.lumi)
+    scenario = fom.Scenario(lumi_fb_per_nucleon=args.lumi,
+                            run_share=args.run_share)
+    lumi_eff = scenario.lumi_effective_fb_per_nucleon
+    # a non-default share writes its own files: the published maps are the
+    # share-1 ones
+    share_key = fom.run_share_tag(args.run_share)
+    suffix = ("_" + share_key) if share_key else ""
     g1_model = ToyG1()
 
     summary = []
@@ -64,20 +82,22 @@ def main():
         tag = cfg.label().replace(" ", "").replace("(", "").replace(")", "") \
                          .replace("/u", "u").replace("x", "_x_")
         plot_map(proj, proj.n_events,
-                 f"{cfg.label()},  L={args.lumi:g} fb$^{{-1}}$/u  "
+                 f"{cfg.label()},  L={lumi_eff:g} fb$^{{-1}}$/u  "
                  f"$\\sqrt{{s_{{eN}}}}$={cfg.sqrt_s_per_nucleon:.0f} GeV",
-                 "events / bin", outdir / f"rate_{tag}.png", vmin=1, vmax=None)
+                 "events / bin", outdir / f"rate_{tag}{suffix}.png",
+                 vmin=1, vmax=None)
         plot_map(proj, obs["err_g1_over_f1"],
                  f"{cfg.label()}: stat. precision on $g_1^A/F_1^A$",
-                 r"$\delta(g_1/F_1)$", outdir / f"err_g1f1_{tag}.png",
+                 r"$\delta(g_1/F_1)$", outdir / f"err_g1f1_{tag}{suffix}.png",
                  vmin=1e-4, vmax=1)
         plot_map(proj, obs["err_azz"],
                  f"{cfg.label()}: stat. precision on $A_{{zz}}$",
-                 r"$\delta A_{zz}$", outdir / f"err_azz_{tag}.png",
+                 r"$\delta A_{zz}$", outdir / f"err_azz_{tag}{suffix}.png",
                  vmin=1e-4, vmax=1)
         plot_map(proj, obs["err_a_cos2phi"],
                  f"{cfg.label()}: stat. precision on $A_{{\\cos 2\\phi}}$",
-                 r"$\delta A_{\cos 2\phi}$", outdir / f"err_cos2phi_{tag}.png",
+                 r"$\delta A_{\cos 2\phi}$",
+                 outdir / f"err_cos2phi_{tag}{suffix}.png",
                  vmin=1e-4, vmax=1)
 
         n_tot = proj.n_events.sum()
@@ -101,10 +121,11 @@ def main():
         )
 
     text = "\n".join(summary)
-    (outdir / f"summary_{args.ion}.txt").write_text(text + "\n")
-    print(f"# ion={args.ion}  L={args.lumi:g} fb^-1/nucleon  "
+    (outdir / f"summary_{args.ion}{suffix}.txt").write_text(text + "\n")
+    print(f"# ion={args.ion}  L={lumi_eff:g} fb^-1/nucleon  "
           f"Pe={scenario.pol_electron} Pz={scenario.pol_ion_vector} "
           f"Pzz={scenario.pol_ion_tensor}")
+    print("# " + fom.run_share_header(args.lumi, args.run_share))
     print(text)
     print(f"\nplots written to {outdir}/")
 

@@ -72,6 +72,17 @@ RECO_FIGS = {
     "__RC7__": "evgen/hfs_acceptance_6Li.png",
 }
 
+# Figures a report QUOTES numbers from without embedding them.  They are
+# listed here for one reason: the ARTEFACTS staleness check of
+# tools/consistency_check.py walks every "__TAG__": "path" pair in this
+# file, so registering them here is what makes the guard notice when the
+# script that draws one has moved on and the PNG has not.  No template
+# carries these tags, so the substitution pass simply never fires.
+UNEMBEDDED_FIGS = {
+    "__MTA__": "evgen/money_tagged_azz_6Li.png",
+    "__TP7__": "evgen/tagged_polarimetry_7Li.png",
+}
+
 # In report-number order, which is also the order reports/index.html lists
 # them and the order they are meant to be read: primer -> projections ->
 # reconstruction -> detector study.

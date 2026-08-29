@@ -122,7 +122,7 @@ that drives the whole tagging program:
 | n | ZDC | ZDC |
 | p | R=0.50 → OMD center | R=0.43 → OMD low edge |
 | d | R=1.00 → **beam-blind** below RP pT cutoff | R=0.86 → Roman Pots |
-| t | R=1.50 → **no coverage** | R=1.29 → **no coverage** |
+| t | R=1.50 → **lost** (152 mm at the pot plane, past the 144 mm module edge) | R=1.29 → **RP-inner + ZDC** (measured 2026-08-28, dx = +66 mm) |
 | ³He | R=0.75 → Roman Pots | R=0.64 → RP/OMD boundary |
 | α | R=1.00 → **beam-blind** (pT tail only) | R=0.86 → **Roman Pots** |
 
@@ -147,20 +147,26 @@ the only Li far-forward datapoint is coherent J/ψ at IR-8, arXiv:2511.05638,
   recover R≈1 down to pT ~ 0), or relies on the ⁶Li → p/³He channels.
 ☑ *2026-08-28: the fold is done — `fastsim/scripts/tagging_acceptance.py`
 folds the cluster-model p_T(α) against a 10σ angular envelope for four optics
-per configuration, giving a ⁶Li α tag of 1.7 / 1.5 / 1.6% at the Yellow Report
-optics and 35 / 27 / 28% at a lithium tagging optics costing 1/7–1/13 of the
+per configuration, giving a ⁶Li α tag of 1.9 / 1.7 / 2.6% at the Yellow Report
+optics and 35 / 28 / 29% at a lithium tagging optics costing 1/7–1/13 of the
 luminosity (`fastsim/out/tagging_acceptance.txt`, Report 3 Table 6). The
 argument therefore does not hold at any published IP6 optics: it needs the
 tagging optics or IR-8. The third branch, the ⁶Li → p/³He channels, was never
 quantified as a tag — those fragments are treated as breakup backgrounds.*
-- **Tritons at IP6 — revisit!** ◐ *2026-06-12 gun-scan finding
-  (tools/fullsim/README.md): in the current epic-main geometry the
-  over-rigid triton (R = 1.286) crosses the Roman-Pot planes ~36 mm on
-  the inner (over-rigid) side of the beam orbit and then deposits in the
-  ZDC — the "no coverage" assumption from the rigidity-window picture
-  may be wrong. Verify with beam-envelope (10σ) modeling, divergence,
-  and reconstruction before counting on the α+t double-tag at IP6;
-  IR-8 remains the clean solution.*
+- **Tritons at IP6 — revisit!** ☑ *2026-08-28 (tools/fullsim/README.md,
+  plans/09 B1): in the current epic-main geometry (git 9aaa2969) the
+  over-rigid triton (R = 1.286) crosses the Roman-Pot planes at
+  dx = +66 mm at station 1 and +70 to +72 mm at station 2 on the inner
+  (over-rigid) side of the beam orbit — 60 of 60 events at all three
+  configurations, in the 48–144 mm outer band, which carries no vertical
+  insertion, so the hit is at y ≈ 0 and needs no pT — and then deposits
+  in the ZDC in 80 / 83 / 98% of the same events. The ~36 mm of the
+  2026-06-12 scan was the September-2024 geometry. The "no coverage"
+  assumption is withdrawn: `farforward.route_charged` has an over-rigid
+  branch (code 6, RP-inner) and the ⁷Li t tag is 78 / 92 / 94%. What
+  remains is reconstruction: the fast simulation routes in angle and
+  cannot see the acceptance hole between θx = −1.55 and −2.53 mrad that
+  the triton's own 8% larger R12 opens against the 16 mm blind block.*
 - ZDC neutron tagging (evaporation n from both isotopes) + de-excitation γ.
 
 Work plan: (1) particle-gun (x_L, pT, vertex) scans per fragment per beam
@@ -177,7 +183,11 @@ matrix selection (Report 3 item 13). B0 and ZDC were never examined, and
 `MatrixTransferStaticConfig.h` hardcodes `partMass = 0.938272`, `partCharge = 1`
 with no override in `RPOTS.cc`/`FOFFMTRK.cc` — every far-forward particle is
 reconstructed as a proton. The "derive" half is ours, not the FF group's, and
-the repo holds one element of one matrix (R12 = 30.6 m at 18×275).*
+the repo holds R12, R34 and D per configuration (`farforward.POT_LEVERS`:
+19.24 / — / 0.311, 21.25 / 3.35 / 0.287 and 29.97 / 2.93 / 0.292 m) plus the
+second-order dispersion D2 = −0.190 / −0.206 / −0.215 m, which is what makes
+the over-rigid arithmetic reproduce the measurement to a tenth of a
+millimetre; R11, R21, R22 and D′ are still unmeasured.*
 
 ☐ *2026-08-28 on (4): feeding parameterizations back is done (the measured pot
 aperture and the per-configuration optics are in the fast sim), and the
@@ -265,7 +275,7 @@ samples.
 | risk | mitigation |
 |---|---|
 | Li optics/afterburner configs don't exist | verified: 3 concrete artifacts to add (preset, beamline XML, runcard); ⁶Li can proxy d/He4 (same Z/A); engage FF WG early for ⁷Li |
-| ⁶Li α-tag fails at IP6 (R=1 beam-blind) | quantify pT-tail acceptance; document IR-8 secondary-focus case; pivot ⁶Li tagging to p/³He channels — *superseded (2026-08-28): the risk materialised (1.5–1.7% at every published optics) and was answered by a mitigation this row predates — the one-plane β\* de-squeeze of Report 1 §6.1, 27–35% at 1/7–1/13 of the luminosity, with IR-8 (≈20%) as the fallback; the p/³He fragments were evaluated and classified as vetoable breakup backgrounds, not tags (plans/06 §6.2)* |
+| ⁶Li α-tag fails at IP6 (R=1 beam-blind) | quantify pT-tail acceptance; document IR-8 secondary-focus case; pivot ⁶Li tagging to p/³He channels — *superseded (2026-08-28): the risk materialised (1.7–2.6% at every published optics) and was answered by a mitigation this row predates — the one-plane β\* de-squeeze of Report 1 §6.1, 28–35% at 1/7–1/13 of the luminosity, with IR-8 (≈20%) as the fallback; the p/³He fragments were evaluated and classified as vetoable breakup backgrounds, not tags (plans/06 §6.2)* |
 | Geant4/DD4hep mishandles light-ion or excited-ion primaries | gun tests in 2.1.4; sanitize PDG codes to ground states |
 | EICrecon FF matrices proton-tuned | derive Li-rigidity matrices with FF WG |
 | Compute exceeds local resources | guns + small samples locally; campaign production via collaboration |

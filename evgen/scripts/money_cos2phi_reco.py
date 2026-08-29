@@ -20,7 +20,16 @@ RECONSTRUCTED level (plans/07 WP3), re-deriving money plots 5 and 7 with
 
 Statistics are exact at any luminosity (expected counts per phi' bin per
 spin state, Poisson-fluctuated) on an importance-sampled response with
-n_mc pseudo-events per sampler cell.  Outputs:
+n_mc pseudo-events per sampler cell.
+
+`--lumi-1yr` / `--lumi-10yr` are the PROGRAMME luminosities (one and ten
+EIC years) and `--lumi-fraction` is the share of them this observable is
+given in the run plan (plans/07 WP2).  It is a THIRD factor, distinct
+from the 0.5 / 0.5 spin-state share inside `bookkeeping.tensor_flip_plan`
+(which divides this measurement's own luminosity between its fills) and
+from the optics luminosity fraction of the coherent channel (which prices
+a de-squeezed beta*_x).  Every published number is at --lumi-fraction 1,
+and a non-default share writes its own PNG.  Outputs:
 
   money_cos2phi_reco_6Li.png        (5R: phi' pseudo-data in the four
                                      sweet-spot super-bins + amplitude vs x)
@@ -88,6 +97,13 @@ def main():
     ap.add_argument("--scale", type=float, default=1e-2)
     ap.add_argument("--lumi-1yr", type=float, default=10.0)
     ap.add_argument("--lumi-10yr", type=float, default=100.0)
+    ap.add_argument("--lumi-fraction", type=float, default=1.0,
+                    dest="lumi_fraction",
+                    help="this observable's share of the PROGRAMME "
+                         "luminosity (plans/07 WP2; default 1.0, which "
+                         "every published number assumes).  Not the "
+                         "0.5/0.5 spin-state share of the flip plan, "
+                         "which divides this measurement's own luminosity")
     ap.add_argument("--pzz", type=float, default=0.60)
     ap.add_argument("--y-method", default="mixed", choices=("mixed", "electron"))
     ap.add_argument("--y-had-res", type=float, default=0.25,
@@ -186,7 +202,7 @@ def main():
                          "numbers (polligen.radiative draws z from its own "
                          "stream), and the shift of Delta_hat that an "
                          "ISR-free bin-centering would leave is compared "
-                         "with the 5% gate")
+                         "with the 5%% gate")
     ap.add_argument("--isr-gen-q2min", type=float, default=None,
                     help="rebuild the ISR pair from a generator window "
                          "reaching down to this Q2 [GeV^2] instead of the "
@@ -199,7 +215,11 @@ def main():
                          "of 2E_e to both members of the pair (0.85 is the "
                          "cut H1/ZEUS used against radiative events); the "
                          "chain does not apply it, so this is the "
-                         "MITIGATION column, not the bound")
+                         "MITIGATION column, not the bound.  The retention "
+                         "is printed three ways -- globally, in bands of "
+                         "nominal y, and per analysis bin -- because the "
+                         "global number is dominated by the high-y bulk "
+                         "and is NOT what a sweet spot pays")
     ap.add_argument("--isr-seeds", default=None,
                     help="comma-separated RESPONSE seeds over which the "
                          "bound is averaged (mean +- sem).  One draw of "
@@ -213,11 +233,24 @@ def main():
     ap.add_argument("--outdir", default=".")
     args = ap.parse_args()
 
+    if not args.lumi_fraction > 0:
+        ap.error("--lumi-fraction must be positive")
     config = beams.default_configs("6Li")[args.config]
-    lumi1_pb, lumi10_pb = args.lumi_1yr * 1e3, args.lumi_10yr * 1e3
+    # programme luminosity x this observable's share of the run plan; the
+    # spin-state share of `plan` divides what is left, and is a different
+    # object (see the module docstring)
+    lumi1_pb = args.lumi_1yr * args.lumi_fraction * 1e3
+    lumi10_pb = args.lumi_10yr * args.lumi_fraction * 1e3
     rng = np.random.default_rng(args.seed)
     analysis = fom.Scenario(lumi_fb_per_nucleon=args.lumi_1yr,
+                            run_share=args.lumi_fraction,
                             pol_ion_tensor=args.pzz)
+    print("run plan: programme %g / %g fb^-1/u (1 yr / 10 yr) x share %g "
+          "-> %g / %g fb^-1/u delivered to this observable; spin-state "
+          "share 0.5 / 0.5 within it"
+          % (args.lumi_1yr, args.lumi_10yr, args.lumi_fraction,
+             args.lumi_1yr * args.lumi_fraction,
+             args.lumi_10yr * args.lumi_fraction))
     model, q2_ref = build_delta_model(args, config, analysis)
     kern = InclusiveKernel(beams.LI6, b1_func=toy_b1, delta_func=model)
     # the shape the bin-centering starts from: the injected model unless
@@ -276,6 +309,12 @@ def main():
                            rng=rng, hfs=hfs_resp)
     suffix = (args.tag if args.tag is not None
               else ("_hfs" if args.y_source == "hfs" else ""))
+    # published PNGs are the --lumi-fraction 1 ones: a non-default share
+    # appends its key rather than overwriting them (the same guard as
+    # money_tagged_azz.output_stem)
+    share_key = fom.run_share_tag(args.lumi_fraction)
+    if share_key and args.tag is None:
+        suffix = "%s_%s" % (suffix, share_key)
     plan = bk.tensor_flip_plan(args.pzz, rel_lumi_offset=args.rel_lumi_offset)
     lumi_assumed = [0.5, 0.5]
     cat_plus = plan.categories[0]

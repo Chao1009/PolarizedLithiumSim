@@ -299,7 +299,7 @@ def spectator_lab_kinematics(channel, p_per_nucleon, n=200_000, beta=0.30,
     1.51% (legacy 164 urad) at 137.5 GeV/u; 13.2% -> 13.5% at 50 GeV/u.
     (These legacy numbers are the AZIMUTH-BLIND circular cut the routing
     applied at the time; since 2026-08-28 the published tag is evaluated
-    per configuration at the Yellow Report optics -- 1.7 / 1.5 / 1.6% --
+    per configuration at the Yellow Report optics -- 1.9 / 1.7 / 2.6% --
     and at the tagging optics, farforward.yr_optics / tagging_optics,
     with the rectangle applied to each fragment's azimuth.)  The 7Li
     alpha, off rigidity at R = 0.856 with no nearby edge, moves by

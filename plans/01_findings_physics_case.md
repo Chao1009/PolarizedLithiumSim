@@ -70,6 +70,13 @@ simulations within the broader EIC program."*
   (our inference, to be developed with theory colleagues):
   b₁(⁶Li)/nucleon ≈ ⅓·P_d(⁶Li)·b₁(d) ≈ 0.29·b₁(d) + α–d D-wave term.
   EPIOS explicitly motivates "b₁ of the deuteron, free or embedded in ⁶Li".
+  *2026-08-28: the ⅓·P_d form is right but P_d is the wrong rank.  b₁ is a
+  rank-2 structure function, so the deuteron's alignment survives the α–d
+  motion as the TENSOR dilution 1 − (9/10)P_D = 0.921947, not the vector
+  0.87, and b₁(⁶Li)/nucleon = (2/6) × 0.921947 × b₁(d) = 0.307·b₁(d)
+  (`polarized.LI6_B1_RANK2_TRANSFER` and `LI6_B1_PER_NUCLEON`, pinned
+  against `TaggedModel.tensor_dilution()` in `evgen/tests/test_tagged.py`;
+  plans/08 D9).  The α–d D-wave term is still not in the model.*
 - Extraction systematics (Cosyn et al. arXiv:2410.12764, EPJ A 61:83):
   at collider kinematics the clean b₁ extraction prefers polarization
   **along the momentum transfer**, not the beam axis — build this into the
@@ -82,6 +89,39 @@ simulations within the broader EIC program."*
   (PLB 783:247): polarized ≈ unpolarized. **A 5%-level measurement
   discriminates the two camps** — and they map onto mean-field vs SRC
   origins of the EMC effect.
+  *2026-08-28: both figures are now digitized (CBT Fig. 6 for ⁷Li at
+  Q² = 5 GeV², TMT Fig. 4 for nuclear matter at Q² = 10 GeV²;
+  `fastsim/polli_fastsim/data/`, `tools/digitize_figure.py`), and the "2×"
+  is a valence-region statement, not a constant: the ratio of EMC effects
+  (1 − R_pol)/(1 − R_unpol) on CBT's own ⁷Li curves is 2.25 / 1.69 / 1.41 /
+  1.14 at x = 0.40 / 0.45 / 0.50 / 0.60, falling to a minimum of 1.06 at
+  x ≈ 0.70 without reaching 1 (their Eq.-26 curve does cross the
+  unpolarized one, at x = 0.651), against TMT's 1.01 / 0.98 /
+  1.00 / 1.08.  Below x ≈ 0.28 the ratio has no content — ⁷Li's unpolarized
+  EMC ratio is above 1 there while both models keep a 7% polarized
+  depletion — so the two camps are put on one common ⁷Li unpolarized
+  baseline through a single valence strength factor (1 for CBT, which
+  computed ⁷Li itself; 0.397 for TMT's nuclear matter).  The transferred
+  separation is 0.044 / 0.040 / 0.034 / 0.059 at x = 0.09 / 0.28 / 0.45 /
+  0.71, but only the valence-window part of that is a statement about the
+  two papers: the factor is fitted over 0.35 < x < 0.65 and applied
+  everywhere, and below the window the two PUBLISHED polarized curves
+  agree to better than 0.008 over 0.028 < x < 0.30 (0.002 at x = 0.09)
+  while ⁷Li's unpolarized effect there is an enhancement, so a strength
+  ratio has nothing to scale.  Inside the window the transferred
+  nuclear-matter depletion tracks ⁷Li's own unpolarized 0.034 / 0.048 /
+  0.087 at x = 0.40 / 0.45 / 0.65 to within 0.005 — "polarized ≈
+  unpolarized", as TMT claim — against CBT's 0.077 / 0.082 / 0.094, so ΔR
+  separates by 0.040 at x = 0.36 and only 0.011 at 0.65.  The
+  discriminating region is therefore x ≈ 0.35–0.45: inside the valence
+  region as before, at its lower edge, with about half the separation the
+  constants 2 and 1 implied, and a reach of 0.84σ per bin at 10 fb⁻¹/u
+  (2.66σ at 100) in the best window bin, x = 0.355, rather than the
+  1.16σ / 3.65σ the unrestricted best bin at x = 0.141 returns on the
+  strength of the transfer alone.
+  `money_polemc.py` prints both, and the same window is where the mixed
+  three/five-flavour grid scheme is negligible (0.31% of F₂ᴬ at x = 0.35
+  against 2.6% at 0.09).*
 - Gluon sector: Wang–Bentz–Cloët–Thomas (J.Phys.G 49:03LT01,
   arXiv:2109.03591): polarized *gluon* EMC larger than unpolarized; ⁷Li
   named "the most promising case" — EIC Q² lever arm via dg₁/dlnQ² is the
@@ -168,7 +208,7 @@ EPIOS white paper: Atoian et al., **arXiv:2510.10794**, PRC 113:060501
 |---|---|---|
 | b₁(d) | HERMES: δb₁ ~ (1–5)×10⁻² stat, 0.01<x<0.45; E12-13-011: high-x precision | low-x reach where b₁ ~ 0.1, zero-crossing mapping, ⁶Li-vs-d difference |
 | Δ(x,Q²) | nothing (LOI only) | first projection; 5σ reach vs Δ/F₁ ∈ 10⁻³–10⁻² |
-| ΔR_pol-EMC(⁷Li) | E12-14-001 projected 4–5% on ratio, x ≤ 0.8 | x < 0.06 + Q² arm + 5%-level CBT-vs-QMC discrimination |
+| ΔR_pol-EMC(⁷Li) | E12-14-001 projected 4–5% on ratio, x ≤ 0.8 | x < 0.06 + Q² arm + 3–4%-level CBT-vs-QMC discrimination — on the digitized curves (2026-08-28) the camps differ by 0.034–0.044 over x = 0.09–0.45, so 4% per bin is the requirement and the highest-x bins are not where it is decided |
 | tagged structure | Friščić e+³He ×2–3 improvement | α-tagged ⁶Li embedded-deuteron program |
 
 ## 6. Fact-check addendum (2026-08-21, primer revision "why Li / why polarization / fixed target vs collider")
@@ -251,9 +291,14 @@ corrections to entries above:
 - **Primer §1.5 (2026-08-21, second revision): beam requirements and
   uniqueness by observable.** Requirements table built from the program's
   own FOMs (fastsim README / money plots 5–6): g₁-EMC needs longitudinal
-  P_z ≥ 0.7 + P_e ≈ 0.7 (δΔR ≈ 2.6–4%/x-bin at x = 0.3–0.5, 10 fb⁻¹/u;
-  5σ CBT-vs-TMT at 100 fb⁻¹/u); b₁ needs tensor fills (δA_zz ≈ 1×10⁻⁴ at
-  x < 0.05 vs scenario (2–10)×10⁻³; rel-lumi at 10⁻⁴); Δ needs transverse
+  P_z ≥ 0.7 + P_e ≈ 0.7 (δΔR ≈ 4.1–6.0%/x-bin at x = 0.28–0.45 on grid
+  inputs, 10 fb⁻¹/u, revised 2026-08-28 from 2.6–4%; CBT-vs-TMT at
+  100 fb⁻¹/u — 2.7σ in the best bin of the valence window in which the two
+  calculations are comparable at all, revised the same day from the 5σ that
+  came from the undigitized 2×/1× constants); b₁ needs tensor
+  fills (δA_zz ≈ 1×10⁻⁴ at x < 0.05 vs a digitized-Miller |A_zz| of
+  (2.4–14)×10⁻⁴ over x = 0.005–0.07, up to 11σ per bin, while the CDKS
+  convolution is ≤ 0.2σ everywhere; rel-lumi at 10⁻⁴); Δ needs transverse
   P_zz (δA = (1.5–4.5)×10⁻⁴ at P_zz = 0.6; a 3×10⁻³ floor stays 3–10σ at
   P_zz = 0.3); tagging/coherent as in plans/03, 06. Machine facts: arcs'
   stable spin is vertical → transverse native, longitudinal needs rotators

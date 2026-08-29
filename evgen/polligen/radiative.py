@@ -453,14 +453,88 @@ def empz_fraction(resp):
         return e_p * (1.0 - ct) / np.maximum(1.0 - y_r, 1e-12) / two_ee
 
 
+def empz_keep_mask(resp, lo=0.85, hi=1.15):
+    """The boolean the window keeps, WITHOUT touching `resp.eff`.
+
+    Separated from `apply_empz_cut` because the per-bin retention has to
+    be taken against the pre-cut selection: `RecoResponse.mask_reco`
+    carries an `eff > 0` factor, so a bin mask evaluated after the cut
+    already has the rejected events removed and every retention would
+    come back 1."""
+    f = empz_fraction(resp)
+    return np.isfinite(f) & (f >= lo) & (f <= hi)
+
+
+def empz_bin_retention(resp, edges, lo=0.85, hi=1.15, keep=None):
+    """Per-bin (w eff mask keep).sum()/(w eff mask).sum() at the pre-cut
+    `resp.eff`, one entry per (xlo, xhi, q2lo, q2hi) of `edges`.
+
+    The global retention `apply_empz_cut` returns is dominated by the
+    high-y bulk of the selected sample, where the radiative tail lives;
+    what an analysis bin actually pays is this, and at the sweet spots
+    (y = 0.01-0.03) it is a different number by two orders."""
+    keep = empz_keep_mask(resp, lo, hi) if keep is None else keep
+    we = resp.w * resp.eff
+    out = []
+    for e in edges:
+        mr = resp.mask_reco(*e)
+        den = float(we[mr].sum())
+        out.append(float(we[mr & keep].sum()) / den if den > 0 else np.nan)
+    return out
+
+
+EMPZ_Y_BANDS = (0.0, 0.05, 0.2, 0.5, 1.0)
+
+
+def empz_y_retention(resp, bands=EMPZ_Y_BANDS, lo=0.85, hi=1.15, keep=None):
+    """Retention and rate share in bands of the NOMINAL y, pre-cut.
+
+    Where the window's loss sits is the whole question of whether it can
+    be adopted as a default: the reconstructed E - p_z is
+    E'(1 - cos theta)/(1 - y_Sigma), so its resolution carries 1/(1 - y)
+    and the window rejects unradiated events at high y purely on the
+    hadronic y resolution -- 25% for the Gaussian stand-in, a few per
+    cent for the calibrated Sigma of the PYTHIA chain.  The analysis
+    bins of the tensor programme live at y = 0.01-0.03, which is why the
+    global retention badly overstates what they pay.
+
+    `share` is normalised to the BANDED rate and therefore sums to one by
+    construction; `covered` is the banded rate as a fraction of the whole
+    selected rate, so that the identity the published numbers rest on,
+
+        global retention = covered * sum(keep_b * share_b),
+
+    stays exact whatever `bands` is asked for.  The default bands span
+    y = 0 to 1 and `covered` is 1 for any physical selection; a narrower
+    `bands` argument -- or, one day, a selection leaking outside [0, 1) --
+    shows up there instead of silently rescaling the shares."""
+    keep = empz_keep_mask(resp, lo, hi) if keep is None else keep
+    y = np.asarray(resp.y_nominal, dtype=float)
+    we = resp.w * resp.eff
+    tot = float(we.sum())
+    out_k, out_d = [], []
+    for a, b in zip(bands[:-1], bands[1:]):
+        m = (y >= a) & (y < b)
+        den = float(we[m].sum())
+        out_k.append(float(we[m & keep].sum()) / den if den > 0 else np.nan)
+        out_d.append(den)
+    banded = float(np.sum(out_d))
+    out_s = [d / banded if banded > 0 else np.nan for d in out_d]
+    return {"bands": tuple(bands), "keep": np.array(out_k),
+            "share": np.array(out_s),
+            "covered": banded / tot if tot > 0 else np.nan}
+
+
 def apply_empz_cut(resp, lo=0.85, hi=1.15):
     """Zero `resp.eff` outside lo <= (E - p_z)/2E_e <= hi, IN PLACE.
 
     Every reco-level quantity of the response (`mask_reco`, `bin_summary`,
     `fold_kernel`, `expected_counts`) reads `eff` at call time, so this is
-    the whole cut.  Returns the accepted fraction of the selected rate."""
-    f = empz_fraction(resp)
-    keep = np.isfinite(f) & (f >= lo) & (f <= hi)
+    the whole cut.  Returns the accepted fraction of the selected rate --
+    the GLOBAL one, which the high-y bulk dominates and which is NOT what
+    an analysis bin pays; for that see `empz_bin_retention` and
+    `empz_y_retention`, both of which must be called before this."""
+    keep = empz_keep_mask(resp, lo, hi)
     before = float((resp.w * resp.eff).sum())
     resp.eff = resp.eff * keep
     after = float((resp.w * resp.eff).sum())
@@ -488,11 +562,19 @@ def migration_bound(build_response, edges, category, isr=None,
     isr = (isr or ISRModel()).reset()   # reproducible for any caller,
     off = build_response(None)         # even a reused model instance
     on = build_response(isr)
-    keep = None
+    keep = bin_keep = None
     if empz_cut is not None:
         # the same cut on both members of the pair, so the comparison
-        # stays a comparison of the radiation and not of the selection
-        keep = (apply_empz_cut(off, *empz_cut), apply_empz_cut(on, *empz_cut))
+        # stays a comparison of the radiation and not of the selection.
+        # The per-bin retention is taken BEFORE the cut is applied, for
+        # the reason in `empz_bin_retention`.
+        keep, bin_keep, y_keep = [], [], []
+        for resp in (off, on):
+            km = empz_keep_mask(resp, *empz_cut)
+            bin_keep.append(empz_bin_retention(resp, edges, keep=km))
+            y_keep.append(empz_y_retention(resp, keep=km))
+            keep.append(apply_empz_cut(resp, *empz_cut))
+        keep = tuple(keep)
     rows = []
     for i, e in enumerate(edges):
         a = off.bin_summary(*e, category)
@@ -510,8 +592,12 @@ def migration_bound(build_response, edges, category, isr=None,
             "d_k": a["a_reco_bin"] / b["a_reco_bin"] - 1.0,
             "sigma_reco_ratio": b["sigma_reco_pb"] / a["sigma_reco_pb"],
         })
+        if bin_keep is not None:
+            rows[-1]["empz_keep_off"] = bin_keep[0][i]
+            rows[-1]["empz_keep_on"] = bin_keep[1][i]
     return {"rows": rows, "off": off, "on": on, "isr": isr,
-            "empz_cut": empz_cut, "empz_keep": keep}
+            "empz_cut": empz_cut, "empz_keep": keep,
+            "empz_y": (tuple(y_keep) if empz_cut is not None else None)}
 
 
 def migration_bound_seeds(build_pair, edges, category, seeds,
@@ -532,7 +618,10 @@ def migration_bound_seeds(build_pair, edges, category, seeds,
     per-bin entries replaced by the mean over seeds and `<key>_sem` added
     for `d_amp`, `d_purity`, `d_eff` and `sigma_reco_ratio`; `off`, `on`
     and `isr` are those of the FIRST seed, so a caller can still read the
-    z spectrum off the pair."""
+    z spectrum off the pair.  With `empz_cut` the retentions are averaged
+    too -- the global pair as `empz_keep` with `empz_keep_sem`, the
+    per-bin ones as row keys, the y bands as `empz_y` -- because they are
+    published numbers and a single draw of them is not."""
     seeds = [int(v) for v in seeds]
     runs = [migration_bound(lambda m, sd=sd: build_pair(sd, m), edges,
                             category, isr=ISRModel(seed=isr_seed, **isr_kw),
@@ -541,6 +630,8 @@ def migration_bound_seeds(build_pair, edges, category, seeds,
     keys = ("purity_off", "purity_on", "eff_off", "eff_on", "amp_off",
             "amp_on", "a_reco_off", "a_reco_on", "d_purity", "d_eff",
             "d_amp", "d_k", "sigma_reco_ratio")
+    if empz_cut is not None:
+        keys = keys + ("empz_keep_off", "empz_keep_on")
     n = float(len(seeds))
     rows = []
     for i in range(len(edges)):
@@ -556,6 +647,21 @@ def migration_bound_seeds(build_pair, edges, category, seeds,
     out["rows"] = rows
     out["seeds"] = seeds
     out["runs"] = runs
+    if empz_cut is not None:
+        # the GLOBAL retention pair is a per-seed number as well
+        k = np.array([run["empz_keep"] for run in runs], dtype=float)
+        out["empz_keep"] = tuple(k.mean(axis=0))
+        out["empz_keep_sem"] = tuple(k.std(axis=0, ddof=1) / np.sqrt(n)
+                                     if n > 1 else np.zeros(k.shape[1]))
+        out["empz_y"] = tuple(
+            {"bands": runs[0]["empz_y"][i]["bands"],
+             "keep": np.mean([run["empz_y"][i]["keep"] for run in runs],
+                             axis=0),
+             "share": np.mean([run["empz_y"][i]["share"] for run in runs],
+                              axis=0),
+             "covered": float(np.mean([run["empz_y"][i]["covered"]
+                                       for run in runs]))}
+            for i in (0, 1))
     return out
 
 
@@ -570,22 +676,44 @@ def format_bound(bound, gate=0.05):
         out.append("  mean +- sem over %d response seeds: %s"
                    % (len(bound["seeds"]),
                       ", ".join(str(v) for v in bound["seeds"])))
-    if bound.get("empz_cut"):
-        out.append("  E - p_z cut %.2f-%.2f x 2E_e: keeps %.4f (no ISR) / "
-                   "%.4f (ISR) of the selected rate"
-                   % (bound["empz_cut"][0], bound["empz_cut"][1],
-                      bound["empz_keep"][0], bound["empz_keep"][1]))
-    out.append("  %-22s %8s %8s %8s %8s %9s %16s"
+    empz = bool(bound.get("empz_cut"))
+    if empz:
+        sem = bound.get("empz_keep_sem")
+        fmt = ("%.4f +- %.4f (no ISR) / %.4f +- %.4f (ISR)"
+               % (bound["empz_keep"][0], sem[0], bound["empz_keep"][1],
+                  sem[1]) if sem else
+               "%.4f (no ISR) / %.4f (ISR)" % (bound["empz_keep"][0],
+                                               bound["empz_keep"][1]))
+        out.append("  E - p_z cut %.2f-%.2f x 2E_e: keeps %s of the "
+                   "selected rate GLOBALLY; the per-bin retentions below "
+                   "are what the analysis bins pay"
+                   % (bound["empz_cut"][0], bound["empz_cut"][1], fmt))
+        yk = bound.get("empz_y")
+        if yk:
+            bands = " ".join("%g-%g" % (a, b) for a, b in
+                             zip(yk[0]["bands"][:-1], yk[0]["bands"][1:]))
+            out.append("    retention in bands of nominal y (%s): "
+                       "no ISR %s / ISR %s; band share of the selected "
+                       "rate %s"
+                       % (bands,
+                          " ".join("%.4f" % v for v in yk[0]["keep"]),
+                          " ".join("%.4f" % v for v in yk[1]["keep"]),
+                          " ".join("%.3f" % v for v in yk[0]["share"])))
+    out.append("  %-22s %8s %8s %8s %8s %9s%s %16s"
                % ("bin", "P(off)", "P(on)", "eff off", "eff on",
-                  "sig on/off", "dDelta [%]"))
+                  "sig on/off",
+                  " %8s %8s" % ("keep off", "keep on") if empz else "",
+                  "dDelta [%]"))
     for r in rows:
         tail = ("%+9.3f +- %.3f" % (100.0 * r["d_amp"],
                                     100.0 * r["d_amp_sem"]) if multi
                 else "%+16.3f" % (100.0 * r["d_amp"],))
-        out.append("  %-22s %8.3f %8.3f %8.3f %8.3f %9.4f %s"
+        mid = (" %8.4f %8.4f" % (r["empz_keep_off"], r["empz_keep_on"])
+               if empz else "")
+        out.append("  %-22s %8.3f %8.3f %8.3f %8.3f %9.4f%s %s"
                    % (r["label"], r["purity_off"], r["purity_on"],
                       r["eff_off"], r["eff_on"], r["sigma_reco_ratio"],
-                      tail))
+                      mid, tail))
     if multi:
         out.append("  seed-to-seed spread of dDelta [%]: "
                    + ", ".join("%s %.3f (sd %.3f, min %.3f, max %.3f)"

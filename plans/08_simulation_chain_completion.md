@@ -371,18 +371,18 @@ fix and left for the author.
 | # | item | state |
 |---|---|---|
 | **D1** | **b₁-sector sign.** The code is opposite to Cosyn Eq. (27) / HERMES. B2 lands the anchor and the single constant, so the flip is one line. What flips is the sign of κ — and therefore the O(γ²) subtraction, which must not be coded before the decision. `money_b1.py` plots \|A_zz\|; `money_tagged_azz` is dominated by the O(1) S/D interference. | open |
-| **D7** | **⁶Li effective polarization.** `beams.LI6` uses the Cloët 1/3 *per-nucleon* convention in a slot that `ToyG1.g1_nucleus` treats as whole-nucleus and callers then divide by A — the 2-of-6 dilution applied twice (code review S13; g₁(⁶Li)/g₁(d) = 0.119 per nucleon). The structural fix (carry Z and N in `g1_nucleus`, as `NuclearF2.f2a` already does) is unambiguous and also restores ³He's missing ×2 on the proton term; the *value* — 1/3 versus the 0.81 cluster picture — is `plans/04` #6. No headline number uses g₁(⁶Li). | structural fix safe; value open |
-| **D9** | **b₁ money plot dilution (S6).** `money_b1.py` draws the signal with the ×0.87 deuteron transfer and no 2/6 against errors with neither — a factor 3 between signal and error. The correct rank-2 transfer is `TaggedModel.tensor_dilution()`, not the vector 0.87. Blocked with D7 because they are the same convention question. | open |
+| **D7** | **⁶Li effective polarization.** `beams.LI6` used the Cloët 1/3 *per-nucleon* convention in a slot that `ToyG1.g1_nucleus` treated as whole-nucleus while callers divided by A — the 2-of-6 dilution applied twice. | ☑ **closed 2026-08-28** (structural half; the *value*, 1/3 versus the 0.81 cluster picture, remains `plans/04` #6). `g1_nucleus` now weights by Z and N exactly as `NuclearF2.f2a` does, every `Ion` slot is per-nucleon, and `beams.LI7` holds the verified VMC sums divided by Z = 3 and N = 4 so that the published ⁷Li path — 0.866 g₁ᵖ − 0.037 g₁ⁿ — is bit-for-bit unchanged (pinned to 1e-15 in `fastsim/tests/test_polarized_normalisation.py`, five tests). Per-nucleon g₁(⁶Li)/g₁(d) is **0.358**, not 0.119, and equals (1/3)/0.93 exactly since both ions are isoscalar. ³He's proton term gains the ×2 the Bissey numbers intend. `polligen.tagged.TRITON` is the ³He mirror and gains its second neutron: no published number reads the g₁ₜ/F₁ₜ overlay it moves (+8.4% at x = 0.005 to −0.7% at 0.7), but the α-tag acceptances `tagged_polarimetry_7li.py` prints DO move in the fourth decimal, because the accepted sample is cross-section-weighted — Roman-Pot tag 0.9614 / 0.9676 / 0.9726 → 0.9620 / 0.9678 / 0.9728 (YR) and 0.9807 / 0.9916 / 0.9920 → 0.9807 / 0.9917 / 0.9919 (tagging), median δA_∥ 0.01150 / 0.01138 → 0.01152 / 0.01140. The error-bar penalty does not move: √(acc × L ratio) is 2.83 / 3.87 / 3.15 on either side of the change, the shift being in the fourth decimal of both terms of the ratio. The script's `acc(any far-fwd)` also moved the same day, but from the far-forward stream's over-rigid routing branch and not from this change: an isolation probe forcing `farforward.over_rigid_route` to `False` returns it to `acc(RP)` exactly (0.9678 and 0.9916 at 10 × 99.5). Both causes and the current values are recorded in `docs/reproduction_manual.md` §4.1 and `plans/09`; Report 3's Table 6 caption and change log still carry the old tags and are left to the far-forward stream. |
+| **D9** | **b₁ money plot dilution (S6).** `money_b1.py` drew the signal with the ×0.87 deuteron transfer and no 2/6 against errors with neither — a factor 2.83 between signal and error. | ☑ **closed 2026-08-28.** `polarized.b1_li6_from_deuteron` now carries two named constants, `LI6_B1_RANK2_TRANSFER = 0.921947` — which *is* `TaggedModel(li6_alpha_channel()).tensor_dilution()`, pinned against it and against the closed form 1 − (9/10) P_D at P_D = 0.0867 in `evgen/tests/test_tagged.py` — and `LI6_B1_PER_NUCLEON = 2/6`, so the b₁ sector uses the same dilution convention as `delta_models.py` (whose "known residual inconsistency" paragraph is retired). `money_b1.py --transfer legacy` reproduces the old 0.87 × 1 curve and writes a different stem. Signal × 0.307316/0.87 = 0.353 relative to before at fixed b₁; with the digitized Miller b₁ on top of that (plans/02 step 1.2.3) the plotted \|A_zz\| is 2.4×10⁻⁴ at x = 0.005 rising to 1.4×10⁻³ at 0.07, i.e. 1.7 / 4.8 / 7.6 / 10.9σ per bin at x = 0.0035 / 0.009 / 0.028 / 0.071 (P_zz = 0.6, 10 fb⁻¹/u), while the CDKS convolution stays under 0.2σ everywhere. Every error number is unchanged. |
 
 ## 8.3 Blocked on external input
 
 | # | item | blocker |
 |---|---|---|
 | D2 | exact finite-γ kernel (Cosyn Eqs. 9/10/14/24), b₃/b₄ slots, Eqs. 17d/17e | gated on D1 for the subtraction sign. **Correct now, without code:** report §2, code review G2 and the `plans/07` systematics row all quote the leakage as γ²b₁/6 and are ≈ 7× low; the exact ratio a₂(full)/a₂(17e alone) ≈ 6.9. Impact on everything published is ≤ 0.15%; the exposure is the Δ/F₁ ~ 10⁻³ scenario and x ≳ 0.2 at Q² ≈ 1 |
-| D3 | radiative corrections (WP4) | ☑ **closed 2026-08-28 — it was never external.** Two of the four planned deliverables were void by algebra and the other two are now measured, in `evgen/polligen/radiative.py` (exponentiated leading-log D(z, Q²), Kuraev–Fadin / Nicrosini–Trentadue; ∫D = 1 + O(t²) with a 7×10⁻⁴ residual at t = 0.070), the default-off `recopseudo.RecoResponse(isr=…)` hook and `money_cos2phi_reco.py --isr`. **Void:** collinear ISR generates exactly zero fake cos φ′/cos 2φ′ — the covariant azimuth is invariant under k → (1−z)k in the massless-target limit, now *pinned* at 3.6×10⁻¹⁵ rad over the 2×10⁴-event flat sample of `test_covariant_azimuth_is_invariant_under_a_collinear_photon` (z ≤ 0.9; the 2×10⁻¹⁶ quoted here before was a gentler sample). Over the 1.84×10⁶ events of the response, where the physical ⁶Li mass leaves the O(γ²) residual, max |Δφ′| = 2.6×10⁻² rad and the fake cos 2φ′ is 9×10⁻⁸ rate-weighted (`RecoResponse.isr_dphi`) — the two samples are not the same and their residuals differ by two orders — and the ratio cancellation is demonstrated. **Measured:** (a) the migration bound on purity/efficiency/K with common random numbers at the four mid-configuration sweet spots — purity 0.653→0.638, 0.633→0.613, 0.679→0.659, 0.684→0.640, efficiency 0.414→0.404, 0.590→0.572, 0.374→0.369, 0.653→0.634, and Δ̂ corrected with an ISR-free K biased by +0.62±0.03/+0.50±0.02/+0.94±0.03/+1.22±0.02% (mean ± sem over eight response seeds; one draw scatters by 4–14% of the bound, seed-to-seed sd 0.05–0.09 points, so a single-seed number is not publishable), rising to a 1.8–2.8% band as the generator window is opened to Q² ≥ 0.15–0.02 GeV², where the truncated feed-in saturates — ≤2.9% is what the 5% gate is read against, and it passes; a HERA-style E − p_z window brings it to ≤0.25% while keeping 87% of the non-radiative rate; (b) the method comparison at z = 0.092, observed/hard for (Q², y, x), at the rate-weighted ⟨y⟩ = 0.189 of the whole selected sample: electron (1.102, 1.351, 0.740), Σ (1.000, 1.000, 0.908), JB (0.976, 0.908, 0.976), DA (1.214, 1.000, 1.102), mixed (1.102, 1.000, **1.000**). The electron rows go as (y + z)(1 − z)/y and are therefore far worse at the sweet spots themselves (y = 0.010–0.026), where y is off by 4.2–9.2 and x by 0.109–0.239; the mixed row is 1.000 at every y, which is the whole argument for the chain's choice. The 2026-08-28 correction stands and is now pinned against a four-vector construction: x = Q²_e/(s y_Σ) is exact under a collinear photon and it is the Q²_e *label* that migrates by 1/(1−z). Q²_Σ = p_T,e²/(1 − y_Σ) uses no beam energy either, so an e-Σ label would carry no migration at all — a chain change, not made. Still external / uncalculated: the TENSOR-sector RC (plans/05 §5.5) |
+| D3 | radiative corrections (WP4) | ☑ **closed 2026-08-28 — it was never external.** Two of the four planned deliverables were void by algebra and the other two are now measured, in `evgen/polligen/radiative.py` (exponentiated leading-log D(z, Q²), Kuraev–Fadin / Nicrosini–Trentadue; ∫D = 1 + O(t²) with a 7×10⁻⁴ residual at t = 0.070), the default-off `recopseudo.RecoResponse(isr=…)` hook and `money_cos2phi_reco.py --isr`. **Void:** collinear ISR generates exactly zero fake cos φ′/cos 2φ′ — the covariant azimuth is invariant under k → (1−z)k in the massless-target limit, now *pinned* at 3.6×10⁻¹⁵ rad over the 2×10⁴-event flat sample of `test_covariant_azimuth_is_invariant_under_a_collinear_photon` (z ≤ 0.9; the 2×10⁻¹⁶ quoted here before was a gentler sample). Over the 1.84×10⁶ events of the response, where the physical ⁶Li mass leaves the O(γ²) residual, max |Δφ′| = 2.6×10⁻² rad and the fake cos 2φ′ is 9×10⁻⁸ rate-weighted (`RecoResponse.isr_dphi`) — the two samples are not the same and their residuals differ by two orders — and the ratio cancellation is demonstrated. **Measured:** (a) the migration bound on purity/efficiency/K with common random numbers at the four mid-configuration sweet spots — purity 0.653→0.638, 0.633→0.613, 0.679→0.659, 0.684→0.640, efficiency 0.414→0.404, 0.590→0.572, 0.374→0.369, 0.653→0.634, and Δ̂ corrected with an ISR-free K biased by +0.62±0.03/+0.50±0.02/+0.94±0.03/+1.22±0.02% (mean ± sem over eight response seeds; one draw scatters by 4–14% of the bound, seed-to-seed sd 0.05–0.09 points, so a single-seed number is not publishable), rising to a 1.8–2.8% band as the generator window is opened to Q² ≥ 0.15–0.02 GeV², where the truncated feed-in saturates — ≤2.9% is what the 5% gate is read against, and it passes; a HERA-style E − p_z window brings it to ≤0.25% while keeping 87% (25% Gaussian y stand-in) / 98% (PYTHIA, calibrated Σ) of the non-radiative rate, the loss falling above y = 0.2 and costing 0.01–0.06% at the four sweet spots; not adopted as a default; (b) the method comparison at z = 0.092, observed/hard for (Q², y, x), at the rate-weighted ⟨y⟩ = 0.189 of the whole selected sample: electron (1.102, 1.351, 0.740), Σ (1.000, 1.000, 0.908), JB (0.976, 0.908, 0.976), DA (1.214, 1.000, 1.102), mixed (1.102, 1.000, **1.000**). The electron rows go as (y + z)(1 − z)/y and are therefore far worse at the sweet spots themselves (y = 0.010–0.026), where y is off by 4.2–9.2 and x by 0.109–0.239; the mixed row is 1.000 at every y, which is the whole argument for the chain's choice. The 2026-08-28 correction stands and is now pinned against a four-vector construction: x = Q²_e/(s y_Σ) is exact under a collinear photon and it is the Q²_e *label* that migrates by 1/(1−z). Q²_Σ = p_T,e²/(1 − y_Σ) uses no beam energy either, so an e-Σ label would carry no migration at all — a chain change, not made. Still external / uncalculated: the TENSOR-sector RC (plans/05 §5.5) |
 | D4 | PYTHIA 8 HFS samples | ☑ **closed 2026-08-26** — it was never external. PYTHIA 8.311 builds its own Python bindings against the analysis machine's interpreter (`tools/pythia8/README.md`); the eic-shell container has the C++ library but no bindings, which is what had made this look like a container problem. 8 M events over the three beam configurations now stand in `evgen/samples/`, and A5's beam guard makes the merge safe |
 | D5 | incoherent breakup shapes, veto efficiencies, event-level Z-ID | FLUKA licence → BeAGLE. `plans/07` already rules this non-blocking; the m-state-blind dilution argument is algebra, not a simulation gap. *2026-08-26:* the no-FLUKA half is done — the official BeAGLE e+d sample streams over xrootd and the control study is run (`tools/beagle/README.md`), which is what calibrates the cluster model's p_T tail; what FLUKA still gates is A = 6, 7 breakup itself |
-| D6 | ePIC numbers: the calorimeter noise/threshold floor at Σ_h ≈ 0.2–0.5 GeV (#21, the one number the letter cannot do without); the **backward-disk angular resolution** (F3 — worth more than A7); Li ring σ_θ (#20); the RP slot geometry; EICROC Z-ID (#19) | external — except the RP slot geometry, which is now measured rather than assumed: an intact ⁶Li through the ePIC far-forward geometry puts the aperture at \|θ_x\| ≳ 2.0 / 1.35 / 1.03 mrad in the 5×41 / 10×100 / 18×275 optics against \|θ_y\| ≳ 1.8–3 mrad, i.e. **open horizontally**, the opposite aspect to `rp_measure`'s slot (`tools/fullsim/README.md`, plans/04 #20) |
+| D6 | ePIC numbers: the calorimeter noise/threshold floor at Σ_h ≈ 0.2–0.5 GeV (#21, the one number the letter cannot do without); the **backward-disk angular resolution** (F3 — worth more than A7); Li ring σ_θ (#20); the RP slot geometry; EICROC Z-ID (#19) | external — except the RP slot geometry, which is now measured rather than assumed: an intact ⁶Li through the ePIC far-forward geometry puts the aperture at \|θ_x\| ≳ 2.50 / 1.51 / 0.53 mrad in the 5×41 / 10×100 / 18×275 optics against \|θ_y\| ≳ 0.92–2.12 mrad where the vertical plane is open at all and nothing at 5 × 41, i.e. **open horizontally**, the opposite aspect to `rp_measure`'s slot — 1.4–1.7× taller than wide, re-measured 2026-08-28 (`tools/fullsim/README.md`, plans/09 B1, plans/04 #20) |
 | D8 | a coherent diffractive model for ⁶Li (#18) | blocks a coherent electron side and x_P/M_X binning. Pairing the inclusive map with the log-uniform x_P now in `CoherentResponse` gives β = x/x_P > 1 for 58% of events, so this cannot be faked locally |
 
 ---
@@ -435,29 +435,37 @@ index, and the numbers are in `plans/00` run 8.
    reported and skipped).  ~~**What is left:** a harmonic basis that works
    under a strongly anisotropic acceptance — fewer columns, wider bins,
    or |t| re-binned inside the window the cutout leaves.~~
-   **SUPERSEDED 2026-08-28** (verified numerically; the disposition is
-   below).  The WP5 optics
+   **CLOSED 2026-08-28** (verified numerically; the disposition is
+   below).  Two of the three levers were superseded; the third, |t|
+   re-binning, was measured and **adopted** — the published window is now
+   the seven bins 0.017–0.25 GeV².  The WP5 optics
    scan now carries the measured edge as a marked line on all three of
    its curves.  Priced against the per-configuration Yellow Report
-   envelopes it is 0.91× / 0.75× / 1.12× the horizontal 10σ half-width at
-   5×41 / 10×100 / 18×275, so the envelope binds at the two lower
-   configurations and the silicon only marginally at the top (the
-   "2.8× / 1.9× / 1.4×, never binding" quoted here until 2026-08-28 was
-   the same edge against the retired single 73 µrad;
-   `tools/fullsim/README.md`).
+   envelopes, and re-measured in the current ePIC geometry on 2026-08-28,
+   it is **1.14× / 0.84× / 0.58×** the horizontal 10σ half-width at
+   5×41 / 10×100 / 18×275, so the SILICON binds at 5 × 41 and the machine
+   at the other two — the opposite ordering at both ends to the
+   0.91× / 0.75× / 1.12× the September-2024 geometry gave, and further
+   still from the "2.8× / 1.9× / 1.4×, never binding" quoted here until
+   2026-08-28, which was that edge against the retired single 73 µrad
+   (`tools/fullsim/README.md`, plans/09 B1).
 
    *Why item 4's "what is left" is superseded.*  The problem it names does
    not exist at the configurations the programme now quotes, and where the
    anisotropy is extreme it has become an **empty-sample** problem rather
    than an ill-conditioned-fit one.  At the tagging optics the acceptance
-   *is* strongly anisotropic — ⟨cos 2β⟩ of the tagged sample runs −0.50 to
-   +0.14 across the four |t| bins, and four of twenty-four β bins are hard
-   empty in the lowest ones — and the design is nonetheless near
-   orthogonal: condition number 1.80–2.86, rank 7/7, corr(a_e, a_t) <
+   *is* strongly anisotropic — ⟨cos 2β⟩ of the tagged sample ran −0.50 to
+   +0.14 across the four |t| bins published when this was written, and on
+   the seven published since 2026-08-28 the cutout leaves 16–20 of
+   twenty-four β bins populated below 0.05 GeV², 20–24 between 0.05 and
+   0.12 and all 24 above — and the design is nonetheless near
+   orthogonal: condition number 1.80–6.66 over those seven bins at the
+   three configurations (1.80–2.85 over the four bins of the earlier
+   window), rank 7/7 everywhere, corr(a_e, a_t) <
    0.005 (worst 0.0046) and no non-constant parameter pair correlated
    above 0.031, at all three configurations, and the fit closes on the
    injected coefficients to every printed digit on exact counts even where
-   those four β bins are empty (an empty bin already carries weight zero).
+   β bins are empty (an empty bin already carries weight zero).
    *Measured on* `money_cos2phi_coherent_reco.py --config {0,1,2}
    --optics tagging --exact --n-mc 6000000`: the condition number is
    σ_max/σ_min of the weighted design the fit actually solves (`basis_2d`
@@ -468,7 +476,8 @@ index, and the numbers are in `plans/00` run 8.
    the pre-2026-08-27 rigidity-scaled energies, where 2.0 mrad of silicon
    sat at |t| ≈ 0.06
    GeV², inside the fitted window; at the γ-matched energies
-   p_ion = 244.8 GeV, so 2.0 mrad is |t| > 0.24 GeV² and the
+   p_ion = 244.8 GeV, so the 2.50 mrad the current geometry measures is
+   |t| > 0.37 GeV² and the
    measured-aperture case has
    **zero** accepted recoils, not an awkward fit.  Of the three levers:
    *fewer columns* buys nothing, because the three sin columns are already
@@ -479,22 +488,41 @@ index, and the numbers are in `plans/00` run 8.
    6 × 12, i.e. slightly worse) and hits the rank guard at 4 × 8, where
    ⟨cos 2α⟩ vanishes identically — it belongs to A12, which closed the
    low-count problem with a likelihood instead; and *|t| re-binned inside
-   the window the cutout leaves* is the only surviving content — and it is
-   an unclaimed gain, not a repair.  **Follow-up, measurable but not
-   adopted:** the fixed 0.05–0.25 GeV² window discards 67–74% of the
-   tagged sample below 0.05 GeV² (reco |t| quantiles 0.010 / 0.018 /
-   0.031 / 0.052 / 0.101 at 5 × 40.8); four added bins over 0.006–0.05
-   fit cleanly (rank 7/7, exact-count closure exact) with δa_e = 0.0022 /
-   0.0022 / 0.0026 / 0.0031 at edges 0.006 / 0.017 / 0.028 / 0.039 / 0.05,
-   halving the combined one-year δa_e from 0.00205 to 0.00105 — the script
-   takes `--t-edges` and prints the combination, so
+   the window the cutout leaves* was the only surviving content — a gain
+   to claim rather than a repair, and it has now been claimed.
+   **Adopted 2026-08-28:** the published
+   binning is the seven bins 0.017–0.25 GeV²
+   (`recopseudo.T_EDGES_PUBLISHED`, edges 0.017 / 0.028 / 0.039 / 0.05 /
+   0.08 / 0.12 / 0.17 / 0.25).  The 0.05–0.25 GeV² window it replaces held
+   only 27 / 34 / 27% of the tagged sample at 5 × 40.8 / 10 × 99.5 /
+   18 × 137.5; the seven bins hold 78 / 88 / 85% and take the combined
+   one-year δa_e from 0.00205 / 0.00169 / 0.00132 to **0.00119 / 0.00104 /
+   0.00074**.  The lower edge is an analysis choice, not the apparatus:
+   the cutout's own floor (A p_u ε_x)² is 0.0064 / 0.0098 / 0.0094 GeV²,
+   below 0.017 at all three.  The **0.006–0.017 bin stays out**, on three
+   measurements rather than on taste — the cutout leaves only 16 of 24
+   β bins populated at 5 × 40.8 and 12 of 24 at the other two; its
+   weighted design has condition number 9.79 / 20.39 / 14.79 against the
+   1.80–6.66 of the published bins; and a 10⁻³ fill-to-fill envelope split
+   moves its a_t by −26.5 / −76.2 / −56.4%, against at most −12.5% in any
+   published bin — and it would buy only 0.00105 / 0.00097 / 0.00068.  The
+   script takes `--t-edges` and prints the combination, so
    `money_cos2phi_coherent_reco.py --config 0 --optics tagging --exact
    --n-mc 6000000 --t-edges 0.006,0.017,0.028,0.039,0.05,0.08,0.12,0.17,0.25`
-   is the whole measurement.  Those bins are
+   is that measurement, and the run-13 window survives as
+   `--t-edges 0.05,0.08,0.12,0.17,0.25` (`recopseudo.T_EDGES_LEGACY`) in
+   both coherent scripts under its own output stem.  The added bins are
    resolution-dominated (δp_T,y = 93 MeV; the 0.17–0.25 reco bin already
-   has t_ref = 0.0895), so they buy statistics for the flat a_e far more
-   than shape information for a_t(t), and t_min = 3 × 10⁻³ GeV² at
-   x_P = 0.01 bounds the window below.
+   has t_ref = 0.090), so they buy statistics for the flat a_e far more
+   than shape information for a_t(t); below 0.05 GeV² the injected a_t is
+   the linear model extrapolated past `coherent.MANTYSAARI_A2_DEUTERON`'s
+   lowest digitized point, which is the one physics weakness of the
+   window — counted per bin it covers four of the seven and not three,
+   since a_t is quoted at t_ref and resolution puts the 0.05–0.08 bin's
+   t_ref at 0.045 GeV², so the retired window's own lowest bin was
+   already extrapolated and the wider window deepens the extrapolation
+   rather than introducing it; and t_min = 3 × 10⁻³ GeV² at x_P = 0.01
+   bounds any window below.
 5. **The e+d control calibrates the cluster tail** — and says no β in
    the two-parameter Hulthén reproduces BeAGLE's shape (plans/02 step
    1.5.3).  Since the ⁶Li α tag is entirely a p_T-tail measurement, its
@@ -518,7 +546,7 @@ plans/00 run 11.  Items that change the plan above:
 | A10 | hadron acceptance in the lab frame; target-mass term; σ-weighted p + n merge | ☑ |
 | A11 | 6R at the tagging optics with ensembles; per-fill perturbation on the binding cut; `--exact` systematics | ☑ |
 | A12 | low-count bias of the bin-wise 2-D ratio below ~30 counts per (α, β) bin: a likelihood fit, or adaptive binning | ☑ **closed 2026-08-28**, see below |
-| D3 | the ISR statement corrected (above), then **closed in code** 2026-08-28: `polligen/radiative.py`, the default-off `RecoResponse(isr=…)` hook, `money_cos2phi_reco.py --isr`, 25 tests; bound +0.5 to +1.2% of Δ̂ in the published generator window (≤2.9% with the low-Q² feed-in opened up, ≤0.25% behind an E − p_z window) against the 5% gate | ☑ |
+| D3 | the ISR statement corrected (above), then **closed in code** 2026-08-28: `polligen/radiative.py`, the default-off `RecoResponse(isr=…)` hook, `money_cos2phi_reco.py --isr`, 30 tests; bound +0.5 to +1.2% of Δ̂ in the published generator window (≤2.9% with the low-Q² feed-in opened up, ≤0.25% behind an E − p_z window (contingency, not applied)) against the 5% gate | ☑ |
 
 ### A12 — what the low-count bias was, and what closed it
 

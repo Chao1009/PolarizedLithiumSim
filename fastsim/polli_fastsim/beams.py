@@ -113,15 +113,51 @@ class Ion:
     A: int
     Z: int
     spin: float
-    # Effective nucleon polarizations P_p, P_n building whole-nucleus
-    #   g1A = P_p*g1p + P_n*g1n   (naive denominator of the EMC ratio DR)
-    # 7Li: P_p=+0.866, P_n=-0.037 (QMC/VMC, Wiringa 1309.3794 via JLab
-    #      E12-14-001) -- verified. 3He: Bissey PRC 65:064317 -- verified.
-    # 6Li: UNRESOLVED convention (factor 2.4!): Cloet slides use
-    #      P_p=P_n=1/3 (per-nucleon-normalized 2-of-6 dilution); cluster
-    #      picture gives ~0.81 whole-nucleus (0.87 P_d x 0.93 D-state;
-    #      Schellingerhout PRC 48:2714). We keep 1/3 (conservative) until
-    #      resolved with I. Cloet -- plans/04_open_questions.md item 6.
+    # PER-NUCLEON effective polarizations P_p, P_n, from which
+    #   g1A = Z*P_p*g1p + N*P_n*g1n   (naive denominator of the EMC ratio DR)
+    # exactly as NuclearF2.f2a builds F2A from Z*f2p + N*f2n.  The nucleon
+    # counts moved into ToyG1.g1_nucleus on 2026-08-28 (plans/08 D7); the
+    # two slots that held WHOLE-NUCLEUS sums were rescaled in the same
+    # change so that every published number is bit-for-bit unchanged.
+    # 7Li: the verified whole-nucleus sums are P_p=+0.866, P_n=-0.037
+    #      (QMC/VMC, Wiringa 1309.3794 via JLab E12-14-001); stored here
+    #      DIVIDED BY Z=3 and N=4, so Z*P_p and N*P_n return them exactly
+    #      (pinned in fastsim/tests/test_polarized_normalisation.py).
+    # 3He: Bissey PRC 65:064317 -- verified, and per-nucleon already, so
+    #      the proton term now carries the factor Z=2 the literature
+    #      intends and that the old whole-nucleus reading dropped.
+    # 6Li: UNRESOLVED convention, and D7 changed which way it errs.
+    #      Cloet slides use P_p=P_n=1/3 (per-nucleon 2-of-6 dilution);
+    #      the cluster picture gives ~0.81 whole-nucleus (0.87 P_d x 0.93
+    #      D-state; Schellingerhout PRC 48:2714).  Under the per-nucleon
+    #      convention Z*P_p = N*P_n = 3 x 1/3 = 1, i.e. a WHOLE-NUCLEUS
+    #      1.0 against the cluster picture's 0.81: a factor 1.23, and 1/3
+    #      is now the LARGER, optimistic end of the pair.  Before D7 the
+    #      same slot was read as whole-nucleus, so it was 1/3 against
+    #      0.81 -- a factor 2.4, and the conservative end.  The gap
+    #      shrank because the double dilution went, not because anyone
+    #      resolved the convention; the VALUE is still open with
+    #      I. Cloet -- plans/04_open_questions.md item 6.  Per-nucleon
+    #      g1(6Li)/g1(d) is 0.358 = (1/3)/0.93 against the cluster
+    #      picture's 0.29.
+    #      WHAT DEPENDS ON IT, measured 2026-08-28 so the choice can be
+    #      revisited cheaply: g1(6Li) tripled at D7, but no published
+    #      figure moved.  `fom.project_observables`' err_azz and
+    #      err_g1_over_f1 are counting errors and carry no eff_pol;
+    #      `phase_space_map.py` defaults to 7Li; and every published
+    #      cos 2phi / Delta figure runs the transverse categories of
+    #      `bookkeeping.transverse_tensor_plan` at theta_S = pi/2 with
+    #      unpolarized electrons, where the g1 term enters only through
+    #      cos(theta_S) = 0 and through a_1's lam_e = 0 -- w_avg and a_2
+    #      are bit-for-bit unchanged there.  The one place it does move
+    #      is the longitudinal vector-L term of `xsec.InclusiveKernel`,
+    #      w_avg at theta_S = 0, m = 1, lam_e P_e = 0.7: 0.000365 /
+    #      0.000868 / 0.001218 / 0.002323 / 0.002335 / 0.001409 ->
+    #      0.000197 / 0.000789 / 0.001261 / 0.002526 / 0.002730 /
+    #      0.002148 at (x, Q2) = (0.005, 1.1) ... (0.28, 25).  That is
+    #      the closure_fom.py A_par panel, whose estimator variance is
+    #      1/(P_e P_z)^2 N up to O(A_par^2) <= 2e-5 -- below its own
+    #      Monte-Carlo band.
     eff_pol_p: float = 0.0
     eff_pol_n: float = 0.0
 
@@ -159,7 +195,8 @@ PROTON = Ion("p", 1, 1, 0.5, eff_pol_p=1.0, eff_pol_n=0.0)
 DEUTERON = Ion("d", 2, 1, 1.0, eff_pol_p=0.93, eff_pol_n=0.93)  # 1-1.5*w_D
 HE3 = Ion("3He", 3, 2, 0.5, eff_pol_p=-0.028, eff_pol_n=0.86)
 LI6 = Ion("6Li", 6, 3, 1.0, eff_pol_p=1.0 / 3.0, eff_pol_n=1.0 / 3.0)
-LI7 = Ion("7Li", 7, 3, 1.5, eff_pol_p=0.866, eff_pol_n=-0.037)
+# 0.866/3 and -0.037/4: the whole-nucleus VMC sums per nucleon (D7).
+LI7 = Ion("7Li", 7, 3, 1.5, eff_pol_p=0.866 / 3.0, eff_pol_n=-0.037 / 4.0)
 
 IONS = {i.name: i for i in (PROTON, DEUTERON, HE3, LI6, LI7)}
 

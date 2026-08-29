@@ -17,8 +17,15 @@ lattice + Drell-Yan estimates.  Rates come from the DIS maps scaled by
 the scenario coherent fraction.
 
 Panels: (a) recoil |t| spectrum vs the RP pT cuts; (b) a_2(|t|) --
-deuteron anchor points vs the scaled 6Li band, with the tagged window
-and the form-factor-minimum exclusion; (c) tagged coherent yield vs x;
+deuteron anchor points vs the scaled 6Li band, with the ANALYSIS window
+(the published reconstructed binning of money plot 6R, 0.017-0.25 GeV^2,
+recopseudo.T_EDGES_PUBLISHED; its lower edge is an analysis choice
+sitting above the tagging-optics aperture floor of 0.0064-0.0098 GeV^2,
+not the floor itself) and the form-factor-minimum exclusion.  The anchor
+is digitized from 0.05 GeV^2 up, so below that the band -- and the a_t
+truth of the four reco bins whose t_ref falls there, the lowest bin of
+the retired four-bin window among them -- is the linear-in-|t| model
+extrapolated; (c) tagged coherent yield vs x;
 (d) phi'-modulation pseudo-data at the deformation-anchored amplitude
 with the gluonic scenario overlaid.
 
@@ -42,6 +49,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 
 from polligen import coherent as coh  # noqa: E402
+from polligen.recopseudo import T_EDGES_PUBLISHED  # noqa: E402
 from polligen.estimators import (cos2phi_fit_binned,  # noqa: E402
                                  cos2phi_fit_err)
 from polligen.sample import phi_histogram_pseudo  # noqa: E402
@@ -53,6 +61,13 @@ from polli_fastsim.farforward import (HIGH_ACCEPTANCE,  # noqa: E402
 C_TRUTH, C_FIT, C_ALT = "#0072B2", "#D55E00", "#009E73"
 EPS_BAND = (-0.04, -0.13)  # eps_b0 band for 6Li (plans/06 SS6.4b)
 T_DIP = 0.31               # 6Li form-factor minimum [GeV^2]
+# The ANALYSIS window shaded in panel (b): the published reconstructed
+# |t| binning of money plot 6R (recopseudo.T_EDGES_PUBLISHED, adopted
+# 2026-08-28), so that the truth-level and reconstructed-level figures
+# shade the same window.  Its lower edge is a choice of the analysis and
+# sits ABOVE the tagging-optics aperture floor (|t|_min = 0.0064 /
+# 0.0098 / 0.0094 GeV^2 at the three configurations), not at it.
+T_WINDOW = (T_EDGES_PUBLISHED[0], T_EDGES_PUBLISHED[-1])
 
 
 def best_superbin(proj, n_tag, pad=1):
@@ -145,10 +160,18 @@ def main():
                            r"[-0.04,-0.13]$, $P_{zz}=%.1f$" % args.pzz)
     ax2.plot(tt, sc.a2_deformation(tt, args.pzz), "-", color=C_TRUTH,
              lw=1.6)
-    ax2.axvspan(cut_ha ** 2, 0.25, color=C_ALT, alpha=0.07)
-    ax2.annotate("tagged window", xy=(0.145, 0.58),
+    ax2.axvspan(T_WINDOW[0], T_WINDOW[1], color=C_ALT, alpha=0.07)
+    ax2.annotate("analysis window\n%.3f-%.2f GeV$^2$" % T_WINDOW,
+                 xy=(0.13, 0.55),
                  xycoords=("data", "axes fraction"), fontsize=7,
                  color=C_ALT, ha="center")
+    # the anchor is digitized from 0.05 GeV^2 up; below it the band is
+    # the linear-in-|t| model extrapolated, which the added bins of
+    # money plot 6R measure
+    ax2.axvline(td[0], color=C_ALT, ls="--", lw=0.8, alpha=0.7)
+    ax2.annotate("anchor starts\nat 0.05: below,\nmodel extrapolated",
+                 xy=(0.047, 0.34), xycoords=("data", "axes fraction"),
+                 fontsize=6.2, color=C_ALT, ha="right", va="top")
     ax2.axvline(T_DIP, color="0.3", ls=":", lw=1)
     ax2.annotate("$C_0$ zero $\\approx0.31$:\nlinear model invalid",
                  xy=(0.245, 0.44), xycoords=("data", "axes fraction"),

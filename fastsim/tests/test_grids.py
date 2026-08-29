@@ -73,9 +73,18 @@ def test_charm_share_of_f2_is_small_where_the_polarized_emc_lives():
     Measured 2026-08-28 over the accepted (x, Q2) bins of the three ⁷Li
     configurations at 10 fb^-1/u with >= 100 events: charm + bottom carry
     7.8% of F2A event-weighted over all of them, but only 0.65% at
-    x = 0.3-0.5 and 0.23% at x = 0.5-0.7, which is where the CBT/TMT
-    discrimination sits.  This checks the two ends of that statement at a
-    representative Q2 rather than re-running the whole projection.
+    x = 0.3-0.5 and 0.23% at x = 0.5-0.7.  That window is where the two
+    digitized polarized-EMC camps genuinely differ -- the valence window
+    `polarized.POLEMC_VALENCE_WINDOW` in which their transfer factor is
+    defined -- and the share there is 0.31% at x = 0.35 down to 0.03% at
+    0.65 at Q2 = 4 GeV2, far below the 0.03-0.04 separation in DR.
+    `money_polemc.py` also plots low-x bins, and its unrestricted best bin
+    sits at x = 0.141; the share there is 2.6% at x = 0.09 and 1.4% at
+    0.14 at Q2 = 4 GeV2 (4.3% and 2.4% at Q2 = 10), i.e. comparable to the
+    relative separation those bins are drawn with, which is why the report
+    reads the discrimination off the valence window instead.  This checks
+    both ends of that statement at a representative Q2 rather than
+    re-running the whole projection.
     """
     from polli_fastsim.structure import PartonF2, _safe_xfx
     f2 = PartonF2()
@@ -93,3 +102,16 @@ def test_charm_share_of_f2_is_small_where_the_polarized_emc_lives():
     assert 0.10 < share(3e-3, 100.0) < 0.30     # low x, high Q2: the big end
     assert 0.002 < share(0.4, 10.0) < 0.02      # the polarized-EMC window
     assert share(0.65, 10.0) < share(0.4, 10.0)
+    # the valence window, where the two digitized camps genuinely differ:
+    # negligible against the 0.03-0.04 separation in DR
+    from polli_fastsim.polarized import POLEMC_VALENCE_WINDOW
+    vlo, vhi = POLEMC_VALENCE_WINDOW
+    assert share(vlo, 4.0) < 0.005
+    assert share(vhi, 4.0) < share(vlo, 4.0) < share(0.14, 4.0)
+    assert share(vlo, 10.0) < 0.01
+    # the low-x bins money_polemc.py also plots: comparable to the
+    # separation drawn there, so the report does not read them as the
+    # discriminating ones
+    assert 0.02 < share(0.09, 4.0) < 0.04
+    assert 0.01 < share(0.14, 4.0) < 0.02
+    assert share(0.14, 10.0) < share(0.09, 10.0)

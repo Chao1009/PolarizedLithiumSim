@@ -89,7 +89,7 @@ into the letter's far-forward requirement.
 | 2 | polarization placeholder | single P_zz = 0.6, full luminosity in one fill | δA vs P_zz ∈ {0.4, 0.6, 0.8} and fill-share ∈ {0.5, 1}; one table | WP2 | **yes** |
 | 3 | dilution convention (plans/04 #6) | 1/3 baseline (Cloët convention); cluster picture gives ≈0.81 (×2.4) | keep 1/3 as conservative baseline, quote the cluster value as labeled upside; ask Cloët (D3) | WP2 | yes (one paragraph) |
 | 4 | detector level | generator-level φ′; smearing machinery exists (money_delta_20260729: ePIC tracking + ε_eID, Case-3 retains ~92% S/N) | reco-level amplitude dilution + δA inflation per super-bin; 2-D φ-hole closure (plans/03 2.3.3) | WP3 | **yes** |
-| 5 | radiative corrections | uncalculated for tensor observables (flagged); **the collinear-ISR migration is bounded — Δ̂ by +0.5 to +1.2% in the published generator window, ≤ 2.9% with the low-Q² feed-in opened up, ≤ 0.25% behind an E − p_z window, against the 5% gate (WP4 closed 2026-08-28)** | quantified migration bound + spin-state-ratio cancellation argument (common acceptance, bunch-by-bunch) + explicit open-theory statement | WP4 | yes (as a bound, not a calculation) |
+| 5 | radiative corrections | uncalculated for tensor observables (flagged); **the collinear-ISR migration is bounded — Δ̂ by +0.5 to +1.2% in the published generator window, ≤ 2.9% with the low-Q² feed-in opened up, ≤ 0.25% behind an E − p_z window (a documented contingency, not applied), against the 5% gate (WP4 closed 2026-08-28)** | quantified migration bound + spin-state-ratio cancellation argument (common acceptance, bunch-by-bunch) + explicit open-theory statement | WP4 | yes (as a bound, not a calculation) |
 | 6 | coherent optics cut | two-point (0.20/0.45 GeV); Li optics undocumented (report assumption #1) | acceptance, N_tag, δA as curves vs pT_cut ∈ [0.1, 0.7] GeV; IR-8 alternative with published efficiencies; t_min and ×0.73 rate-weighting folded into the central curve | WP5 | **yes** |
 | 7 | far-forward geometry | RP z = 26/28 m (YR-era) in text; run-2 Geant4 scan found 32.5/34.3 m in epic-main | quote current ePIC geometry, windows unchanged in θ/R | WP5 | minor |
 | 8 | coherent fraction f₀ | scenario 0.04 [×2/÷2] | unchanged (no light-A prediction exists — stated); theory ask on record (IP-Glasma α–d, #18) | — | no |
@@ -123,8 +123,12 @@ into the letter's far-forward requirement.
   addendum. Effort: 2–4 days.
 
 ### WP2 — Polarization, run-plan, and dilution bands
-- ☐ δA scaling table vs P_zz and fill share (analytic 1/(P_zz√(fN)) checked
+- ◐ δA scaling table vs P_zz and fill share (analytic 1/(P_zz√(fN)) checked
   against one sampler rerun).
+  ◐ *2026-08-28: the fill-share half is done and priced below — the share is a
+  flag (`--run-share` / `--lumi-fraction`, default 1.0), the 1/√f law is verified
+  against direct reruns rather than assumed, and Plans A, B and A×B are tabulated.
+  The P_zz half of the same table is still to write.*
 - ☐ Dilution paragraph: 1/3 baseline; 0.81-cluster upside as the labeled
   alternative (amplitudes ×2.4); one email to I. Cloët (D3) — do not block.
   ☐ *2026-08-28: the paragraph is written (Report 1 §3.2 and assumption row 3)
@@ -132,6 +136,130 @@ into the letter's far-forward requirement.
   normalization is solved before the dilution multiplies Δ. The email is unsent —
   external, plans/04 #6.*
 - Acceptance: Table 1 of the letter exists. Effort: 1 day.
+
+#### The run plan, priced (2026-08-28)
+
+Today every projection in every report gives its observable the **whole**
+10 fb⁻¹/u year in its own spin configuration, far-forward optics and
+isotope.  That is stated once (Report 0 §6, Report 1 §3.1, Report 2
+Table 2, Report 3 Table 9 row 16) and it means the reaches are
+alternatives, not a programme.  The share is now a flag — `--run-share`
+in `fastsim/`, `--lumi-fraction` in `evgen/`, both default 1.0, both
+carried into `fom.Scenario.run_share` — so the options below are
+arithmetic, not a rerun of the physics.  **This section prices them; it
+does not choose one, and none of these numbers belongs in a report until
+the programme decides.**
+
+Three laws, verified exactly (§3.5 of the manual,
+`fastsim/tests/test_run_share.py`, `evgen/tests/test_run_share.py`): a
+share *f* multiplies every statistical error by 1/√*f*, leaves any
+luminosity quoted as a reach (`L_5σ` = 16.7 / 16.3 / 21.8 fb⁻¹/u for the
+toy inclusive Δ) exactly where it is, and multiplies the years to a
+target significance by 1/*f*.
+
+**Plan A — one ⁶Li year per configuration, split between the coherent and
+the inclusive channel.**  The coherent channel is given exactly the share
+that buys 5σ on the deformation (shape) term in the year:
+*f*<sub>coh</sub> = (5/9.3)², (5/8.3)², (5/10.7)² = 0.289 / 0.363 / 0.218
+from the 9.3 / 8.3 / 10.7 σ per year of `tagging_optics.py` at the
+tagging optics.  The rest runs at the Yellow Report high-acceptance
+optics and is shared *s* = 1, ½, ⅓ among the three inclusive ion fills.
+
+| configuration | *f*<sub>coh</sub> | δa_e coherent, 1 yr at *f*<sub>coh</sub> | inclusive share, *s* = 1 | δ(Δ/F₁) | yr to 5σ | *s* = ½ | δ(Δ/F₁) | yr to 5σ | *s* = ⅓ | δ(Δ/F₁) | yr to 5σ |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| 5 × 40.8 | 0.289 | 0.00221 | 0.711 | 3.067×10⁻⁴ | 2.35 | 0.355 | 4.337×10⁻⁴ | 4.70 | 0.237 | 5.312×10⁻⁴ | 7.05 |
+| 10 × 99.5 | 0.363 | 0.00173 | 0.637 | 3.202×10⁻⁴ | 2.56 | 0.319 | 4.529×10⁻⁴ | 5.13 | 0.212 | 5.546×10⁻⁴ | 7.69 |
+| 18 × 137.5 | 0.218 | 0.00158 | 0.782 | 3.341×10⁻⁴ | 2.79 | 0.391 | 4.725×10⁻⁴ | 5.58 | 0.261 | 5.786×10⁻⁴ | 8.37 |
+
+δa_e is the combined one-year error on the exotic-glue coefficient over
+the seven |t| bins, 0.00119 / 0.00104 / 0.00074 at the full year
+(`money_cos2phi_coherent_reco.py --optics tagging --exact --n-mc 600000`,
+per configuration), divided by √*f*<sub>coh</sub>.  δ(Δ/F₁) is the error
+on the Δ/F₁ scale after one programme year, 2.586 / 2.556 / 2.954 ×10⁻⁴
+at the full year, and "yr to 5σ" the programme years to 5σ on
+Δ/F₁ = 10⁻³, 1.67 / 1.63 / 2.18 at the full year
+(`money_delta.py --ion 6Li --pdf toy`).  Every entry was **also produced
+directly** by rerunning `money_delta.py --run-share` at the share in its
+own row, taken unrounded as (1 − *f*<sub>coh</sub>)·*s* — the share
+column is rounded to three decimals for display and rerunning at the
+rounded value reproduces the entries only to two significant figures.
+The direct and the rescaled values agree to the last digit printed
+(5.786 against 5.787 in the last cell is rounding, nothing else).
+
+What *f*<sub>coh</sub> does to the rest of the coherent line is the same
+arithmetic on the numbers `tagging_optics.py` publishes at the full year
+(rerun 2026-08-28: N_tag/yr = 2.59 / 3.01 / 6.15 ×10⁶, best-bin 5σ floor
+1.67 / 2.10 / 1.62 % per unit P_zz, 2.8 / 4.4 / 2.6 years to 5σ on a 1%
+exotic-glue term, from ε = 0.423 / 0.323 / 0.332 at r_h = 49.7 / 175.6 /
+89.3 and L/L_HA = 1/7.1 / 1/13.3 / 1/9.5):
+
+| at *f*<sub>coh</sub> = 0.289 / 0.363 / 0.218 | 5 × 40.8 | 10 × 99.5 | 18 × 137.5 |
+|---|---|---|---|
+| tagged events in the year (× *f*<sub>coh</sub>) | 7.5×10⁵ | 1.09×10⁶ | 1.34×10⁶ |
+| best-bin 5σ floor, /√*f*<sub>coh</sub> | 3.11 % | 3.49 % | 3.47 % |
+| years to 5σ on a 1% exotic-glue term, /*f*<sub>coh</sub> | 9.7 | 12.1 | 11.9 |
+
+The last row is the reason "what the coherent channel needs" has two
+answers and they differ by an order of magnitude.  Read as *5σ on the
+deformation (shape) term within the year* — the null test the deuteron
+cannot offer, and the thing the sign flip is a prediction about — the
+channel needs *f*<sub>coh</sub> = 0.289 / 0.363 / 0.218 and Plan A is
+affordable.  Read as *5σ on a 1% exotic-glue term* it needs 2.8 / 4.4 /
+2.6 **full** years at the full year and 9.7 / 12.1 / 11.9 programme years
+at *f*<sub>coh</sub>, so no share of one year buys it and the question
+becomes how many years the programme runs, not how one is divided.  The
+tables here are built on the first reading; the second is the ten-year
+column of the reports and is unaffected by any of this arithmetic except
+through the count of years.
+
+**Plan B — ⁶Li and ⁷Li each half a year.**  Every share above is halved,
+so every error grows by √2 and every year count doubles.  Measured at
+`--run-share 0.5`: the inclusive δ(Δ/F₁) is 3.657 / 3.615 / 4.177 ×10⁻⁴
+with 3.34 / 3.27 / 4.36 years to 5σ; δA_zz per x-bin at P_zz = 0.8 goes
+6.98 / 6.63 / 7.30 ×10⁻⁵ and 2.66 / 8.77 ×10⁻⁴ (x = 0.0035 / 0.0089 /
+0.0282 / 0.2818 / 0.5623) to 9.88 / 9.37 / 10.3 ×10⁻⁵ and 3.76 / 12.4
+×10⁻⁴ (`money_b1.py`); and the ⁷Li polarized-EMC δΔR goes 0.0477 /
+0.0511 / 0.0619 / 0.1237 to 0.0675 / 0.0722 / 0.0876 / 0.1749 at
+x = 0.09 / 0.28 / 0.45 / 0.71 (`money_polemc.py --ion 7Li`, toy inputs).
+
+**Plan A × B — ⁶Li takes half a year and splits it, ⁷Li takes the
+other half.**  The coherent share becomes ½ *f*<sub>coh</sub> = 0.145 /
+0.181 / 0.109, δa_e becomes 0.00313 / 0.00244 / 0.00224 and the shape
+term falls to 5/√2 = **3.5σ at every configuration** — by construction,
+*f*<sub>coh</sub> having been defined to put it at exactly 5σ — so it
+needs two years rather than one; the ⁶Li inclusive share at *s* = 1
+is 0.355 / 0.319 / 0.391, which is numerically the *s* = ½ column of
+Plan A and gives the same 4.337 / 4.529 / 4.725 ×10⁻⁴ and 4.70 / 5.13 /
+5.58 years; ⁷Li is Plan B's column.
+
+Two second-order effects the tables above ignore, in the conservative
+direction, and one thing that must not be rescaled at all.
+
+The inclusive measurement does not stop during the coherent share: the
+tagging optics de-squeezes the horizontal β* only and inclusive DIS is
+blind to the far-forward acceptance, so those stores still deliver
+1/7.1, 1/13.3 and 1/9.5 of the high-acceptance luminosity to it.  The
+effective inclusive share is (1 − *f*<sub>coh</sub>) +
+*f*<sub>coh</sub> L/L<sub>HA</sub> = 0.752 / 0.664 / 0.805 rather than
+0.711 / 0.637 / 0.782, which is 2.7 / 2.1 / 1.4 % off every inclusive
+error in Plan A.
+
+The longitudinal fills are shared, not additive: one set of
+longitudinally polarized ⁶Li stores with electron-helicity flips delivers
+A_∥ (and so g₁, the polarized EMC effect) and, in its tensor states, A_zz
+(and so b₁).  b₁ and g₁ therefore cost one share between them, not two,
+and Plan B's halving is the real cost of the second isotope rather than
+of the second observable.
+
+What must **not** be rescaled by 1/√*f*: anything that is not pure
+statistics.  The full bars of Report 2 money plot 7R (§5.1) carry the
+shape fit, the response Monte Carlo and the unfolding-prior spread, and
+that spread does not shrink with luminosity; only their statistical part
+obeys the law above, and it has to be separated before the share is
+applied.  (The Table 4 bars of the same report are statistical only and
+do obey it.)  The same holds for the polarimetry scale (a 1:1
+normalisation on Δ) and for the model bands of Report 1 — the Δ/F₁
+scenario band of §4 and the a₂ deformation band of §6.3.
 
 ### WP3 — Reconstructed-level closure for cos 2φ
 - ☑ Port the 20260729 smearing model (tracking σ_p/p, σ_θ, η-dependent
@@ -297,7 +425,7 @@ efficiency explicitly.
   hadrons 0.11 [0.03]) *(superseded 2026-08-27 — pre-correction energies and
   spots; at the corrected mid spots 69–85% is captured through the response
   and HCal objects — neutral hadrons plus the charged particles the tracker
-  does not see — carry 0.09–0.10 of Σ within acceptance, Report 2 §3 Figure 4
+  does not see — carry 0.09–0.10 of Σ within acceptance, Report 2 §3 Figure 2
   and Table 1b)*; Σ-method δy/y at the four sweet spots with 50 MeV
   noise **0.55 / 0.28 / 0.50 / 0.15** [0.28 / 0.17 / 0.24 / 0.07], i.e. the
   toy was optimistic by 0.04–0.05 absolute everywhere; 0.21 / 0.12 / 0.17 /
@@ -335,7 +463,7 @@ efficiency explicitly.
   (pinned against a stored digest of the response arrays, against the closed
   form of the generator weight, and against the state of the response's own
   random stream); driver `money_cos2phi_reco.py --isr [--isr-seeds]
-  [--isr-gen-q2min] [--isr-empz]`. 25 tests.
+  [--isr-gen-q2min] [--isr-empz]`. 30 tests.
   - **The fake-modulation term is identically zero.** The covariant azimuth is
     invariant under k → (1 − z)k for a massless target: cos φ′ and sin φ′ carry
     the same factor [2ac((1−z)a−b)]^(−1/2) and the arctan divides it out.
@@ -380,13 +508,24 @@ efficiency explicitly.
     final state with the calibrated scale (`--y-source hfs --hfs-sample …
     --hfs-calibrate`, 800/cell) the same bound is **+0.38 / +0.44 / +0.46 /
     +0.88%** (± 0.02–0.04).
-  - **mitigation the chain does not yet use:** the HERA E − p_z window. The
-    visible sum is 2(1 − z)E_e and is already reconstructed as
-    Σ_h + E′(1 − cos θ) = E′(1 − cos θ)/(1 − y_Σ); requiring it within 15% of
-    2E_e brings the bias to **+0.23 / +0.16 / +0.22 / +0.18%** (± 0.01–0.02),
-    independent of the generator window, and keeps 86.9% of the non-radiative
-    selected rate (82.4% with radiation)
-    (`radiative.empz_fraction`, `apply_empz_cut`).
+  - **mitigation the chain does not use:** the HERA E − p_z window. The
+    visible sum is 2(1 − z)E_e and is already reconstructed
+    as Σ_h + E′(1 − cos θ) = E′(1 − cos θ)/(1 − y_Σ); requiring it within 15% of
+    2E_e brings the bias to **+0.23 / +0.16 / +0.22 / +0.18%** on the 25%
+    Gaussian y stand-in and **+0.17 / +0.19 / +0.20 / +0.16%** through the PYTHIA
+    hadronic final state with the calibrated Σ scale (± 0.01–0.03 on both),
+    independent of the generator window, and keeps 0.869 / 0.824 (stand-in) and
+    0.979 / 0.929 (PYTHIA, calibrated Σ) of the non-radiative / radiative
+    selected rate; the loss is almost entirely above y = 0.2 — 99.5% and 97.2%
+    of the discarded non-radiative rate — and costs 0.01–0.06% at the four
+    sweet spots. The window is a documented contingency, not a default: apply it
+    if a published analysis opens the generator window below Q² = 0.15 GeV², or
+    if the 5% gate tightens. It is not the default because the gate already
+    passes at ≤ 2.9% without it, because it is free where the letter's numbers
+    live, and because what it does remove is the y > 0.2 rate that carries the
+    low-x end of every Q² slice in money plots 5R and 7R
+    (`radiative.empz_fraction`, `apply_empz_cut`,
+    `empz_bin_retention`, `empz_y_retention`).
   - **method comparison** at z = 0.092 (the mean radiated fraction of the emitting
     events), observed/hard for (Q², y, x). The electron-method rows are a strong
     function of y — (y + z)(1 − z)/y — so the y has to be stated. At the
@@ -488,7 +627,7 @@ cutout geometry as the assumption it is (#20).
 | 3 | Simulation framework: beams (EPIOS), polligen validation (one paragraph), grid SFs, acceptance, statistics method | 500 | Fig. 1 |
 | 4 | Inclusive projections: φ′ pseudo-data, amplitude vs x, xΔ extraction, A-vs-B discrimination | 700 | Figs. 2–3, Table 1 |
 | 5 | Coherent channel: detection at IP6/IR-8, rate model bands, anchored a₂, sign flip, null test, two-component fit | 700 | Fig. 4 |
-| 6 | Systematics and assumptions: reco dilution, RC bound (collinear-ISR migration ≤ 2.9% of Δ̂, ≤ 0.25% behind an E − p_z window; tensor-sector RC still uncalculated), polarimetry, purity via |t| fit, acceptance stability between the spin-state samples (bunch-by-bunch requirement: a 10⁻³ difference of the cos 2φ′ efficiency harmonic fakes half the signal), K model dependence (3–11% between Δ shapes with the bin-by-bin factor, ≤ 1.2% with the folded shape fit), O(γ²) b₁ leakage — **not** γ²b₁/6: the full Cosyn Eq. (17e) combination is ≈ 6.9× that, so the bound is γ²b₁ × 1.15, still ≤ 0.15% of everything published and exposed only at Δ/F₁ ~ 10⁻³ and x ≳ 0.2, Q² ≈ 1 (plans/08 D2) — R model in Δ/F₁ = −2(1+R)Â, now the published R1998 and worth +16.6 / +18.0 / +4.7 / −4.4% at the sweet spots — code review 2026-08-25 — condensed assumptions | 450 | — |
+| 6 | Systematics and assumptions: reco dilution, RC bound (collinear-ISR migration ≤ 2.9% of Δ̂, ≤ 0.25% behind an E − p_z window (a documented contingency, not applied); tensor-sector RC still uncalculated), polarimetry, purity via |t| fit, acceptance stability between the spin-state samples (bunch-by-bunch requirement: a 10⁻³ difference of the cos 2φ′ efficiency harmonic fakes half the signal), K model dependence (3–11% between Δ shapes with the bin-by-bin factor, ≤ 1.2% with the folded shape fit), O(γ²) b₁ leakage — **not** γ²b₁/6: the full Cosyn Eq. (17e) combination is ≈ 6.9× that, so the bound is γ²b₁ × 1.15, still ≤ 0.15% of everything published and exposed only at Δ/F₁ ~ 10⁻³ and x ≳ 0.2, Q² ≈ 1 (plans/08 D2) — R model in Δ/F₁ = −2(1+R)Â, now the published R1998 and worth +16.6 / +18.0 / +4.7 / −4.4% at the sweet spots — code review 2026-08-25 — condensed assumptions | 450 | — |
 | 7 | Summary and outlook (theory and machine asks) | 250 | — |
 
 Title candidates (D5): (a) "Nuclear gluonometry with a tensor-polarized ⁶Li
@@ -502,7 +641,7 @@ double-helicity-flip structure function of ⁶Li at the EIC"; (c) variant of
 |---|---|---|
 | "The Δ model is arbitrary" | moment-constrained (Δ⁺⁺ bag provenance stated); A/B interpretations bracket; the measurement discriminates them — that is the point | §2, §4 |
 | "Bag moment ported to a nucleus" | labeled scenario; literature brackets both directions (NPLQCD suppression vs binding enhancement); x-shape ours by necessity (S–S give none) | §2, §6 |
-| "No tensor radiative corrections" | quantified migration bound (≤ 2.9% of Δ̂ with the low-Q² feed-in opened up, ≤ 0.25% with an E − p_z window; Report 2 §7); collinear ISR fakes no cos 2φ′ at all and cancels in the spin-state ratio; open-theory statement with citation trail | §6 (WP4) |
+| "No tensor radiative corrections" | quantified migration bound (≤ 2.9% of Δ̂ with the low-Q² feed-in opened up, ≤ 0.25% with an E − p_z window (a documented contingency, not applied); Report 2 §7); collinear ISR fakes no cos 2φ′ at all and cancels in the spin-state ratio; open-theory statement with citation trail | §6 (WP4) |
 | "Li beams do not exist; no luminosity" | EPIOS PRC 113:060501 feasibility; stated 10 fb⁻¹/u with linear scaling; P_zz band quoted | §3, Table 1 |
 | "Coherent fraction is invented" | explicit f₀ band bracketing HERA ep and heavy-A saturation; first-of-kind labeled; IP-Glasma ask on record | §5 |
 | "pT cut undocumented for Li" | curves vs cut, not a point estimate; documented anchors marked; IR-8 alternative with published numbers | §5 (WP5) |

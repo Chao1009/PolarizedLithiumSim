@@ -7,12 +7,16 @@ licence and no local build:
 Goal: build `../../../BeAGLE` (eic/BeAGLE, master) on this machine for the
 e+⁶Li/⁷Li breakup & tagging study (plans/02 step 1.5).
 
-## Where this stands on the analysis box (checked 2026-08-26)
+## Where this stands on the analysis box (checked 2026-08-26, container line updated 2026-08-28)
 
 **Nothing of the local build is present here**: no `~/Projects/eic/beagle_deps`,
-no BeAGLE checkout, no FLUKA, and only the legacy `jug_xl-nightly.sif`
-container under `~/Projects/eic/local/lib` (no `eic_xl-nightly.sif`).  The
-dependency table below is the recipe, not a description of this machine.
+no BeAGLE checkout, no FLUKA, and under `~/Projects/eic/local/lib` only the
+legacy `jug_xl-nightly.sif` container.  That statement is about
+`~/Projects/eic/local/lib` alone: an `eic_xl-nightly.sif` image (4.5 GB)
+arrived on 2026-08-28 under `~/Projects/eic-2026/local/lib`, and it is the
+container the far-forward aperture measurement was made in
+(`tools/fullsim/README.md`, plans/09 B1).  The dependency table below is the
+recipe, not a description of this machine.
 
 **What is verified working here, and is the reason the local build is not
 on the critical path**, is the no-FLUKA route: the container ships `xrdcp`,
