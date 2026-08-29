@@ -73,7 +73,7 @@ where it is, and multiplies the years to it by 1/*f*.  It is a flag
   tritons need IR-8.
 - **The hadronic final state is PYTHIA 8, not a toy** (2026-08-26): 8 M
   events over the three beam configurations, generated natively
-  (`tools/pythia8`).  Σ-method δy/y at the four sweet spots is 0.32 / 0.22 / 0.29 / 0.15 at the mid configuration (2026-08-27, corrected spots; library regenerated 2026-08-28 without PYTHIA's default m̂ ≥ 4 GeV floor, which had removed x < 16/s) — the toy was optimistic everywhere — and each configuration's own spots resolve to 0.38–0.11 (low) and 0.23–0.18 (top), so the x ≈ 0.14 bins belong to the **low-energy** configuration.
+  (`tools/pythia8`).  Σ-method δy/y at the four sweet spots is 0.32 / 0.22 / 0.29 / 0.15 at the mid configuration (2026-08-27, corrected spots; library regenerated 2026-08-28 without PYTHIA's default m̂ ≥ 4 GeV floor, which had removed x < 16/s) — the toy was optimistic everywhere — and each configuration's own spots resolve to 0.39–0.11 (low) and 0.23–0.18 (top), so the x ≈ 0.14 bins belong to the **low-energy** configuration.
 - **The Roman-Pot aperture for an intact ⁶Li is measured, and it is
   horizontal** (re-measured 2026-08-28 in the current ePIC geometry,
   `epic-main` git 9aaa2969): npsim cannot shoot a nucleus, so

@@ -81,6 +81,15 @@ RECO_FIGS = {
 UNEMBEDDED_FIGS = {
     "__MTA__": "evgen/money_tagged_azz_6Li.png",
     "__TP7__": "evgen/tagged_polarimetry_7Li.png",
+    # 5R / 7R on the 25% Gaussian y stand-in: quoted by the manual's results
+    # table and by Report 1 Table 1, embedded by no template (2026-08-29)
+    "__M5R__": "evgen/money_cos2phi_reco_6Li.png",
+    "__M7R__": "evgen/money_delta_extracted_reco_6Li.png",
+    # quoted by Report 4 Table 5 / plans/09 §9.2, by the manual's WP5 row,
+    # and by Report 3 §5 respectively (2026-08-29)
+    "__NB5__": "evgen/nearbeam_two_hit_6Li.png",
+    "__COS__": "evgen/coherent_optics_scan_6Li.png",
+    "__NB1B__": "evgen/nearbeam_aperture_7Li.png",
 }
 
 # In report-number order, which is also the order reports/index.html lists

@@ -169,7 +169,7 @@ automatically.
 ```bash
 cd evgen   && python3 -m pytest tests/ -q     # 305 passed, ~60 s
 cd fastsim && python3 -m pytest tests/ -q     # 111 passed, ~13 s
-python3 tools/consistency_check.py --verbose  # 24 checks, whole repository
+python3 tools/consistency_check.py --verbose  # 25 checks, whole repository
 ```
 
 416 tests, all of which run without the PDF grids except three of the four
@@ -181,6 +181,26 @@ collinear frame, R1998 against the published fit's own worked values, the
 nuclear masses against CODATA, the tensor sign against Cosyn Eq. (27).
 If these pass, the machinery is sound and the rest of this manual is
 about numbers, not correctness.
+
+The consistency sweep is the other half of those five minutes: 25 checks
+in five groups — PHYSICS invariants the simulation must satisfy, SOURCES
+against the Yellow Report tables, DRIFT (superseded values a correction
+should have removed, statements a rewrite must not drop), ARTEFACTS
+(figures, report numbering, and the test counts quoted just above) and
+REFERENCES.  Three of the ARTEFACTS checks guard the figures, and since
+2026-08-29 the last of them is dependency-aware: the first asks that every
+figure a report embeds exists and is registered in
+`reports/build_report.py`, the second that it is newer than the script
+that draws it, and the third that it is newer than every library module
+that script imports — the `polligen` and `polli_fastsim` trees resolved
+transitively with `ast` (a package `__init__` counts, because importing a
+submodule executes it), plus the digitized CSVs under
+`polli_fastsim/data/` that `polarized.py` reads.  A change to a library
+module therefore marks every figure downstream of it stale even though no
+script was touched, which is exactly the case a hand-run reproduction
+misses; the message names the figure, the offending module and both
+timestamps, and the fix is to rerun that figure with the command this
+manual gives for it (§3, §4).
 
 ---
 
@@ -1527,10 +1547,10 @@ trust anything downstream of it.
 | what | command (from `evgen/`) | expected |
 |---|---|---|
 | 5R sweet spots (x, Q²) | `scripts/money_cos2phi.py` | (0.028, 1.14), (0.011, 1.14), (0.071, 3.13), (0.141, 14.3); A = 7.4 / 4.4 / 9.5 / 9.5 ×10⁻³, δA = 1.7 / 1.4 / 2.8 / 4.5 ×10⁻⁴ (1 yr) |
-| 5R sweet-spot purity, 25% stand-in | `scripts/money_cos2phi_reco.py` | 0.66 / 0.63 / 0.69 / 0.69 (D = 0.92 / 0.99 / 0.90 / 0.96); δÂ = 1.2 / 0.9 / 1.6 / 3.0 ×10⁻⁴ |
+| 5R sweet-spot purity, 25% stand-in | `scripts/money_cos2phi_reco.py` | 0.66 / 0.63 / 0.69 / 0.69 (D = 0.92 / 0.99 / 0.90 / 0.96); δÂ = 1.2 / 0.9 / 1.6 / 2.9 ×10⁻⁴ |
 | 5R sweet-spot purity, PYTHIA HFS, uncalibrated | `… --y-source hfs --hfs-sample …` | 0.42 / 0.53 / 0.49 / 0.68 |
 | 5R amplitude dilution D, PYTHIA HFS, uncalibrated | same | 0.79 / 0.84 / 0.83 / 0.95 |
-| 5R with the hadronic scale calibrated in reconstructed bins | `… --y-source hfs --hfs-sample … --hfs-calibrate` | purity 0.56 / 0.59 / 0.64 / 0.75, D = 1.00 / 1.06 / 0.95 / 0.98, δÂ = 1.3 / 0.9 / 1.7 / 3.0 ×10⁻⁴ |
+| 5R with the hadronic scale calibrated in reconstructed bins | `… --y-source hfs --hfs-sample … --hfs-calibrate` | purity 0.56 / 0.59 / 0.64 / 0.75, D = 1.00 / 1.06 / 0.95 / 0.98, δÂ = 1.2 / 0.9 / 1.7 / 3.0 ×10⁻⁴ |
 | 7R folded-fit bars at the best bins, PYTHIA calibrated | `… --hfs-calibrate --unfold folded` | 4.2 / 2.6 / 7.0% (1 yr), 3.8 / 2.2 / 2.6% (10 yr) at Q² = 1.14 / 3.13 / 14.3; prior spread 3.7 / 2.1 / 1.3% |
 | residual hadronic scale +2% (calibrated) | `… --hfs-calibrate --hfs-scale 1.02` | Â moves +0.2 to +1.2% |
 | Σ at the mid sweet spots | `scripts/hfs_acceptance.py --config 1 --sample …` | within acceptance and above threshold 0.80 / 0.87 / 0.83 / 0.92 at |η| ≤ 3.7 (forward loss 0.17 / 0.08 / 0.15 / 0.07), 0.85 / 0.89 / 0.88 / 0.94 at 4.0; captured through the response 0.70 / 0.74 / 0.74 / 0.85; δy/y unchanged between reaches |

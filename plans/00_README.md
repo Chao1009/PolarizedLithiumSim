@@ -206,7 +206,7 @@ reproducibility) before the rebuild.
   the b₁ default changed (the amplitude is exactly unchanged and the
   normalisation moves by ≤ 0.05 %).
 
-Tests: 305 evgen + 111 fastsim, 24 consistency checks.
+Tests: 305 evgen + 111 fastsim, 25 consistency checks.
 
 ## Development run 13 (2026-08-28): the to-do audit, the low-count estimator, the α+d veto, the tagged chain on the real optics, the radiative bound
 
@@ -522,8 +522,9 @@ morning of 2026-08-27 but the prose still carried the 50 GeV/u numbers.
 - ☑ **`hfs_resolution.py` selected the sweet spots from a constant** at
   the pre-correction energies; it now takes them per configuration from
   the money-plot-5 selection.  Σ-method δy/y at the mid spots is
-  0.32 / 0.22 / 0.29 / 0.15 (low 0.38 / 0.23 / 0.24 / 0.11, top
-  0.23 / 0.19 / 0.21 / 0.18, each at its own spots).
+  0.32 / 0.22 / 0.29 / 0.15 (low 0.39 / 0.23 / 0.24 / 0.11, top
+  0.23 / 0.19 / 0.21 / 0.18, each at its own spots; the low-configuration
+  first spot re-read 0.39 on 2026-08-29, not the 0.38 first logged).
 - ☑ **Report 2 patched, not rewritten**: Table 2 (5R) and the text on the
   current spots; money plot 6R re-derived at the low configuration with a
   0.727 mrad near-beam approach (acceptance 7.8%, N_tag 3.4×10⁶, three
@@ -564,7 +565,9 @@ morning of 2026-08-27 but the prose still carried the 50 GeV/u numbers.
   system whose target-fragmentation side reaches the calorimeter edge —
   78 / 86 / 82 / 91% of Σ_h is captured at the four mid spots, 19 / 8 / 16 /
   7% escapes forward beyond |η| = 3.7 (geometry and thresholds; 69 / 74 /
-  73 / 85% captured through the full response), 1–6% is below threshold,
+  73 / 85% captured through the full response) — lab-frame figures,
+  superseded 2026-08-28 by the detector frame's 80 / 87 / 83 / 92, 17 / 8 /
+  15 / 7 and 70 / 74 / 74 / 85% (evgen/README) — 1–6% is below threshold,
   nothing is lost backward, and the lithium fragments carry
   E − p_z = m²/(2p) — 4.4 MeV per nucleon, 26 MeV for an intact recoil — at
   η ≈ 8, never in the measured Σ_h whether tagged or not.  The escape is a
@@ -576,7 +579,7 @@ morning of 2026-08-27 but the prose still carried the 50 GeV/u numbers.
   0.52 / 0.59 / 0.59 / 0.76 and D from 0.79–0.95 to 0.95–1.03 at unchanged
   errors; a residual 1% scale error moves Δ̂ by 0.2–0.7%.  It is not the
   resolution driver: the ePIC nominal reach of 4.0 recovers a quarter of it
-  (19 → 14%) with δy/y unchanged (0.32 / 0.22 / 0.29 / 0.14) — the width is
+  (19 → 14% in the lab frame of this entry) with δy/y unchanged (0.32 / 0.22 / 0.29 / 0.14) — the width is
   the noise at the y ≈ 0.01 spots and the within-acceptance capture
   fluctuation at y ≈ 0.025.  Report 1 §5.2 and Table 1 now quote the
   calibrated numbers with the uncalibrated ones alongside; the purity loss
@@ -770,7 +773,9 @@ left as author decisions (D1, D7, D9).
   Table 3 is reproduced digit for digit with them on.
 - ☑ **WP5 exists as a curve.**  `coherent_optics_scan.py`: tagged fraction
   32% / 3.0% / 4×10⁻⁵ / 2×10⁻⁷ and δaₜ/aₜ = 1.6% / 5.7% / 104% / 540% at
-  a near-beam envelope of 0.10 / 0.22 / 0.45 / 0.60 GeV — **the coherent
+  a near-beam envelope of 0.10 / 0.22 / 0.45 / 0.60 GeV (re-run 2026-08-29
+  on the run-14 chain: 1.2% / 4.6% / 79% / 392%, the tagged fractions
+  unchanged) — **the coherent
   measurement lives at the low- and mid-energy configurations and is dead
   at the top energy.**  Needed importance sampling above the cut: the
   plain sampler leaves zero accepted recoils above 0.3 GeV.

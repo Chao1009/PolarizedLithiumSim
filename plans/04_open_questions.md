@@ -311,7 +311,7 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
     500 µm pitch**, and 6 to 107 over the 16–84% band. An intact ⁶Li is
     one hit. And the second fragment is a *veto*: conditioned on an α
     that fakes a coherent tag, the partner deuteron is recorded in **84%**
-    of events at the tagging optics (0.04–0.29 at the published ones,
+    of events at the tagging optics (0.02–0.25 at the published ones,
     where the fake rate is 10⁻³–10⁻⁴ anyway), so topology beats dE/dx
     here in sensors that already exist — subject to how far the pot
     stations extend, which is B1. Measured 2026-08-28 with both fragments
@@ -514,10 +514,10 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
     Reco purity at the sweet spots falls from 0.64–0.68 to 0.40–0.73 with
     the real final state.
     *2026-08-27 (acceptance, `hfs_acceptance.py`, Report 2 §3 Figure 2):*
-    78 / 86 / 82 / 91% of Σ_h is captured at the four mid sweet spots;
-    19 / 8 / 16 / 7% escapes forward beyond |η| = 3.7 (the target-
+    80 / 87 / 83 / 92% of Σ_h is captured at the four mid sweet spots;
+    17 / 8 / 15 / 7% escapes forward beyond |η| = 3.7 (the target-
     fragmentation side of a W ≈ 6–10 GeV system), 1–6% is below threshold.
-    Through the full response 69 / 74 / 73 / 85% is captured: a 13–28% scale
+    Through the full response 70 / 74 / 74 / 85% is captured: a 13–28% scale
     bias on y_Σ that the library *reproduces* in the pseudo-events and the
     bin-centering factor absorbs; `--hfs-calibrate` (per-cell mean captured
     fraction, the analysis's own calibration) takes the 5R purities to

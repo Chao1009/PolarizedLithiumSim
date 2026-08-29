@@ -149,7 +149,7 @@ circular acceptance exp(−B c²) while the chain uses the slot — a factor
 *Done 2026-08-25* — panel (a) of the new script plots the circular,
 square and slot curves together so the difference is visible rather than
 implicit.  Measured (slot, B = 50): tagged fraction
-32% / 3.0% / 4×10⁻⁵ / 2×10⁻⁷ and δa_t/a_t = 1.6% / 5.7% / 104% / 540%
+32% / 3.0% / 4×10⁻⁵ / 2×10⁻⁷ and δa_t/a_t = 1.2% / 4.6% / 79% / 392%
 at 0.10 / 0.22 / 0.45 / 0.60 GeV.  `t_floor` must stay well below the
 cut: it is a hard lower bound on the TRUE |t|, so with divergence
 smearing it biases the acceptance downward if pushed too close (the

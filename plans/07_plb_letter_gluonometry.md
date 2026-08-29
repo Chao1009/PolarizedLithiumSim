@@ -556,7 +556,7 @@ the 0.73 rate weighting folded in, against the IR-8 published band; the
 fitted δa_t and δa_e from the full response (importance-sampled above the
 cut — the plain sampler leaves *zero* accepted recoils above 0.3 GeV);
 and acceptance vs beam momentum. Numbers: tagged fraction
-32% / 3.0% / 4×10⁻⁵ / 2×10⁻⁷ and δa_t/a_t = 1.6% / 5.7% / 104% / 540% at
+32% / 3.0% / 4×10⁻⁵ / 2×10⁻⁷ and δa_t/a_t = 1.2% / 4.6% / 79% / 392% at
 an envelope of 0.10 / 0.22 / 0.45 / 0.60 GeV. **The coherent measurement
 lives at the low- and mid-energy configurations and is dead at the top
 energy.** Remaining: fold the curve into the letter figure and quote the

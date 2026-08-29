@@ -246,8 +246,9 @@ def main():
         ax.plot(r, lum, "-", color=C_GREY, lw=0.8, label="L/L$_{HA}$ = 1/√r")
         ax.plot([opt_env["r"]], [opt_env["eps"] * opt_env["lum"]], "o", color=col, ms=7,
                 mfc="white", mew=1.8, label="optimum of the yield")
-        # pots fixed at the measured aperture: below the axis at every r
-        # (max %.1e), so it is stated rather than drawn
+        # pots fixed at the measured aperture: at or below the axis floor at
+        # the two lower configurations and flat at 1.2e-05 at the top one, so
+        # the maximum over r is stated rather than drawn
         ax.axhline(IR8_LI6_INTERPOLATED, color="0.25", lw=1.0, ls="-.")
         ax.annotate("IR-8 secondary focus: ≈ 20% (our interpolation) if L = L$_{HA}$",
                     xy=(0.3, IR8_LI6_INTERPOLATED), xytext=(0, 4), textcoords="offset points",
@@ -268,7 +269,7 @@ def main():
         ax.text(0.03, 0.03,
                 "optimum, horizontal β* × %.0f: ε = %.2f, L/L$_{HA}$ = 1/%.0f\n"
                 "N$_{tag}$ = %.1f×10$^{%d}$ / yr, 5σ floor %.1f%% / yr (shape term %.1f%%: %.0fσ / yr)\n"
-                "pots fixed at the measured aperture: ε < %.0e at every r"
+                "pots fixed at the measured aperture: max ε = %.1e over r"
                 % (opt_env["r"], opt_env["eps"], 1 / opt_env["lum"],
                    opt_env["n_tag"] / 10 ** int(np.floor(np.log10(opt_env["n_tag"]))),
                    int(np.floor(np.log10(opt_env["n_tag"]))), 100 * opt_env["floor"],

@@ -3,9 +3,9 @@
 `tools/consistency_check.py` verifies that the simulation, the figures, the
 reports and the reference list still agree with each other -- the physics
 invariants, the published values the code carries, the absence of superseded
-numbers, that every embedded figure exists and is newer than the script that
-makes it, and that the report numbering agrees across builder, templates and
-index.
+numbers, that every embedded figure exists and is newer both than the script
+that makes it and than every library module that script imports, and that the
+report numbering agrees across builder, templates and index.
 
 It is wired in here so that a correction which lands in one place and not
 another fails a test rather than reaching a report.  The checks that depend

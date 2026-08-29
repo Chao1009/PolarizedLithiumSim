@@ -19,10 +19,11 @@ It checks five kinds of agreement:
                energies and the 2x-pessimistic P_zz propagation -- and
                statements a rewrite must not drop, such as the run-plan
                share every per-year reach is quoted at.
-  ARTEFACTS    that every figure a report embeds exists, is newer than the
-               script that makes it, and is registered in build_report.py;
-               that every sample matches a configuration energy; that the
-               report numbering agrees across templates, index and builder.
+  ARTEFACTS    that every figure a report embeds exists, is registered in
+               build_report.py, and is newer both than the script that makes
+               it and than every library module that script imports; that
+               every sample matches a configuration energy; that the report
+               numbering agrees across templates, index and builder.
   REFERENCES   that every refs_dict entry with a local file has one, and
                that documents citing refs/ point at files that exist.
 
@@ -33,12 +34,14 @@ Usage:  python3 tools/consistency_check.py [--verbose]
 """
 
 import argparse
+import ast
 import glob
 import json
 import math
 import pathlib
 import re
 import sys
+import time
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "fastsim"))
@@ -391,14 +394,169 @@ def _():
 
 # --- ARTEFACTS -------------------------------------------------------------
 
+# the ".png" is load-bearing: build_report.py's own comment about the
+# registry spells out a "__TAG__": "path" pair that is not a figure
+FIG_RE = re.compile(r'"(__[A-Z0-9_]+__)":\s*"([^"]+\.png)"')
+
+# the two library trees every figure's numbers come out of, and the
+# digitized curves polarized.py reads: data a figure depends on exactly
+# as it depends on a module
+PKG_ROOTS = (("polligen", ROOT / "evgen" / "polligen"),
+             ("polli_fastsim", ROOT / "fastsim" / "polli_fastsim"))
+POLARIZED = ROOT / "fastsim" / "polli_fastsim" / "polarized.py"
+POLARIZED_DATA = tuple(sorted(
+    pathlib.Path(p) for p in
+    glob.glob(str(ROOT / "fastsim/polli_fastsim/data/*.csv"))))
+
+_BODIES = {}
+_FIG_SCRIPT = {}
+_IMPORTS = {}
+_DEPS = {}
+
+
+def registered_figures():
+    """Every ("__TAG__", "path.png") pair build_report.py registers, in file
+    order -- the embedded ones and UNEMBEDDED_FIGS alike."""
+    return FIG_RE.findall((ROOT / "reports/build_report.py").read_text())
+
+
+def _script_bodies():
+    """evgen/scripts/*.py read once, in a deterministic order."""
+    if not _BODIES:
+        for sc in sorted(glob.glob(str(ROOT / "evgen/scripts/*.py"))):
+            _BODIES[sc] = pathlib.Path(sc).read_text()
+    return _BODIES
+
+
+def script_of_figure(rel):
+    """Which evgen/scripts/*.py draws the figure at repository path `rel`,
+    or None when no script names it.  Both staleness checks below use this
+    one map.
+
+    A "--tag" suffix (money_cos2phi_reco_6Li_hfscal.png) is not a literal
+    in any script, so three candidates are tried, most specific first: the
+    full file stem (which is what an output_stem guard spells out), the
+    isotope-less one, then that without the suffix.  Each is matched as a
+    figure-file NAME rather than as the prefix of a longer one, so
+    money_cos2phi cannot claim money_cos2phi_reco_6Li.png; two spellings,
+    in this order: the literal "...png", and (since 2026-08-28, when the
+    published stems went behind an output_stem guard) the bare stem as a
+    quoted string."""
+    if rel in _FIG_SCRIPT:
+        return _FIG_SCRIPT[rel]
+    stem = pathlib.Path(rel).stem
+    bare = stem.replace("_6Li", "").replace("_7Li", "")
+    cands = [stem, bare]
+    if re.sub(r"_[a-z0-9]+$", "", bare) != bare:
+        cands.append(re.sub(r"_[a-z0-9]+$", "", bare))
+    bodies = _script_bodies()
+    found = None
+    for cand in cands:
+        short = re.escape(cand) + r"(?![A-Za-z0-9]|_[A-Za-z])"
+        for pat in (short + r"[^\"'\s]*\.png", short + r"[\"']"):
+            for sc in bodies:
+                if re.search(pat, bodies[sc]):
+                    found = sc
+                    break
+            if found:
+                break
+        if found:
+            break
+    _FIG_SCRIPT[rel] = found
+    return found
+
+
+def _own_package(path):
+    """The package a file lives in, for resolving `from . import x`."""
+    for pkg, root in PKG_ROOTS:
+        if path.parent == root:
+            return pkg
+    return None
+
+
+def _resolve(dotted):
+    """A dotted import name -> the files of ours it reaches.  Importing a
+    submodule executes the package __init__, which is why the package
+    itself is a dependency of every submodule import."""
+    for pkg, root in PKG_ROOTS:
+        if dotted != pkg and not dotted.startswith(pkg + "."):
+            continue
+        out = [root / "__init__.py"]
+        if dotted != pkg:
+            f = root / (dotted[len(pkg) + 1:].split(".")[0] + ".py")
+            if f.is_file():
+                out.append(f)
+        return [p for p in out if p.is_file()]
+    return []
+
+
+def _imports_of(path):
+    """The dotted names `path` imports, read with ast (so a commented-out
+    or merely quoted import does not count) and including the ones written
+    inside functions.  Relative imports are resolved against the package
+    the file lives in, and `from pkg import mod` yields `pkg.mod` as well
+    as `pkg`."""
+    if path in _IMPORTS:
+        return _IMPORTS[path]
+    names = set()
+    try:
+        tree = ast.parse(path.read_text(), filename=str(path))
+    except (OSError, SyntaxError):
+        tree = None
+    own = _own_package(path)
+    for node in ast.walk(tree) if tree else ():
+        if isinstance(node, ast.Import):
+            names.update(a.name for a in node.names)
+        elif isinstance(node, ast.ImportFrom):
+            base = node.module or ""
+            if node.level:
+                base = ".".join(x for x in (own, base) if x)
+            if base:
+                names.add(base)
+                names.update("%s.%s" % (base, a.name) for a in node.names)
+    _IMPORTS[path] = names
+    return names
+
+
+def module_deps(script):
+    """Every file under evgen/polligen or fastsim/polli_fastsim that
+    running `script` imports, transitively, plus the digitized CSVs
+    polarized.py reads at import time.  Sibling scripts are followed (one
+    figure script imports another's helpers) but not returned: the
+    script's own mtime is the other check's business."""
+    script = pathlib.Path(script)
+    if script in _DEPS:
+        return _DEPS[script]
+    seen, deps, queue = set(), set(), [script]
+    while queue:
+        cur = queue.pop()
+        if cur in seen:
+            continue
+        seen.add(cur)
+        for dotted in sorted(_imports_of(cur)):
+            for f in _resolve(dotted):
+                deps.add(f)
+                queue.append(f)
+                if f == POLARIZED:
+                    deps.update(POLARIZED_DATA)
+            sib = script.parent / (dotted + ".py")
+            if "." not in dotted and sib.is_file():
+                queue.append(sib)
+    _DEPS[script] = sorted(deps)
+    return _DEPS[script]
+
+
+def _stamp(mtime):
+    return time.strftime("%Y-%m-%d %H:%M", time.localtime(mtime))
+
+
 @check("artefacts: every figure a report embeds exists and is registered")
 def _():
     bad = []
-    src = (ROOT / "reports/build_report.py").read_text()
-    registered = set(re.findall(r'"(__[A-Z0-9_]+__)":\s*"([^"]+)"', src))
-    tags = {t: p for t, p in registered}
-    for f in glob.glob(str(ROOT / "reports/*.template.html")):
-        for tag in set(re.findall(r"__[A-Z0-9_]+__", pathlib.Path(f).read_text())):
+    tags = dict(registered_figures())
+    for f in sorted(glob.glob(str(ROOT / "reports/*.template.html"))):
+        for tag in sorted(set(re.findall(r"__[A-Z0-9_]+__",
+                                         pathlib.Path(f).read_text()))):
             if tag not in tags:
                 bad.append("%s uses %s, which build_report.py does not define"
                            % (pathlib.Path(f).name, tag))
@@ -410,43 +568,48 @@ def _():
 @check("artefacts: every embedded figure is newer than the script that makes it")
 def _():
     bad = []
-    src = (ROOT / "reports/build_report.py").read_text()
-    for _, rel in re.findall(r'"(__[A-Z0-9_]+__)":\s*"([^"]+)"', src):
+    for _tag, rel in registered_figures():
         png = ROOT / rel
-        if not png.exists():
+        script = script_of_figure(rel)
+        if not png.exists() or script is None:
             continue
-        stem = png.stem.replace("_6Li", "").replace("_7Li", "")
-        # a "--tag" suffix (money_cos2phi_reco_6Li_hfscal.png) is not a
-        # literal in any script: fall back on the stem without it, or the
-        # figure is never checked at all
-        # most specific first: the full file stem (which is what an
-        # output_stem guard spells out), then the isotope-less one, then
-        # that without a "--tag" suffix
-        cands = [png.stem, stem]
-        if re.sub(r"_[a-z0-9]+$", "", stem) != stem:
-            cands.append(re.sub(r"_[a-z0-9]+$", "", stem))
-        scripts = sorted(glob.glob(str(ROOT / "evgen/scripts/*.py")))
-        bodies = {sc: pathlib.Path(sc).read_text() for sc in scripts}
-        for cand in cands:
-            # the stem as a figure-file name, not as the prefix of a longer
-            # one: money_cos2phi must not claim money_cos2phi_reco_6Li.png.
-            # Two spellings, tried in that order: the literal "...png", and
-            # (since 2026-08-28, when the published stems went behind an
-            # output_stem guard) the bare stem as a quoted string.
-            short = re.escape(cand) + r"(?![A-Za-z0-9]|_[A-Za-z])"
-            found = None
-            for pat in (short + r"[^\"'\s]*\.png", short + r"[\"']"):
-                for sc in scripts:
-                    if re.search(pat, bodies[sc]):
-                        found = sc
-                        break
-                if found:
-                    break
-            if found:
-                if png.stat().st_mtime < pathlib.Path(found).stat().st_mtime:
-                    bad.append("%s is older than %s -- rerun it"
-                               % (rel, pathlib.Path(found).name))
-                break
+        if png.stat().st_mtime < pathlib.Path(script).stat().st_mtime:
+            bad.append("%s is older than %s -- rerun with the manual's command"
+                       % (rel, pathlib.Path(script).name))
+    return bad
+
+
+@check("artefacts: every embedded figure is newer than every module its script "
+       "imports")
+def _():
+    """A figure goes stale when its own script moves on -- and just as
+    surely when a library module that script imports does, which the check
+    above cannot see.  Development run 14 changed polarized.py, farforward.py
+    and half of polligen under figures whose scripts were never touched.
+    The import graph is read with ast and followed transitively through
+    polligen and polli_fastsim (a package __init__ counts: importing a
+    submodule runs it), with polarized.py carrying the digitized CSVs it
+    reads."""
+    bad = []
+    for _tag, rel in registered_figures():
+        png = ROOT / rel
+        script = script_of_figure(rel)
+        if not png.exists() or script is None:
+            continue
+        t_png = png.stat().st_mtime
+        newer = sorted((d.stat().st_mtime, d) for d in module_deps(script)
+                       if d.stat().st_mtime > t_png)
+        if not newer:
+            continue
+        t_mod, mod = newer[-1]
+        bad.append("%s (%s) is older than %s (%s)%s -- rerun with the "
+                   "manual's command"
+                   % (rel, _stamp(t_png), mod.relative_to(ROOT),
+                      _stamp(t_mod),
+                      "" if len(newer) == 1
+                      else ", and %d more module%s" % (len(newer) - 1,
+                                                       "" if len(newer) == 2
+                                                       else "s")))
     return bad
 
 

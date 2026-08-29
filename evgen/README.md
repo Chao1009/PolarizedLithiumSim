@@ -38,7 +38,7 @@ python3 scripts/nearbeam_sensor_budget.py # plans/09: hot-spot Z-ID, sizing, cha
 python3 scripts/nearbeam_zid_power.py     # plans/09: how much charge information Z-ID needs
 python3 scripts/nearbeam_two_hit.py       # plans/09 B4: two-hit topology of 6Li -> alpha + d, and the partner-fragment veto
 python3 ../reports/build_report.py --pdf  # assemble reports/ pages
-python3 ../tools/consistency_check.py     # 24 checks: does everything still agree?
+python3 ../tools/consistency_check.py     # 25 checks: does everything still agree?
 #   reports are numbered in reading order:
 #   -> 0 polarized_li_primer.html/pdf (educational physics primer)
 #   -> 1 cos2phi_money_plots_report.html/pdf (the projected measurements)
@@ -102,7 +102,7 @@ plus the lithium tagging optics, `--config {0,1,2}`) with the spectator's
 own lab azimuth against the rectangular 10(σ_h, σ_v) envelope, and it
 overlays the truth **weighted by each optics' θ_k acceptance** beside the
 θ_k = 90° curve.  Both matter.  At 10 × 99.5 the α tag is 2.5% at the
-Yellow Report optics against 30% at the tagging optics — a 9% cost in
+Yellow Report optics against 30% at the tagging optics — a 7% cost in
 tagged events per year, since the tagging optics runs at L/L_HA = 1/13.3,
 and a gain of 1.9× and 1.2× at the other two configurations — but
 the median accepted spectator momentum is 0.32 GeV/c with **nothing below
@@ -160,12 +160,12 @@ quantifies the findings with `polligen/reco.py`:
 
 - three of the four sweet spots of money plot 5 sit at y = 0.010–0.025,
   where e′ alone gives δy/y = 50–120%: x needs the hadronic (Σ/JB) y;
-  with a 15–20% hadronic resolution the super-bins keep 75–83% purity
-  and the reco-bin amplitude is within 1–4% of the true-bin value
-  (0.64–0.68 and 1–9% at the 25% default of the R-plots);
+  with a 15–20% hadronic resolution the super-bins keep 73–85% purity
+  and the reco-bin amplitude is within 4% of the true-bin value
+  (0.60–0.69 and within 9% at the 30% row of the same scan);
 - the single-fill cos 2φ′ fit measures the detector's own cos 2φ′
   acceptance harmonic ÷ P_zz (a 3% harmonic aligned with the vertical
-  spin axis fakes 4× the signal); the spin-state ratio of m = ±1-rich
+  spin axis fakes five to eleven times the signal); the spin-state ratio of m = ±1-rich
   (P_zz = +0.6) and m = 0-rich (−1.2) bunches cancels any acceptance
   common to both states bin by bin (bunch-by-bunch alternation required:
   a 10⁻³ difference of the harmonic between the states fakes half the
@@ -210,14 +210,14 @@ mixed method 25%, ε(φ′) harmonic + 10⁻³ rel-lumi offset on):
 
 - 5R (25% hadronic y — the ePIC kinematic-fit study's smearing and the
   ATHENA Fig. 22 value at y ≈ 0.01, `refs/README.md`): sweet spots 1–4 in
-  reco bins (x = 0.028 / 0.011 / 0.071 / 0.141): purity 0.63–0.69, efficiency 0.38–0.66, D = 0.90–0.99; Â within ≈ 2σ of the reco-bin truth; δÂ = 1.2 / 0.9 / 1.6 / 3.0 ×10⁻⁴ (1 yr) — 0.59–0.69 of money plot 5's single-fill errors (the m = 0-rich
+  reco bins (x = 0.028 / 0.011 / 0.071 / 0.141): purity 0.63–0.69, efficiency 0.38–0.66, D = 0.90–0.99; Â within ≈ 2σ of the reco-bin truth; δÂ = 1.2 / 0.9 / 1.6 / 2.9 ×10⁻⁴ (1 yr) — 0.59–0.69 of money plot 5's single-fill errors (the m = 0-rich
   fill gain beats the efficiency loss);
 - 7R: best bins δΔ = 2.4×10⁻³ (Q² = 1.14) and 1.2×10⁻³ (3.13 GeV²) in year 1, purities 0.54–0.57;
 - 6R (re-derived 2026-08-28 at the lithium tagging optics of Report 1 §6.1,
   `--optics tagging`: horizontal β* × 50 at 5 × 40.8, σ_θ = 33/380 μrad,
   pots following the 10σ envelope 0.33 × 3.8 mrad, L/L_HA = 1/7.1 — with
   the Yellow Report divergences and the measured pot aperture no recoil
-  survives at any configuration): acceptance 41%, N_tag = 2.5×10⁶/yr, the
+  survives at any configuration): acceptance 42%, N_tag = 2.5×10⁶/yr, the
   cutout fakes ⟨cos 2β⟩ = −0.27.  The published binning is the seven bins
   of `recopseudo.T_EDGES_PUBLISHED`, 0.017–0.25 GeV² (adopted 2026-08-28;
   Report 2 §7, plans/08 item 4), of which five carry more than 10⁵ recoils
@@ -275,9 +275,9 @@ python3 scripts/money_cos2phi_reco.py --y-source hfs --hfs-sample <the same pair
 ```
 
 **Where Σ_h goes (2026-08-27, `hfs_acceptance.py`, Report 2 §3 Figure 2):** at the mid
-sweet spots 78 / 86 / 82 / 91% of the true Σ_h is within the acceptance and
-above threshold, 69 / 74 / 73 / 85% is captured through the full response, 19 /
-8 / 16 / 7% escapes forward beyond |η| = 3.7 (the target-fragmentation side of
+sweet spots 80 / 87 / 83 / 92% of the true Σ_h is within the acceptance and
+above threshold, 70 / 74 / 74 / 85% is captured through the full response, 17 /
+8 / 15 / 7% escapes forward beyond |η| = 3.7 (the target-fragmentation side of
 a W ≈ 6–10 GeV system; the lithium fragments at η ≈ 8 never enter).  The
 library *reproduces* that capture bias in the pseudo-events;
 `HFSResponse(calibrate=True)` / `money_cos2phi_reco.py --hfs-calibrate`

@@ -63,7 +63,7 @@ external inputs, not work.**
 > acceptance is not a measurement: what the tagging optics buys the tagged
 > observables is **reach**, not rate — at the published optics the α tag
 > admits nothing below a spectator momentum of 0.15 GeV/c, under the
-> tagging optics half the accepted sample is there, for a 9% cost in
+> tagging optics half the accepted sample is there, for a 7% cost in
 > tagged events per year at 10 × 100 and a 1.2–1.9× gain at the other two
 > configurations (B2).  For ⁷Li the whole trade inverts and the tagging
 > optics is a factor 8–15 net loss (B3).
@@ -327,8 +327,10 @@ because 1.987 is only the k → 0 ratio — and nothing
 merges. The dispersive displacement is free to cancel that, and does: a
 recorded pair falls inside one 500 µm pixel in 4.2 × 10⁻³ of cases at
 18 × 275, 2.7 × 10⁻³ at 10 × 100 and 5.2 × 10⁻⁵ at 5 × 41, and in none at
-the Yellow Report or legacy envelopes, where the closest recorded pair over
-1.2 × 10⁷ breakups is still 33 mm away. At that level the Σz² = 5 against
+the Yellow Report or legacy envelopes, where over 1.2 × 10⁷ breakups per
+configuration nothing merges at all — the closest recorded pair is 8.0 mm
+apart at the Yellow Report envelope and 4.1 mm at the legacy one, both
+tens of pixels wide. At that level the Σz² = 5 against
 9 argument is a backstop and not a load-bearing one. The single-hit topology is **asymmetric**: at the
 Yellow Report optics 6–7.5% of breakups put the deuteron alone on a pot
 against 1.5–1.7% for the α alone.
@@ -338,7 +340,7 @@ sensors that already exist.** Conditioned on the α faking a coherent tag —
 the only way this channel is a background at all — the partner deuteron is
 recorded in **84%** of events at the tagging optics, so hit multiplicity
 alone rejects five sixths of it with no dE/dx and no Z-ID. At the Yellow
-Report optics the veto is worth 0.04–0.29, but the fake rate there is
+Report optics the veto is worth 0.02–0.25, but the fake rate there is
 10⁻³–10⁻⁴: the optics that creates the background supplies the veto
 with it.
 
@@ -644,7 +646,7 @@ The ⁷Li tags and the median δA_∥ moved in the fourth decimal on
 neutron; the ⟨P₂⟩ slopes did not (`docs/reproduction_manual.md` §4.1).
 
 **For ⁷Li the tagging optics is a strict net loss, and a near-beam layer
-is worth nothing.** ×1.02 in acceptance for ×1/8.2, ×1/15.4, ×1/10.1 in
+is worth nothing.** ×1.02 in acceptance for ×1/8.2, ×1/15.3, ×1/10.1 in
 luminosity is a factor 8–15 net loss, which at equal running time
 multiplies every ⁷Li error bar by 2.83 / 3.87 / 3.15. So the inversion of
 plans/00 strategic finding 2 is optics-independent **in both
@@ -744,7 +746,7 @@ slope B = 51.13 GeV⁻² above, the intact-⁷Li tagged fraction is
 validating the usage (docs/reproduction_manual.md §4.6). The channel therefore needs the tagging optics of
 Report 1 §6.1 exactly as the ⁶Li one does — which collides with B3 above,
 where that optics is a strict net loss for ⁷Li (×1.02 in acceptance
-against ×1/8.2–×1/15.4 in luminosity, every ⁷Li bar ×2.83–3.87) and where
+against ×1/8.2–×1/15.3 in luminosity, every ⁷Li bar ×2.83–3.87) and where
 this plan concluded that ⁶Li and ⁷Li want different optics and are
 different runs. A coherent ⁷Li channel is a *third* configuration, ⁷Li
 de-squeezed, competing for beam time with the ⁷Li spectator programme it
@@ -851,7 +853,7 @@ nearbeam_two_hit.py` produces the table and the figure. Both fragments are
 in acceptance in 22–29% of breakups at the tagging optics and in ≤ 0.03% at
 the Yellow Report optics; given an α that fakes a coherent tag the partner
 deuteron is recorded in **84%** of events at the tagging optics against
-0.04–0.29 at the published ones, where the fake rate is 10⁻³–10⁻⁴
+0.02–0.25 at the published ones, where the fake rate is 10⁻³–10⁻⁴
 anyway. A
 recorded pair merges into one 500 µm pixel in ≤ 4 × 10⁻³ of cases, through
 the dispersion rather than the angle. The number the veto really depends on
@@ -943,7 +945,7 @@ study should not be what motivates it.
   the IR-8 secondary focus and its z² Cherenkov. The same tagging optics
   buys the ⁶Li *tagged* observables reach rather than rate — nothing
   below k = 0.15 GeV/c at any published optics, half the accepted sample
-  there under the tagging one, at a 9% cost in tagged events per year at
+  there under the tagging one, at a 7% cost in tagged events per year at
   10 × 100 and a 1.2–1.9× gain at the other two (B2) —
   and buys ⁷Li a factor 8–15 net loss (B3), so item (1) is a per-isotope
   recommendation, not a programme-wide one. Superconducting
