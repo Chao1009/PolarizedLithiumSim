@@ -118,7 +118,7 @@ def test_pot_levers_resolve_at_every_gamma_matched_configuration():
     from polli_fastsim import beams
     from polli_fastsim import farforward as ff
 
-    expect = {"5x41": (19.24, None, 0.311),
+    expect = {"5x41": (19.24, 4.56, 0.311),
               "10x100": (21.25, 3.35, 0.287),
               "18x275": (29.97, 2.93, 0.292)}
     for pu, key in ((40.8, "5x41"), (99.5, "10x100"), (137.5, "18x275")):
@@ -134,19 +134,32 @@ def test_pot_levers_resolve_at_every_gamma_matched_configuration():
     for stale in (20.5, 50.0, 117.9):
         with pytest.raises(KeyError):
             ff.pot_levers_for(stale)
-    # R34 at 5 x 41 is None and that is the measurement: the 29.6 mm
-    # per-energy insertion shuts the vertical plane, and a 0.2-6.0 mrad
-    # vertical ladder returned one accepted row.
-    assert ff.pot_levers_for("5x41")[1] is None
+    # R34 at 5 x 41 was None until 2026-08-29 -- the 29.6 mm per-energy
+    # insertion shuts the vertical plane and the ladder had nothing to
+    # regress on -- and is now 4.56 m, read off a scratch geometry whose
+    # four `offset_*_RP_section` constants are zero (tools/fullsim).  The
+    # table carries no None any more, which is what lets
+    # `separation_at_pots` stop falling back on R12.
+    assert all(t[1] is not None for t in ff.POT_LEVERS.values())
+    assert ff.pot_levers_for("5x41")[1] == 4.56
+    # the plane is still SHUT: reaching the insertion needs 29.6 mm /
+    # 4.56 m = 6.49 mrad, past THETA_RP_MAX where the routing ends.  NOT
+    # compared against THETA_RP_OUTER_MEASURED: that is a horizontal edge
+    # on a 4.2x longer lever, so the two angles do not compare.
+    assert (29.6e-3 / ff.pot_levers_for("5x41")[1] > ff.THETA_RP_MAX)
     # the scalar aliases are the 18 x 275 row, so nothing written before
     # the measurement changes meaning
     assert (ff.POT_R12, ff.POT_R34, ff.POT_DISPERSION) == expect["18x275"]
-    # x is ~9x stiffer than y wherever both are measured -- which is why
-    # the pot aperture is a horizontal slot though the pots insert
-    # vertically
-    for key in ("10x100", "18x275"):
+    # x is 4.2 to 10.2x stiffer than y at the three configurations --
+    # which is why the pot aperture is a horizontal slot though the pots
+    # insert vertically
+    for key in ("5x41", "10x100", "18x275"):
         r12, r34, _d = ff.POT_LEVERS[key]
-        assert 6.0 < r12 / r34 < 12.0
+        assert 4.0 < r12 / r34 < 12.0
+    # and the stiffness ratio GROWS with energy, 4.2 / 6.3 / 10.2
+    ratios = [ff.POT_LEVERS[k][0] / ff.POT_LEVERS[k][1]
+              for k in ("5x41", "10x100", "18x275")]
+    assert ratios == sorted(ratios)
 
 
 def test_the_over_rigid_fragment_is_routed_where_the_scan_put_it():

@@ -12,6 +12,17 @@ constants 2 and 1 applied to a hand-written EMC table, which `--emc-mode
 constant` restores. The discrimination significance
 |DR_CBT - DR_TMT| / dDR is the FOM.
 
+Both camps are put on one common UNPOLARIZED baseline before they are
+compared, because they were computed for different targets. Since
+2026-08-29 that baseline is data-driven -- EPPS21's Li-6 F2 per nucleon
+over CT18ANLO's free isoscalar nucleon, `--emc-baseline epps21` -- rather
+than CBT's own model curve for 7Li, which `--emc-baseline cbt` restores
+and which every figure published before that date used. EPPS21's valence
+depletion is half of CBT's, so the separation and the reach halve with it;
+`--emc-baseline nnnpdf` is shallower again. The script prints all three so
+the baseline spread, which is the leading uncertainty on this FOM, is
+visible without rerunning.
+
 The two luminosities drawn (10 and 100 fb^-1/u) are PROGRAMME luminosities;
 `--run-share` is the fraction of them this observable is given (plans/07
 WP2), so dDR scales as 1/sqrt(share) and the published figure is at
@@ -28,11 +39,15 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 
 from polli_fastsim import beams, fom
 from polli_fastsim.inputs import get_backends
-from polli_fastsim.polarized import (CBT_TABLE, POLEMC_VALENCE_WINDOW,
-                                     cbt_polarized_emc_ratio, curve_x_range,
+from polli_fastsim.polarized import (CBT_TABLE, POLEMC_BASELINE,
+                                     POLEMC_BASELINE_MODES, TMT_TABLE,
+                                     POLEMC_VALENCE_WINDOW,
+                                     cbt_polarized_emc_ratio,
+                                     cbt_published_emc_ratio, curve_x_range,
                                      tmt_polarized_emc_ratio,
                                      tmt_published_emc_ratio, toy_b1,
-                                     toy_delta_gluon)
+                                     toy_delta_gluon, valence_depletion,
+                                     valence_scale)
 from polli_fastsim.structure import NuclearF2
 
 import matplotlib
@@ -77,6 +92,15 @@ def main():
                     help="polarized-EMC curves: 'digitized' (default) reads "
                          "the published figures, 'constant' the "
                          "pre-2026-08-28 2x / 1x stand-ins")
+    ap.add_argument("--emc-baseline", default=POLEMC_BASELINE,
+                    dest="baseline", choices=list(POLEMC_BASELINE_MODES),
+                    help="common unpolarized baseline both camps are "
+                         "transferred onto: 'epps21' (default, data-driven "
+                         "A = 6 nuclear PDFs), 'nnnpdf', 'cbt' (the "
+                         "pre-2026-08-29 model baseline) or 'table'")
+    ap.add_argument("--emc-band", action="store_true", dest="emc_band",
+                    help="also print EPPS21's 90%% CL Hessian band on the "
+                         "baseline valence depletion (107 members, +18 s)")
     ap.add_argument("--outdir", default="out")
     ap.add_argument("--run-share", type=float, default=1.0, dest="run_share",
                     help="this observable's share of the programme "
@@ -88,27 +112,75 @@ def main():
     outdir = pathlib.Path(args.outdir)
     outdir.mkdir(parents=True, exist_ok=True)
     backends = get_backends(args.pdf)
+
     def cbt(z):
-        return cbt_polarized_emc_ratio(z, mode=args.emc_mode)
+        return cbt_polarized_emc_ratio(z, mode=args.emc_mode,
+                                       baseline=args.baseline)
 
     def tmt(z):
-        return tmt_polarized_emc_ratio(z, mode=args.emc_mode)
+        return tmt_polarized_emc_ratio(z, mode=args.emc_mode,
+                                       baseline=args.baseline)
+
+    def cbt_raw(z):
+        """CBT's published 7Li curve, before the baseline transfer."""
+        if args.emc_mode == "constant":
+            return cbt(z)
+        return cbt_published_emc_ratio(z)
 
     def tmt_raw(z):
-        """TMT's published nuclear-matter curve, before the 7Li transfer.
+        """TMT's published nuclear-matter curve, before the transfer.
 
         The transfer factor is a single constant fitted in the valence
         window, so applying it two decades below that window manufactures
         a separation the two papers do not have: the published curves
         agree to better than 0.007 for x < 0.3.  Both separations are
-        printed so the reader can tell which is which."""
+        printed -- `cbt_raw` against `tmt_raw` for the calculations,
+        `cbt` against `tmt` for what the projection draws -- so the reader
+        can tell which is which."""
         if args.emc_mode == "constant":
             return tmt(z)
         return tmt_published_emc_ratio(z)
 
-    print("# money_polemc.py  ion=%s  pdf=%s  emc=%s  %s"
-          % (args.ion, args.pdf, args.emc_mode,
+    print("# money_polemc.py  ion=%s  pdf=%s  emc=%s  baseline=%s  %s"
+          % (args.ion, args.pdf, args.emc_mode, args.baseline,
              fom.run_share_header(10.0, args.run_share)))
+    if args.emc_mode == "digitized":
+        print("# baseline valence depletion <1-R_unpol> over %g<x<%g and the "
+              "transfer factors it implies:" % POLEMC_VALENCE_WINDOW)
+        for b in POLEMC_BASELINE_MODES:
+            # the grid-backed baselines need LHAPDF sets the toy path does
+            # not: a missing one is reported in its own row rather than
+            # aborting the whole run, unless it is the baseline IN USE,
+            # which exits 2 with the install hint (plans/08:415).
+            try:
+                row = ("%.5f   s_CBT=%.4f  s_TMT=%.4f"
+                       % (valence_depletion(mode=b),
+                          valence_scale(CBT_TABLE, b),
+                          valence_scale(TMT_TABLE, b)))
+            except Exception as exc:
+                if b == args.baseline:
+                    raise
+                row = "(unavailable: %s)" % exc
+            print("#   %-7s %s%s"
+                  % (b, row,
+                     "   <-- in use" if b == args.baseline else ""))
+        if args.emc_band:
+            from polli_fastsim.polarized import POLEMC_VALENCE_WINDOW as _W
+            from polli_fastsim.polarized import UNPOL_EMC_Q2 as _Q2
+            from polli_fastsim.structure import NuclearF2Ratio
+            # the SAME quadrature and reference Q2 as `valence_depletion`,
+            # so that the band's member-0 centre is the depletion printed
+            # one line above and not a fourth-digit variant of it
+            g = np.linspace(_W[0], _W[1], 301)
+            d0 = float((1.0 - NuclearF2Ratio("epps21", member=0)(g, _Q2)).mean())
+            up = dn = 0.0
+            for i in range(1, 106, 2):
+                a = float((1.0 - NuclearF2Ratio("epps21", member=i)(g, _Q2)).mean())
+                b_ = float((1.0 - NuclearF2Ratio("epps21", member=i + 1)(g, _Q2)).mean())
+                up += max(a - d0, b_ - d0, 0.0) ** 2
+                dn += max(d0 - a, d0 - b_, 0.0) ** 2
+            print("#   epps21 90%% CL Hessian band on that depletion: "
+                  "%.5f +%.5f -%.5f" % (d0, up ** 0.5, dn ** 0.5))
 
     xs = np.logspace(np.log10(0.005), np.log10(0.9), 300)
     fig, (ax, ax2) = plt.subplots(
@@ -126,11 +198,14 @@ def main():
         # than 0.008 for x < 0.3 and part only inside the shaded window.
         ax.plot(xs, tmt_raw(xs), "navy", ls=":", lw=1,
                 label="TMT as published (nuclear matter, no transfer)")
+        ax.plot(xs, cbt_raw(xs), "crimson", ls=":", lw=1,
+                label="CBT as published ($^7$Li, no transfer)")
     ax.axhline(1.0, color="gray", lw=0.5)
     vlo, vhi = POLEMC_VALENCE_WINDOW
     for a in (ax, ax2):
         a.axvspan(vlo, vhi, color="0.85", alpha=0.5, lw=0, zorder=0)
-    ax.text(np.sqrt(vlo * vhi), 1.26, "valence window\n(transfer defined)",
+    ax.text(np.sqrt(vlo * vhi), 1.26,
+            "valence window\n(transfer defined)",
             ha="center", va="top", fontsize=7, color="0.35")
 
     for lumi, color, dx in ((10.0, "black", 1.0), (100.0, "seagreen", 1.04)):
@@ -153,7 +228,7 @@ def main():
     ax.set_ylabel(r"$\Delta R(x) = g_1^A/(P_p g_1^p + P_n g_1^n)$")
     ax.set_title(
         f"Polarized EMC effect, {args.ion}: CBT vs TMT "
-        f"({args.emc_mode})\n"
+        f"({args.emc_mode}, {args.baseline} baseline)\n"
         f"(3 energy settings combined; $P_e$=0.7, $P_z$=0.7; "
         f"stat. only; {backends['tag'].upper()} inputs"
         + ("" if args.run_share == 1.0
@@ -169,6 +244,8 @@ def main():
     stem = f"money_polemc_{args.ion}_{backends['tag']}"
     if args.emc_mode != "digitized":    # never overwrite the published PNG
         stem = f"{stem}_{args.emc_mode}"
+    if args.baseline != POLEMC_BASELINE:
+        stem = f"{stem}_{args.baseline}"
     if share_key:
         stem = f"{stem}_{share_key}"
     path = outdir / f"{stem}.png"
@@ -179,7 +256,7 @@ def main():
     for xq in (0.1, 0.3, 0.5, 0.7):
         i = np.argmin(np.abs(x_c - xq))
         sep_i = abs(cbt(x_c[i]) - tmt(x_c[i]))
-        raw_i = abs(cbt(x_c[i]) - tmt_raw(x_c[i]))
+        raw_i = abs(cbt_raw(x_c[i]) - tmt_raw(x_c[i]))
         print(f"  x={x_c[i]:.2f}: dDR({10.0 * args.run_share:g}/fb)="
               f"{err10[i]:.4f}  CBT-TMT sep={sep_i:.3f}  "
               f"({sep_i / err10[i]:.2f} sigma here, "
@@ -213,11 +290,11 @@ def main():
     lo = good & (x_c > x_lo_ok) & (x_c < 0.3)
     hi = good & (x_c > vlo)
     print(f"  published-curve separation: max "
-          f"{np.abs(cbt(x_c[lo]) - tmt_raw(x_c[lo])).max():.4f} over "
+          f"{np.abs(cbt_raw(x_c[lo]) - tmt_raw(x_c[lo])).max():.4f} over "
           f"{x_lo_ok:.3f} < x < 0.3, where the transferred pair shows "
           f"{np.abs(cbt(x_c[lo]) - tmt(x_c[lo])).min():.4f}-"
           f"{np.abs(cbt(x_c[lo]) - tmt(x_c[lo])).max():.4f}; max "
-          f"{np.abs(cbt(x_c[hi]) - tmt_raw(x_c[hi])).max():.4f} above "
+          f"{np.abs(cbt_raw(x_c[hi]) - tmt_raw(x_c[hi])).max():.4f} above "
           f"x = {vlo:g}")
 
 

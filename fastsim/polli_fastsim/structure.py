@@ -300,6 +300,83 @@ class PartonF2:
                         1.0)
 
 
+# --------------------------------------------------------------------------
+# Nuclear PDF grids: the DATA-DRIVEN unpolarized EMC ratio
+# --------------------------------------------------------------------------
+#
+# `polarized.unpolarized_emc_ratio` used to be a hand-written 12-point
+# shape; since 2026-08-29 its default is the ratio built here from the
+# A = 6 nuclear grids (plans/02 step 1.2.1).
+#
+# WHAT THE GRIDS HOLD.  Both installed A = 6 sets are PER-NUCLEON sets --
+# the PDFs of the average bound nucleon of the nucleus, not of the bound
+# proton -- which is checked rather than assumed: for Li-6 (Z = N = 3) the
+# average nucleon is isoscalar, so x*u and x*d must come back equal, and
+# they do to every digit at x = 0.01-0.7 (`tests/test_grids.py`), while
+# the free CT18NLO proton has d/u = 0.66 at x = 0.1 and 0.18 at 0.7.  The
+# EPPS21 value also reproduces (x*u + x*d)/2 of CT18NLO to within the
+# 1-4% nuclear modification, which is the second half of the check.
+# `PartonF2.f2p` applied to such a grid therefore returns F2^A/A directly,
+# with the same five-flavour charge sum as the free-nucleon denominator,
+# so the heavy-quark scheme cancels in the ratio.
+#
+# WHAT THE DENOMINATOR IS.  The free isoscalar nucleon, (F2p + F2n)/2 on
+# CT18ANLO -- i.e. the deuteron with no nuclear effects of its own, and on
+# the SAME proton fit the numerator is built from: the EPPS21 Li6 grid is
+# EPPS21's nuclear modification times CT18ANLO (its SetDesc reads
+# "EPPS21+CT18ANLO"), so taking the ratio against CT18ANLO cancels the
+# proton fit and leaves the nuclear modification alone.  It was CT18NLO
+# until 2026-08-29, which mixed in the CT18A-vs-CT18 difference between
+# two proton fits and made the valence-window depletion 4.2% SHALLOWER
+# (0.02979 against the 0.03105 here) -- half the size of the ln-A isotope
+# correction the same module carries as a systematic.  A measured EMC
+# ratio is against real deuterium, which carries its own few-per-mille to
+# 1% depletion in the valence region, so the ratio returned here is
+# DEEPER than an A/D ratio by that amount.
+NUCLEAR_F2_SETS = {
+    "epps21": "EPPS21nlo_CT18Anlo_Li6",     # EPPS21 + CT18ANLO, A = 6, Z = 3
+    "nnnpdf": "nNNPDF30_nlo_as_0118_A6_Z3",  # nNNPDF3.0, A = 6, Z = 3
+}
+FREE_NUCLEON_SET = "CT18ANLO"
+
+_F2_BACKENDS = {}
+
+
+def f2_backend(setname, member=0):
+    """A cached `PartonF2` for `setname`; the grids are large to open."""
+    key = (setname, member)
+    if key not in _F2_BACKENDS:
+        _F2_BACKENDS[key] = PartonF2(setname, member)
+    return _F2_BACKENDS[key]
+
+
+class NuclearF2Ratio:
+    """R(x, Q2) = [F2^A/A] / [(F2p + F2n)/2], both from LHAPDF grids.
+
+    `nuclear` is a key of `NUCLEAR_F2_SETS` or a set name outright; `free`
+    is the free-nucleon set.  Instances are callables, so one can be
+    handed straight to `NuclearF2(emc_ratio=...)` after being frozen at a
+    Q2 (the hook takes r(x) alone).
+
+    The ratio is genuinely Q2-dependent -- 0.932 against 0.950 at x = 0.005
+    between Q2 = 4 and 100 GeV2 for EPPS21 -- but almost not at all where
+    the polarized-EMC comparison is read: the valence-window mean
+    depletion moves only from 0.0298 to 0.0288 over the same two decades.
+    """
+
+    def __init__(self, nuclear="epps21", free=FREE_NUCLEON_SET, member=0):
+        self.setname = NUCLEAR_F2_SETS.get(nuclear, nuclear)
+        self.free_setname = free
+        self.member = member
+
+    def __call__(self, x, q2):
+        num = f2_backend(self.setname, self.member).f2p(x, q2)
+        free = f2_backend(self.free_setname)
+        den = 0.5 * (free.f2p(x, q2) + free.f2n(x, q2))
+        den = np.maximum(np.asarray(den, dtype=float), 1e-30)
+        return np.asarray(num, dtype=float) / den
+
+
 class NuclearF2:
     """Whole-nucleus F2A = Z*F2p + N*F2n, with an optional EMC-ratio hook.
 

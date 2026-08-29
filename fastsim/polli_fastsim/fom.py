@@ -47,7 +47,7 @@ from .asymmetries import (
     err_a_parallel,
     err_azz,
     err_cos2phi_amplitude,
-    depolarization_d,
+    depolarization_effective,
 )
 from .structure import NuclearF2, dsigma_dx_dq2
 
@@ -153,6 +153,24 @@ def project_rates(config, scenario, nx=40, nq2=30, x_range=(1e-4, 1.0),
                             extras={"y": y, "eta": eta, "s": s, "nf2": nf2})
 
 
+def _g2_per_nucleon(g1_model, ion, x, q2):
+    """Per-nucleon g2^WW from whatever g1 backend was handed in.
+
+    `polarized.ToyG1.g2_nucleus` (inherited by `PartonG1`) caches the
+    quadrature per (x, Q2) grid, which is what keeps the finite-gamma
+    A_par free on a PDF grid.  A duck-typed backend without the method
+    falls back to the shared quadrature; one that cannot supply g2 at all
+    returns None, and the massless path is used for it."""
+    cached = getattr(g1_model, "g2_nucleus", None)
+    if cached is not None:
+        return np.asarray(cached(ion, x, q2), dtype=float) / ion.A
+    from .polarized import g2_ww
+    getter = getattr(g1_model, "g1_nucleus", None)
+    if getter is None:
+        return None
+    return g2_ww(lambda xx, qq: getter(ion, xx, qq), x, q2) / ion.A
+
+
 def project_observables(config, scenario, proj, g1_model, b1_func, delta_func):
     """Attach asymmetries + statistical errors for the three observables."""
     X, Q2, N = proj.x, proj.q2, proj.n_events
@@ -164,25 +182,40 @@ def project_observables(config, scenario, proj, g1_model, b1_func, delta_func):
 
     out = {}
     # (1) polarized EMC: A_par and delta(g1A/F1A)
+    #
+    # Both the asymmetry and its inversion carry the target mass, and they
+    # carry the SAME one: A_par = D_eff (g1/F1) with
+    #
+    #   D_eff = D_gamma [1 - gamma^2 rho + eta gamma (1 + rho)],
+    #   rho   = g2/g1,   gamma^2 = 4 M^2 x^2/Q^2,
+    #
+    # so delta(g1/F1) = delta(A_par)/D_eff is unbiased at O(gamma^2)
+    # (`asymmetries.depolarization_effective`).  Dividing by the massless D
+    # instead -- what this line did until 2026-08-29 -- returned g1A/F1A,
+    # and the Delta-R built from it, HIGH by (1 + gamma^2) + O(gamma^2 y):
+    # 0.12-1.06% across the published x range against statistical errors
+    # of 4-12%.  The step is legitimate because g2^WW is LINEAR in g1, so
+    # rho is fixed by the shape of g1 and is unchanged by the
+    # multiplicative medium modification Delta-R measures; what is not
+    # fixed is whether the truth is WW at all, and that twist-3 residual
+    # is now the systematic in place of the bias
+    # (`evgen/scripts/target_mass_bound.py` block 3).
     g1 = g1_model.g1_nucleus(config.ion, X, Q2) / config.ion.A
-    apar = a_parallel(g1, f1, y, X, Q2, r_func=r_func)
+    g2 = _g2_per_nucleon(g1_model, config.ion, X, Q2)
+    apar = a_parallel(g1, f1, y, X, Q2, r_func=r_func, g2=g2)
     dapar = err_a_parallel(N, scenario.pol_electron, scenario.pol_ion_vector)
-    # Dividing by the MASSLESS D inverts the massless A_par, so the
-    # extraction comes out HIGH by a factor (1 + gamma^2): the exact
-    # A_par = D_gamma (A1 + eta A2) is (1 + gamma^2) times the massless
-    # one at these y, and feeding that larger asymmetry to the massless
-    # inversion returns a correspondingly larger g1A/F1A (see
-    # a_parallel's docstring).
-    # That leaves Delta-R high by 0.12 / 0.44 / 0.71 / 1.06 % at
-    # x = 0.089 / 0.282 / 0.447 / 0.708 -- inverse-variance weighted with
-    # exactly the weights below, which give the published statistical
-    # 4.77 / 5.11 / 6.19 / 12.37 % at 10 fb^-1/u, so the bias is 9-40x
-    # smaller -- measured by evgen/scripts/target_mass_bound.py, whose
-    # block 3 reproduces both columns.  It is a bias, not a spread, so it
-    # does not enter these error bars; removing it means
-    # dividing by D_gamma (1 + gamma^2 kappa + ...) instead, which is a
-    # change to a published pipeline and the author's call.
-    d_g1f1 = dapar / depolarization_d(y, X, Q2, r_func=r_func)
+    rho = None if g2 is None else g2 / np.where(np.abs(g1) > 1e-300, g1,
+                                                1e-300)
+    # D_eff = D_gamma [1 - gamma^2 rho + eta gamma (1 + rho)] CHANGES SIGN
+    # where |rho| ~ 1/gamma^2, i.e. at a zero crossing of g1, where A_par
+    # carries no information about g1/F1 at all: on a polarized PDF grid
+    # 525 of the 1200 cells of the e(10) x 6Li(99.5/u) map are past such a
+    # crossing (none of them accepted).  A negative statistical error is
+    # not the honest statement there and an infinite one is, so the
+    # divisor is guarded rather than the massless D restored: inf drops
+    # out of every inverse-variance weight by itself.
+    deff = depolarization_effective(y, X, Q2, g2_over_g1=rho, r_func=r_func)
+    d_g1f1 = np.where(deff > 0.0, dapar / np.maximum(deff, 1e-300), np.inf)
     out["a_par"] = apar
     out["err_a_par"] = dapar
     out["err_g1_over_f1"] = d_g1f1

@@ -120,10 +120,10 @@ the harmonic covariance through the numerical Jacobian dA/du.  Measured at
 the tagging optics, one year, per |t| bin (`money_cos2phi_coherent_reco.py
 --config 0 --optics tagging --exact --u-in-situ --n-mc 6000000`, which
 now prints the pair and its error for every |t| bin): δu₂ = 0.0028 /
-0.0040 / 0.0070 / 0.0136 at 5 × 40.8 and 0.0016 / 0.0026 / 0.0049 /
-0.0111 at 18 × 137.5 (`--config 2`), i.e. **1.8–15× better than the ZEUS
+0.0041 / 0.0071 / 0.0138 at 5 × 40.8 and 0.0016 / 0.0026 / 0.0049 /
+0.0111 at 18 × 137.5 (`--config 2`), i.e. **1.7–15× better than the ZEUS
 1σ band of 0.024** that Table 6's systematic assumes — 15× where the bin
-is full, and only 1.8–2.2× in the sparsest bin of either configuration,
+is full, and only 1.7–2.2× in the sparsest bin of either configuration,
 which is where the leakage matters most.  The leakage into a_e falls with
 it all the same, from the +0.00066–0.00093 (6.6–9.3%) of an assumed wrong
 u₂ to a propagated 0.00005–0.00063 (0.5–6.3% of a_e) across the eight
@@ -371,8 +371,8 @@ fix and left for the author.
 | # | item | state |
 |---|---|---|
 | **D1** | **b₁-sector sign.** The code is opposite to Cosyn Eq. (27) / HERMES. B2 lands the anchor and the single constant, so the flip is one line. What flips is the sign of κ — and therefore the O(γ²) subtraction, which must not be coded before the decision. `money_b1.py` plots \|A_zz\|; `money_tagged_azz` is dominated by the O(1) S/D interference. | open |
-| **D7** | **⁶Li effective polarization.** `beams.LI6` used the Cloët 1/3 *per-nucleon* convention in a slot that `ToyG1.g1_nucleus` treated as whole-nucleus while callers divided by A — the 2-of-6 dilution applied twice. | ☑ **closed 2026-08-28** (structural half; the *value*, 1/3 versus the 0.81 cluster picture, remains `plans/04` #6). `g1_nucleus` now weights by Z and N exactly as `NuclearF2.f2a` does, every `Ion` slot is per-nucleon, and `beams.LI7` holds the verified VMC sums divided by Z = 3 and N = 4 so that the published ⁷Li path — 0.866 g₁ᵖ − 0.037 g₁ⁿ — is bit-for-bit unchanged (pinned to 1e-15 in `fastsim/tests/test_polarized_normalisation.py`, five tests). Per-nucleon g₁(⁶Li)/g₁(d) is **0.358**, not 0.119, and equals (1/3)/0.93 exactly since both ions are isoscalar. ³He's proton term gains the ×2 the Bissey numbers intend. `polligen.tagged.TRITON` is the ³He mirror and gains its second neutron: no published number reads the g₁ₜ/F₁ₜ overlay it moves (+8.4% at x = 0.005 to −0.7% at 0.7), but the α-tag acceptances `tagged_polarimetry_7li.py` prints DO move in the fourth decimal, because the accepted sample is cross-section-weighted — Roman-Pot tag 0.9614 / 0.9676 / 0.9726 → 0.9620 / 0.9678 / 0.9728 (YR) and 0.9807 / 0.9916 / 0.9920 → 0.9807 / 0.9917 / 0.9919 (tagging), median δA_∥ 0.01150 / 0.01138 → 0.01152 / 0.01140. The error-bar penalty does not move: √(acc × L ratio) is 2.83 / 3.87 / 3.15 on either side of the change, the shift being in the fourth decimal of both terms of the ratio. The script's `acc(any far-fwd)` also moved the same day, but from the far-forward stream's over-rigid routing branch and not from this change: an isolation probe forcing `farforward.over_rigid_route` to `False` returns it to `acc(RP)` exactly (0.9678 and 0.9916 at 10 × 99.5). Both causes and the current values are recorded in `docs/reproduction_manual.md` §4.1 and `plans/09`; Report 3's Table 6 caption and change log still carry the old tags and are left to the far-forward stream. |
-| **D9** | **b₁ money plot dilution (S6).** `money_b1.py` drew the signal with the ×0.87 deuteron transfer and no 2/6 against errors with neither — a factor 2.83 between signal and error. | ☑ **closed 2026-08-28.** `polarized.b1_li6_from_deuteron` now carries two named constants, `LI6_B1_RANK2_TRANSFER = 0.921947` — which *is* `TaggedModel(li6_alpha_channel()).tensor_dilution()`, pinned against it and against the closed form 1 − (9/10) P_D at P_D = 0.0867 in `evgen/tests/test_tagged.py` — and `LI6_B1_PER_NUCLEON = 2/6`, so the b₁ sector uses the same dilution convention as `delta_models.py` (whose "known residual inconsistency" paragraph is retired). `money_b1.py --transfer legacy` reproduces the old 0.87 × 1 curve and writes a different stem. Signal × 0.307316/0.87 = 0.353 relative to before at fixed b₁; with the digitized Miller b₁ on top of that (plans/02 step 1.2.3) the plotted \|A_zz\| is 2.4×10⁻⁴ at x = 0.005 rising to 1.4×10⁻³ at 0.07, i.e. 1.7 / 4.8 / 7.6 / 10.9σ per bin at x = 0.0035 / 0.009 / 0.028 / 0.071 (P_zz = 0.6, 10 fb⁻¹/u), while the CDKS convolution stays under 0.2σ everywhere. Every error number is unchanged. |
+| **D7** | **⁶Li effective polarization.** `beams.LI6` used the Cloët 1/3 *per-nucleon* convention in a slot that `ToyG1.g1_nucleus` treated as whole-nucleus while callers divided by A — the 2-of-6 dilution applied twice. | ☑ **closed 2026-08-28** (structural half; the *value*, 1/3 versus the 0.81 cluster picture, remains `plans/04` #6). `g1_nucleus` now weights by Z and N exactly as `NuclearF2.f2a` does, every `Ion` slot is per-nucleon, and `beams.LI7` holds the verified VMC sums divided by Z = 3 and N = 4 so that the published ⁷Li path — 0.866 g₁ᵖ − 0.037 g₁ⁿ — is bit-for-bit unchanged (pinned to 1e-15 in `fastsim/tests/test_polarized_normalisation.py`, five tests). Per-nucleon g₁(⁶Li)/g₁(d) is **0.358**, not 0.119, and equals (1/3)/0.93 exactly since both ions are isoscalar. ³He's proton term gains the ×2 the Bissey numbers intend. `polligen.tagged.TRITON` is the ³He mirror and gains its second neutron: no published number reads the g₁ₜ/F₁ₜ overlay it moves (+8.4% at x = 0.005 to −0.7% at 0.7), but the α-tag acceptances `tagged_polarimetry_7li.py` prints DO move in the fourth decimal, because the accepted sample is cross-section-weighted — Roman-Pot tag 0.9614 / 0.9676 / 0.9726 → 0.9620 / 0.9678 / 0.9728 (YR) and 0.9807 / 0.9916 / 0.9920 → 0.9807 / 0.9917 / 0.9919 (tagging), median δA_∥ 0.01150 / 0.01138 → 0.01152 / 0.01140; the current pair, after the 5 × 41 R₃₄ measurement and the per-configuration tagging levers of 2026-08-29, is 0.9617 / 0.9678 / 0.9728 and 0.9800 / 0.9909 / 0.9919. The error-bar penalty does not move: √(acc × L ratio) was 2.83 / 3.87 / 3.15 on either side of the change, the shift being in the fourth decimal of both terms of the ratio (it is 2.78 / 3.81 / 3.15 since the per-configuration tagging levers of 2026-08-29, which moved the luminosity and not the tag). The script's `acc(any far-fwd)` also moved the same day, but from the far-forward stream's over-rigid routing branch and not from this change: an isolation probe forcing `farforward.over_rigid_route` to `False` returns it to `acc(RP)` exactly (0.9678 and 0.9916 at 10 × 99.5; 0.9678 and 0.9909 today). Both causes and the current values are recorded in `docs/reproduction_manual.md` §4.1 and `plans/09`; Report 3's Table 6 was brought onto them on 2026-08-29. |
+| **D9** | **b₁ money plot dilution (S6).** `money_b1.py` drew the signal with the ×0.87 deuteron transfer and no 2/6 against errors with neither — a factor 2.83 between signal and error. | ☑ **closed 2026-08-28.** `polarized.b1_li6_from_deuteron` now carries two named constants, `LI6_B1_RANK2_TRANSFER = 0.921947` — which *is* `TaggedModel(li6_alpha_channel()).tensor_dilution()`, pinned against it and against the closed form 1 − (9/10) P_D at P_D = 0.0867 in `evgen/tests/test_tagged.py` — and `LI6_B1_PER_NUCLEON = 2/6`, so the b₁ sector uses the same dilution convention as `delta_models.py` (whose "known residual inconsistency" paragraph is retired). `money_b1.py --transfer legacy` reproduces the old 0.87 × 1 curve and writes a different stem. Signal × 0.307316/0.87 = 0.353 relative to before at fixed b₁; with the digitized Miller b₁ on top of that (plans/02 step 1.2.3) the plotted \|A_zz\| is 2.4×10⁻⁴ at x = 0.005 rising to 1.4×10⁻³ at 0.07, i.e. 1.7 / 4.8 / 7.6 / 10.9σ per bin at x = 0.0035 / 0.009 / 0.028 / 0.071 (P_zz = 0.6, 10 fb⁻¹/u), while the CDKS convolution stays under 0.2σ everywhere — 2.2×10⁻⁴, 1.4×10⁻³ and 1.6 / 4.7 / 7.3 / 10.4σ since the binned signal Q² of 2026-08-29. Every error number is unchanged. |
 
 ## 8.3 Blocked on external input
 
@@ -457,10 +457,10 @@ index, and the numbers are in `plans/00` run 8.
    *is* strongly anisotropic — ⟨cos 2β⟩ of the tagged sample ran −0.50 to
    +0.14 across the four |t| bins published when this was written, and on
    the seven published since 2026-08-28 the cutout leaves 16–20 of
-   twenty-four β bins populated below 0.05 GeV², 20–24 between 0.05 and
-   0.12 and all 24 above — and the design is nonetheless near
-   orthogonal: condition number 1.80–6.66 over those seven bins at the
-   three configurations (1.80–2.85 over the four bins of the earlier
+   twenty-four β bins populated below 0.05 GeV² and 20–24 above it, all
+   24 in the top bin — and the design is nonetheless near
+   orthogonal: condition number 1.85–10.87 over those seven bins at the
+   three configurations (1.85–3.35 over the four bins of the earlier
    window), rank 7/7 everywhere, corr(a_e, a_t) <
    0.005 (worst 0.0046) and no non-constant parameter pair correlated
    above 0.031, at all three configurations, and the fit closes on the
@@ -482,10 +482,11 @@ index, and the numbers are in `plans/00` run 8.
    **zero** accepted recoils, not an awkward fit.  Of the three levers:
    *fewer columns* buys nothing, because the three sin columns are already
    orthogonal to the cos ones — dropping them (`--no-sin`) leaves the
-   condition number unchanged to every printed digit, 2.33 / 1.94 / 1.80 /
+   condition number unchanged to every printed digit, 2.50 / 2.04 / 1.85 /
    2.01 in the four bins at 5 × 40.8 either way; *wider bins* buys nothing
-   either (2.33 → 2.40 → 2.46 in the sparsest bin going 12 × 24 → 8 × 16 →
-   6 × 12, i.e. slightly worse) and hits the rank guard at 4 × 8, where
+   either (1.97 → 2.02 → 2.08 in the sparsest of the seven published bins
+   and 4.98 → 5.18 → 5.47 in the lowest, going 12 × 24 → 8 × 16 → 6 × 12,
+   i.e. slightly worse) and hits the rank guard at 4 × 8, where
    ⟨cos 2α⟩ vanishes identically — it belongs to A12, which closed the
    low-count problem with a likelihood instead; and *|t| re-binned inside
    the window the cutout leaves* was the only surviving content — a gain
@@ -494,18 +495,19 @@ index, and the numbers are in `plans/00` run 8.
    binning is the seven bins 0.017–0.25 GeV²
    (`recopseudo.T_EDGES_PUBLISHED`, edges 0.017 / 0.028 / 0.039 / 0.05 /
    0.08 / 0.12 / 0.17 / 0.25).  The 0.05–0.25 GeV² window it replaces held
-   only 27 / 34 / 27% of the tagged sample at 5 × 40.8 / 10 × 99.5 /
-   18 × 137.5; the seven bins hold 78 / 88 / 85% and take the combined
-   one-year δa_e from 0.00205 / 0.00169 / 0.00132 to **0.00119 / 0.00104 /
+   only 28 / 38 / 27% of the tagged sample at 5 × 40.8 / 10 × 99.5 /
+   18 × 137.5; the seven bins hold 82 / 96 / 85% and take the combined
+   one-year δa_e from 0.00207 / 0.00178 / 0.00132 to **0.00121 / 0.00111 /
    0.00074**.  The lower edge is an analysis choice, not the apparatus:
-   the cutout's own floor (A p_u ε_x)² is 0.0064 / 0.0098 / 0.0094 GeV²,
+   the cutout's own floor (A p_u ε_x)² is 0.0079 / 0.0132 / 0.0094 GeV²,
    below 0.017 at all three.  The **0.006–0.017 bin stays out**, on three
    measurements rather than on taste — the cutout leaves only 16 of 24
-   β bins populated at 5 × 40.8 and 12 of 24 at the other two; its
-   weighted design has condition number 9.79 / 20.39 / 14.79 against the
-   1.80–6.66 of the published bins; and a 10⁻³ fill-to-fill envelope split
-   moves its a_t by −26.5 / −76.2 / −56.4%, against at most −12.5% in any
-   published bin — and it would buy only 0.00105 / 0.00097 / 0.00068.  The
+   β bins populated at 5 × 40.8, 8 of 24 at 10 × 99.5 and 12 of 24 at
+   18 × 137.5; its weighted design has condition number 12.82 / 47.26 /
+   14.79 against the 1.85–10.87 of the published bins; and a 10⁻³
+   fill-to-fill envelope split moves its a_t by −42.7 / −273.1 / −56.4%,
+   against at most −31.2% in any published bin — and it would buy only
+   0.00109 / 0.00108 / 0.00068.  The
    script takes `--t-edges` and prints the combination, so
    `money_cos2phi_coherent_reco.py --config 0 --optics tagging --exact
    --n-mc 6000000 --t-edges 0.006,0.017,0.028,0.039,0.05,0.08,0.12,0.17,0.25`
@@ -513,13 +515,13 @@ index, and the numbers are in `plans/00` run 8.
    `--t-edges 0.05,0.08,0.12,0.17,0.25` (`recopseudo.T_EDGES_LEGACY`) in
    both coherent scripts under its own output stem.  The added bins are
    resolution-dominated (δp_T,y = 93 MeV; the 0.17–0.25 reco bin already
-   has t_ref = 0.090), so they buy statistics for the flat a_e far more
+   has t_ref = 0.092), so they buy statistics for the flat a_e far more
    than shape information for a_t(t); below 0.05 GeV² the injected a_t is
    the linear model extrapolated past `coherent.MANTYSAARI_A2_DEUTERON`'s
    lowest digitized point, which is the one physics weakness of the
    window — counted per bin it covers four of the seven and not three,
    since a_t is quoted at t_ref and resolution puts the 0.05–0.08 bin's
-   t_ref at 0.045 GeV², so the retired window's own lowest bin was
+   t_ref at 0.046 GeV², so the retired window's own lowest bin was
    already extrapolated and the wider window deepens the extrapolation
    rather than introducing it; and t_min = 3 × 10⁻³ GeV² at x_P = 0.01
    bounds any window below.
@@ -583,8 +585,9 @@ step-halving *stall* on the positivity boundary, so
 of the error bar it would move and raises a named `LinAlgError` instead
 of returning a boundary point with a meaningless covariance (2026-08-28
 review, finding 5; the margin is twelve orders of magnitude at every
-occupancy this chain reaches, and the guard first fires around a tenth of
-a count per (α, β) cell).  Empty bins
+occupancy this chain reaches, and the guard fires at one count per
+(α, β) cell — one draw in two hundred of the sparsest bin at
+`--lumi-1yr 0.22222`, an occupancy no published command reaches).  Empty bins
 contribute nothing and single-fill bins contribute a finite n log p term,
 which removes the R3 variance pathology structurally rather than by a
 patch.
@@ -596,29 +599,33 @@ pseudo-experiments per |t| bin at 5 × 40.8 on **the same Poisson draws**
 
 | \|t\| | N_tag/yr | counts/(α,β) bin | injected a_t | ratio mean | likelihood mean |
 |---|---|---|---|---|---|
-| 0.05–0.08 | 4.2×10⁵ | 1451 | 0.0898 | 0.0899 (+0.1%) | 0.0902 |
-| 0.08–0.12 | 1.8×10⁵ | 620 | 0.1181 | 0.1170 (−0.9%) | 0.1176 |
-| 0.12–0.17 | 5.4×10⁴ | 192 | 0.1473 | 0.1394 (−5.4%) | 0.1463 |
-| 0.17–0.25 | 1.3×10⁴ | 48 | 0.1803 | 0.1143 (−37%) | 0.173 |
+| 0.05–0.08 | 4.1×10⁵ | 1431 | 0.0916 | 0.0913 (−0.3%) | 0.0916 |
+| 0.08–0.12 | 1.8×10⁵ | 607 | 0.1205 | 0.1203 (−0.2%) | 0.1215 |
+| 0.12–0.17 | 5.3×10⁴ | 184 | 0.1502 | 0.1460 (−2.8%) | 0.1514 |
+| 0.17–0.25 | 1.3×10⁴ | 45 | 0.1833 | 0.1211 (−34%) | 0.1814 |
 
 Two hundred experiments turn that comparison from an indication into a
 measurement (the same command with `--config 0 --n-mc 6000000
---ensemble 200`, 8 min).  Ratio: 0.0899 / 0.1179 / 0.1414 / 0.1184,
-i.e. +0.1 / −0.2 / −4.0 / −34.3 % with pulls of the mean +0.4 / −0.7 /
-**−9.0** / **−42.1**.
-Likelihood: 0.0902 / 0.1185 / 0.1477 / 0.1816, i.e. +0.4 / +0.3 / +0.3 /
-+0.7 % with pulls +2.0 / +1.0 / +0.5 / +0.9 — and the first bin's residual
+--ensemble 200`, 8 min).  Ratio: 0.0913 / 0.1187 / 0.1465 / 0.1202,
+i.e. −0.3 / −1.5 / −2.5 / −34.4 % with pulls of the mean −1.2 / **−5.4** /
+**−5.8** / **−47.2**.
+Likelihood: 0.0916 / 0.1199 / 0.1522 / 0.1822, i.e. 0.0 / −0.5 / +1.3 /
+−0.6 % with pulls −0.1 / −1.8 / +3.1 / −0.9 — and the third bin's residual
 is the response Monte Carlo's own floor at 6 × 10⁶ recoils, not the
-estimator.  At 18 × 137.5 the likelihood gives 0.0998 / 0.1373 / 0.1793 /
-0.2298 against 0.0997 / 0.1372 / 0.1791 / 0.2283, pulls +0.8 / +0.6 /
-+0.4 / +1.5.  The error bars become honest with it: the likelihood's
-spreads are 0.0031 / 0.0048 / 0.0091 / 0.0193 against quoted errors
-0.0035 / 0.0048 / 0.0086 / 0.0187, while the ratio's quoted error at 48
-counts per bin is 13% *below* its own spread (0.0181 against 0.0208) and
-at one count per bin 62% *above* it — a compressed estimator's error bar
+estimator.  At 18 × 137.5 the likelihood gives 0.0997 / 0.1374 / 0.1790 /
+0.2297 against 0.0996 / 0.1371 / 0.1791 / 0.2283, pulls +0.6 / +1.1 /
+−0.3 / +1.4.  The error bars become honest with it: the likelihood's
+spreads are 0.0035 / 0.0047 / 0.0089 / 0.0186 against quoted errors
+0.0037 / 0.0050 / 0.0089 / 0.0191, while the ratio's quoted error at 45
+counts per bin is 2% *below* its own spread (0.0185 against 0.0189) and
+at one count per bin 55% *above* it — a compressed estimator's error bar
 is not its spread in either direction.  Push the same bin to ONE count
-per (α, β) cell and the ratio changes sign, mean −0.085 against +0.182
-injected, while the likelihood still returns +0.181.  On exact counts the
+per (α, β) cell (`--lumi-1yr 0.22222`) and the ratio changes sign, mean
+−0.073 over two hundred draws against +0.183 injected, while the
+likelihood returns +0.205 ± 0.122 on the single draw the same command
+makes; 199 of its two hundred ensemble draws converge and the
+two-hundredth trips the positivity guard above, which is the first
+occupancy at which that guard has ever fired.  On exact counts the
 likelihood returns the injected coefficients to machine precision (rel
 4 × 10⁻¹⁶ against the ratio's 2 × 10⁻⁶) and the two quote the same Asimov
 errors to 0.24%, so **no published error bar moves**.  The default stays
@@ -626,13 +633,13 @@ errors to 0.24%, so **no published error bar moves**.  The default stays
 `harmonic_ratio_fit_2d` bit for bit.
 
 *Adaptive binning is not the fix.*  In the sparsest bin it only
-attenuates — over the same two hundred experiments, −34.3% at 12 × 24,
-−13.9% at 8 × 16, −7.8% at 6 × 12 (`--n-alpha 8 --n-beta 16` and
+attenuates — over the same two hundred experiments, −34.4% at 12 × 24,
+−12.8% at 8 × 16, −6.9% at 6 × 12 (`--n-alpha 8 --n-beta 16` and
 `--n-alpha 6 --n-beta 12` on that same `--ensemble 200` command) —
 because the offset falls as 1/ν_b while ν_b grows only as the bin count
-falls; it inflates err(a_e) by 17% through the wider-bin dilutions
-(0.0139 → 0.0148 → 0.0162); and it hits a hard floor at K_α = 4, where
-⟨cos 2α⟩ vanishes identically and the design is rank-deficient at 430
+falls; it inflates err(a_e) by 15% through the wider-bin dilutions
+(0.0141 → 0.0150 → 0.0162); and it hits a hard floor at K_α = 4, where
+⟨cos 2α⟩ vanishes identically and the design is rank-deficient at 405
 counts per bin.  It survives as a cross-check, not as the remedy.
 
 ## 8.5 Commit sequence

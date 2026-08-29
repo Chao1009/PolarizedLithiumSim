@@ -99,26 +99,35 @@ simulations within the broader EIC program."*
   unpolarized one, at x = 0.651), against TMT's 1.01 / 0.98 /
   1.00 / 1.08.  Below x ≈ 0.28 the ratio has no content — ⁷Li's unpolarized
   EMC ratio is above 1 there while both models keep a 7% polarized
-  depletion — so the two camps are put on one common ⁷Li unpolarized
-  baseline through a single valence strength factor (1 for CBT, which
-  computed ⁷Li itself; 0.397 for TMT's nuclear matter).  The transferred
-  separation is 0.044 / 0.040 / 0.034 / 0.059 at x = 0.09 / 0.28 / 0.45 /
+  depletion — so the two camps are put on one common unpolarized
+  baseline through a single valence strength factor.  Since 2026-08-29
+  that baseline is data-driven — EPPS21's ⁶Li F₂ per nucleon over
+  CT18ANLO's free isoscalar nucleon (EPPS21's own proton baseline, so the
+  fit cancels), valence depletion 0.03105 over the
+  window — giving 0.5322 for CBT and 0.2113 for TMT's nuclear matter,
+  where CBT's own model curve for ⁷Li (0.05835) gave 1 and 0.397 and
+  every figure published before that date.  The transferred
+  separation is 0.023 / 0.021 / 0.018 / 0.032 at x = 0.09 / 0.28 / 0.45 /
   0.71, but only the valence-window part of that is a statement about the
   two papers: the factor is fitted over 0.35 < x < 0.65 and applied
   everywhere, and below the window the two PUBLISHED polarized curves
   agree to better than 0.008 over 0.028 < x < 0.30 (0.002 at x = 0.09)
   while ⁷Li's unpolarized effect there is an enhancement, so a strength
   ratio has nothing to scale.  Inside the window the transferred
-  nuclear-matter depletion tracks ⁷Li's own unpolarized 0.034 / 0.048 /
-  0.087 at x = 0.40 / 0.45 / 0.65 to within 0.005 — "polarized ≈
-  unpolarized", as TMT claim — against CBT's 0.077 / 0.082 / 0.094, so ΔR
-  separates by 0.040 at x = 0.36 and only 0.011 at 0.65.  The
+  nuclear-matter depletion tracks the baseline's own unpolarized
+  0.021 / 0.027 / 0.041 at x = 0.40 / 0.45 / 0.65 to within 0.003 —
+  "polarized ≈ unpolarized", as TMT claim — against CBT's 0.041 / 0.044 /
+  0.050, so ΔR separates by 0.021 at x = 0.36 and only 0.006 at 0.65.  The
   discriminating region is therefore x ≈ 0.35–0.45: inside the valence
-  region as before, at its lower edge, with about half the separation the
-  constants 2 and 1 implied, and a reach of 0.84σ per bin at 10 fb⁻¹/u
-  (2.66σ at 100) in the best window bin, x = 0.355, rather than the
-  1.16σ / 3.65σ the unrestricted best bin at x = 0.141 returns on the
-  strength of the transfer alone.
+  region as before, at its lower edge, with a quarter of the separation the
+  constants 2 and 1 implied, and a reach of 0.45σ per bin at 10 fb⁻¹/u
+  (1.43σ at 100) in the best window bin, x = 0.355, rather than the
+  0.62σ / 1.95σ the unrestricted best bin at x = 0.141 returns on the
+  strength of the transfer alone.  Nothing reaches 1σ per bin anywhere at
+  10 fb⁻¹/u, and the spread between available baselines — 0.01372
+  (nNNPDF3.0) to 0.05835 (CBT), with a 90% CL Hessian band on EPPS21 alone
+  of +0.039 / −0.041 — is now the leading uncertainty on the figure of
+  merit, wider than the statistics.
   `money_polemc.py` prints both, and the same window is where the mixed
   three/five-flavour grid scheme is negligible (0.31% of F₂ᴬ at x = 0.35
   against 2.6% at 0.09).*
@@ -293,11 +302,12 @@ corrections to entries above:
   own FOMs (fastsim README / money plots 5–6): g₁-EMC needs longitudinal
   P_z ≥ 0.7 + P_e ≈ 0.7 (δΔR ≈ 4.1–6.0%/x-bin at x = 0.28–0.45 on grid
   inputs, 10 fb⁻¹/u, revised 2026-08-28 from 2.6–4%; CBT-vs-TMT at
-  100 fb⁻¹/u — 2.7σ in the best bin of the valence window in which the two
-  calculations are comparable at all, revised the same day from the 5σ that
-  came from the undigitized 2×/1× constants); b₁ needs tensor
+  100 fb⁻¹/u — 1.4σ in the best bin of the valence window in which the two
+  calculations are comparable at all, revised on 2026-08-28 from the 5σ that
+  came from the undigitized 2×/1× constants and again on 2026-08-29, when
+  the EPPS21 baseline halved the transfer); b₁ needs tensor
   fills (δA_zz ≈ 1×10⁻⁴ at x < 0.05 vs a digitized-Miller |A_zz| of
-  (2.4–14)×10⁻⁴ over x = 0.005–0.07, up to 11σ per bin, while the CDKS
+  (2.2–14)×10⁻⁴ over x = 0.005–0.07, up to 10σ per bin, while the CDKS
   convolution is ≤ 0.2σ everywhere; rel-lumi at 10⁻⁴); Δ needs transverse
   P_zz (δA = (1.5–4.5)×10⁻⁴ at P_zz = 0.6; a 3×10⁻³ floor stays 3–10σ at
   P_zz = 0.3); tagging/coherent as in plans/03, 06. Machine facts: arcs'

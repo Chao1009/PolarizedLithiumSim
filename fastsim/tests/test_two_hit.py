@@ -25,7 +25,8 @@ from polli_fastsim import spectator as sp
 
 #: median alpha-d separation at the pot plane [mm] on the PER-CONFIGURATION
 #: levers measured on 2026-08-28 (`farforward.POT_LEVERS`, tools/fullsim,
-#: plans/09 B1: R12 = 19.24 / 21.25 / 29.97 m, R34 = -- / 3.35 / 2.93,
+#: plans/09 B1 and B1', R12 = 19.24 / 21.25 / 29.97 m, R34 = 4.56 / 3.35 /
+#: 2.93,
 #: D = 0.311 / 0.287 / 0.292), beta = 0.30, seed 7, in configuration order
 #: (5 x 41, 10 x 100, 18 x 275).  These are the numbers Report 4 Table 5,
 #: plans/09 SS9.2 and the reproduction manual carry, and
@@ -44,20 +45,25 @@ from polli_fastsim import spectator as sp
 #: with R34 taken equal to it, at every configuration.  The scan of
 #: plans/09 B1 measured both per configuration and the millimetres fall
 #: again: R12 is a third smaller at the two lower configurations, and R34
-#: is 2.9-3.4 m rather than 30.6, an order of magnitude, so the vertical
-#: half of every separation collapses.  Hence 25.8 / 10.7 / 10.9 mm, and
-#: the ordering 5 x 41 > 10 x 100 no longer implies 10 x 100 > 18 x 275:
-#: the two upper configurations are now equal to 4%, because 18 x 275's
-#: larger R12 offsets its smaller angles.
-MEDIAN_SEPARATION_MM = {"5x41": 25.8, "10x100": 10.7, "18x275": 10.9}
+#: is 2.9-4.6 m rather than 30.6, so the vertical half of every separation
+#: collapses.  The 5 x 41 row moved once more on 2026-08-29, when R34 was
+#: measured there too: it had been carrying the fallback r34 = r12 =
+#: 19.24 m, a factor 4.2 too large, and 25.8 mm becomes 17.3.  The
+#: ordering 5 x 41 > 10 x 100 no longer implies 10 x 100 > 18 x 275: the
+#: two upper configurations are equal to 1%, because 18 x 275's larger R12
+#: offsets its smaller angles.
+MEDIAN_SEPARATION_MM = {"5x41": 17.3, "10x100": 10.7, "18x275": 10.9}
 
 #: median alpha-d separation with the ANGULAR lever alone [mm].  Pinned so
 #: that the size of the dispersive term stays visible and cannot be dropped
 #: again in silence -- and it is now the SMALLER half at the two upper
-#: configurations, 6.2 mm of angle against a 8.8-9.3 mm median dispersive
+#: configurations, 6.2 mm of angle against a 8.8-9.5 mm median dispersive
 #: displacement, the roles having swapped with the measurement of R34:
-#: on the single 30.6 m lever the angular term was the dominant one.
-ANGULAR_ONLY_SEPARATION_MM = {"5x41": 23.1, "10x100": 6.2, "18x275": 6.2}
+#: on the single 30.6 m lever the angular term was the dominant one.  At
+#: 5 x 41 the angular term is still the larger of the two, 14.4 against
+#: 9.5 mm, but only by half as much as the 23.1 mm this row carried while
+#: the vertical lever there was the fallback r34 = r12.
+ANGULAR_ONLY_SEPARATION_MM = {"5x41": 14.4, "10x100": 6.2, "18x275": 6.2}
 
 
 def _breakup(config, n=200_000, seed=7):
@@ -173,9 +179,9 @@ def test_the_dispersive_term_is_the_same_size_as_the_angular_one():
     """The correction of the 2026-08-28 review.  `separation_at_pots` may
     not drop the dispersion: the two fragments carry OPPOSITE k_z, so their
     rigidities move apart rather than together (dR/dk_z = +0.268 for the
-    alpha, -0.536 for the deuteron), and D (R_a - R_d) is a median 9.2 mm
-    against separations of 15 to 38 mm.  Pinning both columns keeps the
-    size of the term visible."""
+    alpha, -0.536 for the deuteron), and D (R_a - R_d) is a median 8.8 to
+    9.5 mm against separations of 11 to 17 mm.  Pinning both columns keeps
+    the size of the term visible."""
     for cfg in beams.default_configs("6Li"):
         ev = _breakup(cfg)
         a, d = ev["spectator"], ev["partner"]
@@ -216,7 +222,6 @@ def test_a_recorded_pair_merges_only_through_the_dispersion():
         ev = _breakup(cfg)
         a, d = ev["spectator"], ev["partner"]
         r12, r34, _disp = ff.pot_levers_for(cfg)
-        r34e = r12 if r34 is None else r34
         sep_mm = 1e3 * ff.separation_at_pots(a, d, config=cfg)
         ang_mm = 1e3 * ff.separation_at_pots(a, d, r12=r12, r34=r34,
                                              dispersion=0.0)
@@ -230,13 +235,24 @@ def test_a_recorded_pair_merges_only_through_the_dispersion():
             rec = ((ra == 1) | (ra == 4)) & ((rd == 1) | (rd == 4))
             if rec.sum() < 50:
                 continue
-            # the scale needs the lever of the axis the recoil escapes
-            # through, and since 2026-08-28 those differ by ~9x: it is
-            # 3 min(R12 env_x, R34 env_y), not 3 R12 min(envelope).  At
-            # 10 x 100 the two read 18 and 115 mm and the measured minimum
-            # is 19, so the old form is not a scale at all any more.
-            scale = 3e3 * min(r12 * optics.envelope[0],
-                              r34e * optics.envelope[1])
+            # the scale needs the lever of the axis the recoil ACTUALLY
+            # escapes through, and since 2026-08-28 the two differ by 4 to
+            # 10x.  It is not 3 R12 min(envelope), and it is not
+            # 3 min(R12 env_x, R34 env_y) either: that was right only while
+            # both axes were in use.  With R34 measured at 5 x 41 as well
+            # (2026-08-29) the vertical envelope there, 3.80 mrad against a
+            # spectator that rarely reaches 2 mrad, is cleared by NO
+            # recorded pair at the Yellow Report or the tagging optics, so
+            # its 17.3 mm lever is not a scale of anything; the minimum
+            # sits at 3 R12 env_x = 127 and 21 mm instead.  Take the
+            # minimum over the axes the recorded alphas are seen to use.
+            cx, cy = optics.envelope
+            esc_x = np.abs(a["theta"] * np.cos(a["phi"])) > cx
+            esc_y = np.abs(a["theta"] * np.sin(a["phi"])) > cy
+            levers = ([r12 * cx] if (esc_x & rec).any() else []) + \
+                     ([r34 * cy] if (esc_y & rec).any() else [])
+            assert levers
+            scale = 3e3 * min(levers)
             assert 0.90 * scale < float(ang_mm[rec].min()) < 1.20 * scale
             assert float(ang_mm[rec].min()) > 12.0 * 0.5   # > 12 pixels
             # with the dispersion the same pairs can close up, but rarely.

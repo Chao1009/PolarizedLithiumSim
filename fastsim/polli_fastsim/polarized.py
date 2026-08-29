@@ -8,6 +8,13 @@ published theory curves, digitized from the papers' own vector figures by
 branches that reproduce every figure published before 2026-08-28.
 
   - g1p, g1n: JAM / DSSV grids (LHAPDF) -- `PartonG1` wires NNPDFpol11
+  - g2: Wandzura-Wilczek from whichever g1 backend is in use (`g2_ww`,
+    `ToyG1.g2_nucleus`), the one quadrature both packages share; the
+    twist-3 departure from it is varied at the caller and is the residual
+    systematic of the finite-gamma A_par (`asymmetries.a_parallel_exact`)
+  - unpolarized EMC ratio: the A = 6 NUCLEAR PDF GRIDS (EPPS21, nNNPDF3.0)
+    over CT18NLO's free isoscalar nucleon -- data-driven since 2026-08-29,
+    and the common baseline the two polarized camps are transferred onto
   - polarized EMC ratio: DIGITIZED Cloet-Bentz-Thomas (PLB 642:210, Fig. 6,
     7Li at Q2 = 5 GeV2) and Tronchin-Matevosyan-Thomas (PLB 783:247, Fig. 4,
     nuclear matter at Q2 = 10 GeV2)
@@ -21,6 +28,37 @@ branches that reproduce every figure published before 2026-08-28.
 import numpy as np
 
 from .structure import ToyF2, r_sigma_lt, _safe_xfx
+
+# NumPy compat: np.trapz removed in NumPy >= 2.4, np.trapezoid absent < 2.0
+_trapezoid = getattr(np, "trapezoid", None) or np.trapz
+
+
+def g2_ww(g1_func, x, q2, npts=96):
+    """Wandzura-Wilczek g2(x) = -g1(x) + int_x^1 du g1(u)/u at fixed Q2.
+
+    Substitution u = x^(1-t) maps the integral to -ln(x) int_0^1 g1(x^(1-t)) dt,
+    evaluated by trapezoid; accepts any mutually broadcastable (x, q2).
+
+    This is the ONE quadrature both packages use: `polligen.xsec` re-exports
+    it under its old name, and `ToyG1.g2_nucleus` below wraps it with a
+    per-grid cache.  It is linear in g1, which is what makes the extraction
+    of section (c) legitimate -- scaling g1 by a constant scales g2^WW by the
+    same constant, so the ratio g2/g1 that the finite-gamma A_par needs is a
+    property of the SHAPE and survives the multiplicative medium
+    modification the polarized-EMC ratio measures.
+    """
+    xb, qb = np.broadcast_arrays(np.asarray(x, dtype=float),
+                                 np.asarray(q2, dtype=float))
+    shape = xb.shape
+    xf = np.atleast_1d(xb).ravel()
+    qf = np.atleast_1d(qb).ravel()
+    t = np.linspace(0.0, 1.0, npts)
+    xu = np.power(xf[:, None], 1.0 - t)
+    qu = np.broadcast_to(qf[:, None], xu.shape)
+    g1u = np.asarray(g1_func(xu, qu), dtype=float)
+    integral = -np.log(np.maximum(xf, 1e-12)) * _trapezoid(g1u, t, axis=-1)
+    out = -np.asarray(g1_func(xf, qf), dtype=float) + integral
+    return out.reshape(shape)
 
 
 class ToyG1:
@@ -81,6 +119,67 @@ class ToyG1:
             g1 = g1 * medium_ratio(x)
         return g1
 
+    # --- g2 -------------------------------------------------------------
+    #
+    # A backend is asked for g2 by everything that uses the finite-gamma
+    # A_par -- `polligen.xsec.InclusiveKernel` (default since 2026-08-29),
+    # `fom.project_observables`, and the g2 systematic of
+    # `evgen/scripts/target_mass_bound.py`.  It is Wandzura-Wilczek by
+    # construction here: the twist-3 piece is the model's own uncertainty
+    # and is varied at the CALLER (g2 = 0 and 1.5 g2^WW), not silently
+    # inside the backend.
+    #
+    # The cache is what makes the term free.  `g2_ww` costs one g1
+    # evaluation per quadrature node -- 96 of them -- so on a PDF grid it
+    # is the whole cost of a projection, while every consumer asks for the
+    # same (x, Q2) grid over and over: `money_polemc` runs three energy
+    # configurations that SHARE one 40 x 30 grid, and its `main()` calls
+    # `delta_dr_per_x` once per luminosity, so the six asks of a run
+    # collapse to a single 96-node build.  Keyed on the ion and the raw
+    # bytes of the two arrays, so it is exact rather than approximate;
+    # bounded, so a script sweeping grids cannot grow it without limit.
+    _G2_CACHE_MAX = 12
+
+    def g2_nucleus(self, ion, x, q2, medium_ratio=None, npts=96):
+        """g2A^WW built from THIS backend's g1A, cached per (x, Q2) grid.
+
+        Same normalization as `g1_nucleus`: whole-nucleus, so a caller
+        dividing by A gets the per-nucleon g2 that pairs with a
+        per-nucleon F1.  g2^WW is linear in g1, so the division commutes
+        with the quadrature."""
+        x = np.asarray(x, dtype=float)
+        q2 = np.asarray(q2, dtype=float)
+        cache = getattr(self, "_g2_cache", None)
+        if cache is None:
+            cache = self._g2_cache = {}
+        key = None
+        if medium_ratio is None:
+            # `ion` itself, NOT id(ion): beams.Ion is a frozen dataclass
+            # and hashable, while an id is only unique for as long as the
+            # object lives -- a transient Ion (dataclasses.replace, a test
+            # fixture) can be allocated at a recycled address and would
+            # collect another nucleus's table.
+            key = (ion, x.shape, q2.shape, npts,
+                   x.tobytes(), q2.tobytes())
+            hit = cache.get(key)
+            if hit is not None:
+                return hit
+
+        def g1f(xx, qq):
+            return self.g1_nucleus(ion, xx, qq, medium_ratio=medium_ratio)
+
+        out = g2_ww(g1f, x, q2, npts=npts)
+        if key is not None:
+            if len(cache) >= self._G2_CACHE_MAX:
+                cache.pop(next(iter(cache)))
+            # a hit hands back the stored array itself, so it is frozen:
+            # a caller writing into a result would otherwise poison every
+            # later hit.  Every caller in the repository divides by A and
+            # gets a fresh array from that.
+            out.setflags(write=False)
+            cache[key] = out
+        return out
+
 
 class PartonG1(ToyG1):
     """LO g1 from a polarized LHAPDF grid via `parton` (default
@@ -131,23 +230,96 @@ class PartonG1(ToyG1):
             np.asarray(x, dtype=float), np.asarray(q2, dtype=float))
 
 
-def unpolarized_emc_ratio(x):
-    """Qualitative unpolarized EMC ratio R_EMC(x) for a light nucleus:
-    shadowing dip, anti-shadowing bump ~1.01 at x~0.1, valence dip ~0.88
-    at x~0.7, Fermi rise beyond. Smooth interpolation of the canonical
-    shape (SCENARIO; EPPS21 / data fits are its own replacement, plans/02
-    step 1.2.1 -- deliberately NOT touched by the 2026-08-28
-    digitization, which replaced the POLARIZED curves).
+# The pre-2026-08-29 hand-written shape, kept as mode='table' below:
+# shadowing dip, anti-shadowing bump ~1.01 at x ~ 0.1, valence dip 0.88 at
+# x ~ 0.7, Fermi rise beyond.  Every figure published before 2026-08-29
+# that carried an unpolarized EMC ratio carried this one.
+LEGACY_EMC_TABLE_X = np.array([1e-4, 0.01, 0.06, 0.10, 0.20, 0.30, 0.45,
+                               0.60, 0.70, 0.80, 0.88, 0.95])
+LEGACY_EMC_TABLE_R = np.array([0.96, 0.98, 1.00, 1.01, 1.00, 0.98, 0.95,
+                               0.91, 0.88, 0.90, 1.00, 1.15])
 
-    `cbt_unpolarized_emc_ratio` is the digitized 7Li unpolarized curve and
-    is the better object; this one stays because `NuclearF2(emc_ratio=)`
-    consumers (`money_delta_realistic.py`) and the `mode='constant'`
-    legacy branches below are pinned to it."""
-    xs = np.array([1e-4, 0.01, 0.06, 0.10, 0.20, 0.30, 0.45, 0.60,
-                   0.70, 0.80, 0.88, 0.95])
-    rs = np.array([0.96, 0.98, 1.00, 1.01, 1.00, 0.98, 0.95, 0.91,
-                   0.88, 0.90, 1.00, 1.15])
-    return np.interp(np.asarray(x, dtype=float), xs, rs)
+UNPOL_EMC_MODES = ("epps21", "nnnpdf", "cbt", "table")
+UNPOL_EMC_MODE = "epps21"        # the default of unpolarized_emc_ratio
+UNPOL_EMC_Q2 = 5.0               # reference Q2 [GeV^2] of the grid modes
+
+
+def unpolarized_emc_ratio(x, q2=None, mode=None):
+    """Unpolarized EMC ratio R(x, Q2) for a light nucleus, per nucleon.
+
+    mode='epps21' (the default, `UNPOL_EMC_MODE`) is DATA-DRIVEN: the
+    per-nucleon F2 of EPPS21nlo_CT18Anlo_Li6 over the free isoscalar
+    nucleon (F2p + F2n)/2 of CT18ANLO -- EPPS21's OWN proton baseline, so
+    the fit cancels and the ratio is the nuclear modification alone (it
+    was CT18NLO until 2026-08-29, 4.2% shallower) -- both through
+    `structure.NuclearF2Ratio` and so through the same five-flavour charge
+    sum, at `q2` or at the reference `UNPOL_EMC_Q2` = 5 GeV2 (CBT's scale,
+    so that the two-camp comparison below is built at one scale).  This
+    closes plans/02 step 1.2.1.
+
+    mode='nnnpdf' is the same construction on nNNPDF30_nlo_as_0118_A6_Z3.
+    Its A = 6 EMC effect is much the shallower of the two -- 0.0137 mean
+    valence depletion against EPPS21's 0.0311 -- because nNNPDF3.0 has
+    almost no A = 6 data to constrain it there; the spread between the two
+    fits is the leading uncertainty on everything built on this baseline
+    and is reported as such, not averaged away.
+
+    mode='cbt' is the digitized CBT 7Li unpolarized curve (the right
+    ISOTOPE, but a model rather than a fit to data: mean valence depletion
+    0.0584, 1.9x EPPS21's).  mode='table' is the legacy 12-point shape
+    (0.0646), which every figure published before 2026-08-29 used and
+    which the `mode='constant'` branches below and the dated
+    `money_delta_*.py` notes stay pinned to.
+
+    ISOTOPE CAVEAT.  LHAPDF has A = 6 grids and nothing for A = 7, while
+    the polarized-EMC observable of `money_polemc.py` is 7Li.  Over
+    0.1 < x < 0.7 the EPPS21 Li-6 ratio and the CBT 7Li curve differ by up
+    to 0.056 (mean 0.022), but that difference is a fit against a model,
+    not 6Li against 7Li: the EMC slope grows roughly as ln A, so 7Li's
+    depletion should exceed 6Li's by about ln7/ln6 = 1.086, i.e. the
+    isotope alone moves the valence depletion from 0.0298 to about 0.032
+    -- a twelfth of the gap to CBT and a fifth of the gap to nNNPDF3.0.
+    The isotope is therefore the smallest of the three uncertainties here
+    (plans/04 #8).
+
+    `q2` is ignored by the two digitized/tabulated modes, which are curves
+    at one scale (CBT at Q2 = 5, the legacy table at none); passing it is
+    not an error, because callers switch modes without switching
+    signatures.
+    """
+    mode = UNPOL_EMC_MODE if mode is None else mode
+    if mode == "table":
+        return np.interp(np.asarray(x, dtype=float),
+                         LEGACY_EMC_TABLE_X, LEGACY_EMC_TABLE_R)
+    if mode == "cbt":
+        return cbt_unpolarized_emc_ratio(x)
+    if mode not in ("epps21", "nnnpdf"):
+        raise ValueError("mode must be one of %s" % (UNPOL_EMC_MODES,))
+    q2 = UNPOL_EMC_Q2 if q2 is None else q2
+    return _nuclear_ratio(mode)(x, q2)
+
+
+def legacy_emc_ratio(x):
+    """`unpolarized_emc_ratio` frozen at mode='table', as a bare r(x).
+
+    The `NuclearF2(emc_ratio=)` hook takes one argument, and the three
+    scripts that use it -- `money_delta_realistic.py` and the dated
+    `money_delta_20260720/21.py` -- are reproductions of dated notes
+    (`notes/money_delta_note_2026-07-16.md` R3), so they must keep the
+    12-point shape they were written against when the default moved to
+    the nuclear grids on 2026-08-29."""
+    return unpolarized_emc_ratio(x, mode="table")
+
+
+_NUCLEAR_RATIOS = {}
+
+
+def _nuclear_ratio(mode):
+    """Cached `structure.NuclearF2Ratio`; opening a grid is not cheap."""
+    if mode not in _NUCLEAR_RATIOS:
+        from .structure import NuclearF2Ratio
+        _NUCLEAR_RATIOS[mode] = NuclearF2Ratio(mode)
+    return _NUCLEAR_RATIOS[mode]
 
 
 # --------------------------------------------------------------------------
@@ -242,18 +414,38 @@ CDKS_TABLE = "b1_cdks_q2p5"          # Cosyn-Dong-Kumano-Sargsian Fig. 4
 # two nuclei, not two models.  What each model actually predicts is the
 # STRENGTH of the polarized EMC effect relative to the unpolarized one in
 # its own calculation ("about twice" vs "about equal"), and that ratio is
-# what transfers.  Both camps are therefore put on one common 7Li
-# unpolarized baseline -- CBT's own digitized 7Li unpolarized curve --
-# through
+# what transfers.  Both camps are therefore put on one common unpolarized
+# baseline through
 #
 #     DR_model(x) = 1 - s_model * [1 - R_pol,model(x)],
-#     s_model     = <1 - R_unpol,7Li> / <1 - R_unpol,model>   over the
+#     s_model     = <1 - R_unpol,baseline> / <1 - R_unpol,model>  over the
 #                   valence window 0.35 < x < 0.65.
 #
-# For CBT s = 1 identically (it IS the 7Li calculation), so the money plot
-# draws CBT's published Eq.-23 curve untouched.  For TMT s = 0.397: the
-# 7Li unpolarized depletion averages 0.0583 against nuclear matter's
-# 0.1470 over that window.
+# WHICH BASELINE, changed 2026-08-29 (plans/02 step 1.2.1).  It used to be
+# CBT's own digitized 7Li unpolarized curve, so s was 1 for CBT by
+# construction and 0.397 for TMT, whose nuclear matter is depleted 0.1470
+# against 7Li's 0.0583 over the window.  It is now the DATA-DRIVEN
+# `unpolarized_emc_ratio` default, EPPS21's Li-6 over the free isoscalar
+# nucleon, whose valence depletion is 0.03105 -- just over half of CBT's
+# model value.  Both camps are therefore scaled: s = 0.5322 for CBT and 0.2113
+# for TMT, their RATIO unchanged at 2.52 because that ratio is a property
+# of the two calculations and not of the baseline.
+#
+# WHAT THAT COSTS THE HEADLINE, stated plainly because it is the single
+# largest number this module moved: the separation the money plot draws is
+# proportional to the baseline depletion, so it halves, from 0.0395 to
+# 0.0202 at x = 0.36 and from 0.0110 to 0.0056 at 0.65.  The reach halves
+# with it.  That is not a loss of information but the removal of a
+# borrowed one: the old figure asserted CBT's own model value for the
+# unpolarized EMC effect of a nucleus nobody has measured, and EPPS21's
+# fit says half of it.  `baseline='cbt'` reproduces the old figure
+# exactly, `baseline='nnnpdf'` gives 0.213 and 0.0846 (nNNPDF3.0's A = 6
+# EMC effect is shallower again), and the spread between those three is
+# the honest uncertainty on the reach -- larger than any of the detector
+# or luminosity terms in the same projection.  EPPS21's own 90%-CL
+# Hessian band on the valence depletion is 0.0297 +0.0393 -0.0406, i.e.
+# compatible with no EMC effect at A = 6 at all, so the spread is not a
+# choice between three well-determined numbers.
 #
 # The strength ratio is taken over the valence window rather than
 # pointwise for a physical reason, not a numerical one: pointwise,
@@ -271,32 +463,66 @@ CDKS_TABLE = "b1_cdks_q2p5"          # Cosyn-Dong-Kumano-Sargsian Fig. 4
 # figure: s is CONSTANT in x, so it is applied everywhere the money plot
 # draws, including two decades below the window in which it is defined.
 # The two PUBLISHED polarized curves agree to better than 0.007 over
-# 0.028 < x < 0.30 (0.0016 at x = 0.09, 0.0006 at x = 0.14), so the 0.04
-# separation the transferred pair shows there is the 7Li-vs-nuclear-matter
-# strength rescaling and not a disagreement between the papers.  Inside the
-# window, where the comparison does mean something, the transferred
-# depletion tracks 7Li's own unpolarized 0.034 / 0.048 / 0.087 at
-# x = 0.40 / 0.45 / 0.65 to within 0.005 against CBT's 0.077 / 0.082 /
-# 0.094 -- "polarized ~ unpolarized" against "about twice" -- so DR
-# separates by 0.040 at x = 0.36 and 0.011 at 0.65 as CBT's ratio of
-# effects falls to 1.  `tmt_published_emc_ratio` returns the untransferred
-# curve so that both separations can be quoted side by side, `money_polemc.py`
-# prints them side by side, and Report 0 section 5.3 says so in words.
+# 0.028 < x < 0.30 (0.0016 at x = 0.09, 0.0006 at x = 0.14), so the 0.020
+# separation the transferred pair shows there is the baseline rescaling of
+# two different targets and not a disagreement between the papers.
+# Inside the window, where the comparison does mean something, the
+# separation is 0.0202 at x = 0.36 falling to 0.0056 at 0.65 as CBT's
+# ratio of effects falls towards TMT's.  `tmt_published_emc_ratio`
+# returns the untransferred curve so that both separations can be quoted
+# side by side, `money_polemc.py` prints them side by side, and Report 0
+# section 5.3 says so in words.
 POLEMC_VALENCE_WINDOW = (0.35, 0.65)
 
 
-def _valence_scale(table):
-    """<1 - R_unpol,7Li> / <1 - R_unpol,table> over the valence window."""
+POLEMC_BASELINE = "epps21"        # default baseline of the transfer
+POLEMC_BASELINE_MODES = UNPOL_EMC_MODES
+
+
+def valence_depletion(mode=None, q2=None, n=301):
+    """<1 - R_unpol> of one baseline over POLEMC_VALENCE_WINDOW.
+
+    0.03105 for 'epps21' and 0.01372 for 'nnnpdf' at the reference
+    Q2 = 5 GeV2, 0.05835 for 'cbt' and 0.06459 for 'table'.  The two grid
+    values are almost Q2-independent over the range the projection covers
+    (EPPS21: 0.03108 at Q2 = 4, 0.03090 at 10, 0.02952 at 100).
+    """
     lo, hi = POLEMC_VALENCE_WINDOW
-    g = np.linspace(lo, hi, 301)
-    d_ref = 1.0 - _interp(CBT_TABLE, "R_unpol", g)
-    d_mod = 1.0 - _interp(table, "R_unpol", g)
-    return float(d_ref.mean() / d_mod.mean())
+    g = np.linspace(lo, hi, n)
+    return float((1.0 - unpolarized_emc_ratio(g, q2=q2, mode=mode)).mean())
 
 
-# Evaluated once at import (the tables are small and the lookup cached).
-CBT_VALENCE_SCALE = 1.0          # CBT computed 7Li itself -- exact identity
-TMT_VALENCE_SCALE = _valence_scale(TMT_TABLE)                    # = 0.397009
+_VALENCE_SCALES = {}
+
+
+def valence_scale(table, baseline=None, q2=None):
+    """<1 - R_unpol,baseline> / <1 - R_unpol,table> over the valence window.
+
+    The strength with which one camp's POLARIZED depletion is carried onto
+    the common unpolarized baseline.  On the default 'epps21' baseline it
+    is 0.5322 for CBT and 0.2113 for TMT; on the legacy 'cbt' baseline it
+    is exactly 1 for CBT (which computed 7Li itself) and 0.397009 for TMT,
+    which is what every figure published before 2026-08-29 used.
+    """
+    baseline = POLEMC_BASELINE if baseline is None else baseline
+    key = (table, baseline, q2)
+    if key not in _VALENCE_SCALES:
+        lo, hi = POLEMC_VALENCE_WINDOW
+        g = np.linspace(lo, hi, 301)
+        d_ref = valence_depletion(mode=baseline, q2=q2)
+        d_mod = float((1.0 - _interp(table, "R_unpol", g)).mean())
+        _VALENCE_SCALES[key] = d_ref / d_mod
+    return _VALENCE_SCALES[key]
+
+
+# The legacy pair, evaluated at import because neither needs a grid.  They
+# are the transfer on the 'cbt' baseline, i.e. the published-before-
+# 2026-08-29 numbers, and are what `baseline='cbt'` reproduces.
+CBT_VALENCE_SCALE_ON_CBT = 1.0   # CBT computed 7Li itself -- exact identity
+_VW = np.linspace(POLEMC_VALENCE_WINDOW[0], POLEMC_VALENCE_WINDOW[1], 301)
+TMT_VALENCE_SCALE_ON_CBT = float(
+    (1.0 - _interp(CBT_TABLE, "R_unpol", _VW)).mean()
+    / (1.0 - _interp(TMT_TABLE, "R_unpol", _VW)).mean())     # = 0.397009
 
 
 def cbt_unpolarized_emc_ratio(x):
@@ -309,50 +535,80 @@ def cbt_unpolarized_emc_ratio(x):
     return _interp(CBT_TABLE, "R_unpol", x)
 
 
-def cbt_polarized_emc_ratio(x, mode="digitized", eq=23):
-    """Cloet-Bentz-Thomas polarized EMC ratio for 7Li.
+def cbt_polarized_emc_ratio(x, mode="digitized", eq=23, baseline=None):
+    """Cloet-Bentz-Thomas polarized EMC ratio for 7Li, on the baseline.
 
-    mode='digitized' (default) returns the published curve of PLB 642:210
+    mode='digitized' (default) takes the published curve of PLB 642:210
     Fig. 6 -- `eq=23` the red dotted R^{3/2 3/2}_{As} of their Eq. (23),
     which is what plans/01 defines the programme's DR_A to be, and
-    `eq=26` the red solid R^{(3/2 1)}_{As} of their Eq. (26).  No transfer
-    is applied because CBT computed 7Li itself (s = 1 above).
+    `eq=26` the red solid R^{(3/2 1)}_{As} of their Eq. (26) -- and
+    carries its depletion onto the common unpolarized baseline with the
+    valence factor `valence_scale(CBT_TABLE, baseline)`.
+
+    Until 2026-08-29 the baseline WAS CBT's own 7Li unpolarized curve, so
+    that factor was exactly 1 and this returned the published curve
+    untouched; `baseline='cbt'` still does.  On the default data-driven
+    'epps21' baseline it is 0.5106, because EPPS21's Li-6 valence
+    depletion (0.0298) is half of CBT's model 7Li one (0.0584): what
+    transfers is the model's RATIO of polarized to unpolarized effect,
+    and the size of the unpolarized effect is then taken from the fit.
 
     mode='constant' is the pre-2026-08-28 stand-in, 1 - 2(1 - R_EMC) on
-    the 12-point `unpolarized_emc_ratio` table, kept so the figures
-    published before the digitization can be reproduced.
+    the legacy 12-point table, kept so the figures published before the
+    digitization can be reproduced; it ignores `baseline`.
 
     DIGITIZED RANGE x = 0.028-0.871.  Below 0.028 the value is frozen at
     the endpoint 0.919 and above 0.871 at 1.007; `money_polemc.py` draws
     from x = 0.005, so the leftmost decade of that figure is a flat
     continuation, not a prediction."""
     if mode == "constant":
-        return 1.0 - 2.0 * (1.0 - unpolarized_emc_ratio(x))
+        return 1.0 - 2.0 * (1.0 - unpolarized_emc_ratio(x, mode="table"))
     if mode != "digitized":
         raise ValueError("mode must be 'digitized' or 'constant'")
     if eq not in (23, 26):
         raise ValueError("eq must be 23 (R^{3/2 3/2}) or 26 (R^{(3/2 1)})")
-    return _interp(CBT_TABLE, "R_pol_eq%d" % eq, x)
+    s = valence_scale(CBT_TABLE, baseline)
+    return 1.0 - s * (1.0 - _interp(CBT_TABLE, "R_pol_eq%d" % eq, x))
 
 
-def tmt_polarized_emc_ratio(x, mode="digitized"):
-    """Tronchin-Matevosyan-Thomas polarized EMC ratio, transferred to 7Li.
+def tmt_polarized_emc_ratio(x, mode="digitized", baseline=None):
+    """Tronchin-Matevosyan-Thomas polarized EMC ratio, on the baseline.
 
     mode='digitized' (default) rescales the published nuclear-matter
-    polarized depletion of PLB 783:247 Fig. 4 to 7Li strength with the
-    valence factor s = 0.397 defined above, so that it is comparable with
-    `cbt_polarized_emc_ratio` bin by bin.  mode='constant' is the
-    pre-2026-08-28 stand-in, the unpolarized 12-point table itself.
+    polarized depletion of PLB 783:247 Fig. 4 with the valence factor
+    `valence_scale(TMT_TABLE, baseline)` -- 0.2113 on the default
+    data-driven 'epps21' baseline, 0.397009 on the legacy 'cbt' one --
+    so that it is comparable with `cbt_polarized_emc_ratio` bin by bin.
+    mode='constant' is the pre-2026-08-28 stand-in, the legacy 12-point
+    table itself, and ignores `baseline`.
 
     DIGITIZED RANGE x = 0.0015-0.739 (the published curve stops there);
     above 0.739 the value is frozen at the endpoint, which also freezes
     the nuclear-matter Fermi rise at a different x than 7Li's, so the
     x > 0.74 end of the money plot is not a like-for-like comparison."""
     if mode == "constant":
-        return unpolarized_emc_ratio(x)
+        return unpolarized_emc_ratio(x, mode="table")
     if mode != "digitized":
         raise ValueError("mode must be 'digitized' or 'constant'")
-    return 1.0 - TMT_VALENCE_SCALE * (1.0 - _interp(TMT_TABLE, "R_pol", x))
+    s = valence_scale(TMT_TABLE, baseline)
+    return 1.0 - s * (1.0 - _interp(TMT_TABLE, "R_pol", x))
+
+
+def cbt_published_emc_ratio(x, eq=23):
+    """CBT's PUBLISHED 7Li polarized ratio, BEFORE the baseline transfer.
+
+    Until 2026-08-29 this was `cbt_polarized_emc_ratio` itself, because
+    the baseline was CBT's own unpolarized curve and the transfer factor
+    was 1.  It no longer is, so the two accessors have parted, and the
+    question "how far apart are the two CALCULATIONS?" is answered by this
+    one against `tmt_published_emc_ratio` -- not by the transferred pair,
+    which answers "how far apart does the projection draw them on one
+    common baseline?".
+
+    DIGITIZED RANGE x = 0.028-0.871, constant-extrapolated."""
+    if eq not in (23, 26):
+        raise ValueError("eq must be 23 (R^{3/2 3/2}) or 26 (R^{(3/2 1)})")
+    return _interp(CBT_TABLE, "R_pol_eq%d" % eq, x)
 
 
 def tmt_published_emc_ratio(x):
@@ -372,11 +628,11 @@ def tmt_published_emc_ratio(x):
     POLEMC_VALENCE_WINDOW, the only window in which the transfer factor is
     defined: the separation the transferred pair shows below x ~ 0.3 is the
     strength rescaling extrapolated out of that window, not a disagreement
-    between the papers, and inside it the transferred depletion tracks
-    7Li's own unpolarized 0.034 / 0.048 / 0.087 at x = 0.40 / 0.45 / 0.65
-    to within 0.005 against CBT's 0.077 / 0.082 / 0.094, so DR separates by
-    0.040 at x = 0.36 and 0.011 at 0.65.  `money_polemc.py` prints both separations for this
-    reason, and Report 0 section 5.3 says it in words.
+    between the papers, and inside it the transferred pair separates by
+    0.0202 at x = 0.36 and 0.0056 at 0.65 on the default EPPS21 baseline
+    (0.0395 and 0.0110 on the legacy CBT one) as CBT's ratio of effects
+    falls towards TMT's.  `money_polemc.py` prints both separations for
+    this reason, and Report 0 section 5.3 says it in words.
 
     DIGITIZED RANGE x = 0.0015-0.739, constant-extrapolated."""
     return _interp(TMT_TABLE, "R_pol", x)
@@ -441,6 +697,92 @@ def toy_polarized_emc_ratio(x, **kw):
 B1_PER_DEUTERON_TO_PER_NUCLEON = 0.5
 
 
+# --------------------------------------------------------------------------
+# The Q2 handle on b1 (plans/02 step 1.2.1, wired in 2026-08-29)
+# --------------------------------------------------------------------------
+#
+# Both b1 papers publish a Q2 SET alongside the curve we digitize as the
+# nominal: Miller's Fig. 6 at Q2 = 1.17, 1.76, 2.12 and 3.25 GeV2, CDKS's
+# Fig. 5 at 1.0, 2.5 and 5.0.  Neither set covers the nominal curve's full
+# x range, so the Q2 dependence is carried as a RATIO to the set's own
+# member at the nominal scale, which cancels the digitization of the
+# common shape and leaves only the Q2 lever.
+#
+# WHICH SCALE THE NOMINAL CURVE IS AT is not printed in Miller's Fig. 5
+# caption; it is READ OFF the two digitizations, which is possible because
+# Fig. 6's Q2 = 3.25 curve and Fig. 5's total coincide: 1.001 / 1.000 /
+# 1.000 / 1.001 / 1.003 at x = 0.1007 / 0.15 / 0.20 / 0.40 / 0.50, and
+# within 1.3% at every point of the overlap except the x ~ 0.3 zero
+# crossing.  So `b1_miller.csv` is Miller at Q2 = 3.25 GeV2, and the
+# hidden-colour six-quark piece Fig. 5 adds to Fig. 6's pion is invisible
+# on that scale.  CDKS name theirs: `b1_cdks_q2p5.csv` is Q2 = 2.5.
+#
+# WHAT IT COSTS.  The scale is frozen in x outside the set's range (Miller
+# 0.1007-0.7000, CDKS 0.0050-1.5850) and in ln Q2 outside the set's nodes,
+# so every bin above Q2 = 3.25 gets Miller's 3.25 curve -- i.e. the
+# published nominal, ratio exactly 1 -- and the lever bites only on the
+# low-Q2 bins, where it reaches 0.826 at x = 0.15 and Q2 = 1.17.  Below
+# x = 0.1007 the ratio is frozen at its value there, 0.889 at Q2 = 1.17,
+# and that is where most of the b1 reach sits, so the low-x bins carry a
+# Q2 correction inherited from x = 0.1 rather than one Miller plots.  Near
+# a zero crossing the ratio is not a useful object; it is clipped to
+# `B1_Q2_SCALE_CLIP`, which for Miller bites only inside the two windows
+# 0.2991 < x < 0.3027 and 0.5753 < x < 0.5789 around his two zero
+# crossings, where |b1| stays below 5.9e-4 and 3.7e-4 per deuteron and
+# |A_zz| is at the 1e-6 level.
+#
+# ONLY MILLER'S SET IS WIRED IN.  CDKS's Fig. 5 exists as
+# `b1_cdks_q2set.csv` and is not used, because their theory-1 curve
+# crosses zero twice (x = 0.06 and 0.42) and the crossings MOVE with Q2,
+# so the ratio swings over the whole clip band across 0.1 < x < 0.7 and
+# would be a digitization artefact rather than a Q2 lever.  The CDKS camp
+# is drawn at its published Q2 = 2.5 GeV2 everywhere, which costs nothing
+# at the digits that matter: it is below 0.2 sigma in every bin.
+MILLER_Q2SET_TABLE = "b1_miller_q2set"
+MILLER_Q2SET_COLS = ("b1_q2_1p17", "b1_q2_1p76", "b1_q2_2p12", "b1_q2_3p25")
+MILLER_Q2SET_NODES = (1.17, 1.76, 2.12, 3.25)
+MILLER_B1_Q2_REF = 3.25          # the scale of b1_miller.csv, read off above
+B1_Q2_SCALE_CLIP = (0.5, 2.0)
+
+
+def _q2_scale(table, cols, nodes, q2_ref, x, q2, clip=B1_Q2_SCALE_CLIP):
+    """b1(x, Q2) / b1(x, q2_ref) from a digitized Q2 set.
+
+    Linear in ln Q2 between the set's nodes and CONSTANT outside them;
+    constant in x outside the set's own range (`_interp`'s convention);
+    clipped to `clip` so that the model's zero crossings cannot turn the
+    ratio into a pole."""
+    t = _load_curve(table)
+    xa, qa = np.broadcast_arrays(np.asarray(x, dtype=float),
+                                 np.asarray(q2, dtype=float))
+    shape = xa.shape
+    xf = xa.reshape(-1)
+    lq = np.log(np.maximum(qa.reshape(-1), 1e-6))
+    vals = np.stack([np.interp(xf, t["x"], t[c]) for c in cols])
+    ln_nodes = np.log(np.asarray(nodes, dtype=float))
+    cell = np.arange(vals.shape[1])
+
+    def at(ln):
+        j = np.clip(np.searchsorted(ln_nodes, ln) - 1, 0, len(nodes) - 2)
+        w = np.clip((ln - ln_nodes[j]) / (ln_nodes[j + 1] - ln_nodes[j]),
+                    0.0, 1.0)
+        v0, v1 = vals[j, cell], vals[j + 1, cell]
+        return v0 + w * (v1 - v0)
+
+    num = at(lq)
+    den = at(np.full(lq.shape, np.log(float(q2_ref))))
+    safe = np.abs(den) > 0
+    r = np.where(safe, num / np.where(safe, den, 1.0), 1.0)
+    r = np.clip(np.nan_to_num(r, nan=1.0), clip[0], clip[1])
+    return r.reshape(shape)
+
+
+def miller_b1_q2_scale(x, q2):
+    """Miller's Fig.-6 Q2 lever on the Fig.-5 total, relative to Q2 = 3.25."""
+    return _q2_scale(MILLER_Q2SET_TABLE, MILLER_Q2SET_COLS,
+                     MILLER_Q2SET_NODES, MILLER_B1_Q2_REF, x, q2)
+
+
 def _toy_b1_shape(x, q2, f1):
     """The pre-2026-08-28 'HERMES-like' scenario shape times F1."""
     x = np.asarray(x, dtype=float)
@@ -448,14 +790,24 @@ def _toy_b1_shape(x, q2, f1):
     return shape * np.exp(-3.0 * x) * f1
 
 
-def toy_b1(x, q2, f1, mode="digitized"):
+def toy_b1(x, q2, f1, mode="digitized", q2_evolve=False):
     """b1 of the deuteron, per nucleon: Miller's pion + hidden-colour total.
 
     mode='digitized' (default) is PRC 89:045203 Fig. 5, the curve that
     reproduces the HERMES measurement with a hidden-colour probability of
-    0.15% -- the 'HERMES-like' camp.  `q2` and `f1` are ignored (the Q2
-    handle is `b1_miller_q2set.csv`, not wired in).  mode='toy' is the old
-    analytic shape times F1.
+    0.15% -- the 'HERMES-like' camp.  mode='toy' is the old analytic shape
+    times F1; `f1` is ignored otherwise.
+
+    `q2_evolve=True` multiplies by `miller_b1_q2_scale(x, q2)`, Miller's
+    own Fig.-6 Q2 set relative to the Q2 = 3.25 GeV2 of Fig. 5 (see the
+    block above), so the curve is evaluated at the caller's scale rather
+    than at one slice.  It stays OFF by default because the twelve evgen
+    scripts that hand this function to `xsec.InclusiveKernel` want one
+    fixed b1 per sample and already carry a much larger normalisation
+    caveat (the 6Li transfer below); `money_b1.py --signal-q2 binned`, the
+    projection that reads a number off b1, turns it on.  Above
+    Q2 = 3.25 GeV2 the scale is exactly 1, so a bin at the old Q2 = 4
+    slice is bit-for-bit what it was.
 
     DIGITIZED RANGE x = 0.010-0.900: b1 is frozen at 0.0647 per nucleon
     below x = 0.01, where the generator does sample, and above x = 0.900 it
@@ -467,7 +819,10 @@ def toy_b1(x, q2, f1, mode="digitized"):
         return _toy_b1_shape(x, q2, f1)
     if mode != "digitized":
         raise ValueError("mode must be 'digitized' or 'toy'")
-    return B1_PER_DEUTERON_TO_PER_NUCLEON * _interp_tapered(MILLER_TABLE, "b1", x)
+    b1 = B1_PER_DEUTERON_TO_PER_NUCLEON * _interp_tapered(MILLER_TABLE, "b1", x)
+    if q2_evolve:
+        b1 = b1 * miller_b1_q2_scale(x, q2)
+    return b1
 
 
 def b1_convolution(x, q2, f1, mode="digitized"):

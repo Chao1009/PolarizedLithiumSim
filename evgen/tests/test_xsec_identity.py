@@ -4,6 +4,13 @@ The doubly polarized kernel must reproduce the fastsim's analytic
 asymmetries exactly, sector by sector: vector -> a_parallel, tensor ->
 azz, transverse tensor -> a_cos2phi.  Toy backends here; the same
 identities on PDF-grid backends run in the grid-marked test (auto-skip).
+
+The vector identity is taken with the TARGET-MASS TERM ON BOTH SIDES,
+which is what makes it an identity again after the flip of 2026-08-29:
+the kernel's default A_par is the finite-gamma one, so the fastsim side
+is `a_parallel(..., g2=t["g2"])`.  With g2 omitted the two sides differ
+by O(gamma^2), and that difference is `test_target_mass.py`'s subject,
+not this file's.
 """
 
 import pathlib
@@ -49,7 +56,7 @@ def test_vector_sector_matches_a_parallel(setup6):
     wm, _, _ = kern.amplitudes(t, x, q2, s,
                                EventSpinState(-1, pe, 1.0, 1.0))
     measured = (wp - wm) / (2.0 + wp + wm)
-    expected = pe * a_parallel(t["g1"], t["f1"], y, x, q2)
+    expected = pe * a_parallel(t["g1"], t["f1"], y, x, q2, g2=t["g2"])
     np.testing.assert_allclose(measured, expected, rtol=1e-12)
 
 
@@ -62,7 +69,7 @@ def test_vector_sector_spin32(setup6):
     wp, _, _ = kern.amplitudes(t, x, q2, s, EventSpinState(+1, 1.0, 1.5, 1.5))
     wm, _, _ = kern.amplitudes(t, x, q2, s, EventSpinState(-1, 1.0, 1.5, 1.5))
     measured = (wp - wm) / (2.0 + wp + wm)
-    expected = a_parallel(t["g1"], t["f1"], y, x, q2)
+    expected = a_parallel(t["g1"], t["f1"], y, x, q2, g2=t["g2"])
     np.testing.assert_allclose(measured, expected, rtol=1e-12)
     # rank-2 slots default to zero: unpolarized electron -> no modulation
     w0, a1, a2 = kern.amplitudes(t, x, q2, s, EventSpinState(0, 0.0, 1.5, 1.5))
@@ -195,7 +202,8 @@ def test_identities_on_grid_backends(setup6):
     wm, _, _ = kern_v.amplitudes(t, x, q2, s,
                                  EventSpinState(-1, 0.7, 1.0, 1.0))
     np.testing.assert_allclose((wp - wm) / (2.0 + wp + wm),
-                               0.7 * a_parallel(t["g1"], t["f1"], y, x, q2),
+                               0.7 * a_parallel(t["g1"], t["f1"], y, x, q2,
+                                                g2=t["g2"]),
                                rtol=1e-12)
     # tensor identity with the scenario b1 on grid F1/F2
     kern = InclusiveKernel(beams.LI6, f2_source=base, g1_model=g1_model,

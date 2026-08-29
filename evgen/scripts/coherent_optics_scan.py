@@ -28,6 +28,39 @@ honest form of the statement.  This script produces it:
   (d) acceptance versus beam momentum per nucleon at fixed optics -- the
       statement that the coherent program chooses the beam energy.
 
+The one-year errors of panel (c) moved since the scan was first run
+on 2026-08-25, and none of the move belongs to this script's fit path,
+which is byte-identical across the three commits.  At 0.10 / 0.22 / 0.45 / 0.60 GeV
+they read 1.6 / 5.7 / 104 / 540 % of a_t then and 1.2 / 4.6 / 79 / 392 %
+now.  Two thirds of that is arithmetic: the gamma-matched beam menu
+(2026-08-27, plans/10) moved the mid configuration from 10 x 50 to
+10 x 99.5 GeV/u and the produced sample from 8.36e7 to 1.23e8 recoils in
+the year, a uniform 1/sqrt(1.474) = 0.823 on every error.  The remainder
+is the exact Jacobian of the ratio inversion (2026-08-28, code review):
+`reco._ratio_to_modulation` returns dT/dR = (1 + u + Pbar T) /
+(sigma_P^2 - Pbar R) where it used to return the small-modulation limit
+(1 + u + Pbar T)/sigma_P^2, and the old form therefore OVERSTATED the
+error by sigma_P^2/(sigma_P^2 - Pbar R).  That factor is one to a part in
+a thousand wherever the modulation is a percent, as it is in the
+inclusive channel where the correction was first priced, but the
+deformation coefficient this panel measures reaches a_t = 0.49 at the
+largest cut, Pbar T reaches 0.17 there, and the factor runs
+0.997 / 0.976 / 0.926 / 0.883 across the four published points.  The
+smaller error is the correct one; the published triple is the current
+one.
+
+Those two factors reproduce the last three points exactly -- 5.7 x 0.823
+x 0.976 = 4.6, 104 x 0.823 x 0.926 = 79, 540 x 0.823 x 0.883 = 392 --
+and leave the first 7 % short: 1.6 x 0.823 x 0.997 = 1.3 against the 1.2
+this script now prints, and reconciling it by them alone would need a
+retired reading of 1.5.  The remainder is a third effect, which is real
+and belongs to the beam menu rather than to the fit: doubling A p_u at
+the mid configuration means a FIXED p_T cut selects a different angle and
+therefore a different |t| bin, so a_t and t_ref move with it.  At the
+shallowest cut, where a_t is smallest, that shifts the RATIO d(a_t)/a_t;
+at the three deeper cuts, whose bins sit where a_t is already steep, it
+does not move it at two digits.
+
 Usage:  python3 scripts/coherent_optics_scan.py
 """
 

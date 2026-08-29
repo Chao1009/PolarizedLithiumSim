@@ -39,17 +39,19 @@ def test_rectangular_envelope_in_the_routing():
 
 
 def test_tagging_optics_reproduces_the_priced_optimum():
-    # NO ROW MOVED under the 2026-08-28 re-measurement, and that is the
-    # assertion.  The pot dispersion enters here only as the RATIO D / R12:
-    # the re-measured 18 x 275 pair is 0.292 / 29.97 m against the
-    # September-2024 0.30 / 30.6, i.e. both levers moved by ~2% and the
-    # ratio by 0.6% (9.74e-3 against 9.80e-3), which is below the grid's
-    # resolution in r_h.  The two lower rows use the same 18 x 275 scalars
-    # by default; their own measured levers, whose ratios differ by 66%
-    # and 39%, are opt-in and priced in
-    # test_the_per_configuration_pot_levers_would_move_the_priced_optimum.
-    expect = ((49.7, 0.423, 7.1, 0.33, 3.80), (175.6, 0.323, 13.3, 0.17, 1.80),
-              (89.3, 0.332, 9.5, 0.12, 0.92))
+    # THE PRICED OPTIMUM, on the per-configuration levers that became the
+    # default on 2026-08-29.  The pot dispersion enters here only as the
+    # RATIO D / R12, which is 1.62e-2 / 1.35e-2 / 9.74e-3 m/m; the single
+    # 18 x 275 pair this function used until then understated the two
+    # lower configurations by 66% and 39%, and the top row is unmoved
+    # because POT_R12 and POT_DISPERSION ARE the 18 x 275 triple's first
+    # and third entries.  The single-lever numbers -- 49.7 / 175.6 / 89.3,
+    # eps 0.423 / 0.323 / 0.332, 1/7.1 / 1/13.3 / 1/9.5, the envelope
+    # 0.33 / 0.17 / 0.12 mrad, which is what every tagging number
+    # published before that date was priced with -- are reproduced by
+    # levers="18x275" and pinned below.
+    expect = ((46.5, 0.374, 6.8, 0.363, 3.80), (164.1, 0.251, 12.8, 0.192, 1.80),
+              (89.3, 0.332, 9.5, 0.117, 0.92))
     for cfg, (r_h, eps, one_over_l, env_x, env_y) in zip(beams.default_configs("6Li"), expect):
         t = ff.tagging_optics_point(cfg)
         assert abs(t["r_h"] / r_h - 1.0) < 0.02
@@ -58,13 +60,26 @@ def test_tagging_optics_reproduces_the_priced_optimum():
         o = t["optics"]
         assert o.envelope == pytest.approx((1e-3 * env_x, 1e-3 * env_y), abs=1e-5)
         assert o.lumi_fraction == pytest.approx(t["lumi_fraction"])
+    # the retired single-lever behaviour, still reachable and still exact
+    old = ((49.7, 0.423, 7.1, 0.328), (175.6, 0.323, 13.3, 0.166),
+           (89.3, 0.332, 9.5, 0.117))
+    for cfg, (r_h, eps, one_over_l, env_x) in zip(beams.default_configs("6Li"),
+                                                  old):
+        t = ff.tagging_optics_point(cfg, levers="18x275")
+        assert abs(t["r_h"] / r_h - 1.0) < 0.02
+        assert abs(t["acceptance"] - eps) < 0.005
+        assert abs(1.0 / t["lumi_fraction"] - one_over_l) < 0.15
+        assert abs(1e3 * t["env_x"] - env_x) < 0.005
+    with pytest.raises(ValueError):
+        ff.tagging_optics_point(beams.default_configs("6Li")[0],
+                                levers="per-configuration")
 
 
 def test_alpha_tag_at_the_yellow_report_optics_is_the_off_rigidity_window_only():
     """With the Yellow Report divergence the 6Li alpha's near-beam tail is
     below the 10 sigma envelope at every configuration: what survives is
     the ~1.5% that falls below R = 0.95, and a tagging optics recovers
-    ~30% at 1/7-1/13 of the luminosity."""
+    23-32% at 1/6.8-1/12.8 of the luminosity."""
     rng = np.random.default_rng(3)
     for cfg in beams.default_configs("6Li"):
         k = sp.spectator_lab_kinematics(sp.LI6_ALPHA_TAG, cfg.ion_momentum_per_nucleon,
@@ -83,7 +98,10 @@ def test_alpha_tag_at_the_yellow_report_optics_is_the_off_rigidity_window_only()
         assert yr["RP-inner (over-rigid)"] > 0.005
         assert yr["RomanPots"] < 0.02
         assert yr["RP (pT tail, R~1)"] < 0.003
-        assert 0.27 < 1.0 - tag["lost"] < 0.40
+        # 0.324 / 0.229 / 0.292 on the per-configuration levers of
+        # 2026-08-29; on the single 18 x 275 pair the band was 0.27-0.40,
+        # and the 10 x 100 row is where the flip is felt.
+        assert 0.22 < 1.0 - tag["lost"] < 0.35
 
 
 def test_the_reconstruction_chain_and_the_fast_simulation_share_one_divergence():
@@ -97,38 +115,39 @@ def test_the_reconstruction_chain_and_the_fast_simulation_share_one_divergence()
             ff.hole_acceptance(50.0, 0.08, 0.93)["acc"]
 
 
-def test_the_per_configuration_pot_levers_would_move_the_priced_optimum():
-    """plans/09 B1's one open consequence, pinned so it cannot be lost.
+def test_the_per_configuration_pot_levers_are_the_default_and_what_they_cost():
+    """plans/09 B1's one open consequence, closed on 2026-08-29 and pinned.
 
     `tagging_optics_point` reaches the horizontal envelope through the pot
     dispersion, D dp/p / R12.  Both were measured PER CONFIGURATION on
     2026-08-28 and are 1.62e-2 / 1.35e-2 / 9.74e-3 m/m against the single
-    18 x 275 pair 0.30 / 30.6 = 9.80e-3 that every published tagging
-    number was priced with -- the top configuration lands within 0.6% of
-    the historical scalar, which is why the default row does not move and
-    only the two lower ones do.  The default is still the scalar pair and
-    `per_config_levers=True` is the measurement.  Switching it on is a
-    decision about the whole coherent chain -- eps at 10 x 100 falls 22%
-    and `money_cos2phi_coherent_reco.py` runs on it -- so it is opt-in,
-    and this test says what it costs."""
+    18 x 275 pair 0.30 / 30.6 = 9.80e-3 that every tagging number
+    published before 2026-08-29 was priced with; the top configuration
+    lands within 0.6% of the historical scalar, so only the two lower rows
+    move.  They are now the default, because the per-configuration
+    transport is the working assumption everywhere (POT_LEVERS), and this
+    test says what that costs: eps at 10 x 100 falls 22%, and
+    `money_cos2phi_coherent_reco.py` runs on the optimum."""
     expect = ((46.5, 0.374, 6.8), (164.1, 0.251, 12.8), (89.3, 0.332, 9.5))
     for cfg, (r_h, eps, one_over_l) in zip(beams.default_configs("6Li"),
                                            expect):
-        t = ff.tagging_optics_point(cfg, per_config_levers=True)
+        t = ff.tagging_optics_point(cfg)
         assert abs(t["r_h"] / r_h - 1.0) < 0.02
         assert abs(t["acceptance"] - eps) < 0.005
         assert abs(1.0 / t["lumi_fraction"] - one_over_l) < 0.15
-    # and the default is unchanged at the two lower configurations, where
-    # the levers actually differ from the 18 x 275 pair; at 18 x 275 the
-    # two paths are the same numbers and agree exactly.
+    # the two lower configurations are where the flip is felt; at 18 x 275
+    # the two paths are the same numbers and agree exactly.
     for cfg in beams.default_configs("6Li")[:2]:
         assert (ff.tagging_optics_point(cfg)["r_h"]
                 != pytest.approx(
-                    ff.tagging_optics_point(cfg,
-                                            per_config_levers=True)["r_h"],
+                    ff.tagging_optics_point(cfg, levers="18x275")["r_h"],
                     rel=1e-6))
     top = beams.default_configs("6Li")[2]
     assert ff.tagging_optics_point(top)["r_h"] == pytest.approx(
-        ff.tagging_optics_point(top, per_config_levers=True)["r_h"],
-        rel=1e-12)
+        ff.tagging_optics_point(top, levers="18x275")["r_h"], rel=1e-12)
+    # the opt-in flag is gone, not silently ignored
+    import inspect
+    params = inspect.signature(ff.tagging_optics_point).parameters
+    assert "per_config_levers" not in params
+    assert params["levers"].default == "per-config"
 

@@ -72,3 +72,40 @@ def test_ion_slots_are_all_per_nucleon():
     for ion in beams.IONS.values():
         assert abs(ion.eff_pol_p) <= 1.0 + 1e-12, ion.name
         assert abs(ion.eff_pol_n) <= 1.0 + 1e-12, ion.name
+
+
+def test_g2_cache_key_separates_ion_grid_npts_and_medium_ratio():
+    """The g2^WW cache is what makes the default-on target-mass term free
+    (`polarized.ToyG1.g2_nucleus`), so what it is keyed on is a
+    correctness statement, not a performance one.
+
+    It is keyed on the ION ITSELF -- a frozen, hashable dataclass -- and
+    not on id(ion), which is unique only while the object lives: a
+    transient Ion could be allocated at a recycled address and collect
+    another nucleus's table.  A medium-modified call is not cached at all,
+    and a hit hands back a FROZEN array, so a caller writing into a result
+    cannot poison every later hit.
+    """
+    import dataclasses
+
+    model = polarized.ToyG1()
+    a6 = model.g2_nucleus(beams.LI6, X, Q2)
+    a7 = model.g2_nucleus(beams.LI7, X, Q2)
+    assert not np.allclose(a6, a7)             # the ion is in the key
+    assert model.g2_nucleus(beams.LI6, X, Q2) is a6      # ... and it hits
+    assert not a6.flags.writeable                        # frozen
+    with pytest.raises(ValueError):
+        a6[0] = 1234.0
+    # a value-equal Ion at a different address is the SAME key (hashable,
+    # not identity), and a genuinely different one is not
+    twin = dataclasses.replace(beams.LI6)
+    assert model.g2_nucleus(twin, X, Q2) is a6
+    other = dataclasses.replace(beams.LI6, eff_pol_p=0.5)
+    assert model.g2_nucleus(other, X, Q2) is not a6
+    # npts is in the key, and a medium-modified call is not cached
+    assert model.g2_nucleus(beams.LI6, X, Q2, npts=32) is not a6
+    n = len(model._g2_cache)
+    med = model.g2_nucleus(beams.LI6, X, Q2, medium_ratio=lambda x: 0.9)
+    assert len(model._g2_cache) == n
+    assert not np.allclose(med, a6)
+    assert model.g2_nucleus(beams.LI6, X, Q2) is a6      # and did not evict

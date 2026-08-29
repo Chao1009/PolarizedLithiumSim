@@ -226,7 +226,7 @@ def test_alpha_deuteron_breakup_is_two_hits_tens_of_pixels_apart():
     lever alone, no dispersion.  It is a LOWER bound and it is NOT what the
     documents quote.  The measurement draws both fragments from one
     relative momentum at kappa = 60.7 MeV/c and adds the pot dispersion,
-    giving medians of 10.9 / 10.7 / 25.8 mm at 18 x 275 / 10 x 100 / 5 x 41,
+    giving medians of 10.9 / 10.7 / 17.3 mm at 18 x 275 / 10 x 100 / 5 x 41,
     an ordering that stopped being monotone in the beam energy when R12
     was measured per configuration (fastsim/tests/test_two_hit.py,
     plans/09 B4).  Until 2026-08-28 this
@@ -336,11 +336,14 @@ def test_rp_aperture_resolves_for_both_isotopes_at_every_configuration():
 
     # re-measured 2026-08-28 in the current epic-main (plans/09 B1,
     # tools/fullsim): band threshold / measured lever, 48/19.24,
-    # 32/21.25, 16/29.97 horizontally and 7.1/3.35, 2.7/2.93 vertically,
-    # each reproduced by the first accepted angle of a 0.05 mrad ladder to
-    # 1-4%.  The September-2024 triple (2.0, 3.0), (1.35, 3.0), (1.03,
-    # 2.3) is kept reachable as reco.RP_APERTURE_SEP2024.
-    expect = ((2.50e-3, 8.84e-3), (1.51e-3, 2.12e-3), (0.53e-3, 0.92e-3))
+    # 32/21.25, 16/29.97 horizontally and 29.6/4.56, 7.1/3.35, 2.7/2.93
+    # vertically, each reproduced by the first accepted angle of a 0.05
+    # mrad ladder to 1-4% wherever the plane is open.  The 5 x 41 vertical
+    # lever came a day later, off a zero-insertion geometry, and replaced
+    # a bound of 8.84 mrad with the 6.49 measured here.  The
+    # September-2024 triple (2.0, 3.0), (1.35, 3.0), (1.03, 2.3) is kept
+    # reachable as reco.RP_APERTURE_SEP2024.
+    expect = ((2.50e-3, 6.49e-3), (1.51e-3, 2.12e-3), (0.53e-3, 0.92e-3))
     for iso in ("6Li", "7Li"):
         got = [reco.rp_aperture_for(c) for c in beams.default_configs(iso)]
         assert got == list(expect), iso
@@ -382,10 +385,14 @@ def test_the_5x41_vertical_plane_is_shut_not_a_3mrad_edge():
     ladder at phi = 90 and none at phi = 270, and the only one above the
     29.6 mm module edge -- theta = 3.35 mrad, y = +30.94 mm -- is a single
     hit in a single plane with both its 0.05 mrad neighbours empty.  That
-    is an isolated grazing hit, not an edge.  c_y is instead the smallest
-    angle at which any 5 x 41 silicon could be reached at all: 29.6 mm over
-    the largest vertical lever measured anywhere (R34 = 3.35 m at
-    10 x 100)."""
+    is an isolated grazing hit, not an edge.  c_y is the angle at which the
+    insertion is actually reached, 29.6 mm over the vertical lever measured
+    at this configuration on 2026-08-29 through a zero-insertion geometry,
+    R34 = 4.56 m -- 6.49 mrad, against the 8.84 mrad bound the entry
+    carried while that lever was unmeasured.  The plane is shut because
+    6.49 mrad is past THETA_RP_MAX, where the routing ends -- NOT because
+    it exceeds THETA_RP_OUTER_MEASURED, which is a horizontal edge on a
+    4.2x longer lever and does not compare across the two planes."""
     import numpy as np
 
     from polligen import reco
@@ -394,20 +401,29 @@ def test_the_5x41_vertical_plane_is_shut_not_a_3mrad_edge():
     from polli_fastsim import spectator as sp
 
     cx, cy = reco.RP_APERTURE_MEASURED["5x41"]
-    assert cy > 8.0e-3                       # shut, not 3.35 mrad
-    assert cy == pytest.approx(29.6e-3 / ff.POT_LEVERS["10x100"][1], rel=0.01)
+    assert cy > 6.0e-3                       # shut, not 3.35 mrad
+    assert cy == pytest.approx(29.6e-3 / ff.POT_LEVERS["5x41"][1], rel=0.01)
+    assert cy > ff.THETA_RP_MAX              # past where the routing ends
     assert np.isfinite(cy)                   # finite, so callers can print it
-    # nothing this programme produces reaches it: no 6Li alpha spectator at
-    # 5 x 41 is tagged on the vertical alone
+    # nothing this programme produces reaches it in a way that survives:
+    # 2 of 200k 6Li alpha spectators at 5 x 41 clear 6.49 mrad vertically
+    # without clearing 2.50 horizontally -- 1e-5 of the sample and 0.5% of
+    # its 1.9e-3 horizontal tag -- and both sit past THETA_RP_MAX, so the
+    # routing loses them anyway.  On the retired 8.84 mrad bound there were
+    # none at all, which is the sense in which the measurement is the less
+    # conservative number and the sense in which it does not matter.
     cfg = beams.default_configs("6Li")[0]
     k = sp.spectator_lab_kinematics(sp.LI6_ALPHA_TAG,
                                     cfg.ion_momentum_per_nucleon, 200000,
                                     beta=0.30, rng=np.random.default_rng(7))
     thx = np.abs(k["theta"] * np.cos(k["phi"]))
     thy = np.abs(k["theta"] * np.sin(k["phi"]))
-    assert not np.any((thy > cy) & (thx <= cx))
-    # the retired 3.35 mrad row WOULD have admitted some of them
-    assert np.any((thy > 3.35e-3) & (thx <= cx))
+    vert_only = (thy > cy) & (thx <= cx)
+    assert float(vert_only.mean()) < 1e-4
+    assert np.all(k["theta"][vert_only] > ff.THETA_RP_MAX)
+    # the retired 3.35 mrad row WOULD have admitted 40x as many, all of
+    # them inside the pot acceptance
+    assert np.mean((thy > 3.35e-3) & (thx <= cx)) > 40 * vert_only.mean()
 
 
 def test_the_light_ion_lattice_alternative_is_reachable_and_priced():
@@ -438,6 +454,11 @@ def test_the_light_ion_lattice_alternative_is_reachable_and_priced():
             == pytest.approx(1.55, abs=0.03))
     assert alt["10x100"] is None
     assert alt["18x275"] == reco.RP_APERTURE_MEASURED["18x275"]
+    # the vertical is the one entry the alternative does not measure: no
+    # zero-insertion twin of the He4 file was built, so it repeats the
+    # baseline c_y rather than pretending to a lever of its own
+    assert alt["5x41"][1] == reco.RP_APERTURE_MEASURED["5x41"][1]
+    assert ff.POT_LEVERS_LIGHT_ION_LATTICE["5x41"][1] is None
     # and it is reachable through the lookup, like the September-2024 table
     from polli_fastsim import beams
     cfg = beams.default_configs("6Li")[0]
@@ -448,10 +469,10 @@ def test_li7_alpha_tag_is_optics_blind_and_the_tagging_optics_is_a_net_loss():
     """The B3 result in one assertion.  The 7Li alpha sits at rigidity
     ratio 0.856, inside the Roman-Pot momentum window, so it never has to
     clear the near-beam envelope: its tag is 0.96-0.97 at the Yellow Report
-    optics and 0.98-0.99 at the tagging optics -- x1.02 -- bought at 1/8 to
-    1/15 of the luminosity.  For 7Li the tagging optics is therefore a
+    optics and 0.98-0.99 at the tagging optics -- x1.02 -- bought at 1/7.9
+    to 1/14.8 of the luminosity.  For 7Li the tagging optics is therefore a
     factor 8-15 NET LOSS, the exact inverse of 6Li, where the same optics
-    turns a 1.7-2.6% tag into a 28-35% one.  6Li and 7Li want different machine
+    turns a 2.4-2.6% tag into a 23-32% one.  6Li and 7Li want different machine
     optics and are different runs."""
     import numpy as np
     from polli_fastsim import beams, farforward as ff, spectator as sp
@@ -475,7 +496,7 @@ def test_li7_alpha_tag_is_optics_blind_and_the_tagging_optics_is_a_net_loss():
         gain = tag["top"] / tag["yr"]
         loss = 1.0 / ff.tagging_optics(cfg).lumi_fraction
         assert 1.00 < gain < 1.04                  # acceptance bought
-        assert 8.0 < loss < 16.0                   # luminosity paid
+        assert 7.5 < loss < 16.0                   # luminosity paid
         assert gain / loss < 0.15, i               # a net loss, decisively
 
 

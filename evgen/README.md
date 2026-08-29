@@ -15,7 +15,7 @@ next. Imports `../fastsim/polli_fastsim` — nothing there is duplicated.
 
 ```bash
 cd evgen
-python3 -m pytest tests/ -q            # 305 tests
+python3 -m pytest tests/ -q            # 312 tests
 python3 scripts/closure_fom.py --ion 6Li --events 200000 --trials 200
 python3 scripts/closure_fom.py --ion 7Li --events 200000 --trials 200
 python3 scripts/money_tagged_azz.py --events 400000       # money plot 4 (--config, --optics, --lumi-fraction)
@@ -30,7 +30,7 @@ python3 scripts/money_cos2phi_coherent_reco.py --config 0 --optics tagging --n-m
 python3 scripts/coherent_optics_scan.py   # WP5: the coherent tag vs the near-beam envelope
 python3 scripts/tagging_optics.py         # report 1 §6.1: a lithium tagging optics at IP6, priced in luminosity
 python3 scripts/hfs_acceptance.py --config 1 --sample samples/pythia8_e10_p99.5_dis.npz samples/pythia8_e10_n99.5_dis.npz  # report 2 §3: where the hadronic E - p_z sum goes
-python3 scripts/target_mass_bound.py       # how big is the γ² term A∥ drops? (prints, no figure)
+python3 scripts/target_mass_bound.py       # how big is the γ² term A∥ now carries, and what g₂ leaves open (prints, no figure)
 python3 scripts/eic_beam_figures.py       # report 3: the ion energy menu and the divergence
 python3 scripts/nearbeam_aperture_scan.py # plans/09: what every near-beam aperture is worth (--isotope 7Li for the 7Li alpha panel)
 python3 scripts/nearbeam_reach_gain.py    # plans/09: the coherent chain at both apertures (--lumi-fraction)
@@ -63,7 +63,7 @@ plans/07 WP2 and the arithmetic is pinned by `tests/test_run_share.py`.
 |---|---|
 | `polligen/nearbeam.py` | plans/09: thin-film energy deposit; the hot-spot firing threshold I_th/I_c = 1 − 2r_s/w with r_s ∝ z (anchored on Argonne's *extrapolated* 134 nm, arXiv:2312.13405); and a sampled Landau with `zid_fake_rate`, which says how much charge information the ⁶Li/α separation actually needs — one bit per plane costs a factor 1.4 against the Neyman-Pearson optimum, and the nanowire loses on fill factor instead |
 | `polligen/spin.py` | ρ(m,m′) for J = 1, 3/2: Wigner-d/CG, populations ↔ normalized (vector, tensor, octupole) moments, arbitrary quantization axis, spin-temperature (max-entropy) fills |
-| `polligen/xsec.py` | doubly polarized inclusive master formula: HJM spin-1 tensor sector (b₁/b₂, Δ cos 2φ), vector sector A∥ = D·g1/F1 (+ γ-suppressed g_T term, g₂ = g₂^WW), spin-3/2 rank-0/1 exact + rank-2 scenario slots; the exact finite-γ A∥ = D_γ(A₁ + ηA₂) behind `target_mass=True` (default off; what it removes is ≤ 0.6% at the published sweet spots — `scripts/target_mass_bound.py`) |
+| `polligen/xsec.py` | doubly polarized inclusive master formula: HJM spin-1 tensor sector (b₁/b₂, Δ cos 2φ), vector sector A∥ = D·g1/F1 (+ γ-suppressed g_T term, g₂ = g₂^WW), spin-3/2 rank-0/1 exact + rank-2 scenario slots; the exact finite-γ A∥ = D_γ(A₁ + ηA₂) behind `target_mass=True` (**default on** since 2026-08-29; the term is ≤ 0.6% at the published sweet spots and the twist-3 residual it leaves is an order of magnitude smaller — `scripts/target_mass_bound.py`) |
 | `polligen/bookkeeping.py` | run plans (helicity flips, tensor thirds, transverse fills), relative-luminosity offsets + first-order bias formulas, polarimetry smearing, per-(run,bunch) rng streams |
 | `polligen/sample.py` | grid inverse-CDF sampler: per-spin-state Poisson rates (φ-averaged modulation shifts counting rates), φ accept-reject, Mode-W weight matrices |
 | `polligen/estimators.py` | analysis-side estimators: helicity-flip, tensor thirds, cos 2φ moment + binned LSQ fit (holey-φ robust), luminosity-corrected yields |
@@ -102,11 +102,11 @@ plus the lithium tagging optics, `--config {0,1,2}`) with the spectator's
 own lab azimuth against the rectangular 10(σ_h, σ_v) envelope, and it
 overlays the truth **weighted by each optics' θ_k acceptance** beside the
 θ_k = 90° curve.  Both matter.  At 10 × 99.5 the α tag is 2.5% at the
-Yellow Report optics against 30% at the tagging optics — a 7% cost in
-tagged events per year, since the tagging optics runs at L/L_HA = 1/13.3,
-and a gain of 1.9× and 1.2× at the other two configurations — but
+Yellow Report optics against 25% at the tagging optics — a 19% cost in
+tagged events per year, since the tagging optics runs at L/L_HA = 1/12.8,
+and a gain of 1.8× and 1.2× at the other two configurations — but
 the median accepted spectator momentum is 0.32 GeV/c with **nothing below
-k = 0.15 GeV/c** against 0.16 GeV/c with 44% below it: at every published
+k = 0.15 GeV/c** against 0.18 GeV/c with 36% below it: at every published
 optics the ⁶Li α tag admits only the high-k tail, and the tagging optics
 is what turns money plot 4 from a one-point measurement into a curve.  And
 the accepted sample is not at θ_k = 90°: the surviving off-rigidity window
@@ -124,8 +124,8 @@ window, so it never has to clear the near-beam envelope, and the folded
 ⟨P₂⟩ slope moves from −0.193 (legacy 73 μrad) to −0.194 (Yellow Report) to
 −0.196 (tagging) against the analytic −0.200.  The consequence is a
 programme statement: for ⁷Li the tagging optics buys ×1.02 in acceptance
-for ×1/8–1/15 in luminosity, a factor 8–15 net loss and the exact inverse
-of ⁶Li, so the two isotopes want different machine optics and are
+for ×1/7.9–1/14.8 in luminosity, a factor 7.9–14.8 net loss and the exact
+inverse of ⁶Li, so the two isotopes want different machine optics and are
 different runs (plans/09 B3).
 
 `phase_space_bins.py`: the companion phase-space figure — (x, Q²)
@@ -214,29 +214,29 @@ mixed method 25%, ε(φ′) harmonic + 10⁻³ rel-lumi offset on):
   fill gain beats the efficiency loss);
 - 7R: best bins δΔ = 2.4×10⁻³ (Q² = 1.14) and 1.2×10⁻³ (3.13 GeV²) in year 1, purities 0.54–0.57;
 - 6R (re-derived 2026-08-28 at the lithium tagging optics of Report 1 §6.1,
-  `--optics tagging`: horizontal β* × 50 at 5 × 40.8, σ_θ = 33/380 μrad,
-  pots following the 10σ envelope 0.33 × 3.8 mrad, L/L_HA = 1/7.1 — with
+  `--optics tagging`: horizontal β* × 46 at 5 × 40.8, σ_θ = 36/380 μrad,
+  pots following the 10σ envelope 0.36 × 3.8 mrad, L/L_HA = 1/6.8 — with
   the Yellow Report divergences and the measured pot aperture no recoil
-  survives at any configuration): acceptance 42%, N_tag = 2.5×10⁶/yr, the
-  cutout fakes ⟨cos 2β⟩ = −0.27.  The published binning is the seven bins
+  survives at any configuration): acceptance 36%, N_tag = 2.3×10⁶/yr, the
+  cutout fakes ⟨cos 2β⟩ = −0.31.  The published binning is the seven bins
   of `recopseudo.T_EDGES_PUBLISHED`, 0.017–0.25 GeV² (adopted 2026-08-28;
   Report 2 §7, plans/08 item 4), of which five carry more than 10⁵ recoils
-  (5.8 / 4.2 / 3.0 / 4.2 / 1.8 × 10⁵), and they combine to a one-year
-  δa_e = 0.00119.  The template fit recovers a_t(t_ref) = 0.0466 ± 0.0053 /
-  0.0563 ± 0.0047 / 0.0672 ± 0.0048 / 0.0915 ± 0.0035 / 0.1099 ± 0.0048 /
-  0.1384 ± 0.0085 / 0.1215 ± 0.0174 against 0.045 / 0.059 / 0.071 / 0.090 /
-  0.118 / 0.147 / 0.180 injected, and a_e = 0.010 on average: in the lowest
-  bin one seed gives 0.0130 ± 0.0022 and the 20-experiment ensemble a mean
-  of 0.0092 with a spread of 0.0020, so the single-seed high value is a
+  (5.5 / 4.1 / 2.9 / 4.1 / 1.8 × 10⁵), and they combine to a one-year
+  δa_e = 0.00121.  The template fit recovers a_t(t_ref) = 0.0418 ± 0.0063 /
+  0.0593 ± 0.0052 / 0.0714 ± 0.0052 / 0.0973 ± 0.0037 / 0.1209 ± 0.0050 /
+  0.1535 ± 0.0089 / 0.1166 ± 0.0186 against 0.046 / 0.060 / 0.073 / 0.092 /
+  0.121 / 0.150 / 0.183 injected, and a_e = 0.010 on average: in the lowest
+  bin one seed gives 0.0099 ± 0.0022 and the 20-experiment ensemble a mean
+  of 0.0105 with a spread of 0.0018, so the seed-to-seed scatter is a
   fluctuation and not the "residual template bias" earlier text called it.
   Below 10⁵ recoils the bin-wise ratio of Poisson counts is biased low
-  (−4.1% and −35.8% on twenty one-year draws, at 189 and 46 counts per
+  (−2.8% and −33.9% on twenty one-year draws, at 184 and 45 counts per
   (α, β) cell) and closes at ten years.  **`--fit likelihood`** — the
   acceptance-profiled
   conditional-multinomial Poisson likelihood of `reco.harmonic_likelihood_fit_2d`
   (plans/08 A12) — removes that bias outright: on the same twenty draws its
-  means are 0.0432 / 0.0585 / 0.0700 / 0.0896 / 0.1179 / 0.1476 / 0.1755
-  against 0.0451 / 0.0586 / 0.0711 / 0.0898 / 0.1181 / 0.1473 / 0.1803
+  means are 0.0451 / 0.0586 / 0.0709 / 0.0916 / 0.1215 / 0.1514 / 0.1814
+  against 0.0462 / 0.0599 / 0.0727 / 0.0916 / 0.1205 / 0.1502 / 0.1833
   injected.  **`--t-edges`** takes any increasing list and appends `tedges`
   to the output stem, so the pre-2026-08-28 window
   (`recopseudo.T_EDGES_LEGACY`, `0.05,0.08,0.12,0.17,0.25`) stays

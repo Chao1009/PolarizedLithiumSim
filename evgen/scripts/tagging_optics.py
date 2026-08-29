@@ -44,8 +44,11 @@ optics), so that the 10 sigma envelope at the pots is 10 R12 sigma_theta --
 the present lattice satisfies this at the Yellow Report optics, and whether a
 de-squeezed one does is the first question for C-AD.  Dispersion at the pots
 is added in quadrature to the horizontal envelope as 10 D dp/p / R12 with
-D = 0.3 m (read off the alpha/triton positions at 18 x 275) and the Yellow
-Report dp/p.  Absolute lithium luminosities are not published; everything
+each configuration's own measured (R12, D) -- 19.24 / 0.311, 21.25 / 0.287
+and 29.97 / 0.292 m (farforward.POT_LEVERS) -- and the Yellow Report dp/p;
+`--levers 18x275` forces the single pair this script used until
+2026-08-29, and writes `tagging_optics_6Li_18x275.png` so that it cannot
+overwrite the published figure.  Absolute lithium luminosities are not published; everything
 here is relative to the high-acceptance optics.
 
 Usage:  python3 scripts/tagging_optics.py [--outdir .] [--slope-b 50] [--pzz 0.6]
@@ -85,13 +88,12 @@ IR8_LI6_INTERPOLATED = 0.20
 # (plans/09 B1, tools/fullsim, farforward.POT_LEVERS): R12 = 19.24 / 21.25
 # / 29.97 m and D = 0.311 / 0.287 / 0.292 m at 5 x 41 / 10 x 100 /
 # 18 x 275, against the single 18 x 275 pair 30.6 / 0.30 m of September
-# 2024 that this script applied at every configuration.  The default stays
-# the 18 x 275 pair -- which is now 29.97 / 0.292 -- so that only that one
-# row moves; `--per-config-levers` uses each configuration's own, which
-# raises D/R12 by 63% at 5 x 41 and 38% at 10 x 100 and is priced in the
-# banner it prints.  It is opt-in because eps at 10 x 100 falls 22% under
-# it and `money_cos2phi_coherent_reco.py` runs on the same optimum.
-R12 = _FF_R12       # m, IP angle -> pot-plane x, measured at 18 x 275
+# 2024 that this script applied at every configuration.  SINCE 2026-08-29
+# each configuration is priced on its own pair, which raises D/R12 by 63%
+# at 5 x 41 and 38% at 10 x 100 and leaves 18 x 275 where it was; the
+# single-lever behaviour is `--levers 18x275`, and that is how every
+# tagging number published before that date is reproduced.
+R12 = _FF_R12       # m, the 18 x 275 lever, kept for --levers 18x275
 D_POT = _FF_D       # m, dispersion at the pots (alpha / 6Li / triton fit)
 
 
@@ -133,9 +135,13 @@ def main():
                     help="flat exotic-glue amplitude per unit P_zz to time (5 sigma)")
     ap.add_argument("--r-max", type=float, default=2000.0)
     ap.add_argument("--no-dispersion", action="store_true")
-    ap.add_argument("--per-config-levers", action="store_true",
-                    help="use each configuration's own measured (R12, D) "
-                         "instead of the 18 x 275 pair (plans/09 B1)")
+    ap.add_argument("--levers", default="per-config",
+                    choices=("per-config",) + KEYS,
+                    help="pot transport for the dispersive envelope term: "
+                         "each configuration's own measured (R12, D) "
+                         "(default), or one configuration's pair forced "
+                         "everywhere -- '18x275' is the single-lever "
+                         "behaviour published before 2026-08-29")
     ap.add_argument("--outdir", default=".")
     args = ap.parse_args()
     outdir = pathlib.Path(args.outdir)
@@ -166,10 +172,10 @@ def main():
 
         from polli_fastsim import farforward as _ff
         dpp = 1e-4 * _ff.YR_PROTON_DIVERGENCE[key][1]
-        if args.per_config_levers:
+        if args.levers == "per-config":
             r12_c, _r34_c, d_c = _ff.pot_levers_for(cfg)
         else:
-            r12_c, d_c = R12, D_POT
+            r12_c, _r34_c, d_c = _ff.POT_LEVERS[args.levers]
         disp = 0.0 if args.no_dispersion else d_c * dpp / r12_c  # rad, in quadrature
 
         def env_h(rr):                       # horizontal 10 sigma envelope at r_h = rr
@@ -289,7 +295,10 @@ def main():
     fig.legend(handles, labels, loc="lower center", ncol=3, fontsize=7.0, frameon=False,
                bbox_to_anchor=(0.5, 0.0))
     fig.tight_layout(rect=(0, 0.09, 1, 0.92))
-    out = outdir / "tagging_optics_6Li.png"
+    stem = "tagging_optics_6Li"
+    if args.levers != "per-config":     # never overwrite the published PNG
+        stem = "%s_%s" % (stem, args.levers)
+    out = outdir / ("%s.png" % stem)
     fig.savefig(out, dpi=140)
     lines.append("wrote %s" % out)
     print("\n".join(lines))

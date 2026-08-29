@@ -142,8 +142,13 @@ python3 tools/fullsim/ion_gun_hepmc.py --out $S/gun.hepmc --pdg 1000030060 \
 
 # (b) the ladders: theta 0.20-6.00 mrad in 0.05 steps at phi = 0/90/180/270
 #     (117 angles x 4 azimuths = 468 events).  p_T = theta * A * p_u, so the
-#     --pt list is per configuration; A p_u = 825 GeV at 18 x 275 (and
-#     244.8 / 597.0 GeV at 5 x 41 / 10 x 100).
+#     --pt list is per configuration.  The ladder below is 18 x 275, where
+#     A p_u = 825 GeV IS the fill energy.  At 5 x 41 and 10 x 100 the ladder
+#     is shot at the ring's rigidity-scaled reference momentum and not at the
+#     fill energy: A p_u = 123.0 and 300.0 GeV, i.e. the rigidity-scaled
+#     20.5 and 50 GeV/u every scan here used.  The gamma-matched fill
+#     energies at those two settings, 244.8 and 597.0 GeV (plans/10), are
+#     not used by any scan in this file.
 python3 tools/fullsim/ion_gun_hepmc.py --out $S/ladder.hepmc --pdg 1000030060 \
     --a 6 --p-per-nucleon 137.5 \
     --pt $(python3 -c "print(' '.join('%.5f' % (825e-3*(0.20+0.05*i)) \
@@ -200,7 +205,7 @@ where an over-rigid fragment goes.
 
 | configuration | R₁₂ st.1 [m] | R₁₂ st.2 | R₃₄ st.1 [m] | R₃₄ st.2 | D [m] | D₂ [m] |
 |---|---|---|---|---|---|---|
-| 5 × 41 | **19.24** | 18.54 | not measurable | not measurable | **0.311** † | −0.190 † |
+| 5 × 41 | **19.24** | 18.54 | **4.56** ‡ | 4.57 ‡ | **0.311** † | −0.190 † |
 | 10 × 100 | **21.25** | 20.69 | **3.35** | 3.23 | **0.287** | −0.206 |
 | 18 × 275 | **29.97** | 30.31 | **2.93** | 2.62 | **0.292** | −0.215 |
 
@@ -229,14 +234,79 @@ inside the fit residual.)
 **R₃₄ = dy/dθ_y** comes from the φ = 90/270° ladders restricted to rows
 with |dx| < 16 mm, so that the vertical threshold is the single central
 one. Intercepts −0.81 mm (10 × 100) and −0.11 mm (18 × 275), rms 0.9 mm.
-**It cannot be determined at 5 × 41, and that is a result rather than a
-gap**: the per-energy insertion there holds the central silicon off to
-|y| ≥ 29.6 mm and the intermediate bands to 27.5 and 18.0 mm, so a
-vertical kick needs θ_y ≈ 10 mrad to reach any sensor. The whole
-0.20–6.00 mrad vertical ladder returned **one** accepted row (θ = 3.35
-mrad, y = +30.94 mm, single hit) at φ = 90° and none at φ = 270°. One
-point is not a regression; what the scan establishes at 5 × 41 is that the
-vertical plane is *shut*.
+
+‡ **The 5 × 41 vertical lever needed a second geometry** (2026-08-29).
+The per-energy insertion there holds the central silicon off to |y| ≥ 29.6
+mm and the intermediate bands to 27.5 and 18.0 mm, so the whole 0.20–6.00
+mrad vertical ladder returned **one** accepted row (θ = 3.35 mrad, y =
++30.94 mm, a single hit) at φ = 90° and none at φ = 270°, and one point is
+not a regression. The transport, however, belongs to the magnets and not
+to where the pots sit, so it can be read off a geometry whose pots are not
+retracted. Copy `compact/fields/beamline_5x41.xml` and
+`epic_craterlake_5x41.xml` into a scratch directory, set the four
+insertion constants of the copied beamline file to zero —
+
+```xml
+<constant name="offset_central_RP_section"        value="0.0*cm"/>
+<constant name="offset_intermediate_1_RP_section" value="0.0*cm"/>
+<constant name="offset_intermediate_2_RP_section" value="0.0*cm"/>
+<constant name="offset_outer_RP_section"          value="0.0*cm"/>
+```
+
+— point the copied `epic_craterlake_5x41.xml` at it,
+
+```bash
+singularity exec $SIF bash -lc 'source /opt/detector/epic-main/bin/thisepic.sh
+  mkdir -p '$S'/r34
+  sed "s#\(offset_[a-z0-9_]*_RP_section\" value *=\)\"[^\"]*\"#\1\"0.0*cm\"#" \
+      $DETECTOR_PATH/compact/fields/beamline_5x41.xml > '$S'/r34/beamline_5x41_zero.xml
+  sed "s|\${DETECTOR_PATH}/compact/fields/beamline_5x41.xml|'$S'/r34/beamline_5x41_zero.xml|" \
+      $DETECTOR_PATH/epic_craterlake_5x41.xml > '$S'/r34/epic_craterlake_5x41_zero.xml'
+```
+
+(`offset_OMD_x` does not match `_RP_section` and is left alone; the four
+Roman-pot section offsets are the only constants touched.  Both
+substitutions are written to be exact: the value pattern is `"[^"]*"`
+rather than `.*`, so the two `<!-- rough extrapolation -->` comments on
+lines 63–64 survive, and the include pattern carries its `${DETECTOR_PATH}/`
+prefix, without which the rewritten path is appended to the detector
+directory and no such file exists.  Both files then come out byte-identical
+to the stored ones.)
+
+and run the same θ = 0.20–6.00 mrad ladder in 0.05 mrad steps at
+φ = 0/90/180/270° through it with an intact ⁶Li at the ring's reference
+rigidity — the rigidity-scaled matching momentum of the paragraph above,
+not a fill energy — i.e. `ion_gun_hepmc.py --a 6 --p-per-nucleon 20.5 --pt
+$(python3 -c "print(' '.join('%.5f' % (123e-3*(0.20+0.05*i)) for i in
+range(117)))") --nphi 4`, then `npsim --compactFile
+$S/r34/epic_craterlake_5x41_zero.xml`, then `ff_gun_hits.py --per-event
+--index … --positions`; 123 GeV total, 468 events. Every
+field is untouched, so the transport is the baseline one; only the silicon
+has slid onto the beam axis. Regressing y on θ_y over the φ = 90/270°
+rows then gives **R₃₄ = 4.56 m** at station 1 (4.564 at layer 1, 4.558 at
+layer 2, 149 of 154 rows on the line, residual rms 0.79 mm, stable to 1.5%
+when the fit is restricted to |θ_y| < 3 mrad) and 4.57 m at station 2.
+The control is R₁₂ in the same file: **19.18 m** against the 19.24
+measured through the real insertion, i.e. zeroing the offsets moved the
+transport by 0.3%, which is the fit scatter and not a change.
+
+The plane is nonetheless *shut*, and now for a reason with a number
+attached: reaching the 29.6 mm insertion needs θ_y = 29.6 mm / 4.56 m =
+**6.49 mrad**, which is past the 5 mrad at which the far-forward routing
+ends. It is *not* shut by the 2.85 mrad outer edge of the row above —
+that is a **horizontal** edge, 54.8 mm of x on the 19.24 m horizontal
+lever, while 6.49 mrad of y is only 29.6 mm on the 4.56 m vertical one;
+the levers are 4.2× apart and the two angles do not compare. This very
+ladder carries clean on-the-fit-line vertical rows out to θ_y = 4.65
+mrad. What it does not carry is a row *at* the insertion: it stops at
+6.00 mrad, i.e. y = 4.56 × 6.00 − 2.4 = 25 mm against 29.6, so the
+constant is an extrapolation of a measured **lever**, not a measured
+**edge**. The −2.42 mm fitted vertical orbit offset splits the two sides
+to 7.02 mrad upward and 5.96 downward; 6.49 is the offset-free value, and
+nothing this programme produces reaches either. That 6.49 mrad is what
+`reco.RP_APERTURE_MEASURED["5x41"]` carries as c_y, replacing the 8.84
+mrad bound (29.6 mm over the largest vertical lever seen anywhere,
+R₃₄ = 3.35 m at 10 × 100) it held while the lever was unmeasured.
 
 **D = dx/dR at θ = 0** from a quadratic through the three rigidities each
 configuration provides — α at R = 0.857 and triton at R = 1.286 from the
@@ -254,10 +324,10 @@ from the He4 lattice run below, where a ⁶Li at 81.6 GV in an 82 GV lattice
 is off rigidity by −0.49% and its ladder intercept is −1.13 mm, i.e.
 D ≈ 0.23 m — the same quantity to 20% from a different measurement.
 
-The transport is **6.3× stiffer in x than in y at 10 × 100 and 10.2× at
-18 × 275**. That, and not the pot
-orientation, is why the open aperture is a horizontal slot although the
-pots insert vertically.
+The transport is **4.2× stiffer in x than in y at 5 × 41, 6.3× at
+10 × 100 and 10.2× at 18 × 275** — the ratio grows with energy. That, and
+not the pot orientation, is why the open aperture is a horizontal slot
+although the pots insert vertically.
 
 ### The edges
 
@@ -269,7 +339,7 @@ needs |dx| > 48 / 32 / 16 mm.
 
 | configuration | horizontal edge +x / −x | threshold/R₁₂ | vertical edge +y / −y | offset/R₃₄ | outer edge +x / −x | 144 mm/R₁₂ |
 |---|---|---|---|---|---|---|
-| 5 × 41 | **2.50 / 2.50 mrad** | 48/19.24 = 2.50 | none in 0.2–6.0 | — | **4.30 / 2.85 mrad** | 7.48 |
+| 5 × 41 | **2.50 / 2.50 mrad** | 48/19.24 = 2.50 | none in 0.2–6.0 | 29.6/4.56 = 6.49 | **4.30 / 2.85 mrad** | 7.48 |
 | 10 × 100 | **1.50 / 1.55** | 32/21.25 = 1.51 | 2.50 / 1.95 | 7.1/3.35 = 2.12 | **4.30 / 3.85** | 6.78 |
 | 18 × 275 | **0.55 / 0.55** | 16/29.97 = 0.53 | 0.80 / 0.95 | 2.7/2.93 = 0.92 | **4.25 / 4.00** | 4.80 |
 
@@ -280,7 +350,15 @@ regressed lever, to 4% at 18 × 275 and 1% at the other two, horizontally;
 and to the same at 18 × 275 vertically. At 10 × 100 the two vertical sides
 straddle the geometric 2.12 mrad (2.50 up, 1.95 down) and the −0.81 mm
 fitted vertical orbit offset accounts for the split exactly:
-(7.1 ± 0.81)/3.35 = 2.36 and 1.88 mrad.
+(7.1 ± 0.81)/3.35 = 2.36 and 1.88 mrad. The 5 × 41 vertical row is the
+one place the two readings cannot be compared: there is no measured
+vertical edge to compare the 6.49 mrad against, because the ladder stops
+at 6.00 mrad (y = 25 mm) before the 29.6 mm insertion is reached. The
+2.85 mrad of the outer-edge column is **not** that comparison — it is a
+horizontal edge on a 4.2× longer lever. What makes the plane *shut* is
+that 6.49 mrad is past the 5 mrad at which the far-forward routing ends,
+and the zero-insertion scan of 2026-08-29 is what turns that from an
+inference into an arithmetic one.
 
 **The outer edge is not the module edge.** At every configuration the
 contiguous primary track stops between 2.85 and 4.30 mrad, at |dx| =
@@ -347,7 +425,7 @@ threshold over the station-1 lever:
 
 | configuration | c_x [mrad] | c_y [mrad] | superseded (Sep 2024) |
 |---|---|---|---|
-| 5 × 41 | **2.50** | **8.84** — the vertical plane is *shut* | 2.0 × 3.0 |
+| 5 × 41 | **2.50** | **6.49** — measured, and the plane is *shut* | 2.0 × 3.0 |
 | 10 × 100 | **1.51** | **2.12** | 1.35 × 3.0 |
 | 18 × 275 | **0.53** | **0.92** | 1.03 × 2.3 |
 
@@ -371,10 +449,9 @@ At 18 × 275 both half-widths shrink — x by 1.9×, y by 2.5× — which is the
 7 mm insertion of September 2024, exactly as plans/09 §9.4 predicted from
 reading the files (it named 0.52 mrad from 16 mm / 30.6 m; the scan gives
 0.53). At 5 × 41 the aperture gets **worse**, also as predicted. The
-cutout is **taller than it is wide wherever both axes are open**, by
-1.4–1.7×, so `reco.rp_measure`'s `cut_scale_xy = (2.5, 1.0)` still has the
-aspect the wrong way round — by 3.5–4.4× rather than the 5.8× the
-September-2024
+cutout is **taller than it is wide at every configuration**, by 1.4–2.6×,
+so `reco.rp_measure`'s `cut_scale_xy = (2.5, 1.0)` still has the aspect
+the wrong way round — by 3.5–6.5× rather than the 5.8× the September-2024
 numbers gave. The magnitude moved; the **sign** of the acceptance-induced
 ⟨cos 2φ_t⟩, which is the half of this that does not depend on the geometry
 version, did not.
@@ -487,12 +564,23 @@ and a pure field scale *does* preserve the transfer matrix. The ePIC
 (R₁₂ = 19–21 m) and are a different optics, not a scaled one.
 
 So the lattice has to be stated with the number, because it is worth a
-factor 1.56 in the horizontal aperture at 5 × 41. Everything above is on
+factor 1.55 in the horizontal aperture at 5 × 41. Everything above is on
 the ePIC baseline compact files, which is what every earlier scan here
-used and what `docs/reproduction_manual.md` documents; the He4 alternative
-is a bounded systematic on the 5 × 41 row (R₁₂ ×1.55, edge ×0.64) and an
-open question for the far-forward working group: which of the two files
-describes the lattice a ⁶Li fill at 81.6 GV would actually run in.
+used and what `docs/reproduction_manual.md` documents.
+
+**Which file a ⁶Li fill at 81.6 GV would run in is not settled, and since
+2026-08-29 this repository states a working assumption instead of leaving
+the question open.** The assumption — an educated guess of ours, not a
+machine-design statement — is the **ePIC baseline lattice of that ring
+setting run at twice the field** for the Z/A = ½ fill: the same magnets,
+the same orbit, and therefore the transport measured above. A lithium
+beam at 40.8 GeV/u carries 81.6 GV against the 41 GeV proton lattice's
+41 GV, so every gradient doubles, the optics is unchanged, and R₁₂, R₃₄
+and D are the numbers in the table. The Yellow-Report-scaled Z/A = 0.5
+file is carried as the **alternative**, and the ratio of the two is the
+systematic: R₁₂ ×1.55, the horizontal edge ×0.64 at 5 × 41. The
+far-forward working group may settle it the other way, and plans/09 B1
+records what would then move.
 
 **The alternative is reachable in code, not only here.**
 `farforward.POT_LEVERS_LIGHT_ION_LATTICE` carries (R₁₂, R₃₄, D) =
@@ -510,7 +598,7 @@ that setting is `beamline_10x110_H2.xml` at 220 GV, and the ⁶Li fill at
 10 × 100 is at 199 GV — a different *energy*, not a different lattice at
 the same energy, so a scan there would confound the two. No 199 GV
 light-ion file exists in `epic-main`. The check is not meaningful at
-10 × 100 and was not run; carry the 5 × 41 factor 1.56 as the size of the
+10 × 100 and was not run; carry the 5 × 41 factor 1.55 as the size of the
 effect.
 
 ### Caveats

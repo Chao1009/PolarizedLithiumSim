@@ -148,8 +148,9 @@ the only Li far-forward datapoint is coherent J/ψ at IR-8, arXiv:2511.05638,
 ☑ *2026-08-28: the fold is done — `fastsim/scripts/tagging_acceptance.py`
 folds the cluster-model p_T(α) against a 10σ angular envelope for four optics
 per configuration, giving a ⁶Li α tag of 1.9 / 1.7 / 2.6% at the Yellow Report
-optics and 35 / 28 / 29% at a lithium tagging optics costing 1/7–1/13 of the
-luminosity (`fastsim/out/tagging_acceptance.txt`, Report 3 Table 6). The
+optics and 31 / 22 / 29% at a lithium tagging optics costing 1/6.8–1/12.8 of the
+luminosity (35 / 28 / 29% until the per-configuration transport became the
+baseline on 2026-08-29) (`fastsim/out/tagging_acceptance.txt`, Report 3 Table 6). The
 argument therefore does not hold at any published IP6 optics: it needs the
 tagging optics or IR-8. The third branch, the ⁶Li → p/³He channels, was never
 quantified as a tag — those fragments are treated as breakup backgrounds.*
@@ -275,7 +276,7 @@ samples.
 | risk | mitigation |
 |---|---|
 | Li optics/afterburner configs don't exist | verified: 3 concrete artifacts to add (preset, beamline XML, runcard); ⁶Li can proxy d/He4 (same Z/A); engage FF WG early for ⁷Li |
-| ⁶Li α-tag fails at IP6 (R=1 beam-blind) | quantify pT-tail acceptance; document IR-8 secondary-focus case; pivot ⁶Li tagging to p/³He channels — *superseded (2026-08-28): the risk materialised (1.7–2.6% at every published optics) and was answered by a mitigation this row predates — the one-plane β\* de-squeeze of Report 1 §6.1, 28–35% at 1/7–1/13 of the luminosity, with IR-8 (≈20%) as the fallback; the p/³He fragments were evaluated and classified as vetoable breakup backgrounds, not tags (plans/06 §6.2)* |
+| ⁶Li α-tag fails at IP6 (R=1 beam-blind) | quantify pT-tail acceptance; document IR-8 secondary-focus case; pivot ⁶Li tagging to p/³He channels — *superseded (2026-08-28): the risk materialised (1.7–2.6% at every published optics) and was answered by a mitigation this row predates — the one-plane β\* de-squeeze of Report 1 §6.1, 22–31% at 1/6.8–1/12.8 of the luminosity, with IR-8 (≈20%) as the fallback; the p/³He fragments were evaluated and classified as vetoable breakup backgrounds, not tags (plans/06 §6.2)* |
 | Geant4/DD4hep mishandles light-ion or excited-ion primaries | gun tests in 2.1.4; sanitize PDG codes to ground states |
 | EICrecon FF matrices proton-tuned | derive Li-rigidity matrices with FF WG |
 | Compute exceeds local resources | guns + small samples locally; campaign production via collaboration |

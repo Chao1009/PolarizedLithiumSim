@@ -70,7 +70,7 @@ from polli_fastsim import beams, fom
 from polli_fastsim.beams import LI6, BeamConfig
 from polli_fastsim.asymmetries import a_cos2phi
 from polli_fastsim.inputs import get_backends
-from polli_fastsim.polarized import toy_delta_gluon, unpolarized_emc_ratio
+from polli_fastsim.polarized import legacy_emc_ratio, toy_delta_gluon
 from polli_fastsim.structure import NuclearF2
 import polli_fastsim.structure as structure_mod
 import polli_fastsim.asymmetries as asymmetries_mod
@@ -343,7 +343,7 @@ def sig2_per_fb_at_ct18emc(cfg, scale, pzz, base, variant="mid_x",
     This is identical to sig2_per_fb_at_realistic in the parent script.
     Used for the gray dashed reference line only.
     """
-    nf2_obj = NuclearF2(cfg.ion, base=base, emc_ratio=unpolarized_emc_ratio)
+    nf2_obj = NuclearF2(cfg.ion, base=base, emc_ratio=legacy_emc_ratio)
     return sig2_per_fb_at_nuc(cfg, scale, pzz, nf2_obj, variant=variant,
                                min_events=min_events)
 

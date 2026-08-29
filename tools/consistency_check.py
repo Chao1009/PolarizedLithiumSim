@@ -258,8 +258,13 @@ def _():
     calling `separation_at_pots` with its DEFAULTS, which are the 18 x 275
     levers, so it validated the documents against the same single-lever
     arithmetic the documents used and could not see that R12 and R34 are
-    per configuration.  It now passes `config=cfg`.  The current values
-    are 25.8 / 10.7 / 10.9 mm."""
+    per configuration.  It now passes `config=cfg`.
+
+    Fourth error, 2026-08-29: 5 x 41 was still on the fallback
+    R34 = R12 = 19.24 m, because the vertical plane is shut and the B1
+    ladder had nothing to regress there; the zero-insertion scratch
+    geometry gives R34 = 4.56 m and the median falls 25.8 -> 17.3 mm.
+    The current values are 17.3 / 10.7 / 10.9 mm."""
     import numpy as np
     from polli_fastsim import beams
     from polli_fastsim import farforward as ff

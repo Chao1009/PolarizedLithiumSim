@@ -87,14 +87,27 @@ curves — all four are digitized from the published figures into
 `fastsim/polli_fastsim/data/` by `tools/digitize_figure.py`
 (`data/SOURCES.md`), the two money plots draw them by default and keep the
 old shapes behind `--emc-mode constant` / `--transfer legacy`.  Item 1
-(EPPS21 for the unpolarized ratio) and the Wang gluon-spin curves are the
-remainder.*
+(EPPS21 for the unpolarized ratio) closed on 2026-08-29 — see step 1.2.1
+below — and the Wang gluon-spin curves are the remainder.*
 
 1. Unpolarized: LHAPDF inside eic-shell (container ships LHAPDF6) or the
    pure-python `parton` package locally; CT18NNLO + EPPS21/nNNPDF3.0 nuclear
    ratios for ⁶,⁷Li (A=6,7 grids exist in EPPS21? if not, interpolate A or
    use light-nuclei convolution). Validate toy-vs-grid F₂ maps (expect ≤30%
    shifts, no FOM conclusions change).
+   ☑ *2026-08-29: closed for ⁶Li.  `polarized.UNPOL_EMC_MODE = "epps21"` is
+   EPPS21nlo_CT18Anlo_Li6's F₂ per nucleon over CT18ANLO's free isoscalar
+   nucleon — EPPS21's own proton baseline, so the fit cancels (CT18NLO
+   until 2026-08-29, 4.2% shallower) — with `nnnpdf` (nNNPDF30 A = 6) as the spread and the retired
+   hand-written 12-point shape reachable as `mode="table"`.  Mean valence
+   depletion over 0.35 < x < 0.65: 0.03105 (EPPS21), 0.01372 (nNNPDF3.0),
+   0.06459 (table), against 0.05835 for CBT's own model curve; EPPS21's 90%
+   CL Hessian band on its own value is +0.039 / −0.041.  It is the common
+   baseline both polarized-EMC camps are now transferred onto (item 2), and
+   the spread between the choices is the leading uncertainty on that figure
+   of merit.  ⁷Li has no nuclear PDF grid from anyone, so the ⁷Li
+   projection uses the A = 6 baseline; that substitution is the residue of
+   this item.*
 2. Polarized: JAM (e.g., JAMpol via LHAPDF) or DSSV14 grids for g₁p/g₁n →
    A₁ maps; **two-camp** medium-modification curves digitized as
    `medium_ratio(x)`: CBT (PLB 642:210; ~2× unpolarized EMC) vs
@@ -107,17 +120,23 @@ remainder.*
    (nuclear matter, Q² = 10 GeV²) are in `cbt_polemc_7Li_Q5.csv` and
    `tmt_polemc_nm_Q10.csv`.  Because the two are different targets at
    different scales, they are compared as the ratio of EMC effects applied
-   to one common ⁷Li baseline — CBT's own unpolarized curve — with a
-   valence strength factor of 1 for CBT and 0.397 for TMT.  That factor is
-   fitted in 0.35 < x < 0.65 and applied at every x, so the comparison is a
-   statement about the two papers only inside that window: the published
-   polarized curves agree to better than 0.008 over 0.028 < x < 0.30, while
-   inside the window the transferred TMT depletion tracks ⁷Li's own
-   unpolarized one to within 0.005 against CBT's roughly twice it, so ΔR
-   separates by 0.040 at x = 0.36 falling to 0.011 at 0.65.  The answer to
-   the FOM question is 2.7σ in the best bin of that window at 100 fb⁻¹/u,
-   not 5σ; the 3.7σ the unrestricted scan returns at x = 0.141 is carried by
-   the transfer, not by the calculations, and `money_polemc.py` prints both.
+   to one common baseline with a single valence strength factor.  That
+   factor is fitted in 0.35 < x < 0.65 and applied at every x, so the
+   comparison is a statement about the two papers only inside that window:
+   the published polarized curves agree to better than 0.008 over
+   0.028 < x < 0.30, while inside the window the transferred TMT depletion
+   tracks the baseline's own unpolarized one against CBT's roughly twice it.
+   *2026-08-29: the baseline is no longer CBT's own model curve but EPPS21's
+   ⁶Li over CT18ANLO (step 1.2.1), whose valence depletion 0.0311 is just
+   over half of CBT's 0.0584, so the factors are 0.5322 and 0.2113 in place
+   of 1 and 0.397 and the transferred TMT depletion tracks it to within
+   0.003 while
+   ΔR separates by 0.021 at x = 0.36 falling to 0.006 at 0.65.  The answer
+   to the FOM question is 1.43σ in the best bin of that window at
+   100 fb⁻¹/u, not 5σ and not the 2.7σ the model baseline gave; the 1.95σ
+   the unrestricted scan returns at x = 0.141 is carried by the transfer,
+   not by the calculations, and `money_polemc.py` prints both, together with
+   the baseline spread that is now the leading uncertainty on the answer.*
    Wang's Figure 3 is NOT digitized:
    the dg₁/dlnQ² observable has no money plot (`refs/2109.03591.pdf` and
    `data/SOURCES.md` record where the curves are).*
@@ -155,16 +174,19 @@ by toy-MC closure (`tests/test_closure.py`). First numbers: gluonometry
 100 fb⁻¹/u; δA_zz ~ 10⁻³/x-bin at 10 fb⁻¹/u. To finalize: rerun on grid
 inputs + adopted binning, add the items below.*
 
-*2026-08-28: the CBT-vs-TMT line above is retired.  It was the two camps as
-the constants 2 and 1 on a hand-written EMC table, which made them separate
-as |1 − R_EMC(x)| and therefore grow with x.  On the digitized curves the
-separation is 0.044 / 0.040 / 0.034 / 0.059 at x = 0.09 / 0.28 / 0.45 / 0.71
-against δΔR = 0.0423 / 0.0405 / 0.0600 / 0.1893 on grid inputs at
-10 fb⁻¹/u — 3.3 / 3.1 / 1.8 / 1.0 σ at 100 fb⁻¹/u.  The replacement headline
+*2026-08-28, revised 2026-08-29: the CBT-vs-TMT line above is retired.  It
+was the two camps as the constants 2 and 1 on a hand-written EMC table,
+which made them separate as |1 − R_EMC(x)| and therefore grow with x.  On
+the digitized curves, transferred onto the EPPS21 unpolarized baseline that
+became the default on 2026-08-29, the separation is 0.023 / 0.021 / 0.018 /
+0.032 at x = 0.09 / 0.28 / 0.45 / 0.71 against δΔR = 0.0423 / 0.0403 /
+0.0595 / 0.1868 on grid inputs at 10 fb⁻¹/u — 1.75 / 1.66 / 0.97 / 0.53 σ
+at 100 fb⁻¹/u, and nothing above 1σ per bin at 10.  The replacement headline
 is the valence window in which the transfer is defined and the two published
-curves genuinely differ: best bin x = 0.355, 0.84σ at 10 fb⁻¹/u and 2.66σ at
+curves genuinely differ: best bin x = 0.355, 0.45σ at 10 fb⁻¹/u and 1.43σ at
 100.  The x ≈ 0.5–0.7 of the old line is inside that window; what is retired
-is the 5σ, not the location.*
+is the 5σ, not the location.  The model baseline the day before gave twice
+those separations, which `--emc-baseline cbt` reproduces.*
 
 For each observable, produce the "money plots":
 1. **Polarized EMC (⁷Li first):** projected δ(ΔR(x)) vs x for the energy
@@ -339,8 +361,10 @@ need analogous care.
      number decides whether ⁶Li d-cluster tagging works at IP6 or needs
      the IR-8 secondary focus; ³He → RP (R = 0.75); p → OMD.
      ☑ *2026-08-28: the number is in — the ⁶Li α tag is 1.9 / 1.7 / 2.6% at the
-     Yellow Report optics of the three configurations and 35 / 28 / 29% at a
-     lithium tagging optics costing 1/7–1/13 of the luminosity
+     Yellow Report optics of the three configurations and 31 / 22 / 29% at a
+     lithium tagging optics costing 1/6.8–1/12.8 of the luminosity (the tagging
+     triple read 35 / 28 / 29% until the per-configuration transport became the
+     baseline on 2026-08-29)
      (`fastsim/out/tagging_acceptance.txt`, Report 3 Table 6); the near-beam cut
      is now the angular 10(σ_h, σ_v) envelope, not the 0.2–0.45 GeV/c p_T cutoff
      this bullet still words it as. The decision it forces — a tagging optics or
@@ -424,7 +448,7 @@ with 1.4 → 1.6 → 1.7. Total ≈ 3–4 months of focused effort; BeAGLE acces
 |---|---|
 | BeAGLE invalid for A=6,7 breakup (C-12 n(k), no cluster geometry, frozen code) | validation step 1.5.3 incl. cluster-IA cross-check; fallback: cluster-model toy fragmenter (α+d / α+t momentum densities + flat E*) good enough for acceptance maps — *2026-08-28: the fallback carries every published tagging number, but of step 1.5.3 only the e+d control ran; still owed and unblocked are the Tu et al. 2005.14706 comparison and the flat-E\* fragmenter (no E\* code exists)* |
 | BeAGLE access (FLUKA license, "no mere mortal" build) | prebuilt BNL/JLab/CVMFS installs; start access requests immediately |
-| ⁶Li α-tag beam-blind at IP6 (R = 1.0 vs RP pT cutoff) | quantify pT-tail acceptance early (step 1.5.4); lead the tagging story with ⁷Li (α → RP works); document IR-8 secondary-focus case — *2026-08-28: quantified per configuration and per optics (1.7–2.6% at the YR optics, 28–35% at the tagging optics) and IR-8 priced; Report 0 §5.4/Table 3 still states the number on the retired 73/164 µrad optics and needs re-deriving* |
+| ⁶Li α-tag beam-blind at IP6 (R = 1.0 vs RP pT cutoff) | quantify pT-tail acceptance early (step 1.5.4); lead the tagging story with ⁷Li (α → RP works); document IR-8 secondary-focus case — *2026-08-28: quantified per configuration and per optics (1.7–2.6% at the YR optics, 22–31% at the tagging optics since the per-configuration transport of 2026-08-29, 28–35% before it) and IR-8 priced; Report 0 §5.4/Table 3 restated on it* |
 | No nuclear PDF grids at A=6,7 | interpolate EPPS21 in A; or convolution from d/³He/⁴He — *superseded (2026-08-28): A = 6 grids exist and are in use (EPPS21nlo_CT18Anlo_Li6, nNNPDF30 A6, compared against each other in the money-Δ line); the risk survives for ⁷Li alone, where LHAPDF has nothing* |
 | Transverse ion polarization at IP unavailable | gluonometry FOM quoted conditional on rotator configuration; raise early with EPIOS/C-AD (04_open_questions) — *2026-08-28: the conditional quoting is done (`money_delta.py` docstring, Report 1 §3.1 and Table 4 #8); the raise itself has not happened — plans/04 #2 records owner and default, no contact yet* |
 | Tensor (λ=0) bunches operationally undefined | source RF transitions can prepare m=0; needs machine fill-pattern concept — document requirement, don't solve — ☑ *2026-08-28: documented past the ask — plans/04 #3 carries the requirement plus the measured consequence (a 10⁻³ inter-fill difference of the cos 2φ′ harmonic fakes 5.6×10⁻⁴), which turns bunch-by-bunch alternation into a requirement of the measurement (Reports 1 and 2)* |

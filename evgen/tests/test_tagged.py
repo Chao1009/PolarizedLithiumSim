@@ -433,9 +433,14 @@ def test_sampler_defaults_to_the_configuration_optics():
 
 def test_alpha_tag_acceptance_per_optics_at_10x99():
     """The headline B2 numbers, on the tagged sampler at 10 x 99.5: 2.5% at
-    the Yellow Report high-acceptance optics against 30% at the tagging
-    optics, and the whole difference is the near-beam tail.  The circular
-    cut the azimuth-less call applies would read 51% instead of 30%."""
+    the Yellow Report high-acceptance optics against 25% at the tagging
+    optics, and the whole difference is the near-beam tail.  The 25% was
+    30% until 2026-08-29, when `tagging_optics_point` began pricing the
+    dispersive envelope term on each configuration's own (R12, D): at
+    10 x 100 that term is 39% larger than the 18 x 275 pair it replaced,
+    the optimum de-squeeze falls from 175.6 to 164.1, and the horizontal
+    envelope opens from 0.166 to 0.192 mrad.  The circular cut the
+    azimuth-less call applies would still read ~1.6x more."""
     from polli_fastsim import farforward as ff, fom
     kern = InclusiveKernel(beams.DEUTERON, b1_func=toy_b1)
     model = tagged.TaggedModel(tagged.li6_alpha_channel())
@@ -451,7 +456,7 @@ def test_alpha_tag_acceptance_per_optics_at_10x99():
                              phi=ev["phi_spec"])
         acc[label] = float(np.mean((r == 1) | (r == 4)))
     assert acc["yr"] == pytest.approx(0.025, rel=0.10)
-    assert acc["tag"] == pytest.approx(0.30, rel=0.10)
+    assert acc["tag"] == pytest.approx(0.254, rel=0.10)
     # the off-rigidity R < 0.95 window slice is optics-independent and is
     # all that survives at the Yellow Report optics
     r_yr = ff.route_charged(ev["R"], ev["theta"], ev["pT"],
@@ -604,7 +609,7 @@ def test_the_published_coherent_t_window_is_the_seven_bin_one():
     """The reconstructed |t| window of the coherent intact-6Li cos 2beta
     channel became the seven bins 0.017-0.25 GeV^2 on 2026-08-28 (plans/08
     8.4): the three bins added below 0.05 carry most of the tagged sample
-    and nearly halve the combined one-year delta(a_e), 0.00205 -> 0.00119
+    and nearly halve the combined one-year delta(a_e), 0.00207 -> 0.00121
     at 5 x 40.8.  Both coherent scripts must default to the SAME list, the
     default must stay expressed as `--t-edges` unset (the sentinel the
     published stems key on), and the run-13 four-bin window must stay

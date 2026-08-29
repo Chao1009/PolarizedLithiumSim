@@ -9,7 +9,7 @@ is the other:
                            the library as `fom.Scenario.run_share`;
   the OPTICS fraction      what a de-squeezed beta*_x costs at fixed wall
                            time (`farforward.Optics.lumi_fraction`,
-                           1/7 - 1/13 for the lithium tagging optics);
+                           1/6.8 - 1/12.8 for the lithium tagging optics);
   the SPIN-STATE share     how one measurement's own luminosity divides
                            between its fills (`bookkeeping.SpinCategory
                            .lumi_fraction`, 0.5 / 0.5 for the flip plan).

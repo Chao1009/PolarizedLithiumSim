@@ -37,18 +37,18 @@ external inputs, not work.**
 > |---|---|---|---|
 > | coherent, silicon (2.50 / 1.51 / 0.53 mrad) | 9.4×10⁻¹⁰ | 2.0×10⁻¹⁹ | 1.2×10⁻⁵ |
 > | coherent, YR high-acceptance envelope (2.2 / 1.8 / 0.92 mrad) | 7.2×10⁻⁸ | 6.2×10⁻²⁷ | 7.1×10⁻¹⁴ |
-> | coherent, tagging-optics envelope (0.33 / 0.17 / 0.12 mrad, L/L_HA = 1/7.1 / 1/13.3 / 1/9.5) | **0.42** | **0.32** | **0.33** |
-> | ⁶Li α tag (routed), silicon / YR envelope / tagging | 0.017 / 0.018 / 0.36 | 0.016 / 0.016 / 0.28 | 0.029 / 0.025 / 0.29 |
-> | chain at the tagging optics, pots at silicon → pots follow | 0 → 7 bins, N_tag 2.5×10⁶/yr | 0 → 7, 2.9×10⁶ | 0 → 7, 6.0×10⁶ |
+> | coherent, tagging-optics envelope (0.36 / 0.19 / 0.12 mrad, L/L_HA = 1/6.8 / 1/12.8 / 1/9.5) | **0.37** | **0.25** | **0.33** |
+> | ⁶Li α tag (routed), silicon / YR envelope / tagging | 0.017 / 0.018 / 0.32 | 0.016 / 0.016 / 0.22 | 0.029 / 0.025 / 0.29 |
+> | chain at the tagging optics, pots at silicon → pots follow | 0 → 7 bins, N_tag 2.3×10⁶/yr | 0 → 7, 2.4×10⁶ | 0 → 7, 6.0×10⁶ |
 > | | (at 18 × 275 the silicon run's one populated bin is dropped by `nearbeam_reach_gain.MIN_TAGGED_PER_BIN` = 1000 against 231 recoils/yr) | | |
-> | δa_t, best bin, pots follow | 0.0035 | 0.0034 | 0.0023 |
+> | δa_t, best bin, pots follow | 0.0037 | 0.0040 | 0.0023 |
 >
 > At the published optics the *machine* binds at 10 × 100 and 18 × 275,
 > where a closer approach buys nothing; at 5 × 41 the silicon re-measured
 > on 2026-08-28 binds instead (2.50 against a 2.20 mrad envelope) and a
 > closer approach is worth a factor 77.  At the tagging optics the silicon
 > binds everywhere and a layer that follows the envelope is the whole
-> difference between no tag and a 32–42% tag.  The energy ordering reverses: the top
+> difference between no tag and a 25–37% tag.  The energy ordering reverses: the top
 > configuration is the most productive at equal luminosity.  The three
 > effects listed below (statistics, a configuration, bias) were features
 > of the 72.7 µrad envelope against the silicon and are kept as a record.
@@ -63,10 +63,10 @@ external inputs, not work.**
 > acceptance is not a measurement: what the tagging optics buys the tagged
 > observables is **reach**, not rate — at the published optics the α tag
 > admits nothing below a spectator momentum of 0.15 GeV/c, under the
-> tagging optics half the accepted sample is there, for a 7% cost in
-> tagged events per year at 10 × 100 and a 1.2–1.9× gain at the other two
-> configurations (B2).  For ⁷Li the whole trade inverts and the tagging
-> optics is a factor 8–15 net loss (B3).
+> tagging optics a third to a half of the accepted sample is there, for
+> a 19% cost in tagged events per year at 10 × 100 and a 1.2–1.8× gain at
+> the other two configurations (B2).  For ⁷Li the whole trade inverts and
+> the tagging optics is a factor 7.9–14.8 net loss (B3).
 
 `evgen/scripts/nearbeam_aperture_scan.py` (analytic) and
 `nearbeam_reach_gain.py` (the full chain: Roman-Pot emulation, two
@@ -281,8 +281,8 @@ fraction:
 | optics | median separation | 16–84% | in 500 µm pixels | both recorded (YR / tagging) | α fakes a tag (YR / tagging) | partner d seen (YR / tagging) | recorded pair in one pixel (tagging) |
 |---|---|---|---|---|---|---|---|
 | 18 × 275 | **10.9 mm** | 3.2–26.9 | 22 | 0.0002 / 0.22 | 0.0007 / 0.27 | 0.25 / **0.84** | 4.2 × 10⁻³ |
-| 10 × 100 | **10.7 mm** | 3.4–26.4 | 21 | 0.0000 / 0.22 | 0.0001 / 0.26 | 0.02 / **0.84** | 2.7 × 10⁻³ |
-| 5 × 41 | **25.8 mm** | 11.4–53.4 | 52 | 0.0002 / 0.29 | 0.0020 / 0.34 | 0.12 / **0.85** | 5.2 × 10⁻⁵ |
+| 10 × 100 | **10.7 mm** | 3.4–26.4 | 21 | 0.0000 / 0.17 | 0.0001 / 0.21 | 0.02 / **0.82** | 2.2 × 10⁻³ |
+| 5 × 41 | **17.3 mm** | 6.3–41.2 | 35 | 0.0002 / 0.25 | 0.0020 / 0.30 | 0.12 / **0.84** | 1.5 × 10⁻⁴ |
 
 ("YR" is the high-acceptance setting; the high-divergence one is the same
 beam at 5 × 41 and a wider envelope at the other two, where the α fakes a
@@ -293,8 +293,8 @@ the YR optics — 0.245 ± 0.005, 0.017 ± 0.004, 0.120 ± 0.002 — and on
 ≈ 3 × 10⁶ each at the tagging optics.)
 
 (The millimetre is a lever plus a dispersion, x = R₁₂·θ·cos φ + D·(R − 1),
-with (R₁₂, R₃₄, D) measured PER CONFIGURATION on 2026-08-28 — 19.24 / — /
-0.311, 21.25 / 3.35 / 0.287 and 29.97 / 2.93 / 0.292 m, `farforward.POT_LEVERS`,
+with (R₁₂, R₃₄, D) measured PER CONFIGURATION — 19.24 / 4.56 / 0.311,
+21.25 / 3.35 / 0.287 and 29.97 / 2.93 / 0.292 m, `farforward.POT_LEVERS`,
 D3 closed. They also inherit the cluster density's short-range scale:
 β = 0.20–0.40 GeV moves the medians by −12% to +9%, and the veto fractions
 by less than 0.03. This table has been wrong three times. The 30.1 / 73.4 mm
@@ -309,24 +309,32 @@ directions, and restoring it adds 5 / 23 / 39%. There is now a check that
 recomputes these medians and compares them with both documents. The third
 error was the levers: 38.4 / 18.5 / 15.1 mm carried ONE 18 × 275 pair,
 R₁₂ = 30.6 m with R₃₄ taken equal to it, at every configuration, and the
-B1 scan measured both per configuration — R₃₄ is 2.9–3.4 m rather than 30,
-an order of magnitude, so the vertical half of every separation collapses
-and the medians fall again, to 25.8 / 10.7 / 10.9 mm. The ordering stops
-being monotone with it: 18 × 275's larger R₁₂ cancels its smaller angles
-and the two upper rows tie to 4%. The earlier 6.7 / 18.4 / 44.8 mm used a
-single k = 40 MeV/c.)
+B1 scan measured both per configuration — R₃₄ is 2.9–4.6 m rather than 30,
+so the vertical half of every separation collapses and the medians fall
+again, to 25.8 / 10.7 / 10.9 mm. A fourth correction followed on
+2026-08-29: 5 × 41 was still carrying the fallback R₃₄ = R₁₂ = 19.24 m,
+because the 29.6 mm insertion shuts the vertical plane and the B1 ladder
+had nothing to regress there. Repeating that ladder through a copy of the
+compact file whose four Roman-pot section offsets are zero — the silicon
+slid onto the beam axis, every field untouched, R₁₂ = 19.18 m against
+19.24 as the control — gives R₃₄ = 4.56 m, and the 5 × 41 median falls to
+**17.3 mm**. The ordering stops being monotone with all of it: 18 × 275's
+larger R₁₂ cancels its smaller angles and the two upper rows tie to 1%.
+The earlier 6.7 / 18.4 / 44.8 mm used a single k = 40 MeV/c.)
 
 **The merge is rare rather than impossible, and the dispersion is why.**
 In the angular lever alone the back-to-back fragments with θ_d ≃ 2θ_α keep
-a *recorded* pair about 3·min(R₁₂ env_x, R₃₄ env_y) apart — the two levers
-differing by 6.3× at 10 × 100 and 10.2× at 18 × 275, so the vertical sets
-the scale at the top configuration — measured minima 18.1 mm at 5 × 41,
-10.1 at 10 × 100 and 8.1 at 18 × 275 against a scale of 19 / 11 / 8.1 mm,
-4–5% under it at the two lower configurations and on it at the top,
+a *recorded* pair about 3·min(R₁₂ env_x, R₃₄ env_y) apart, the minimum
+taken over the axes a recorded α is *seen* to use rather than over both —
+the two levers differ by 4.2× at 5 × 41, 6.3× at 10 × 100 and 10.2× at
+18 × 275, and at 5 × 41 no recorded α reaches the 3.80 mrad vertical
+envelope at either optics, so its 4.56 m vertical lever is not a scale of
+anything there — measured minima 20.0 mm at 5 × 41, 11.7 at 10 × 100 and
+8.1 at 18 × 275 against a scale of 21 / 12 / 8.1 mm, within 10% either way
 because 1.987 is only the k → 0 ratio — and nothing
 merges. The dispersive displacement is free to cancel that, and does: a
 recorded pair falls inside one 500 µm pixel in 4.2 × 10⁻³ of cases at
-18 × 275, 2.7 × 10⁻³ at 10 × 100 and 5.2 × 10⁻⁵ at 5 × 41, and in none at
+18 × 275, 2.2 × 10⁻³ at 10 × 100 and 1.5 × 10⁻⁴ at 5 × 41, and in none at
 the Yellow Report or legacy envelopes, where over 1.2 × 10⁷ breakups per
 configuration nothing merges at all — the closest recorded pair is 8.0 mm
 apart at the Yellow Report envelope and 4.1 mm at the legacy one, both
@@ -354,11 +362,12 @@ veto is 0.80 / 0.84 / 0.84, so the convention costs five points at 5 × 41
 and nothing at the other two. Against an
 outer edge of 2.0 / 1.0 / 0.5 mrad — 38 / 19 / 10 mm at 5 × 41,
 42 / 21 / 11 mm at 10 × 100 and 60 / 30 / 15 mm at 18 × 275, the last of
-these one 16 mm module — the veto is 0.70 / 0.29 / 0.00 at 5 × 41,
-0.83 / 0.73 / 0.31 at 10 × 100 and 0.84 / 0.81 / 0.56 at 18 × 275: the
+these one 16 mm module — the veto is 0.68 / 0.22 / 0.00 at 5 × 41,
+0.82 / 0.69 / 0.21 at 10 × 100 and 0.84 / 0.81 / 0.56 at 18 × 275: the
 fractions are decided in angle and no lever enters them, only the
 millimetres beside them. At 5 × 41 the median
-separation given an α tag is 40 mm, and 17 mm at both of the others.
+separation given an α tag is 35 mm, 19 mm at 10 × 100 and 17 mm at
+18 × 275.
 
 ## 9.3 What stands in the way
 
@@ -446,9 +455,13 @@ written up in `tools/fullsim/README.md`; 216 map points in p_T × azimuth
 plus four 0.05 mrad ladders of 468 points per configuration.
 
 **The aperture** (`reco.RP_APERTURE_MEASURED`, half-widths c_x / c_y):
-2.50 / 8.84 mrad at 5 × 41 — the vertical plane is *shut*, the insertion
-holding the central silicon off to |y| ≥ 29.6 mm, and 8.84 mrad is the
-smallest angle at which any silicon could be reached — 1.51 / 2.12 at
+2.50 / 6.49 mrad at 5 × 41 — the vertical plane is *shut*, the insertion
+holding the central silicon off to |y| ≥ 29.6 mm, and 6.49 mrad is that
+29.6 mm over the R₃₄ = 4.56 m the zero-insertion scratch geometry measured
+on 2026-08-29, so c_y says by how much the plane is shut and not where an
+edge is; it replaces the 8.84 mrad bound the entry carried while R₃₄ was
+unmeasured, and 6.49 < 8.84 means the retired number was the
+anti-conservative one — 1.51 / 2.12 at
 10 × 100 and 0.53 / 0.92 at 18 × 275, against the September-2024
 2.00 / 3.0, 1.35 / 3.0 and 1.03 / 2.3. The cutout is **taller than it is
 wide wherever both axes are open**, by 1.4–1.7×, so `rp_measure`'s
@@ -501,8 +514,14 @@ the lever and ×0.64 in the aperture. The alternative is carried in code as
 `farforward.POT_LEVERS_LIGHT_ION_LATTICE` and
 `reco.RP_APERTURE_MEASURED_LIGHT_ION_LATTICE`, both pinned in
 `evgen/tests/test_nearbeam.py`, so a downstream caller can price it. Every
-number above is on the ePIC baseline compact files; which file a ⁶Li fill
-at 81.6 GV would actually run in is the question D3 now puts to the FF WG.
+number above is on the ePIC baseline compact files, and that is the stated
+choice: the ⁶Li fill is taken to run in the ePIC baseline lattice of that
+ring setting at twice the field for the Z/A = ½ fill — the same magnets and
+the same orbit, which is the transport this scan measured, R₁₂ = 19.24 and
+21.25 m — with the Yellow-Report-scaled Z/A = 0.5 file (R₁₂ = 29.8 m, a
+1.60 mrad edge at 5 × 41) carried as the alternative.  It is an educated
+guess and is labelled as one; D3 asks the FF WG to confirm it rather than
+to supply it.
 The check is not meaningful at 10 × 100, where the only Z/A = 0.5 file is
 at a different *energy* (220 against 199 GV), and was not run.
 
@@ -530,46 +549,49 @@ tagging}` with the luminosity fraction in the projection scale.
 
 **The result is a reach statement, not an acceptance one.** At 10 × 99.5,
 4×10⁵ events: the ⁶Li α tag is 0.0247 at the Yellow Report optics against
-0.3061 at the tagging optics, which at L/L_HA = 1/13.3 costs 7% in tagged
-events per year (acc × L = 0.0247 vs 0.0231). What that 7% buys is
+0.2545 at the tagging optics, which at L/L_HA = 1/12.8 costs 19% in tagged
+events per year (acc × L = 0.0247 vs 0.0199). What that 19% buys is
 where in k those events sit — median accepted spectator momentum
 0.348 / 0.323 / 0.334 GeV/c at the three configurations with **0.000
-below k = 0.15 GeV/c**, against 0.146 / 0.162 / 0.161 GeV/c with
-0.52 / 0.44 / 0.45 below it at the tagging optics (unfolded: median
+below k = 0.15 GeV/c**, against 0.153 / 0.177 / 0.161 GeV/c with
+0.48 / 0.36 / 0.45 below it at the tagging optics (unfolded: median
 0.093, 74% below 0.15).  10 × 99.5 is the *worst* case for the trade and
-the only one that costs anything: acc × L/L_HA goes 0.0284 → 0.0541 at
+the only one that costs anything: acc × L/L_HA goes 0.0284 → 0.0503 at
 5 × 41 and 0.0265 → 0.0331 at 18 × 275, so at two of the three
-configurations the reach comes with a 1.2–1.9× gain in tagged events per
+configurations the reach comes with a 1.2–1.8× gain in tagged events per
 year. At every published optics the ⁶Li α tag admits
 only the off-rigidity high-k tail; the tagging optics is what turns money
 plot 4 from a one-point measurement into a curve, and that answers the
 plans/05 question ("does the Cosyn–Weiss O(1) asymmetry at
 p_s ≈ 300 MeV/c survive?") as "yes, and at the published optics *only*
-there". Dropping the azimuth would have read 0.51 instead of 0.30 at the
-tagging optics — ×1.7 — pinned in `test_tagged.py`.
+there". Dropping the azimuth would have read 0.51 at the tagging optics
+instead of the 0.30 it gave with the azimuth on the levers then in force
+— ×1.7 — pinned in `test_tagged.py`.
 
 **A correctness defect of money plot 4 was fixed with it.** The figure
 overlaid an analytic A_zz^wf curve drawn at θ_k = 90° on a sample the
 acceptance sculpts in θ_k, and the two optics sculpt it oppositely: the
-surviving off-rigidity window slice is longitudinal (⟨|cos θ_k|⟩ = 0.79)
-and the near-beam tail the tagging optics opens is transverse (0.40). The
+surviving off-rigidity window slice is longitudinal (⟨|cos θ_k|⟩ = 0.80)
+and the near-beam tail the tagging optics opens is transverse (0.39). The
 published ±0.5 swing at k ≈ 0.3 GeV/c was that, not the wave function.
 The right panel now carries, per optics, the acceptance-weighted truth
 (`tagged.acceptance_weights` × `tagged.azz_tensor_curve`), which
-reproduces the folded markers to |ΔA_zz| ≤ 0.018 in every populated bin
-at both optics.  At the k = 0.325 GeV/c bin of one `--events 8e6
---config 1` run: +0.4594 ± 0.0129 against +0.4548 at the Yellow Report
-optics (0.4σ) and −0.1018 ± 0.0069 against −0.0984 at the tagging optics
-(0.5σ), where the 90° curve says −0.482.  (The default 4×10⁵ events give
-+0.491 and −0.070, with errors 0.058 and 0.031, and every populated bin
-within 1.1σ / 1.8σ; the residual against the bin-centre prediction is
-≤ 0.025 at the Yellow Report optics and ≤ 0.016 at the tagging optics.)
-At 8×10⁶ the errors fall to 0.003–0.04 and one bin — k = 0.175 at the
-tagging optics — reads 3.4σ on a 0.011 residual: that is the bin in which
+reproduces the folded markers to |ΔA_zz| ≤ 0.063 at the Yellow Report
+optics and ≤ 0.085 at the tagging optics in every populated bin.  At the
+k = 0.325 GeV/c bin of one `--events 8e6 --config 1` run:
++0.4594 ± 0.0129 against +0.4548 at the Yellow Report optics (0.4σ) and
+−0.0974 ± 0.0070 against −0.0945 at the tagging optics (0.4σ), where the
+90° curve says −0.482.  (The default 4×10⁵ events give +0.491 and −0.066,
+with errors 0.058 and 0.031, and every populated bin within 1.1σ / 1.6σ
+of errors running 0.053–0.167 and 0.014–0.100.)
+At 8×10⁶ the errors fall to 0.012–0.037 and 0.003–0.023, the bin-centre
+residuals to ≤ 0.025 and ≤ 0.022, and one bin — k = 0.175 at the
+tagging optics — reads 2.7σ on a 0.009 residual: that is the bin in which
 ε(k) turns on (nothing is accepted below k = 0.189 GeV/c at the Yellow
 Report optics), so the truth at the bin *centre* is not the truth the
 bin-averaged marker measures; averaged over the bin as the marker is,
-every populated bin is within 1.6σ at 8×10⁶ too.  These are the numbers
+every populated bin is within 1.6σ (Yellow Report) and 2.2σ (tagging) at
+8×10⁶.  These are the numbers
 of the tagged kernel *without* an inclusive b₁ (2026-08-29): in the
 impulse approximation the deuteron's b₁ is the k-integral of the
 m-dependent spectator distribution the sampler already draws from, so an
@@ -596,14 +618,14 @@ the D wave *is* the observable — and the difference is now documented in
 `tagged.py`, the manual §4.1 and Report 3 Table 6's caption. For ⁷Li the
 two densities are the same pure P wave, and the 0.7 points by which the
 B3 table's 0.9690 at 5 × 40.8 exceeds `tagged_polarimetry_7li.py`'s
-0.9620 is **two acceptance definitions, not two densities**: the table is
+0.9617 is **two acceptance definitions, not two densities**: the table is
 `1 - lost` (any far-forward system), the tagged script's mask is the
 Roman Pots alone, and at 5 × 40.8 the B0 takes 1.1% of the ⁷Li α and the
 over-rigid inner branch a further 0.2%. Like
 for like the pure model's Roman-Pot tag is 0.9568 / 0.9668 / 0.9721, and
 restricted to k ≤ 1.2 GeV/c where the tagged model's grid ends it is
 0.9626 / 0.9683 / 0.9736 against the tagged sampler's
-0.9620 / 0.9678 / 0.9728 — 0.1 point everywhere.  (The grid truncation
+0.9617 / 0.9678 / 0.9728 — 0.1 point everywhere.  (The grid truncation
 alone is worth +0.6 point at 5 × 40.8 and +0.2 at the other two on the
 Roman-Pot mask, +0.1 uniformly on `1 - lost`; the B0 fraction is 0.0000
 at 10 × 99.5 and 18 × 117.9.)  The script prints both definitions.
@@ -622,33 +644,33 @@ produces `evgen/nearbeam_aperture_7Li.png`.
 off rigidity at R = 0.856 — in the *middle* of the Roman-Pot momentum
 window — so it is tagged by the window and never has to clear the
 near-beam envelope: 0.969 / 0.968 / 0.975 at the Yellow Report optics
-against 0.988 / 0.992 / 0.994 at the tagging optics on the pure spectator
+against 0.987 / 0.991 / 0.994 at the tagging optics on the pure spectator
 model (`tagging_acceptance.py`, Report 3 Table 6, as `1 - lost`) and
-0.9620 / 0.9678 / 0.9728 against 0.9807 / 0.9917 / 0.9919 on the tagged
+0.9617 / 0.9678 / 0.9728 against 0.9800 / 0.9909 / 0.9919 on the tagged
 generator's Roman-Pot mask, the two agreeing to 0.1 point once the same
 acceptance definition and the same k range are used (B2's last paragraph;
 the tagged script also prints `1 - lost`, now 0.9699 / 0.9690 / 0.9751 and
-0.9886 / 0.9929 / 0.9942 — that pair rose on 2026-08-28 with B1's
+0.9882 / 0.9921 / 0.9942 — that pair rose on 2026-08-28 with B1's
 over-rigid routing branch, which stopped discarding the α's over-rigid
 Fermi tail and leaves the Roman-Pot mask untouched, and then fell back at
 the two lower configurations when the same day's review gave the script
 the per-configuration blind block, 48 / 32 / 16 mm, instead of the
 18 × 275 default it had been using at all three; forcing
 `farforward.over_rigid_route` to `False` returns it to `acc(RP)` exactly,
-0.9678 and 0.9917 at 10 × 99.5). The scan is flat to three
+0.9678 and 0.9909 at 10 × 99.5). The scan is flat to three
 points across the whole 0.05–3 mrad aperture axis. Folded ⟨P₂⟩ slope
-−0.1947 (YR) and −0.1964 (tagging) against −0.1929 at the retired
-73 µrad and the analytic −0.2000; median δA_∥ 0.01152 and 0.01140 at
+−0.1947 (YR) and −0.1962 (tagging) against −0.1929 at the retired
+73 µrad and the analytic −0.2000; median δA_∥ 0.01152 and 0.01141 at
 equal generated statistics (at equal *luminosity* the tagging bars are
-2.83 / 3.87 / 3.15 times larger — the figure now says so on the panel).
+2.78 / 3.81 / 3.15 times larger — the figure now says so on the panel).
 The ⁷Li tags and the median δA_∥ moved in the fourth decimal on
 2026-08-28 with plans/08 D7, which gave the struck triton its second
 neutron; the ⟨P₂⟩ slopes did not (`docs/reproduction_manual.md` §4.1).
 
 **For ⁷Li the tagging optics is a strict net loss, and a near-beam layer
-is worth nothing.** ×1.02 in acceptance for ×1/8.2, ×1/15.3, ×1/10.1 in
-luminosity is a factor 8–15 net loss, which at equal running time
-multiplies every ⁷Li error bar by 2.83 / 3.87 / 3.15. So the inversion of
+is worth nothing.** ×1.02 in acceptance for ×1/7.9, ×1/14.8, ×1/10.1 in
+luminosity is a factor 7.9–14.8 net loss, which at equal running time
+multiplies every ⁷Li error bar by 2.78 / 3.81 / 3.15. So the inversion of
 plans/00 strategic finding 2 is optics-independent **in both
 directions**: ⁶Li needs the de-squeeze and ⁷Li must not have it. **⁶Li and
 ⁷Li therefore want different machine optics and are different runs, not
@@ -746,7 +768,7 @@ slope B = 51.13 GeV⁻² above, the intact-⁷Li tagged fraction is
 validating the usage (docs/reproduction_manual.md §4.6). The channel therefore needs the tagging optics of
 Report 1 §6.1 exactly as the ⁶Li one does — which collides with B3 above,
 where that optics is a strict net loss for ⁷Li (×1.02 in acceptance
-against ×1/8.2–×1/15.3 in luminosity, every ⁷Li bar ×2.83–3.87) and where
+against ×1/7.9–×1/14.8 in luminosity, every ⁷Li bar ×2.78–3.81) and where
 this plan concluded that ⁶Li and ⁷Li want different optics and are
 different runs. A coherent ⁷Li channel is a *third* configuration, ⁷Li
 de-squeezed, competing for beam time with the ⁷Li spectator programme it
@@ -817,6 +839,12 @@ the ⁶Li one, which is plans/04 #18 with an α + t density in place of the
 plans/04 #14, without which the inclusive ⁷Li cos 2φ has a kernel and no
 structure function to put in it; and the α + t P-wave overlap with
 m-dependence, plans/04 #15, which the tagged and breakup sides need.
+*2026-08-29 (author decision (4)):* those three, together with the
+excited-state, FSI and tensor-radiative questions and the two ⁶Li asks
+that travel with them, are now written out as a circulable note —
+`docs/note_7li_theory_questions.md`, seven questions, each with what the
+simulation needs, what it blocks, what exists, the ask and its
+addressee, and what we assume until it is answered.
 
 **Order of work.** (i) The optics conflict, on paper: it decides whether
 the channel is a run at all and costs nothing to answer. (ii) The
@@ -894,8 +922,9 @@ marked *"rough extrapolation"* at 5 × 41, and what that turns into is the
 field scale of one another and give R₁₂ = 19.24 and 29.81 m at the same
 ring setting — a factor 1.55 in every 5 × 41 millimetre and 0.64 in the
 5 × 41 aperture (`farforward.POT_LEVERS_LIGHT_ION_LATTICE`,
-`reco.RP_APERTURE_MEASURED_LIGHT_ION_LATTICE`). Which of the two
-describes the lattice a ⁶Li fill at 81.6 GV would run in is the ask.
+`reco.RP_APERTURE_MEASURED_LIGHT_ION_LATTICE`). We publish on the
+baseline file at twice the field, as an educated guess; the ask is
+confirmation of it, with the scaled file as the labelled alternative.
 
 ### D4 — the x-moving layer and a staircase retraction near x = 0 · **ePIC FF WG (A. Jentsch)**
 Where the ×60–×330 actually lives, and already being designed.
@@ -944,10 +973,10 @@ study should not be what motivates it.
   extend (B4); (5)
   the IR-8 secondary focus and its z² Cherenkov. The same tagging optics
   buys the ⁶Li *tagged* observables reach rather than rate — nothing
-  below k = 0.15 GeV/c at any published optics, half the accepted sample
-  there under the tagging one, at a 7% cost in tagged events per year at
-  10 × 100 and a 1.2–1.9× gain at the other two (B2) —
-  and buys ⁷Li a factor 8–15 net loss (B3), so item (1) is a per-isotope
+  below k = 0.15 GeV/c at any published optics, a third to a half of the
+  accepted sample there under the tagging one, at a 19% cost in tagged
+  events per year at 10 × 100 and a 1.2–1.8× gain at the other two (B2) —
+  and buys ⁷Li a factor 7.9–14.8 net loss (B3), so item (1) is a per-isotope
   recommendation, not a programme-wide one. Superconducting
   nanowires appear nowhere on it.
 * **Where the technology *would* belong.** The Argonne programme's own

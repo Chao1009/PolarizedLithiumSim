@@ -24,7 +24,7 @@ script evaluates the tag at
   * the lithium TAGGING optics of Report 1 Section 6.1 -- the horizontal
     beta* raised to the optimum of acceptance x luminosity for the coherent
     recoil, pots following the envelope (farforward.tagging_optics), whose
-    luminosity is 1/7 - 1/13 of the high-acceptance value;
+    luminosity is 1/6.8 - 1/12.8 of the high-acceptance value;
   * the legacy proton-derived optics, for reproduction of the numbers
     published before 2026-08-28.
 

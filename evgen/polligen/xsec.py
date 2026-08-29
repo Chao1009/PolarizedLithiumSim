@@ -30,35 +30,32 @@ Q_NN = [3m^2 - J(J+1)]/3 -> (1,-1,-1,1) x 1 for J = 3/2, t_geo = Q_NN
 P2(cos theta_S), c_eff = 3 Q_NN (Cosyn Eq. 9); both default to zero SFs.
 Rank-3 dropped (plans/05 truncation).
 
-Vector-sector y-factors follow the fastsim approximation set:
-  A_par  = D(y) g1/F1                       (`asymmetries.a_parallel`)
+Vector-sector y-factors:
+  A_par  = D_gamma (A1 + eta A2)            (`asymmetries.a_parallel_exact`)
+           A1 = (g1 - gamma^2 g2)/F1,  A2 = gamma (g1 + g2)/F1
   A_perp = D(y) sqrt(2 eps/(1+eps)) * gamma ((y/2) g1 + g2)/F1,
            eps = (1-y)/(1-y+y^2/2),  gamma = 2 M x / Q
 A_perp = d*(A2 - xi*A1) keeps BOTH O(gamma) pieces -- in the
 massless-kinematics limit gamma - xi = gamma*y/2 exactly, giving the
 textbook transverse combination (y/2) g1 + g2 (E143 conventions,
-PRD 58:112003).  g2 defaults to Wandzura-Wilczek from the g1 backend; the
-exact Cosyn-Weiss y-factors can replace these two functions behind the
-same interface (plans/05 step 5.B+).
+PRD 58:112003).  g2 is Wandzura-Wilczek from the g1 backend; the exact
+Cosyn-Weiss y-factors can replace these two functions behind the same
+interface (plans/05 step 5.B+).
 
-A_par = D*A1 is the gamma -> 0 limit of the exact D_gamma (A1 + eta A2)
-(E143 again), which `a_parallel` computes when the kernel is built with
-target_mass=True -- default OFF, so that every published number stays
-the fast simulation's.  How much that limit costs, measured with
-g2 = g2_WW by `evgen/scripts/target_mass_bound.py`: at small y the whole
-correction collapses to a multiplicative (1 + gamma^2) on A_par,
-independent of g2, and the W^2 >= 10 GeV^2 cut of `fom.Scenario` bounds
-gamma^2 <= M^2/(W2_min - M^2) = 0.0965 over the entire accepted phase
-space (grid maxima 0.085 / 0.058 / 0.026 at the three 6Li settings,
-0.085 / 0.058 / 0.033 for 7Li).  Where the program actually looks it is
-far smaller: 0.56% at the four money-plot-5 sweet spots of the published
-10 x 99.5 configuration (0.49% at 18 x 137.5, 2.5% at 5 x 40.8, whose
-Q^2 = 1.135 GeV^2 spot sits at x = 0.089), and 2.1% at most on the
-sigma-weighted tagged-triton A_par overlay of tagged_polarimetry_7li.py
-at its published configuration (5.0% at 5 x 40.8, in the top x bin).
-Of those last two the eta*A2 piece alone is 0.56% and 1.9%: it is half
-the correction, and above x ~ 0.5 the half that vanishes, since
-g2_WW -> -g1 kills A2 while the -gamma^2 g2/F1 inside A1 survives.
+A_par carries its target-mass term by DEFAULT (target_mass=True, author
+decision of 2026-08-29); target_mass=False is the massless limit
+D(y) g1/F1 that every figure published before that date was made on, kept
+reachable and pinned bit-for-bit.  The default was flipped because the
+term is exact given g2 and costs one g2^WW table per grid: leaving it out
+would have meant carrying its size as a systematic rather than computing
+it.  That size is bounded by the W^2 >= 10 GeV^2 cut of `fom.Scenario`,
+which caps gamma^2 <= M^2/(W2_min - M^2) = 0.0965 over the entire
+accepted phase space (grid maxima 0.085 / 0.058 / 0.026 at the three 6Li
+settings, 0.085 / 0.058 / 0.033 for 7Li), and at the small y of this
+programme the whole correction collapses to a multiplicative
+(1 + gamma^2) on A_par, independent of g2.  What is left over is the
+twist-3 uncertainty on g2 itself, which `evgen/scripts/target_mass_bound.py`
+measures by repeating the extraction with g2 = 0 and g2 = 1.5 g2^WW.
 The tensor sector's own O(gamma^2) terms (Cosyn Eqs. 17d/17e) are a
 separate open item (plans/08 D2) and target_mass does not touch them.
 
@@ -72,78 +69,26 @@ from dataclasses import dataclass
 import numpy as np
 
 from polli_fastsim import asymmetries as _asym
-from polli_fastsim.asymmetries import TENSOR_LL_SIGN, depolarization_d
+from polli_fastsim.asymmetries import (M_NUCLEON, TENSOR_LL_SIGN,
+                                       a_parallel_exact,
+                                       depolarization_d,
+                                       depolarization_d_gamma,
+                                       epsilon_gamma, eta_gamma,
+                                       gamma_squared)
 from polli_fastsim.structure import NuclearF2, ToyF2, dsigma_dx_dq2
-from polli_fastsim.polarized import ToyG1
+from polli_fastsim.polarized import ToyG1, g2_ww
 
-M_NUCLEON = 0.9383  # GeV (per-nucleon target mass for gamma = 2Mx/Q)
+# The finite-gamma kinematics (eps, D_gamma, eta, gamma^2) and the
+# Wandzura-Wilczek quadrature now live in `polli_fastsim` -- ONE
+# implementation for both packages, so the generator kernel and the fast
+# simulation cannot drift apart in the O(gamma^2) term -- and are
+# re-exported here under the names this module has always used, so that
+# `from polligen.xsec import gamma_squared, g2_ww, ...` keeps working.
+depolarization_gamma = depolarization_d_gamma
 
-# NumPy compat: np.trapz removed in NumPy >= 2.4, np.trapezoid absent < 2.0
-_trapezoid = getattr(np, "trapezoid", None) or np.trapz
-
-
-def g2_ww(g1_func, x, q2, npts=96):
-    """Wandzura-Wilczek g2(x) = -g1(x) + int_x^1 du g1(u)/u at fixed Q2.
-
-    Substitution u = x^(1-t) maps the integral to -ln(x) int_0^1 g1(x^(1-t)) dt,
-    evaluated by trapezoid; accepts any mutually broadcastable (x, q2).
-    """
-    xb, qb = np.broadcast_arrays(np.asarray(x, dtype=float),
-                                 np.asarray(q2, dtype=float))
-    shape = xb.shape
-    xf = np.atleast_1d(xb).ravel()
-    qf = np.atleast_1d(qb).ravel()
-    t = np.linspace(0.0, 1.0, npts)
-    xu = np.power(xf[:, None], 1.0 - t)
-    qu = np.broadcast_to(qf[:, None], xu.shape)
-    g1u = np.asarray(g1_func(xu, qu), dtype=float)
-    integral = -np.log(np.maximum(xf, 1e-12)) * _trapezoid(g1u, t, axis=-1)
-    out = -np.asarray(g1_func(xf, qf), dtype=float) + integral
-    return out.reshape(shape)
-
-
-# --- finite-gamma (target-mass) kinematics, E143 PRD 58:112003 -----------
-#
-# The three factors below are the exact lab-frame ones written in (x, y);
-# test_target_mass.py's test_finite_gamma_factors_match_the_lab_frame_
-# definitions pins them to double precision against E143's own
-# (E, E', theta) definitions
-#   eps = 1/[1 + 2(1 + nu^2/Q^2) tan^2(theta/2)]
-#   D   = (1 - E' eps/E)/(1 + eps R)
-#   eta = eps sqrt(Q^2)/(E - E' eps).
-# At gamma -> 0 they collapse to the massless set the fast simulation
-# uses: eps -> (1-y)/(1-y+y^2/2) and D -> asymmetries.depolarization_d.
-
-
-def gamma_squared(x, q2, m=M_NUCLEON):
-    """Target-mass parameter gamma^2 = 4 M^2 x^2 / Q^2 (= Q^2/nu^2).
-
-    M is the FREE-nucleon mass `M_NUCLEON` because x is per-nucleon; the
-    bound-nucleon `beams.Ion.mass_per_nucleon` (0.9336 GeV for 6Li) would
-    move gamma^2 by 1.0%, i.e. 1% of a <= 1% correction.
-    """
-    return 4.0 * m * m * np.asarray(x, dtype=float) ** 2 / np.asarray(
-        q2, dtype=float)
-
-
-def epsilon_gamma(y, gamma2):
-    """Virtual-photon transverse polarization at finite gamma."""
-    y = np.asarray(y, dtype=float)
-    return ((1.0 - y - 0.25 * gamma2 * y * y)
-            / (1.0 - y + 0.5 * y * y + 0.25 * gamma2 * y * y))
-
-
-def depolarization_gamma(y, gamma2, r):
-    """D_gamma = [1 - (1-y) eps]/(1 + eps R) with the finite-gamma eps."""
-    eps = epsilon_gamma(y, gamma2)
-    return (1.0 - (1.0 - np.asarray(y, dtype=float)) * eps) / (1.0 + eps * r)
-
-
-def eta_gamma(y, gamma2):
-    """eta = eps gamma y/[1 - (1-y) eps], the A2 admixture in A_par."""
-    y = np.asarray(y, dtype=float)
-    eps = epsilon_gamma(y, gamma2)
-    return eps * np.sqrt(gamma2) * y / (1.0 - (1.0 - y) * eps)
+__all__ = ["EventSpinState", "InclusiveKernel", "M_NUCLEON",
+           "depolarization_gamma", "epsilon_gamma", "eta_gamma",
+           "g2_ww", "gamma_squared"]
 
 
 @dataclass(frozen=True)
@@ -175,21 +120,41 @@ class InclusiveKernel:
     EXPLICIT `g1_model` keeps whatever R it was built with: r_func only
     fills the default one.
 
-    `target_mass` (default False) selects the longitudinal vector kernel:
-    False is the massless A_par = D g1/F1 of the fast simulation, which
-    every published number uses; True is the exact finite-gamma
-    D_gamma (A1 + eta A2) of `a_parallel` and needs g2, so it is refused
-    with g2_mode="zero".  Switching it on changes A_par by O(gamma^2)
-    -- at the sweet spots a few parts in 1000, bounded everywhere by the
-    W^2 cut (see the module docstring) -- and is an author decision, not
-    a default (plans/00 "left, in order of value").
+    `g2_mode` chooses the g2 model ("ww", the default Wandzura-Wilczek
+    table of the g1 backend, or "zero") and `g2_scale` multiplies it.
+    Together they are the twist-3 handle on the finite-gamma A_par.  The
+    residual systematic that replaced the target-mass bias is NOT taken by
+    re-running an extraction through this knob: `target_mass_bound.
+    g2_residual` builds one table and forms D_eff(rho)/D_eff(s rho) - 1
+    from it, which is the same variation at a hundredth of the cost
+    because g2^WW is linear in g1 and rho therefore scales with s
+    exactly.  `g2_scale` is the kernel-level equivalent of that s -- what
+    a sampler or a written-out event set has to vary through, having no
+    rho of its own to rescale -- and it is pinned against the analytic
+    form in `tests/test_target_mass.py`.  A kernel with target_mass=True
+    and no g2 at all (g2_mode="zero") is legitimate and is exactly the
+    g2_scale = 0 variation, so it is no longer refused.
+
+    `target_mass` (DEFAULT True since 2026-08-29) selects the longitudinal
+    vector kernel: True is the exact finite-gamma D_gamma (A1 + eta A2) of
+    `asymmetries.a_parallel_exact`, which needs a g2 column and refuses a
+    table built without one (the KeyError in `a_parallel`, not a
+    restriction on g2_mode); False is the massless A_par = D g1/F1 of
+    the fast simulation, bit-for-bit the path every figure published
+    before that date was made on, kept reachable and pinned by
+    `tests/test_target_mass.py`.  The default was flipped because the term
+    is exact and free -- one g2^WW table per grid, nothing per call -- so
+    leaving it off would have meant carrying its O(gamma^2) effect as a
+    systematic on Delta-R instead of simply computing it.  What survives
+    the flip is the twist-3 uncertainty on g2 itself, measured by
+    `evgen/scripts/target_mass_bound.py`.
     """
 
     def __init__(self, ion, f2_source=None, g1_model=None,
                  b1_func=None, b2_func=None, delta_func=None,
                  b1_32_func=None, b2_32_func=None, delta_32_func=None,
-                 g2_mode="ww", emc_ratio=None, r_func=None,
-                 target_mass=False):
+                 g2_mode="ww", g2_scale=1.0, emc_ratio=None, r_func=None,
+                 target_mass=True):
         self.ion = ion
         self.r_func = r_func
         self.nf2 = NuclearF2(ion, base=f2_source or ToyF2(),
@@ -204,9 +169,7 @@ class InclusiveKernel:
         if g2_mode not in ("ww", "zero"):
             raise ValueError("g2_mode must be 'ww' or 'zero'")
         self.g2_mode = g2_mode
-        if target_mass and g2_mode == "zero":
-            raise ValueError("target_mass=True needs g2 (g2_mode='ww'): "
-                             "A1 = (g1 - gamma^2 g2)/F1 and A2 both carry it")
+        self.g2_scale = float(g2_scale)
         self.target_mass = bool(target_mass)
 
     # --- structure-function tables -------------------------------------
@@ -218,9 +181,16 @@ class InclusiveKernel:
         """Per-nucleon SF tables on arrays (x, q2).
 
         g2 is included when `with_g2` (a_perp needs it) or whenever
-        `target_mass` is on, so that callers which never ask for the
-        transverse sector -- `sample.InclusiveSampler`, `tagged` -- get
-        a table the finite-gamma `a_parallel` can use.
+        `target_mass` is on -- i.e. by default -- so that callers which
+        never ask for the transverse sector (`sample.InclusiveSampler`,
+        `tagged`) get a table the finite-gamma `a_parallel` can use.
+
+        It is fetched from the g1 backend's own `g2_nucleus`, which caches
+        the Wandzura-Wilczek quadrature per (x, Q2) grid; that cache is
+        what makes the default-on target mass free on a PDF grid, where
+        the 96-node quadrature would otherwise dominate a projection.  A
+        backend without the method (any duck-typed g1 model) falls back to
+        `g2_ww` on the per-nucleon g1 directly.
         """
         x = np.asarray(x, dtype=float)
         q2 = np.asarray(q2, dtype=float)
@@ -243,9 +213,26 @@ class InclusiveKernel:
             b1, b2, delta = zeros, zeros, zeros
         out.update(b1=b1, b2=b2, delta=delta)
         if with_g2 or self.target_mass:
-            out["g2"] = (g2_ww(self._g1a, x, q2)
-                         if self.g2_mode == "ww" else zeros)
+            out["g2"] = self._g2a(x, q2) if self.g2_mode == "ww" else zeros
         return out
+
+    def _g2a(self, x, q2):
+        """Per-nucleon g2, `g2_scale` times Wandzura-Wilczek.
+
+        The table comes from the backend's cached `g2_nucleus` when it has
+        one; g2^WW is linear in g1, so dividing by A before or after the
+        quadrature is the same number up to the last bit.  `g2_scale` is
+        the twist-3 handle: 0 and 1.5 are the endpoints of the variation
+        `evgen/scripts/target_mass_bound.py` quotes the residual
+        systematic between -- that script forms the same variation
+        analytically from rho, and this is its kernel-level equivalent --
+        and 1 is the model."""
+        cached = getattr(self.g1_model, "g2_nucleus", None)
+        if cached is not None:
+            out = cached(self.ion, x, q2) / self.ion.A
+        else:
+            out = g2_ww(self._g1a, x, q2)
+        return out if self.g2_scale == 1.0 else self.g2_scale * out
 
     # --- kinematic factors ----------------------------------------------
 
@@ -260,23 +247,21 @@ class InclusiveKernel:
     def a_parallel(self, t, x, q2, y):
         """Longitudinal double-spin asymmetry A_par(x, y).
 
-        Default (`target_mass=False`): A_par = D(y) g1/F1, bit-for-bit
-        `asymmetries.a_parallel`, which is the gamma -> 0 limit of the
-        line below and what every published number uses.
-
-        With `target_mass=True` the exact E143 form (PRD 58:112003)
+        Default (`target_mass=True`): the exact E143 form
+        (PRD 58:112003) computed by `asymmetries.a_parallel_exact`,
 
             A_par = D_gamma (A1 + eta A2),
             A1 = (g1 - gamma^2 g2)/F1,   A2 = gamma (g1 + g2)/F1,
 
         with gamma^2 = 4 M^2 x^2/Q^2 and the finite-gamma eps, D_gamma,
-        eta of this module.  Both O(gamma^2) pieces are kept: eta A2
-        alone is half the correction and at x >~ 0.5 the half that
-        vanishes, because g2_WW -> -g1 there kills A2 while the
-        -gamma^2 g2/F1 inside A1 survives.  R is resolved exactly as
-        `depolarization_d` resolves it -- self.r_func, else the
-        `asymmetries` module global at call time, which the dated money
-        scripts rebind.
+        eta of `polli_fastsim.asymmetries`.  With `target_mass=False` it
+        is the massless limit A_par = D(y) g1/F1, bit-for-bit
+        `asymmetries.a_parallel`, which is how every figure published
+        before 2026-08-29 was made.
+
+        R is resolved exactly as `depolarization_d` resolves it --
+        self.r_func, else the `asymmetries` module global at call time,
+        which the dated money scripts rebind.
         """
         if not self.target_mass:
             return (depolarization_d(y, x, q2, r_func=self.r_func)
@@ -284,12 +269,9 @@ class InclusiveKernel:
         if "g2" not in t:
             raise KeyError("target_mass=True needs g2 in tables(); build "
                            "them with this kernel, not a massless one")
-        g2v = gamma_squared(x, q2)
-        r = (_asym.r_sigma_lt if self.r_func is None else self.r_func)(x, q2)
-        f1 = np.maximum(t["f1"], 1e-30)
-        a1 = (t["g1"] - g2v * t["g2"]) / f1
-        a2 = np.sqrt(g2v) * (t["g1"] + t["g2"]) / f1
-        return depolarization_gamma(y, g2v, r) * (a1 + eta_gamma(y, g2v) * a2)
+        r_func = (_asym.r_sigma_lt if self.r_func is None else self.r_func)
+        return a_parallel_exact(t["g1"], t["g2"], t["f1"], y, x, q2,
+                                r_func=r_func)
 
     def a_perp(self, t, x, q2, y):
         """gamma-suppressed transverse-vector amplitude d(y)*(A2 - xi*A1).

@@ -115,3 +115,47 @@ def test_charm_share_of_f2_is_small_where_the_polarized_emc_lives():
     assert 0.02 < share(0.09, 4.0) < 0.04
     assert 0.01 < share(0.14, 4.0) < 0.02
     assert share(0.14, 10.0) < share(0.09, 10.0)
+
+
+@pytest.mark.skipif(not (_have("CT18ANLO") and _have("EPPS21nlo_CT18Anlo_Li6")
+                         and _have("nNNPDF30_nlo_as_0118_A6_Z3")),
+                    reason="A = 6 nuclear grids not installed")
+def test_the_a6_grids_are_per_nucleon_and_give_the_documented_emc_ratio():
+    """`polarized.unpolarized_emc_ratio`'s data-driven default.
+
+    Two statements, both load-bearing for the polarized-EMC baseline.
+    FIRST, the A = 6 grids hold the AVERAGE BOUND NUCLEON and not the
+    bound proton, which is what lets `PartonF2.f2p` on them be F2^A/A:
+    Li-6 has Z = N = 3, so the average nucleon is isoscalar and x*u must
+    equal x*d, while the free CT18ANLO proton is nowhere near that.
+    SECOND, the ratio it builds against the free isoscalar nucleon is the
+    shallow EMC effect the projection is now based on -- 1.012 at x = 0.1,
+    0.967 at 0.5 and 0.967 at 0.7 for EPPS21 at Q2 = 5 GeV2, against the
+    0.939 and 0.910 of CBT's model 7Li curve at the last two.  The
+    denominator is CT18ANLO since 2026-08-29 -- EPPS21's OWN proton
+    baseline, so the fit cancels; on CT18NLO the same ratio read 1.010 /
+    0.969 / 0.965 and its valence depletion was 4.2% shallower.
+    """
+    from polli_fastsim.polarized import unpolarized_emc_ratio
+    from polli_fastsim.structure import (NUCLEAR_F2_SETS, NuclearF2Ratio,
+                                         f2_backend)
+    for key, setname in NUCLEAR_F2_SETS.items():
+        pdf = f2_backend(setname)._pdf
+        for x in (0.01, 0.1, 0.5):
+            assert pdf.xfxQ2(2, x, 10.0) == pytest.approx(
+                pdf.xfxQ2(1, x, 10.0), rel=1e-9), (key, x)
+    free = f2_backend("CT18ANLO")._pdf
+    assert free.xfxQ2(1, 0.5, 10.0) < 0.5 * free.xfxQ2(2, 0.5, 10.0)
+
+    x = np.array([0.1, 0.5, 0.7])
+    assert np.allclose(unpolarized_emc_ratio(x, mode="epps21"),
+                       [1.012, 0.967, 0.967], atol=0.004)
+    assert np.allclose(unpolarized_emc_ratio(x, mode="nnnpdf"),
+                       [0.992, 0.987, 0.989], atol=0.004)
+    # the callable form is the same object the money plot uses
+    assert np.allclose(NuclearF2Ratio("epps21")(x, 5.0),
+                       unpolarized_emc_ratio(x, mode="epps21"))
+    # the free isoscalar denominator, not the bound proton: the ratio is
+    # within 4% of 1 everywhere here, which a proton-over-proton ratio
+    # would not be
+    assert np.all(np.abs(unpolarized_emc_ratio(x, mode="epps21") - 1) < 0.04)

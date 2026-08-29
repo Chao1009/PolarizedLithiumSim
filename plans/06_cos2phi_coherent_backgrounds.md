@@ -269,10 +269,14 @@ subtraction with wrong-sign tracks / positron running). For the
 - **Tensor-observable radiative corrections**: still uncharted
   (plans/04 #10); for the coherent channel the QED radiative tail is
   item 6.2(3) and is calculable — flag both on every plot.
-- **Low-Q², high-x nuclear effects**: target-mass/γ² terms are absent
-  from the master formula *by default* — `polligen.xsec.InclusiveKernel`
-  carries the exact finite-γ A∥ behind `target_mass=True`, off in every
-  published number. The sweet spots sit at x ≤ 0.15 and their
+- **Low-Q², high-x nuclear effects**: target-mass/γ² terms are carried
+  by the master formula *by default* since 2026-08-29 —
+  `polligen.xsec.InclusiveKernel(target_mass=True)` is the exact
+  finite-γ A∥, and `target_mass=False` is the massless limit every figure
+  published before that date was made on.  What is left open is not the
+  term but the twist-3 uncertainty on g₂ it needs, measured at g₂ = 0 and
+  1.5 g₂^WW by `target_mass_bound.py` and an order of magnitude smaller
+  than the term. The sweet spots sit at x ≤ 0.15 and their
   γ² = 4M²x²/Q² is ≤ 0.0057 at the mid configuration and ≤ 0.0050 at
   the top one, but reaches 0.0246 at the **low** configuration, whose
   two Q² = 1.14 GeV² spots sit at x = 0.089 and 0.036 since the
@@ -414,7 +418,7 @@ the arXiv source (now in `coherent.MANTYSAARI_A2_DEUTERON`):
   rigidity-scaled momenta, and the "envelope is never binding" pricing of plans/08 §8.4
   went with it.  Nothing published survives at either aperture: the
   channel exists only under the lithium tagging optics of Report 1 §6.1,
-  which recovers 0.42 / 0.32 / 0.33 at 1/7.1 / 1/13.3 / 1/9.5 of the
+  which recovers 0.37 / 0.25 / 0.33 at 1/6.8 / 1/12.8 / 1/9.5 of the
   luminosity), an independent cross-check of the tagging scale.
 
 **Convention check (2026-08-24, full text of arXiv:2408.13213).** Its

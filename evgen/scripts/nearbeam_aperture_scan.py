@@ -26,7 +26,7 @@ not the same number:
     `reco.RP_APERTURE_SEP2024`;
   * the envelope of the lithium TAGGING optics of Report 1 Section 6.1 --
     the horizontal beta* raised to the optimum of acceptance x luminosity,
-    0.33 / 0.17 / 0.12 mrad, at 1/7 - 1/13 of the high-acceptance
+    0.36 / 0.19 / 0.12 mrad, at 1/6.8 - 1/12.8 of the high-acceptance
     luminosity (farforward.tagging_optics_point).
 
 Which of the three binds is now a PER-CONFIGURATION question, and the
@@ -107,9 +107,10 @@ def alpha_acceptance(theta_x, theta_y, p_per_nucleon, channel=None,
     script's callers pass max(measured aperture, 10 sigma_v), which since
     the 2026-08-28 re-measurement is the ENVELOPE at 18 x 275 (0.917
     against the aperture's 0.92 mrad, so the two now coincide there) and
-    the shut vertical plane at 5 x 41 (8.84 against a 3.80 mrad
-    envelope).  The two agree wherever the envelope is the binding
-    vertical constraint.
+    the shut vertical plane at 5 x 41 (6.49 against a 3.80 mrad
+    envelope; 6.49 mrad is 29.6 mm over the R34 = 4.56 m measured there on
+    2026-08-29, and it was an 8.84 mrad bound until then).  The two agree
+    wherever the envelope is the binding vertical constraint.
     For 6Li the off-rigidity slice below R = 0.95 (~1.5%) is tagged at any
     envelope and the rest is the R ~ 1 tail outside the rectangle; for 7Li
     the alpha is at R = 0.856, entirely inside the momentum window, and the

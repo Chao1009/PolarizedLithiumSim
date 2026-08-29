@@ -21,21 +21,22 @@ physics moves, and that is the deliverable: the 7Li alpha sits at
 rigidity ratio R = 0.856, far off the beam and in the MIDDLE of the
 Roman-Pot momentum window, so it is accepted by the window and never
 has to clear the near-beam envelope at all.  Its acceptance is therefore
-optics-blind: this script's own Roman-Pot tag reads 0.961 / 0.968 / 0.973
-at the Yellow Report optics against 0.981 / 0.992 / 0.992 at the tagging
+optics-blind: this script's own Roman-Pot tag reads 0.962 / 0.968 / 0.973
+at the Yellow Report optics against 0.980 / 0.991 / 0.992 at the tagging
 optics, and the folded <P2> markers and A_par bars move by ~1%.
 
 (Report 3 Table 6 and `fastsim/out/tagging_acceptance.txt` quote 0.9690 /
-0.9683 / 0.9748 and 0.9877 / 0.9919 / 0.9941 for the same tag.  Those are
+0.9683 / 0.9748 and 0.9872 / 0.9909 / 0.9941 for the same tag.  Those are
 the pure spectator model, and they are `1 - lost`, i.e. ANY far-forward
 system, while `accepted()` below is the Roman Pots alone.  At 5 x 40.8
 the B0 carries 1.1% of the 7Li alpha, so the like-for-like pure-model
 Roman-Pot numbers are 0.9568 / 0.9668 / 0.9721; restricted further to
 k <= 1.2 GeV/c, where the tagged model's momentum grid ends, they are
-0.9626 / 0.9683 / 0.9736 against this script's 0.9620 / 0.9678 / 0.9728
+0.9626 / 0.9683 / 0.9736 against this script's 0.9617 / 0.9678 / 0.9728
 -- agreement to 0.1 point at every configuration.  The headline block
 prints both definitions so the comparison can be made directly.  Those
-three numbers were 0.9614 / 0.9676 / 0.9726 before 2026-08-28: the
+three numbers were 0.9614 / 0.9676 / 0.9726 before 2026-08-28 and
+0.9620 / 0.9678 / 0.9728 until the 5 x 41 R34 measurement of 2026-08-29: the
 accepted sample is cross-section-weighted and the cross section carries
 g1 of the struck triton, so making TRITON per-nucleon like every other
 Ion slot -- plans/08 D7, which gives its N = 2 neutrons their second
@@ -210,18 +211,26 @@ def main():
                      fmt=marker, ms=4, capsize=2, color=colour,
                      mfc="none" if i else colour,
                      label="tagged pseudo-exp, %s" % name)
-    # analytic overlay: sigma-weighted D g1t/F1t per x-bin from the inner grid
+    # Analytic overlay: the sigma-weighted A_par of the inner grid, per
+    # x bin.  It is the FINITE-GAMMA A_par (default since 2026-08-29), the
+    # same one the sampler above drew the pseudo-experiment from, so the
+    # curve and the points test the generator rather than the difference
+    # between two conventions.  Taking the massless D(y) g1/F1 here
+    # instead -- what this line did before -- would put the curve below
+    # the points by the target-mass term, up to 2.1% in the top x bin at
+    # this configuration and 5.0% at 5 x 40.8
+    # (`evgen/scripts/target_mass_bound.py` block 4).
     inner = sampler.inner
     t = inner.tables
     y = inner.q2_cells / (inner.s * inner.x_cells)
     apar_cells = a_parallel(t["g1"], t["f1"], y, inner.x_cells,
-                            inner.q2_cells)
+                            inner.q2_cells, g2=t.get("g2"))
     xb = np.digitize(inner.x_cells, x_edges) - 1
     analytic = np.array([
         np.average(apar_cells[xb == b], weights=inner.xsec_flat[xb == b])
         if np.any(xb == b) else np.nan for b in range(xc.size)])
-    ax2.plot(xc, analytic, "k-", lw=1.5, label=r"$D(y)\,g_1^t/F_1^t$"
-             r" ($\sigma$-weighted)")
+    ax2.plot(xc, analytic, "k-", lw=1.5,
+             label=r"$D_\gamma(A_1+\eta A_2)$ ($\sigma$-weighted)")
     ax2.set_xscale("log")
     ax2.set_xlabel("x")
     ax2.set_ylabel(r"$A_\parallel^{\rm tag}$ (quasi-free $t$)")

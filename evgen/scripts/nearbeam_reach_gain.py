@@ -16,8 +16,8 @@ measurement itself does:
              approach, and therefore the ceiling on what any technology
              can buy
 
-Both run at the tagging optics' divergence and luminosity (1/7 - 1/13 of
-the high-acceptance value).  With the Yellow Report optics and the
+Both run at the tagging optics' divergence and luminosity (1/6.8 - 1/12.8
+of the high-acceptance value).  With the Yellow Report optics and the
 measured aperture no recoil is tagged at any configuration (Report 2
 Figure 2c), and the de-squeeze alone does not change that: the envelope
 shrinks to 0.12-0.33 mrad but the silicon still starts at 1.0-2.0 mrad.
@@ -203,7 +203,7 @@ def main():
                     help="this observable's share of the PROGRAMME "
                          "luminosity (plans/07 WP2; default 1.0, which the "
                          "published figure assumes).  A THIRD factor "
-                         "beside the tagging optics' own L/L_HA = 1/7-1/13, "
+                         "beside the tagging optics' own L/L_HA = 1/6.8-1/12.8, "
                          "printed beside it, and the 0.5/0.5 spin-state "
                          "share of the flip plan")
     ap.add_argument("--pzz", type=float, default=0.60)

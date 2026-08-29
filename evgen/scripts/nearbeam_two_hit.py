@@ -40,14 +40,16 @@ fakes a coherent tag in only 1e-4 to 2e-3 of breakups and a 4e5 sample
 conditions on a few dozen events.  (It did: the 0.05 published for the
 10 x 100 veto on 2026-08-28 rested on four successes out of 77.)
 
-Millimetres carry one caveat since 2026-08-28 where they carried two.
-(R12, R34, D) are now measured PER CONFIGURATION -- 19.2 / -- / 0.31,
+Millimetres carry one caveat since 2026-08-29 where they carried two.
+(R12, R34, D) are measured PER CONFIGURATION -- 19.2 / 4.56 / 0.31,
 21.2 / 3.35 / 0.29 and 30.0 / 2.93 / 0.30 m (plans/09 B1,
 `farforward.POT_LEVERS`) -- in place of the single 18 x 275 pair
 R12 = 30.6, D = 0.30 m with R34 taken equal to R12, which made the two
-lower configurations 45-60% too wide.  R34 remains unmeasured at 5 x 41,
-where the 29.6 mm insertion shuts the vertical plane altogether and one
-row of a 0.2-6.0 mrad ladder is accepted, and falls back on R12 there.
+lower configurations 45-60% too wide.  The 5 x 41 vertical lever was the
+last to arrive: the 29.6 mm insertion shuts that plane, so it had to be
+read off a geometry with the pots slid onto the axis, and until it was
+this script fell back on R12 = 19.24 m there and printed a 5 x 41 median
+of 25.8 mm against the 17.3 it prints now.
 And the millimetres inherit the
 cluster density's short-range scale beta, which is 0.30 GeV here and
 uncertain to 0.20-0.40: that band moves the medians by -12% to +9%
@@ -131,6 +133,18 @@ def wilson(k, n):
     return max((p * (1.0 - p) / n) ** 0.5, 1.0 / n)
 
 
+def _merge_scale(config, optics, a):
+    """The scale a recorded pair's angular separation sits at: three times
+    the alpha's own pot-plane displacement at the envelope, on the lever of
+    the axis it ESCAPED through.  Both axes were the same number while R34
+    was taken equal to R12; they are 4 to 10x apart now, and an axis no
+    recorded alpha clears must not enter the minimum."""
+    r12, r34, _d = ff.pot_levers_for(config)
+    lev = ([r12 * optics.envelope[0]] if a["esc_x"] else []
+           ) + ([r34 * optics.envelope[1]] if a["esc_y"] else [])
+    return "%.0f mm" % (3e3 * min(lev)) if lev else "no pair"
+
+
 def counting_pass(config, n_total, seed, beta):
     """Chunked pass returning, per optics label, the counts every fraction
     in the table is built from: the 2 x 2 topology, the near-beam fake rate
@@ -140,7 +154,8 @@ def counting_pass(config, n_total, seed, beta):
     menu = optics_menu(config)
     key = ff.yr_config_key(config)
     acc = {label: dict(n=0, both=0, d_only=0, a_only=0, fake=0, veto=0,
-                       rec=0, merge=0, min_sep=np.inf, min_ang=np.inf)
+                       rec=0, merge=0, min_sep=np.inf, min_ang=np.inf,
+                       esc_x=0, esc_y=0)
            for label, _ in menu}
     scan = {t: [0, 0] for t in OUTER_SCAN}
     tag = ff.tagging_optics(config)
@@ -169,6 +184,14 @@ def counting_pass(config, n_total, seed, beta):
             a["fake"] += int(np.sum(fake))
             a["veto"] += int(np.sum(fake & hd))
             rec = ha & hd
+            # which axis a RECORDED alpha escaped through: the merge scale
+            # below needs the lever of that axis, and since 2026-08-29 the
+            # two levers differ by 4 to 10x at every configuration
+            cx, cy = opt.envelope
+            a["esc_x"] += int(np.sum(rec & (np.abs(
+                alpha["theta"] * np.cos(alpha["phi"])) > cx)))
+            a["esc_y"] += int(np.sum(rec & (np.abs(
+                alpha["theta"] * np.sin(alpha["phi"])) > cy)))
             pair = sep_mm[rec]
             a["rec"] += int(pair.size)
             a["merge"] += int(np.sum(pair < PIXEL_PITCH_MM))
@@ -215,8 +238,10 @@ def main():
              + ".  Until then one 18 x 275 pair, R12 = 30.6 and D = 0.30 m, "
              "was applied at every configuration and R34 was taken equal to "
              "R12; the lower configurations' millimetres were 45-60% high. "
-             " R34 is not measurable at 5 x 41 -- the 29.6 mm insertion "
-             "shuts the vertical plane -- and falls back on R12 there.  "
+             " R34 at 5 x 41 was measured a day later, off a geometry whose "
+             "Roman-pot insertions are zeroed (tools/fullsim): 4.56 m, "
+             "against the R12 = 19.24 m this script fell back on until "
+             "then, which cost the 5 x 41 median 8.5 mm.  "
              "They also inherit beta (0.20-0.40 moves the medians by -12% "
              "to +9%).  The acceptance itself is angular and does not "
              "depend on any of them.",
@@ -287,20 +312,27 @@ def main():
                             if a["rec"] else "-"))
         lines.append("   merge = recorded pair inside one %g um pixel; RARE, "
                      "not impossible.  In the ANGULAR lever alone a recorded "
-                     "pair stays about 3 R12 min(envelope) apart -- back to "
-                     "back with theta_d ~ 2 theta_alpha -- and no recorded "
-                     "pair could merge at all: %s (a scale, not a bound; the "
-                     "measured minima run 4-26%% under it because "
-                     "theta_d/theta_alpha is 1.987 only as k -> 0).  The "
-                     "dispersive term is free to cancel the angular one, and "
-                     "does.  Over ALL breakups the minimum is %.2f mm and "
+                     "pair stays about 3x the alpha's own displacement apart "
+                     "-- back to back with theta_d ~ 2 theta_alpha -- and no "
+                     "recorded pair could merge at all: %s (a scale, not a "
+                     "bound; the measured minima sit within 10%% of it either "
+                     "way, because theta_d/theta_alpha is 1.987 only as "
+                     "k -> 0 and the sparser rows are sampling their own "
+                     "tail).  The "
+                     "scale is 3 min(R12 env_x, R34 env_y) over the axes the "
+                     "recorded alphas are SEEN to escape through, which is "
+                     "not the same as over both: at 5 x 41 the vertical "
+                     "envelope is 3.80 mrad and no recorded alpha reaches it "
+                     "at the Yellow Report or the tagging optics, so the "
+                     "4.56 m vertical lever is not a scale of anything there. "
+                     " The dispersive term is free to cancel the angular one, "
+                     "and does.  Over ALL breakups the minimum is %.2f mm and "
                      "%.4f fall inside a pixel; most of those are collinear "
                      "pairs inside the envelope that no pot records, but not "
                      "all of them, which is the merge column."
                      % (1e3 * PIXEL_PITCH_MM,
-                        " ; ".join("%s scale %.0f mm, min %s"
-                                   % (label, 3e3 * ff.pot_levers_for(cfg)[0]
-                                      * min(opt.envelope),
+                        " ; ".join("%s scale %s, min %s"
+                                   % (label, _merge_scale(cfg, opt, acc[label]),
                                       "%.1f" % acc[label]["min_ang"]
                                       if acc[label]["rec"] else "no pair")
                                    for label, opt in optics_menu(cfg)),

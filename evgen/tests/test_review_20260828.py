@@ -286,23 +286,31 @@ def test_hadronic_methods_reproduce_the_exact_kinematics_by_hand():
 
 def test_tagging_optics_point_reproduces_the_priced_optimum():
     """reco.tagging_optics_point must give the optimum that
-    scripts/tagging_optics.py prints (r_h = 49.7 / 175.6 / 89.3,
-    eps = 0.423 / 0.323 / 0.332, L/L_HA = 1/7.1 / 1/13.3 / 1/9.5)."""
-    # None of the three moved under the 2026-08-28 re-measurement: the pot
-    # dispersion enters as the RATIO D / R12, and the re-measured 18 x 275
-    # pair is 0.292 / 29.97 m against 0.30 / 30.6 (plans/09 B1) -- both
-    # levers 2% smaller, their ratio 0.6%.  The two lower rows keep the
-    # 18 x 275 scalars by default; their own measured levers are opt-in
-    # (tagging_optics_point(per_config_levers=True)).
-    expect = ((49.7, 0.423, 7.1, 0.33, 3.80), (175.6, 0.323, 13.3, 0.17, 1.80),
-              (89.3, 0.332, 9.5, 0.12, 0.92))
+    scripts/tagging_optics.py prints (r_h = 46.5 / 164.1 / 89.3,
+    eps = 0.374 / 0.251 / 0.332, L/L_HA = 1/6.8 / 1/12.8 / 1/9.5)."""
+    # Since 2026-08-29 the dispersive envelope term is priced on each
+    # configuration's own (R12, D) rather than on the 18 x 275 pair alone.
+    # It enters as the RATIO D / R12 -- 1.62e-2 / 1.35e-2 / 9.74e-3 m/m --
+    # so the top row is unmoved (the old default WAS the measured 18 x 275
+    # ratio, within 0.6% of the September-2024 0.30 / 30.6 it inherited)
+    # and the two lower ones lose acceptance: 0.423 -> 0.374 and
+    # 0.323 -> 0.251.  The retired single-lever optimum, which is what
+    # every tagging number published before that date carries, is
+    # tagging_optics_point(cfg, levers="18x275").
+    expect = ((46.5, 0.374, 6.8, 0.363, 3.80), (164.1, 0.251, 12.8, 0.192, 1.80),
+              (89.3, 0.332, 9.5, 0.117, 0.92))
     for cfg, (r_h, eps, one_over_l, env_x, env_y) in zip(beams.default_configs("6Li"), expect):
         t = reco.tagging_optics_point(cfg)
         assert abs(t["r_h"] / r_h - 1.0) < 0.02
         assert abs(t["acceptance"] - eps) < 0.005
         assert abs(1.0 / t["lumi_fraction"] - one_over_l) < 0.15
-        assert abs(1e3 * t["env_x"] - env_x) < 0.01
+        assert abs(1e3 * t["env_x"] - env_x) < 0.005
         assert abs(1e3 * t["env_y"] - env_y) < 0.01
+    # the single-lever behaviour is still reachable and still exact
+    old = reco.tagging_optics_point(beams.default_configs("6Li")[1],
+                                    levers="18x275")
+    assert abs(old["r_h"] / 175.6 - 1.0) < 0.02
+    assert abs(old["acceptance"] - 0.323) < 0.005
 
 
 def test_coherent_response_accepts_an_anisotropic_divergence():

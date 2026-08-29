@@ -139,7 +139,9 @@ Layout: `evgen/polligen/{spin,xsec,tagged,sample,bookkeeping,reweight,io_hepmc,h
    the fastsim never needed). Spin-3/2 (⁷Li): rank-0/1 exact
    (F₁, F₂, g₁, g₂ with effective polarizations P_p = 0.866, P_n = −0.037),
    rank-2 as scenario inputs (b₁-analog shapes ← plans/04 #9; the complete
-   spin-3/2 basis is itself a publishable theory note — engage Cloët/Cosyn),
+   spin-3/2 basis is itself a publishable theory note — engage Cloët/Cosyn;
+   the ask, with its conventions and the P_zz ↔ T map, is written out in
+   `docs/note_7li_theory_questions.md` §1),
    rank-3 dropped. Backends: existing `ToyF2/PartonF2`, `ToyG1/PartonG1`,
    scenario b₁/Δ curves — zero duplication; g₂ = g₂^WW default.
    Consistency gate: with ρ → (P_z only), reproduce `asymmetries.a_parallel`;
@@ -173,7 +175,7 @@ Layout: `evgen/polligen/{spin,xsec,tagged,sample,bookkeeping,reweight,io_hepmc,h
      ☐ *2026-08-28: the rule is not kept. `tagging_acceptance.py` scans the band,
      but the acceptance-folded panel of money plot 4, `tagged_polarimetry_7li.py`
      and the two near-beam scans all run β = 0.30 alone, and Reports 3 and 4
-     publish the ⁶Li α tag as bare 1.7–2.6% / 28–35% where the scan itself spans a
+     publish the ⁶Li α tag as bare 1.7–2.6% / 22–31% where the scan itself spans a
      factor 3.3. The 2026-08-26 e+d control also showed that no β in a two-parameter
      Hulthén reproduces BeAGLE's tail, so the band needs restating as one-sided
      upward rather than as a bracket.*
@@ -238,17 +240,18 @@ under the normalization map A_T∥ = −2 A_zz^wf the extremes are +0.9997 at
   default the Yellow Report high-acceptance optics plus the tagging optics
   with its luminosity fraction), routed with the spectator's own lab
   azimuth (`tagged.boost_spectator` returns `phi_spec`) against the
-  rectangular envelope; without that azimuth the tagging optics reads 0.51
-  instead of 0.30. The answer to the plan's question is **yes, and at the
+  rectangular envelope; without that azimuth the tagging optics read 0.51
+  against the 0.30 with it, on the levers in force when the omission was
+  found (2026-08-28). The answer to the plan's question is **yes, and at the
   published optics only there**: the α tag is 0.0247 at the Yellow Report
-  optics against 0.3061 at the tagging optics — at L/L_HA = 1/13.3 a 7%
-  cost in tagged events per year here, and a 1.9× / 1.2× *gain* at the
+  optics against 0.2545 at the tagging optics — at L/L_HA = 1/12.8 a 19%
+  cost in tagged events per year here, and a 1.8× / 1.2× *gain* at the
   other two configurations — but the median accepted spectator momentum is
-  0.32 GeV/c with nothing below k = 0.15 GeV/c, against 0.16 GeV/c with
-  44% below it. The tagging optics turns a one-point measurement into a
+  0.32 GeV/c with nothing below k = 0.15 GeV/c, against 0.18 GeV/c with
+  36% below it. The tagging optics turns a one-point measurement into a
   curve. Two by-products. The overlay was wrong: an analytic curve at
   θ_k = 90° drawn over a sample the acceptance sculpts to
-  ⟨|cos θ_k|⟩ = 0.79 (the off-rigidity slice, longitudinal) or 0.40 (the
+  ⟨|cos θ_k|⟩ = 0.80 (the off-rigidity slice, longitudinal) or 0.39 (the
   near-beam tail, transverse), so its ±0.5 swing between the two optics at
   k ≈ 0.3 GeV/c was the envelope; the right panel now carries the
   acceptance-weighted truth per optics, which tracks the markers to 1–2σ,
@@ -307,7 +310,9 @@ old shapes behind `--emc-mode constant` and `--transfer legacy`.*
 — *superseded (2026-08-28) for the generator note: plans/07 §7.0 D1 ruled that a
 software paper fits CPC/EPJ C, not the letter, and deferred it to a companion
 "later"; the INT vehicle is now the PLB letter with the money plots, and the
-INT-facing circulation note already exists as docs/note_cos2phi_coherent_6Li.md.*
+INT-facing circulation note already exists as docs/note_cos2phi_coherent_6Li.md;
+since 2026-08-29 docs/note_7li_theory_questions.md carries the ⁷Li theory asks
+to the same audience.*
 
 Total ≈ 7–9 focused weeks to 5.E; 5.A+5.C alone (≈ 3–4 weeks) already
 upgrade every Phase-1 FOM to pseudo-experiment grade.

@@ -84,7 +84,7 @@ Realism ingredients in both (all active):
 - **R1.** Grid PDFs (CT18NLO unpolarized, NNPDFpol11_100 polarized) with `q2_min = 2.0`.
 - **R2.** Three Δ(x, Q²) x-shape variants, all normalized to peak `Δ/F₁ = scale`:
   low_x (α=0.3, β=4, same as `toy_delta_gluon`), mid_x (α=0.7, β=3), high_x (α=1.5, β=2).
-- **R3.** EMC-ratio hook via `unpolarized_emc_ratio` on `NuclearF2`.
+- **R3.** EMC-ratio hook via `unpolarized_emc_ratio` on `NuclearF2` (since 2026-08-29 spelled `legacy_emc_ratio`, that same function frozen at `mode='table'`: its default moved to the A = 6 nuclear PDF grids, and this note's numbers are the 12-point shape's).
 - **R4.** Two `R = σ_L/σ_T` parameterizations (simplified R1998, simplified Christy–Bosted DIS-region form), swapped in by context-manager monkey-patching of `structure.r_sigma_lt` and `asymmetries.r_sigma_lt`.
 - R5. Not included. See §3.
 - **R6.** Two P_zz-dilution scenarios for the same nominal ring value P_zz = 0.80: Cloet-conservative per-nucleon-average (`P_zz_eff = 0.267 = 0.8/3`) and cluster-picture occupancy-folded (`P_zz_eff = sqrt(2/6) × 0.87 × 0.8 ≈ 0.404`). Both fold the 2/6 fraction of polarized nucleons and — for the cluster case — the ~0.87 deuteron-cluster polarization retention (Schellingerhout PRC 48:2714). See §7 for full discussion.

@@ -21,6 +21,12 @@ import numpy as np
 
 from .structure import r_sigma_lt
 
+# Per-nucleon target mass for gamma = 2 M x / Q.  It is the FREE-nucleon
+# mass because x is per-nucleon; the bound-nucleon mass
+# (`beams.Ion.mass_per_nucleon`, 0.9336 GeV for 6Li) would move gamma^2 by
+# 1.0%, i.e. 1% of a <= 10% correction.
+M_NUCLEON = 0.9383
+
 # Sign of the tensor RATE (b1, b2) sector, and the single place it is
 # set for the whole program (polligen.xsec imports this constant).
 #
@@ -56,41 +62,135 @@ def depolarization_d(y, x, q2, r_func=None):
     return y * (2.0 - y) / (y * y + 2.0 * (1.0 - y) * (1.0 + r))
 
 
-def a_parallel(g1, f1, y, x, q2, r_func=None):
-    """Longitudinal double-spin asymmetry, A1 ~= g1/F1 approximation.
+# --- finite-gamma (target-mass) kinematics, E143 PRD 58:112003 -----------
+#
+# ONE implementation, used by both packages: `polligen.xsec` imports these
+# three functions rather than carrying its own copies, so the generator
+# kernel and the fast simulation cannot drift apart in the O(gamma^2) term
+# (they did not, but only because the two transcriptions were written on
+# the same afternoon).  They are the exact lab-frame factors written in
+# (x, y); `evgen/tests/test_target_mass.py` pins them to double precision
+# against E143's own (E, E', theta) definitions
+#   eps = 1/[1 + 2(1 + nu^2/Q^2) tan^2(theta/2)]
+#   D   = (1 - E' eps/E)/(1 + eps R)
+#   eta = eps sqrt(Q^2)/(E - E' eps).
+# At gamma -> 0 they collapse to the massless set: eps -> (1-y)/(1-y+y^2/2)
+# and D -> `depolarization_d` above.
 
-    Massless kinematics: this is the gamma -> 0 limit of the exact
-    A_par = D_gamma (A1 + eta A2) with gamma^2 = 4 M^2 x^2/Q^2,
-    A1 = (g1 - gamma^2 g2)/F1, A2 = gamma (g1 + g2)/F1 and
-    eta = eps gamma y/[1 - (1-y) eps] (E143 PRD 58:112003).  Everything
-    published is this function; the exact form lives behind
-    `polligen.xsec.InclusiveKernel(..., target_mass=True)`, default off.
 
-    What the limit drops, measured with g2 = g2_WW by
-    `evgen/scripts/target_mass_bound.py` (toy backends, the published
-    ones).  At the small y of the analysis the whole correction
+def gamma_squared(x, q2, m=M_NUCLEON):
+    """Target-mass parameter gamma^2 = 4 M^2 x^2 / Q^2 (= Q^2/nu^2)."""
+    return 4.0 * m * m * np.asarray(x, dtype=float) ** 2 / np.asarray(
+        q2, dtype=float)
+
+
+def epsilon_gamma(y, gamma2):
+    """Virtual-photon transverse polarization at finite gamma."""
+    y = np.asarray(y, dtype=float)
+    return ((1.0 - y - 0.25 * gamma2 * y * y)
+            / (1.0 - y + 0.5 * y * y + 0.25 * gamma2 * y * y))
+
+
+def depolarization_d_gamma(y, gamma2, r):
+    """D_gamma = [1 - (1-y) eps]/(1 + eps R) with the finite-gamma eps."""
+    eps = epsilon_gamma(y, gamma2)
+    return (1.0 - (1.0 - np.asarray(y, dtype=float)) * eps) / (1.0 + eps * r)
+
+
+def eta_gamma(y, gamma2):
+    """eta = eps gamma y/[1 - (1-y) eps], the A2 admixture in A_par."""
+    y = np.asarray(y, dtype=float)
+    eps = epsilon_gamma(y, gamma2)
+    return eps * np.sqrt(gamma2) * y / (1.0 - (1.0 - y) * eps)
+
+
+def a_parallel_exact(g1, g2, f1, y, x, q2, r_func=None):
+    """Longitudinal double-spin asymmetry at finite gamma (E143).
+
+        A_par = D_gamma (A1 + eta A2),
+        A1 = (g1 - gamma^2 g2)/F1,   A2 = gamma (g1 + g2)/F1,
+
+    with gamma^2 = 4 M^2 x^2/Q^2 and the eps, D_gamma, eta above.  This is
+    the DEFAULT longitudinal kernel of the programme since 2026-08-29
+    (author decision 1 of run 15): it is exact given g2, it costs one
+    g2^WW table per grid and nothing per call, and switching it on removes
+    the O(gamma^2) bias the massless form left on every extracted g1/F1.
+
+    Both O(gamma^2) pieces are kept.  eta A2 alone is about half the
+    correction, and above x ~ 0.5 it is the half that vanishes, because
+    g2^WW -> -g1 there kills A2 while the -gamma^2 g2/F1 inside A1
+    survives.  At the small y of this programme the whole correction
     collapses to a multiplicative (1 + gamma^2) on A_par, independent of
-    g2, and the W^2 >= 10 GeV^2 cut of `fom.Scenario` caps it everywhere
-    at gamma^2 <= M^2/(W2_min - M^2) = 0.0965, with grid maxima 0.0854 /
-    0.0577 / 0.0258 for 6Li at 5 x 40.8, 10 x 99.5 and 18 x 137.5 GeV/u
-    (0.0854 / 0.0577 / 0.0332 for 7Li).  On the two observables built
-    from A_par it is much smaller than that, and it has a sign: the
-    exact A_par is (1 + gamma^2) times this one, so inverting it with
-    the massless D leaves g1/F1 -- and the polarized-EMC Delta-R built
-    from it -- HIGH, by 0.12 / 0.44 / 0.71 / 1.06 % at
-    x = 0.089 / 0.282 / 0.447 / 0.708
-    (inverse-variance weighted over Q2 and the three energies, i.e. with
-    the weights of the published error bars), and 2.1 % at most on the
-    sigma-weighted tagged-triton A_par overlay of the published 7Li
-    configuration (5.0 % at 5 x 40.8, both in the top x bin).  The eta A2
-    piece alone is 0.08-0.17 % and 0.56 % there: it is HALF the
-    correction, and above x ~ 0.5 the half that vanishes, because
-    g2_WW -> -g1 kills A2 while the -gamma^2 g2/F1 inside A1 survives.
-    M is the free-nucleon mass; the bound-nucleon one moves gamma^2 by
-    1.0 %.
+    g2, and the W^2 >= 10 GeV^2 cut of `fom.Scenario` caps gamma^2
+    everywhere at M^2/(W2_min - M^2) = 0.0965.
+
+    What is left over is the g2 model, not the kinematics: g2 is taken
+    Wandzura-Wilczek (`polarized.g2_ww`), and the twist-3 departure from
+    WW is the residual systematic that replaced the bias.  It is measured
+    by `evgen/scripts/target_mass_bound.py`, which repeats the extraction
+    with g2 = 0 and g2 = 1.5 g2^WW.
     """
+    r = (r_sigma_lt if r_func is None else r_func)(x, q2)
+    g2v = gamma_squared(x, q2)
+    f1 = np.maximum(f1, 1e-30)
+    a1 = (g1 - g2v * g2) / f1
+    a2 = np.sqrt(g2v) * (g1 + g2) / f1
+    return depolarization_d_gamma(y, g2v, r) * (a1 + eta_gamma(y, g2v) * a2)
+
+
+def a_parallel(g1, f1, y, x, q2, r_func=None, g2=None):
+    """Longitudinal double-spin asymmetry A_par(x, y).
+
+    With `g2` supplied this is `a_parallel_exact` -- the finite-gamma form
+    the programme now uses by default.  With `g2=None` it is the massless
+    limit A_par = D(y) g1/F1, bit-for-bit what it was before the term
+    existed, which is how every figure published before 2026-08-29 was
+    made and how `InclusiveKernel(..., target_mass=False)` still computes.
+
+    The limit is not small enough to ignore, which is why it is no longer
+    the default: the exact A_par is (1 + gamma^2) times this one at these
+    y, so inverting it with the massless D left the extracted g1/F1 -- and
+    the polarized-EMC Delta-R built from it -- HIGH by 0.1-1% across the
+    published x range.  `depolarization_effective` is the divisor that
+    removes exactly that.
+    """
+    if g2 is not None:
+        return a_parallel_exact(g1, g2, f1, y, x, q2, r_func=r_func)
     d = depolarization_d(y, x, q2, r_func=r_func)
     return d * g1 / np.maximum(f1, 1e-30)
+
+
+def depolarization_effective(y, x, q2, g2_over_g1=None, r_func=None):
+    """The factor D_eff with A_par = D_eff * (g1/F1), and so the divisor
+    that turns delta(A_par) into delta(g1/F1).
+
+    Writing rho = g2/g1 and gamma^2 = 4 M^2 x^2/Q^2,
+
+        A_par = D_gamma [ (g1 - gamma^2 g2)/F1 + eta gamma (g1 + g2)/F1 ]
+              = D_gamma [ 1 - gamma^2 rho + eta gamma (1 + rho) ] (g1/F1)
+              = D_eff (g1/F1),
+
+    so an extraction that divides a measured A_par by D_eff returns g1/F1
+    with no O(gamma^2) bias, where dividing by the massless D returned it
+    high by (1 + gamma^2) + O(gamma^2 y).  The step from the first line to
+    the second is legitimate BECAUSE rho is a property of the shape of g1
+    and not of its normalization: g2^WW is linear in g1
+    (`polarized.g2_ww`), and the polarized-EMC observable Delta-R is a
+    multiplicative modification of g1 at fixed shape, so rho is the same
+    for the model and for the measurement.  What rho is NOT known to be is
+    the truth -- that is the twist-3 residual, quantified by varying rho.
+
+    `g2_over_g1=None` returns `depolarization_d` unchanged, bit-for-bit,
+    for the massless path.
+    """
+    if g2_over_g1 is None:
+        return depolarization_d(y, x, q2, r_func=r_func)
+    r = (r_sigma_lt if r_func is None else r_func)(x, q2)
+    g2v = gamma_squared(x, q2)
+    rho = np.asarray(g2_over_g1, dtype=float)
+    bracket = (1.0 - g2v * rho
+               + eta_gamma(y, g2v) * np.sqrt(g2v) * (1.0 + rho))
+    return depolarization_d_gamma(y, g2v, r) * bracket
 
 
 def phi_averaged_density(f1, f2, x, y):

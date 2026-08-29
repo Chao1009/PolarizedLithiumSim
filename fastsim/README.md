@@ -35,12 +35,16 @@ their notes were written with, defect and all; `--r-model theta-log` and
 (plans/08 C3). `money_delta_20260729.py` additionally needs the EPPS21
 ⁶Li grid; `money_delta_realistic.py` runs on CT18NLO alone.
 
-One-time PDF-grid setup (optional; toys are the default backend):
+One-time PDF-grid setup (the toys are the default backend everywhere
+else, but `money_polemc.py` banners all four baselines and so wants
+CT18ANLO and both A = 6 grids even on `--pdf toy`):
 ```bash
 pip3 install --user parton && python3 -m parton update
 yes | python3 -m parton install CT18NLO
+yes | python3 -m parton install CT18ANLO                 # money_polemc: EPPS21's own baseline
 yes | python3 -m parton install NNPDFpol11_100
-yes | python3 -m parton install EPPS21nlo_CT18Anlo_Li6   # money_delta_20260729
+yes | python3 -m parton install EPPS21nlo_CT18Anlo_Li6   # money_delta_20260729, money_polemc
+yes | python3 -m parton install nNNPDF30_nlo_as_0118_A6_Z3   # money_polemc's second baseline
 ```
 
 ## Modules
@@ -74,8 +78,8 @@ arithmetic is pinned by `tests/test_run_share.py`.
   each configuration (the near-beam tail is inside the 10σ rectangle
   10(σ_h, σ_v) = 2.2×3.8 / 1.8×1.8 / 0.92×0.92 mrad, so what survives is
   the 1.5% off-rigidity slice below R = 0.95 plus 0.1–1.0 points of
-  over-rigid inner branch) and **28–35%** at the lithium tagging
-  optics of Report 1 §6.1 at 1/7–1/13 of the luminosity; ⁷Li t-tag
+  over-rigid inner branch) and **22–31%** at the lithium tagging
+  optics of Report 1 §6.1 at 1/6.8–1/12.8 of the luminosity; ⁷Li t-tag
   **78 / 92 / 94%**
   (`scripts/tagging_acceptance.py`, 2026-08-28, plans/10). The t-tag was
   ~ 0 while an over-rigid fragment was lost by construction; the full
@@ -120,26 +124,42 @@ arithmetic is pinned by `tests/test_run_share.py`.
   21.811 and 131.26 / 274.64 fb⁻¹/u are unchanged to every digit printed.
 - **Polarized EMC**: δΔR ≈ 4.2% per x-bin at x = 0.09 and 4.1% at 0.28 at
   10 fb⁻¹/u (grid inputs, 3 energies combined; 6.0% at x = 0.45, 18.9% at
-  0.71).  On the **digitized** curves (2026-08-28) the CBT–TMT separation
-  is 0.044 / 0.040 / 0.034 / 0.059 at x = 0.09 / 0.28 / 0.45 / 0.71, i.e.
-  1.04 / 0.98 / 0.57 / 0.31 σ per bin at 10 fb⁻¹/u on the grid inputs and
-  3.3 / 3.1 / 1.8 / 1.0 σ at 100 (0.92 / 0.78 / 0.55 / 0.48 σ on toy).
+  0.71).  On the **digitized** curves (2026-08-28), transferred onto the
+  **EPPS21 unpolarized baseline** (the default since 2026-08-29), the
+  CBT–TMT separation
+  is 0.023 / 0.021 / 0.018 / 0.032 at x = 0.09 / 0.28 / 0.45 / 0.71, i.e.
+  0.55 / 0.53 / 0.31 / 0.17 σ per bin at 10 fb⁻¹/u on the grid inputs and
+  1.75 / 1.66 / 0.97 / 0.53 σ at 100 (0.49 / 0.42 / 0.30 / 0.26 σ on toy).
+  Nothing reaches 1 σ per bin anywhere at 10 fb⁻¹/u.  Both camps are put
+  on one common unpolarized baseline before they are compared, and since
+  2026-08-29 that baseline is data-driven — EPPS21's ⁶Li F₂ per nucleon
+  over CT18ANLO's free isoscalar nucleon (EPPS21's own proton baseline,
+  so the fit cancels; CT18NLO until 2026-08-29, 4.2% shallower) — where it
+  used to be CBT's own model curve for ⁷Li.  EPPS21's valence depletion is
+  0.03105 against CBT's 0.05835, so the transfer factors roughly halve
+  (s_CBT 1.0000 → 0.5322, s_TMT 0.3970 → 0.2113) and the separation and the
+  reach halve with them.
+  The spread between baselines — 0.01372 (nNNPDF3.0) to 0.05835 (CBT), and
+  a 90% CL Hessian band on EPPS21 alone of +0.039 / −0.041 — is the leading
+  uncertainty on this figure of merit, wider than the statistics.
+  `--emc-baseline {epps21,nnnpdf,cbt,table}` selects it and
+  `--emc-baseline cbt` reproduces every figure published before that date.
   **Read only the valence window.** The ⁷Li ← nuclear-matter transfer is
   one constant fitted over 0.35 < x < 0.65 and applied at every x, so
   below that window the plotted separation is the transfer and not the
   papers: the two PUBLISHED polarized curves agree to better than 0.008
   over 0.028 < x < 0.30 (0.002 at x = 0.09, 0.0006 at 0.14).  Inside the
   window the comparison is real and fades across it: the transferred TMT
-  depletion tracks ⁷Li's own unpolarized 0.034 / 0.048 / 0.087 at
-  x = 0.40 / 0.45 / 0.65 to within 0.005 against CBT's 0.077 / 0.082 /
-  0.094, so ΔR separates by 0.040 at x = 0.36 and 0.011 at 0.65.
+  depletion tracks the unpolarized baseline's own 0.020 / 0.026 / 0.041 at
+  x = 0.40 / 0.45 / 0.65 to within 0.002 against CBT's 0.040 / 0.042 /
+  0.048, so ΔR separates by 0.020 at x = 0.36 and 0.006 at 0.65.
   `money_polemc.py`
   shades that window in both panels, draws TMT's published nuclear-matter
   curve untransferred beside the transferred one, and prints both
   separations and the window-restricted reach: best bin
-  x = 0.355 at 0.84 σ (10 fb⁻¹/u) and 2.66 σ (100), 0.72 / 2.27 σ on the
+  x = 0.355 at 0.43 σ (10 fb⁻¹/u) and 1.37 σ (100), 0.37 / 1.17 σ on the
   toy inputs the published PNG draws.  The unrestricted best bin
-  (x = 0.141, 1.16 / 3.65 σ, 5 of 23 bins above 1 σ) is the transfer's,
+  (x = 0.141, 0.59 / 1.87 σ, 0 of 23 bins above 1 σ) is the transfer's,
   not a prediction.  This retires the "≈ 5σ at x ≈ 0.5–0.7" headline all
   the same: with the constants 2 and 1 the two camps separated as
   |1 − R_EMC(x)|, which grows monotonically with x, while the published
@@ -150,16 +170,23 @@ arithmetic is pinned by `tests/test_run_share.py`.
   combined over Q² and the three energies (`money_b1.py`), at 10 fb⁻¹/u,
   P_zz = 0.6–0.8 — unchanged.  What changed is the **signal**: with the
   digitized Miller b₁ and the rank-2 transfer 0.921947 × 2/6 = 0.3073,
-  |A_zz| is 2.4×10⁻⁴ at x = 0.005 rising to 1.4×10⁻³ at x = 0.07 and
-  3.3×10⁻³ at 0.5, i.e. 1.7 / 4.8 / 7.6 / 10.9 / 5.6 / 5.8 σ per bin at
+  |A_zz| is 2.2×10⁻⁴ at x = 0.005 rising to 1.4×10⁻³ at x = 0.07 and
+  3.3×10⁻³ at 0.5, i.e. 1.6 / 4.7 / 7.3 / 10.4 / 5.5 / 5.8 σ per bin at
   x = 0.0035 / 0.009 / 0.028 / 0.071 / 0.18 / 0.45 (P_zz = 0.6).  The CDKS
   convolution scenario is |A_zz| = 10⁻⁵ at low x rising to 4×10⁻⁴ at
   x = 0.5, below 0.2 σ everywhere: the two
-  camps are now "measurable" and "not measurable", not a factor ten.  The
-  signal curve is drawn at Q² = 4 GeV² while the errors combine every
-  accessible Q², so the low-x end understates what the low-Q² bins there
-  would give.  `--transfer legacy` restores the pre-2026-08-28 0.87 × 1
-  (31 σ at x = 0.07).
+  camps are now "measurable" and "not measurable", not a factor ten.  Since
+  2026-08-29 the signal curve is evaluated at each error bin's own
+  acceptance-weighted ⟨Q²⟩ — 3.2 / 4.0 / 5.6 / 8.9 / 18.7 / 52.4 GeV² —
+  rather than on one fixed Q² = 4 GeV² slice, which `--signal-q2 fixed`
+  restores.  Miller's Q² lever is not what separates them: every accepted
+  bin sits at or above the top node of his Fig.-6 set (3.25 GeV²), so the
+  lever is 1.0000 in each and 0.9993 in the lowest.  It is the bin's
+  rate-weighted y — the slice clips y at 1 where the lowest bin's own is
+  0.234 — so the binned signal is 9.5% smaller at the low-x bins the
+  measurement lives in and 0.3% smaller at x = 0.45.
+  `--transfer legacy` restores the pre-2026-08-28 0.87 × 1
+  (30 σ at x = 0.07).
 
 ## Big caveats (by design — see plans/02 steps 1.2–1.5)
 
@@ -183,9 +210,10 @@ arithmetic is pinned by `tests/test_run_share.py`.
    undiluted — a factor 3.3 too large — which is tolerated only because b₁
    enters the kernel through w_avg alone, at the 10⁻³ level, and never
    through the cos 2φ amplitude.  Read a ⁶Li b₁ off `money_b1.py`, not off
-   the generator.  The unpolarized EMC ratio is
-   still the hand-written 12-point table awaiting EPPS21 (plans/02 step
-   1.2.1).
+   the generator.  The unpolarized EMC ratio is no longer among the toys:
+   since 2026-08-29 it is EPPS21's ⁶Li over CT18ANLO, with nNNPDF3.0 as the
+   spread and the hand-written 12-point table reachable as `mode="table"`
+   (plans/02 step 1.2.1, closed).
 2. Ion in-ring polarizations are placeholders (source targets: P_z ≥ 0.90,
    P_zz ≥ 0.80); survival through EBIS+ring is open (plans/04 #1).
 3. Cluster-spectator model: two-parameter wave functions; the ⁶Li tail

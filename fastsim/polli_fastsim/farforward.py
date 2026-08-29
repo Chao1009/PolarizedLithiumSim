@@ -332,21 +332,45 @@ def acceptance_summary(R, theta, pT, optics=HIGH_ACCEPTANCE, phi=None,
 # 18 x 275 in the September-2024 geometry and applied everywhere: the
 # lower configurations are 19.2 and 21.3 m, a third of it, so every
 # millimetre quoted at 5 x 41 and 10 x 100 before today was 45-60% high.
-# R34 had never been measured at all and defaulted to R12: it is 2.6-3.4 m,
-# an order of magnitude smaller, and the far-forward line is ~9x stiffer
+# R34 had never been measured at all and defaulted to R12: it is 2.9-4.6 m,
+# a factor 4 to 10 smaller, and the far-forward line is that much stiffer
 # in x than in y -- which is why the pot aperture is a horizontal slot
 # even though the pots insert vertically.  And D = 0.30 m, which WAS a
 # single 18 x 275 number, survives: 0.31 / 0.29 / 0.29 m measured.
 #
-# R34 is None at 5 x 41 and that is a measurement, not a gap.  The
-# per-energy insertion there holds the central silicon off to |y| >= 29.6
-# mm and the intermediate bands to 27.5 and 18.0, so a vertical kick needs
-# theta_y ~ 10 mrad to reach any sensor: the whole vertical ladder
-# returned one accepted row in 0.2-6.0 mrad.  The vertical plane at 5 x 41
-# is shut, and `separation_at_pots` falls back on R12 there with a warning
-# in its docstring rather than inventing a lever.
+# R34 AT 5 x 41 WAS MEASURED ON 2026-08-29 AND IS 4.56 m.  The first scan
+# could not see it: the per-energy insertion there holds the central
+# silicon off to |y| >= 29.6 mm and the intermediate bands to 27.5 and
+# 18.0, so the whole 0.20-6.00 mrad vertical ladder returned three
+# Roman-pot rows and the lever had nothing to regress on.  The transport,
+# however, is a property of the magnets and not of where the pots sit, so
+# it can be read off a geometry whose pots are not retracted: the same
+# ladder was re-run through a scratch `epic_craterlake_5x41` whose four
+# `offset_*_RP_section` constants are all 0.0 cm, which slides the silicon
+# onto the beam axis and leaves every field untouched
+# (`tools/fullsim/README.md`, the zero-insertion recipe).  Regressing y on
+# theta_y over the phi = 90/270 ladders then gives 4.56 m at station 1
+# (4.564 at layer 1, 4.558 at layer 2, 149/154 rows, residual rms 0.79 mm)
+# and 4.57 at station 2, stable to 1.5% when the fit is restricted to
+# |theta_y| < 3 mrad.  The control is R12 in the same file: 19.18 m
+# against the 19.24 measured through the real insertion, i.e. the zeroed
+# offsets moved the transport by 0.3%, which is the fit scatter.
+#
+# The vertical plane is nonetheless SHUT at 5 x 41, and now for a reason
+# with a number attached: reaching the 29.6 mm insertion needs theta_y =
+# 29.6 mm / 4.56 m = 6.49 mrad, which is past THETA_RP_MAX = 5 mrad,
+# where the far-forward routing ends -- nothing is carried that far to
+# begin with.  It is NOT shut by THETA_RP_OUTER_MEASURED = 2.85 mrad:
+# that constant is a HORIZONTAL edge, and on the 19.24 m horizontal lever
+# it is 54.8 mm of x, while 6.49 mrad on the 4.56 m vertical lever is
+# 29.6 mm of y -- half the displacement.  The two planes' levers are
+# 4.2x apart and their ANGLES do not compare; the zero-insertion ladder
+# itself carries clean on-the-fit-line vertical rows out to 4.65 mrad.
+# What that ladder does not carry is a row AT the insertion: it stops at
+# 6.00 mrad, i.e. y = 4.56 x 6.00 - 2.4 = 25 mm against 29.6, so c_y is
+# an extrapolation of a measured LEVER and not a measured EDGE.
 POT_LEVERS = {
-    "5x41":   (19.24, None, 0.311),
+    "5x41":   (19.24, 4.56, 0.311),
     "10x100": (21.25, 3.35, 0.287),
     "18x275": (29.97, 2.93, 0.292),
 }
@@ -367,8 +391,13 @@ POT_LEVERS = {
 #: horizontal silicon edge 1.60-1.70 mrad against 2.50 (RESULTS section
 #: 6, `lad_he4_5x41`, 6Li at 40.8 GeV/u, theta 0.2-6.0 mrad step 0.1).
 #: D = 0.23 m from the ladder intercept x0 = -1.13 mm at delta = -0.0049,
-#: a one-point number good to ~20%.  R34 is None for the same reason as
-#: the baseline: the vertical plane is shut at 5 x 41.
+#: a one-point number good to ~20%.  R34 is None here and, since
+#: 2026-08-29, that is the one place the alternative is thinner than the
+#: baseline: the He4 ladder was run through the REAL insertion, whose
+#: 29.6 mm offset shuts the vertical plane, and no zero-insertion twin of
+#: `beamline_5x41_He4.xml` was built.  The baseline's 4.56 m is the only
+#: measured 5 x 41 vertical lever; a 1.55x horizontal ratio is no reason
+#: to expect the same ratio vertically, so the alternative leaves it open.
 #:
 #: 10 x 100 is None because it CANNOT be checked: the only Z/A = 0.5 file
 #: near that setting is `beamline_10x110_H2.xml` at 220 GV against the
@@ -378,9 +407,20 @@ POT_LEVERS = {
 #: magnet set that the He4 file scales, which is why the He4 5 x 41 run
 #: reproduces the 18 x 275 levers to 1%.
 #:
-#: Which file is right is the open question for the far-forward working
-#: group (plans/09 B1); the baseline is what the published numbers use,
-#: and the ratio of the two tables is the systematic to carry.
+#: WHICH FILE A 6Li FILL WOULD RUN IN IS NOT SETTLED, and this repository
+#: no longer leaves the choice open: the working assumption throughout,
+#: an educated guess of ours and not a machine-design statement, is the
+#: ePIC BASELINE lattice of that ring setting run at twice the field for
+#: the Z/A = 1/2 fill -- the same magnets, the same orbit, the transport
+#: this scan measured.  A lithium fill at 40.8 GeV/u carries 81.6 GV of
+#: rigidity against the 41 GeV proton lattice's 41 GV, so the baseline
+#: file's gradients are doubled and its optics, hence R12, R34 and D, are
+#: unchanged; that is the physical content of the assumption.  The
+#: Yellow-Report-scaled Z/A = 0.5 file is carried as the ALTERNATIVE, and
+#: the ratio of the two tables (R12 29.81 against 19.24 m, the horizontal
+#: edge 1.60 against 2.50 mrad, i.e. x0.64 at 5 x 41) is the systematic.
+#: The far-forward working group may settle it the other way; plans/09 B1
+#: records what would then move.
 POT_LEVERS_LIGHT_ION_LATTICE = {
     "5x41":   (29.81, None, 0.23),
     "10x100": None,
@@ -455,8 +495,9 @@ def pot_levers_for(config):
     is a property of the ring, not of the beam in it -- a configuration
     key ("5x41", "10x100", "18x275"), or a bare 6Li per-nucleon momentum
     in GeV/u, which resolves at the gamma-matched 40.8 / 99.5 / 137.5 and
-    raises off them rather than interpolating.  R34 is None at 5 x 41; see
-    POT_LEVERS.
+    raises off them rather than interpolating.  All three entries are
+    complete triples since 2026-08-29, when the 5 x 41 vertical lever was
+    read off a zero-insertion geometry; see POT_LEVERS.
     """
     if isinstance(config, str):
         return POT_LEVERS[config]
@@ -584,13 +625,14 @@ def separation_at_pots(frag_a, frag_b, r12=POT_R12, r34=None,
     configuration until then.  The correction is large and it runs the
     unintuitive way: R12 is 19.2 and 21.2 m at 5 x 41 and 10 x 100, a
     third smaller than 30.0 m at the top, so the millimetres the lower
-    configurations carried were 45-60% HIGH.  R34 is now measured at two
-    of the three -- 3.35 and 2.93 m, an order of magnitude under R12, the
-    far-forward line being ~9x stiffer in x than in y -- and is None at
-    5 x 41, where the 29.6 mm insertion shuts the vertical plane
-    altogether and there is nothing to regress; there the fallback r34 =
-    r12 remains, and it is the one place a millimetre in this function is
-    still an assumption.
+    configurations carried were 45-60% HIGH.  R34 is measured at all three
+    since 2026-08-29 -- 4.56 / 3.35 / 2.93 m, a factor 4 to 10 under R12,
+    the far-forward line being that much stiffer in x than in y -- so the
+    fallback `r34 = r12` is now reached only when neither `config` nor an
+    explicit `r34` is given, and no configuration of this programme takes
+    it.  The 5 x 41 lever is what the zero-insertion scan of that day
+    bought (POT_LEVERS); until it existed this function carried r34 =
+    r12 = 19.24 m there, a factor 4.2 too large in the vertical term.
     Nothing in the ROUTING depends on any of it -- the acceptance is
     decided in angle (`route_charged`), which is the same assumption from
     the other side (plans/04 #11: a near-beam fragment is taken to be
@@ -691,7 +733,7 @@ def hole_acceptance(slope_b, cut_x, cut_y, shape="rectangle", nphi=3600):
 
 
 def tagging_optics_point(config, slope_b=50.0, n_sigma=10.0, r_max=2000.0,
-                         per_config_levers=False,
+                         levers="per-config",
                          n_grid=400, dispersion=True, optics="high-acceptance"):
     """The lithium TAGGING OPTICS of Report 1 Section 6.1: the working
     point that maximises (tagged fraction) x (luminosity) when the
@@ -710,6 +752,11 @@ def tagging_optics_point(config, slope_b=50.0, n_sigma=10.0, r_max=2000.0,
     spectator routing can be evaluated at it.  Identical to the scan of
     evgen/scripts/tagging_optics.py (same grid, same acceptance), pinned
     by a test.
+
+    `levers` is the pot transport the dispersive smearing is computed
+    with: "per-config" since 2026-08-29, a configuration key to force one
+    row everywhere (`levers="18x275"` reproduces every tagging number
+    published before that date).
     """
     sh, sv = sigma_theta_for(config, optics)
     p_ion = config.ion.A * config.ion_momentum_per_nucleon
@@ -717,34 +764,39 @@ def tagging_optics_point(config, slope_b=50.0, n_sigma=10.0, r_max=2000.0,
     # The pot dispersion turns the beam's momentum spread into an apparent
     # ANGLE at the IP, D dp/p / R12.
     #
-    # MEASURED PER CONFIGURATION SINCE 2026-08-28 (POT_LEVERS, plans/09
-    # B1) AND NOT YET APPLIED HERE BY DEFAULT.  D/R12 is 1.62e-2 /
-    # 1.35e-2 / 9.74e-3 m/m per configuration.  READ THE DEFAULT BRANCH
-    # CAREFULLY: POT_R12 and POT_DISPERSION are now POT_LEVERS["18x275"],
-    # so the default is 0.292 / 29.97 = 9.74e-3, i.e. the MEASURED
-    # 18 x 275 pair -- the third of those three numbers, not a legacy one.
-    # It lands 0.6% BELOW the 0.30 / 30.6 = 9.80e-3 that Report 1 SS6.1,
-    # the reproduction manual and every published tagging number were
-    # priced with, so no published tagging number moves under the
-    # re-measurement: the 18 x 275 optimum is r_h = 89.3, eps = 0.332,
-    # L/L_HA = 1/9.5 before and after.  That agreement is a result, not a
-    # coincidence to be relied on -- the two levers each moved by 2% and
-    # their ratio did not.
+    # PER CONFIGURATION BY DEFAULT SINCE 2026-08-29.  D/R12 is 1.62e-2 /
+    # 1.35e-2 / 9.74e-3 m/m at the three settings, measured in the ladder
+    # scan of plans/09 B1; the single 18 x 275 pair this function used
+    # until then understated the smearing by 40% at 10 x 100 and by 66% at
+    # 5 x 41, and there is no reading of the far-forward line under which
+    # a lever measured at the top configuration describes the bottom one.
+    # The flip is the second half of the lattice decision recorded in
+    # POT_LEVERS_LIGHT_ION_LATTICE: once the per-configuration transport
+    # is the working assumption everywhere, the tagging envelope is priced
+    # on it too.
     #
-    # What `per_config_levers=True` buys is therefore the two LOWER
-    # configurations, where the smearing is 66% and 39% larger than the
-    # 18 x 275 default.  It moves the optimum measurably -- r_h 49.7 /
-    # 175.6 / 89.3 -> 46.5 / 164.1 / 89.3, eps 0.423 / 0.323 / 0.332 ->
-    # 0.374 / 0.251 / 0.332, L/L_HA 1/7.1 / 1/13.3 / 1/9.5 -> 1/6.8 /
-    # 1/12.8 / 1/9.5, identical at 18 x 275 by construction -- and the
-    # 22% drop in eps at 10 x 100 propagates through
-    # `money_cos2phi_coherent_reco.py` into Reports 1, 3 and 4.  It is
-    # therefore OPT-IN until the coherent chain is re-run with it, which
-    # is the one open item plans/09 B1 hands on rather than closes.
-    if per_config_levers:
+    # It costs the two LOWER configurations.  r_h 49.7 / 175.6 / 89.3 ->
+    # 46.5 / 164.1 / 89.3, eps 0.423 / 0.323 / 0.332 -> 0.374 / 0.251 /
+    # 0.332, L/L_HA 1/7.1 / 1/13.3 / 1/9.5 -> 1/6.8 / 1/12.8 / 1/9.5, and
+    # the top row does not move at all: POT_R12 and POT_DISPERSION ARE
+    # POT_LEVERS["18x275"], so the old default was already the measured
+    # 18 x 275 ratio 0.292 / 29.97 = 9.74e-3, within 0.6% of the historical
+    # 0.30 / 30.6 = 9.80e-3.  The 22% drop in eps at 10 x 100 is the real
+    # content of the change and it propagates through
+    # `money_cos2phi_coherent_reco.py` into Reports 1, 3 and 4.
+    #
+    # `levers` selects the transport: "per-config" (the default) reads
+    # each configuration's own triple, and a configuration KEY forces that
+    # row everywhere -- `levers="18x275"` is the single-lever behaviour
+    # every tagging number published before 2026-08-29 was priced with,
+    # and is how those numbers are reproduced.
+    if levers == "per-config":
         r12_c, _r34_c, disp_c = pot_levers_for(config)
+    elif levers in POT_LEVERS:
+        r12_c, _r34_c, disp_c = POT_LEVERS[levers]
     else:
-        r12_c, disp_c = POT_R12, POT_DISPERSION
+        raise ValueError("levers must be 'per-config' or one of %s, not %r"
+                         % (sorted(POT_LEVERS), levers))
     disp = (disp_c * dpp / r12_c) if dispersion else 0.0
     r = np.logspace(np.log10(0.25), np.log10(r_max), n_grid)
     best = None

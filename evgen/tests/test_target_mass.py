@@ -1,8 +1,10 @@
 """The gamma^2 (target-mass) term of the longitudinal double-spin kernel.
 
-Everything published in this repository uses the massless
-A_par = D(y) g1/F1; `InclusiveKernel(..., target_mass=True)` restores the
-exact E143 form (PRD 58:112003) A_par = D_gamma (A1 + eta A2).  These
+Since 2026-08-29 the exact E143 form (PRD 58:112003)
+A_par = D_gamma (A1 + eta A2) is the DEFAULT
+(`InclusiveKernel(..., target_mass=True)`) and the massless
+A_par = D(y) g1/F1 every figure published before that date was made on is
+`target_mass=False`, kept reachable and pinned here bit-for-bit.  These
 tests pin, in this order:
 
 * the kinematic cap.  W^2 >= 10 GeV^2 (`fom.Scenario`) forces
@@ -15,6 +17,14 @@ tests pin, in this order:
   it scales exactly with 1/Q^2 at fixed (x, y), it collapses to the
   g2-independent factor (1 + gamma^2) at small y, and with the flag off
   the kernel is bit-for-bit `asymmetries.a_parallel`;
+* the extraction that inverts it: A_par = D_eff (g1/F1) with
+  D_eff = `asymmetries.depolarization_effective`, so that
+  `fom.project_observables` returns delta(g1/F1) with no O(gamma^2) bias
+  left in it, and a closure on the toy that recovers an injected
+  multiplicative modification of g1 exactly;
+* the residual that survives -- the twist-3 uncertainty on g2, whose
+  span between g2 = 0 and 1.5 g2^WW is what `target_mass_bound.py` now
+  quotes as the systematic in place of the removed bias;
 * and the same target mass seen in the azimuth rather than in A_par --
   the mrad bounds Report 2 section 4.1 quotes for the lab-angle
   shortcut at the twelve published sweet spots.
@@ -30,17 +40,20 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 
 from polligen.xsec import (EventSpinState, InclusiveKernel,  # noqa: E402
                            M_NUCLEON, depolarization_gamma, epsilon_gamma,
-                           eta_gamma, gamma_squared)
+                           eta_gamma, g2_ww, gamma_squared)
 
 from polli_fastsim import asymmetries, beams, fom  # noqa: E402
 from polli_fastsim.asymmetries import (a_parallel,  # noqa: E402
-                                       depolarization_d)
-from polli_fastsim.polarized import toy_b1  # noqa: E402
+                                       a_parallel_exact,
+                                       depolarization_d,
+                                       depolarization_effective)
+from polli_fastsim.polarized import ToyG1, toy_b1, toy_delta_gluon  # noqa: E402
 
 
 def _kernels(ion=None):
+    """(massless, finite-gamma) -- the second one is the DEFAULT kernel."""
     ion = ion or beams.LI6
-    return InclusiveKernel(ion), InclusiveKernel(ion, target_mass=True)
+    return InclusiveKernel(ion, target_mass=False), InclusiveKernel(ion)
 
 
 def _dis_grid():
@@ -158,6 +171,14 @@ def test_massless_limit_of_the_finite_gamma_factors():
 
 
 def test_target_mass_off_is_bit_for_bit_the_published_kernel():
+    """A_par and the unpolarized/tensor tables are bit-for-bit.
+
+    g2 and a_perp are NOT, at the 1e-14 level, and deliberately so: g2
+    now comes from the backend's cached `g2_nucleus(...)/A` rather than
+    from `g2_ww` on the already-divided g1, so the division by A crossed
+    the quadrature.  g2^WW is linear in g1, so the two orderings differ
+    only by the rounding of the 96-node sum; the tolerance below is what
+    pins that they differ by NOTHING ELSE."""
     kern0, kern1 = _kernels()
     x, q2 = _dis_grid()
     y = np.full(x.shape, 0.2)
@@ -170,15 +191,27 @@ def test_target_mass_off_is_bit_for_bit_the_published_kernel():
     # the two kernels share every unpolarized/tensor number
     for key in ("f1", "f2", "g1", "b1", "b2", "delta"):
         np.testing.assert_array_equal(t0[key], t1[key])
+    # g2 against the OLD ordering, g2_ww on the per-nucleon g1
+    old_order = g2_ww(kern1._g1a, x, q2)
+    scale = np.abs(old_order).max()
+    assert np.any(t1["g2"] != old_order)       # the reorder is visible ...
+    assert np.abs(t1["g2"] - old_order).max() < 1e-13 * scale   # ... and tiny
 
 
-def test_target_mass_needs_g2():
-    with pytest.raises(ValueError):
-        InclusiveKernel(beams.LI6, g2_mode="zero", target_mass=True)
+def test_target_mass_needs_g2_in_the_tables_it_is_handed():
+    """A finite-gamma kernel cannot use a massless kernel's tables.
+
+    g2_mode="zero" is NOT refused any more: with target_mass on it is
+    exactly the g2 = 0 end of the twist-3 variation, which is the
+    residual systematic the reports now quote."""
     kern0, kern1 = _kernels()
     x, q2 = np.array([0.2]), np.array([5.0])
     with pytest.raises(KeyError):
         kern1.a_parallel(kern0.tables(x, q2), x, q2, np.array([0.3]))
+    zero = InclusiveKernel(beams.LI6, g2_mode="zero")
+    tz = zero.tables(x, q2)
+    assert np.all(tz["g2"] == 0.0)
+    assert np.isfinite(zero.a_parallel(tz, x, q2, np.array([0.3]))).all()
 
 
 def test_flag_moves_a_parallel_by_o_gamma_squared_only():
@@ -240,8 +273,8 @@ def test_flag_leaves_the_tensor_and_unpolarized_sectors_alone():
     two kernels give the same b1 rate shift and the same cos 2phi."""
     cfg = beams.default_configs("6Li")[1]
     s = cfg.sqrt_s_per_nucleon**2
-    kern0 = InclusiveKernel(beams.LI6, b1_func=toy_b1)
-    kern1 = InclusiveKernel(beams.LI6, b1_func=toy_b1, target_mass=True)
+    kern0 = InclusiveKernel(beams.LI6, b1_func=toy_b1, target_mass=False)
+    kern1 = InclusiveKernel(beams.LI6, b1_func=toy_b1)
     x, q2 = _dis_grid()
     keep = q2 / (s * x) < 0.95
     x, q2 = x[keep], q2[keep]
@@ -264,6 +297,190 @@ def test_flag_leaves_the_tensor_and_unpolarized_sectors_alone():
         w1 - w0, 0.7 * (kern1.a_parallel(t1, x, q2, y)
                         - kern0.a_parallel(t0, x, q2, y)),
         rtol=1e-6, atol=1e-15)
+
+
+# --- (d) the extraction that inverts the term ---------------------------
+
+
+def test_depolarization_effective_is_exactly_the_a_parallel_divisor():
+    """A_par = D_eff (g1/F1) identically, cell by cell, with
+    D_eff = D_gamma [1 - gamma^2 rho + eta gamma (1 + rho)] and
+    rho = g2/g1.  This is the whole algebra of the extraction: what
+    multiplies g1/F1 in the asymmetry is what delta(A_par) must be divided
+    by to give delta(g1/F1)."""
+    _, kern = _kernels()
+    x, q2 = _dis_grid()
+    for yy in (0.05, 0.2, 0.6):
+        y = np.full(x.shape, yy)
+        t = kern.tables(x, q2)
+        rho = t["g2"] / t["g1"]
+        np.testing.assert_allclose(
+            kern.a_parallel(t, x, q2, y),
+            depolarization_effective(y, x, q2, g2_over_g1=rho)
+            * t["g1"] / t["f1"], rtol=1e-11)
+    # ... and with no g2 it is bit-for-bit the massless divisor
+    y = np.full(x.shape, 0.3)
+    assert np.all(depolarization_effective(y, x, q2)
+                  == depolarization_d(y, x, q2))
+
+
+def test_the_massless_inversion_was_high_by_one_plus_gamma_squared():
+    """The bias the flip removed, stated as the ratio of the two
+    divisors: dividing the exact A_par by the massless D returns g1/F1
+    high by (1 + gamma^2) + O(gamma^2 y), so D_eff/D - 1 IS gamma^2 at
+    small y.  Same statement as the small-y collapse above, seen from the
+    extraction rather than from the asymmetry."""
+    _, kern = _kernels()
+    x, q2 = _dis_grid()
+    t = kern.tables(x, q2)
+    g2v = gamma_squared(x, q2)
+    rho = t["g2"] / t["g1"]
+    tame = np.abs(rho) <= 3.0
+    for yy, tol in ((0.05, 0.08), (0.01, 0.02)):
+        y = np.full(x.shape, yy)
+        ratio = (depolarization_effective(y, x, q2, g2_over_g1=rho)
+                 / depolarization_d(y, x, q2) - 1.0)
+        assert np.abs(ratio[tame] / g2v[tame] - 1.0).max() <= tol
+
+
+def test_g2_ww_is_linear_in_g1_so_rho_is_a_property_of_the_shape():
+    """The step the extraction rests on: g2^WW[c g1] = c g2^WW[g1], so
+    the multiplicative medium modification Delta-R measures leaves
+    rho = g2/g1 alone and D_eff is the same for model and measurement."""
+    from polli_fastsim.polarized import g2_ww
+    x = np.logspace(-2.5, np.log10(0.8), 25)
+    q2 = np.full(x.shape, 8.0)
+
+    def g1(xx, qq):
+        return ToyG1().g1_nucleus(beams.LI7, xx, qq)
+
+    for c in (0.5, 1.3):
+        np.testing.assert_allclose(
+            g2_ww(lambda xx, qq: c * g1(xx, qq), x, q2),
+            c * g2_ww(g1, x, q2), rtol=1e-13)
+
+
+def test_extraction_closure_recovers_an_injected_modification():
+    """Inject Delta-R = c on g1, measure the exact A_par, invert it with
+    D_eff built from the model's own rho: the ratio comes back as c to
+    machine precision at every cell, for every c.  With the massless D it
+    comes back as c(1 + gamma^2) -- the bias this stream removed."""
+    x, q2 = _dis_grid()
+    y = np.full(x.shape, 0.15)
+    model = ToyG1()
+    g1 = model.g1_nucleus(beams.LI7, x, q2) / beams.LI7.A
+    g2 = model.g2_nucleus(beams.LI7, x, q2) / beams.LI7.A
+    f1 = 1.0 / (2.0 * x) * np.ones_like(x)     # any positive F1 will do
+    rho = g2 / g1
+    g2v = gamma_squared(x, q2)
+    d_eff = depolarization_effective(y, x, q2, g2_over_g1=rho)
+    for c in (0.85, 1.0, 1.12):
+        apar = a_parallel_exact(c * g1, c * g2, f1, y, x, q2)
+        np.testing.assert_allclose(apar / d_eff / (g1 / f1), c, rtol=1e-11)
+        naive = apar / depolarization_d(y, x, q2) / (g1 / f1)
+        np.testing.assert_allclose(naive / c - 1.0, g2v, rtol=0.10)
+
+
+def test_fom_extraction_is_self_consistent_and_moved_the_published_error():
+    """`fom.project_observables` must invert the very A_par it returns:
+    err_g1_over_f1 * D_eff == err_a_par exactly wherever D_eff > 0.  And
+    the change is not cosmetic -- the published delta(g1/F1) moved by
+    (1 + gamma^2), i.e. down, cell by cell.
+
+    D_eff changes sign off the physical region (y > 1 here, 525 of the
+    1200 cells of this map, none of them accepted) and at a zero crossing
+    of g1 on a polarized grid, and a negative statistical error is not a
+    statement.  Since 2026-08-29 the divisor is guarded and the error is
+    +inf there, which is the honest reading -- A_par carries no
+    information about g1/F1 where its own divisor vanishes -- and which
+    drops out of every inverse-variance weight on its own."""
+    cfg = beams.default_configs("7Li")[1]
+    scenario = fom.Scenario()
+    proj = fom.project_rates(cfg, scenario)
+    model = ToyG1()
+    obs = fom.project_observables(cfg, scenario, proj, model, toy_b1,
+                                  toy_delta_gluon)
+    X, Q2 = proj.x, proj.q2
+    y = proj.extras["y"]
+    f1 = proj.extras["nf2"].f1a(X, Q2) / cfg.ion.A
+    g1 = model.g1_nucleus(cfg.ion, X, Q2) / cfg.ion.A
+    g2 = model.g2_nucleus(cfg.ion, X, Q2) / cfg.ion.A
+    rho = g2 / g1
+    d_eff = depolarization_effective(y, X, Q2, g2_over_g1=rho)
+    ok = d_eff > 0.0
+    np.testing.assert_allclose((obs["err_g1_over_f1"] * d_eff)[ok],
+                               obs["err_a_par"][ok], rtol=1e-12)
+    assert np.all(np.isinf(obs["err_g1_over_f1"][~ok]))    # guarded, not negative
+    assert np.all(obs["err_g1_over_f1"] > 0.0)             # never negative
+    assert not np.any(proj.accepted & ~ok)                 # and never accepted
+    np.testing.assert_allclose(obs["a_par"],
+                               a_parallel_exact(g1, g2, f1, y, X, Q2),
+                               rtol=1e-12)
+    old = obs["err_a_par"] / depolarization_d(y, X, Q2)
+    acc = proj.accepted
+    shift = (old / obs["err_g1_over_f1"] - 1.0)[acc]
+    # O(gamma^2) everywhere on the accepted grid -- exactly gamma^2 only
+    # at the small y where the collapse holds, which the accepted grid
+    # does not confine itself to
+    assert np.all(np.abs(shift) <= 3.0 * gamma_squared(X, Q2)[acc])
+    assert shift.max() > 1e-3          # the move is real, not round-off
+
+
+def test_the_residual_is_the_twist_three_uncertainty_on_g2():
+    """What survives the flip.  Extracting with an assumed g2 = s g2^WW
+    while the truth is g2^WW mis-scales g1/F1 by C(rho)/C(s rho), which
+    vanishes at s = 1, is linear in (s - 1) for small gamma^2, and is
+    bounded by 2 gamma^2 |rho| |s - 1|.  s = 0 and s = 1.5 are the two
+    variations `target_mass_bound.py` quotes the systematic from."""
+    _, kern = _kernels(beams.LI7)
+    x, q2 = _dis_grid()
+    y = np.full(x.shape, 0.2)
+    t = kern.tables(x, q2)
+    rho = t["g2"] / t["g1"]
+    g2v = gamma_squared(x, q2)
+    tame = np.abs(rho) <= 3.0
+    truth = depolarization_effective(y, x, q2, g2_over_g1=rho)
+    got = {}
+    for s in (0.0, 1.0, 1.5):
+        assumed = depolarization_effective(y, x, q2, g2_over_g1=s * rho)
+        got[s] = (truth / assumed - 1.0)
+        assert np.all(np.abs(got[s][tame])
+                      <= 2.0 * g2v[tame] * np.abs(rho[tame]) * abs(s - 1.0)
+                      + 1e-12)
+    assert np.all(got[1.0] == 0.0)
+    # linear in (s - 1): the 1.5 variation is half the 0 one, up to O(g^4)
+    ratio = np.abs(got[1.5][tame] / got[0.0][tame])
+    assert np.abs(ratio - 0.5).max() < 0.05
+
+
+def test_g2_scale_is_the_kernel_level_twist_three_knob():
+    """`InclusiveKernel(g2_scale=s)` is the s of `g2_residual`.
+
+    The script forms the variation analytically, from rho = g2/g1; a
+    sampler cannot, so the kernel carries the same knob.  Pinned here
+    because nothing else in the repository exercises it: the table scales
+    exactly, s = 0 is g2_mode="zero", and the A_par it produces is the
+    one the analytic residual predicts, to double precision."""
+    x, q2 = _dis_grid()
+    y = np.full(x.shape, 0.2)
+    base = InclusiveKernel(beams.LI6)
+    t1 = base.tables(x, q2)
+    for s in (0.0, 0.5, 1.5):
+        kern = InclusiveKernel(beams.LI6, g2_scale=s)
+        ts = kern.tables(x, q2)
+        np.testing.assert_allclose(ts["g2"], s * t1["g2"],
+                                   rtol=1e-15, atol=0.0)
+        # A_par at scale s, against D_eff(s rho) (g1/F1) -- the divisor
+        # `target_mass_bound.g2_residual` varies instead of the kernel
+        rho = t1["g2"] / t1["g1"]
+        want = (depolarization_effective(y, x, q2, g2_over_g1=s * rho)
+                * t1["g1"] / t1["f1"])
+        np.testing.assert_allclose(kern.a_parallel(ts, x, q2, y), want,
+                                   rtol=1e-12, atol=0.0)
+    zero = InclusiveKernel(beams.LI6, g2_mode="zero")
+    np.testing.assert_array_equal(
+        zero.tables(x, q2)["g2"],
+        InclusiveKernel(beams.LI6, g2_scale=0.0).tables(x, q2)["g2"])
 
 
 def test_azimuth_shortcut_error_at_the_published_sweet_spots():

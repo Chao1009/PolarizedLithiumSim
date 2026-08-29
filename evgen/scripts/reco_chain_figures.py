@@ -23,7 +23,7 @@ reco_chain_coherent_6Li.png  (at the lithium tagging optics, 5 x 40.8)
   (a) the recoil transverse-momentum plane with the three cutouts: the
       Yellow Report high-acceptance 10 sigma envelope, the pot aperture
       measured in the ePIC geometry, and the tagging optics with the
-      pots following the envelope (0.33 x 3.8 mrad);
+      pots following the envelope (0.36 x 3.8 mrad);
   (b) the fake <cos 2beta> about the vertical spin axis and the tagged
       fraction versus the horizontal half-width of the cutout, against
       the anchored deformation band;
@@ -316,8 +316,8 @@ def inclusive_figure(outdir):
 
 def coherent_figure(outdir):
     """The coherent measurement at the tagging optics of Report 1 Section
-    6.1 (5 x 40.8: horizontal beta* x 50, pots following the 10 sigma
-    envelope 0.33 x 3.8 mrad), against the Yellow Report high-acceptance
+    6.1 (5 x 40.8: horizontal beta* x 46, pots following the 10 sigma
+    envelope 0.36 x 3.8 mrad), against the Yellow Report high-acceptance
     optics and the pot aperture measured in the ePIC geometry
     (2026-08-28; the earlier version drew the legacy 73 microrad isotropic
     envelope and a 1.5-aspect slot at the mid configuration, where the tag

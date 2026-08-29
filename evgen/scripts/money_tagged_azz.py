@@ -27,10 +27,10 @@ Two corrections of 2026-08-28 (plans/09 B2) change what this figure says.
 
 2.  THE TRUTH OVERLAY IS ACCEPTANCE-WEIGHTED.  The analytic curve is
     A_zz^wf at theta_k = 90 deg, and the ACCEPTED sample is not at 90
-    deg: the near-beam tail is transverse (<|cos theta_k|> = 0.40 at the
-    tagging optics) while the off-rigidity R < 0.95 window slice, which
+    deg: the near-beam tail is transverse (<|cos theta_k|> = 0.39-0.40 at
+    the tagging optics) while the off-rigidity R < 0.95 window slice, which
     is all that survives at the Yellow Report optics, is longitudinal
-    (0.71-0.79).  The two read the S/D interference at opposite ends of
+    (0.71-0.80).  The two read the S/D interference at opposite ends of
     theta_k, and the +-0.5 swing the published version showed between its
     two optics at k ~ 0.3 GeV/c was that, not the wave function.  The
     right panel therefore carries, per optics, the acceptance-weighted
@@ -45,17 +45,19 @@ Two corrections of 2026-08-28 (plans/09 B2) change what this figure says.
     (pinned in test_tagged.py).  Closure, measured with `--events 8e6
     --config 1` at the k = 0.325 GeV/c bin: +0.4594 +- 0.0129 against the
     weighted prediction +0.4548 at the Yellow Report optics (0.4 sigma)
-    and -0.1018 +- 0.0069 against -0.0984 at the tagging optics (0.5
+    and -0.0974 +- 0.0070 against -0.0945 at the tagging optics (0.4
     sigma).  Over all populated bins the residual against the prediction
-    at the bin centre is |dA_zz| <= 0.025 (Yellow Report) and <= 0.016
-    (tagging) -- within 1.1 sigma (YR) and 1.8 sigma (tagging) at the
-    default 4e5 events, where the errors are 0.03-0.17.  At 8e6 the errors
-    fall to 0.003-0.04 and one bin, k = 0.175 at the tagging optics, then
-    reads 3.4 sigma: that bin is where eps(k) turns on (nothing at all is
+    at the bin centre is |dA_zz| <= 0.063 (Yellow Report) and <= 0.085
+    (tagging) at the default 4e5 events -- within 1.1 sigma (YR) and 1.6
+    sigma (tagging), where the errors are 0.053-0.167 and 0.014-0.100.  At
+    8e6 the errors fall to 0.012-0.037 and 0.003-0.023 and the residuals
+    to 0.025 and 0.022, and one bin, k = 0.175 at the tagging optics, then
+    reads 2.7 sigma: that bin is where eps(k) turns on (nothing at all is
     accepted below k = 0.189 GeV/c at the Yellow Report optics), so the
     truth at the bin CENTRE is not the truth the bin-averaged marker
     measures.  Averaged over each bin the way the marker is, every
-    populated bin is within 1.6 sigma at 8e6 as well.  These numbers are
+    populated bin is within 1.6 sigma (YR) and 2.2 sigma (tagging) at 8e6
+    as well.  These numbers are
     for the kernel WITHOUT an inclusive b1 (see the comment at the kernel
     below): with the toy shape the closure read +0.4471 / -0.1019, the
     -0.008 being the double-counted b1.

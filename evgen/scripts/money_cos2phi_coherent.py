@@ -20,7 +20,7 @@ Panels: (a) recoil |t| spectrum vs the RP pT cuts; (b) a_2(|t|) --
 deuteron anchor points vs the scaled 6Li band, with the ANALYSIS window
 (the published reconstructed binning of money plot 6R, 0.017-0.25 GeV^2,
 recopseudo.T_EDGES_PUBLISHED; its lower edge is an analysis choice
-sitting above the tagging-optics aperture floor of 0.0064-0.0098 GeV^2,
+sitting above the tagging-optics aperture floor of 0.0079-0.0132 GeV^2,
 not the floor itself) and the form-factor-minimum exclusion.  The anchor
 is digitized from 0.05 GeV^2 up, so below that the band -- and the a_t
 truth of the four reco bins whose t_ref falls there, the lowest bin of
@@ -65,8 +65,8 @@ T_DIP = 0.31               # 6Li form-factor minimum [GeV^2]
 # |t| binning of money plot 6R (recopseudo.T_EDGES_PUBLISHED, adopted
 # 2026-08-28), so that the truth-level and reconstructed-level figures
 # shade the same window.  Its lower edge is a choice of the analysis and
-# sits ABOVE the tagging-optics aperture floor (|t|_min = 0.0064 /
-# 0.0098 / 0.0094 GeV^2 at the three configurations), not at it.
+# sits ABOVE the tagging-optics aperture floor (|t|_min = 0.0079 /
+# 0.0132 / 0.0094 GeV^2 at the three configurations), not at it.
 T_WINDOW = (T_EDGES_PUBLISHED[0], T_EDGES_PUBLISHED[-1])
 
 

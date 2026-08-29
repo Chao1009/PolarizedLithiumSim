@@ -56,6 +56,95 @@ brings to the EIC, in support of the ANL polarized ⁶,⁷Li ion-source program
 5. **Calendar anchor**: INT program on polarized ion beams at EIC,
    March 22 – April 2, 2027 — target for Phase-1 money plots.
 
+## Development run 15 (2026-08-29): the target-mass term on, the light-ion lattice and the tagging optics decided, the coherent chain on its own transport, the theory curves on a data-driven baseline, the ⁷Li theory note
+
+The author's decisions of 2026-08-29 — switch the finite-γ term on if it
+is cheap, choose the ⁶Li lattice and the tagging optics as educated
+guesses that maximise the physics and minimise the machine work, write
+the ⁷Li theory questions down, regenerate the inclusive figures once at
+the end — were carried out in six streams, reviewed, verified through the
+five lenses of run 14 and repaired.  Before that, every registered figure
+had been regenerated on the run-14 libraries (only two report numbers had
+gone stale; ~30 pre-existing mis-roundings were corrected) and a
+twenty-fifth check now fails whenever a figure is older than a module its
+script imports.
+
+- ☑ **The exact target-mass kinematics is in the chain by default.**
+  A∥ = D_γ(A₁ + ηA₂) with A₁ = (g₁ − γ²g₂)/F₁, A₂ = γ(g₁ + g₂)/F₁ and
+  g₂ = g₂^WW from one shared quadrature (`asymmetries.a_parallel_exact`,
+  cached per grid, so the term costs nothing per call);
+  `InclusiveKernel(target_mass=True)` is the default and `fom` extracts
+  g₁/F₁ with the same kinematics, so the 0.12–1.06 % bias on ΔR is gone
+  (δΔR 4.2 / 4.0 / 5.9 / 18.7 % on the grids).  What is left is the
+  twist-3 uncertainty on g₂, ≤ 0.16 % on ΔR at g₂ = 0 and ≤ 0.08 % at
+  1.5 g₂^WW; the tagged-triton overlay carries its 2.1 / 5.0 % as a term
+  with a residual of 0.015 / 0.073 %.  `target_mass=False` stays
+  bit-for-bit reachable.
+- ☑ **The lattice and the tagging optics are decided, as educated
+  guesses stated as such.**  A ⁶Li fill at 5 × 41 or 10 × 100 runs, in
+  our assumption, in the ePIC baseline lattice of that ring setting at
+  twice the field — the same magnets and orbit, the transport the scan
+  measured (R₁₂ = 19.24 / 21.25 m) — with the Yellow-Report-scaled
+  Z/A = ½ file (R₁₂ = 29.8 m, edge 1.60 mrad) carried as the alternative;
+  consequently the per-configuration levers are the baseline everywhere,
+  including `tagging_optics_point` (the 18 × 275 lever reachable).  The
+  5 × 41 vertical lever was measured on a zero-insertion copy of the
+  geometry (`tools/fullsim/README.md`): R₃₄ = 4.56 m, so the real
+  29.6 mm insertion is 6.49 mrad, beyond the 5 mrad outer bound of the
+  pot plane — the plane is shut by the pipe (two of 2 × 10⁵ α spectators
+  clear it, both past 5 mrad), and the α + d separations become 17.3 /
+  10.7 / 10.9 mm.
+  The tagging optics is now a requirement list (Report 1 §6.1, plans/10):
+  β*_x raised ×46.5 / ×164 / ×89 (≈ 42 / 100 / 71 m), a horizontal
+  envelope of 0.36 / 0.19 / 0.12 mrad, the pots inserted to 7.0 / 4.1 /
+  3.5 mm at station 1 (the vertical needs nothing: 17.3 / 6.0 / 2.7 mm
+  against the current 29.6 / 7.1 / 2.7), the IP-to-pot transport kept at
+  the baseline levers, luminosity 1/6.8 / 1/12.8 / 1/9.5 — achievable with
+  moderate effort, since the Yellow Report already carries two optics per
+  configuration.
+- ☑ **The coherent chain re-run on its own transport.**  The dispersive
+  term with each configuration's (R₁₂, D) widens the tagging envelope at
+  the two lower configurations (0.33 → 0.36, 0.17 → 0.19 mrad): ε 0.423 /
+  0.323 / 0.332 → 0.374 / 0.251 / 0.332, N_tag 2.59 / 3.01 / 6.15 × 10⁶ →
+  2.37 / 2.42 / 6.15 × 10⁶ per year, the 5σ floors 1.74 / 2.34 / 1.62 %,
+  the years to 5σ on a 1 % term 3.0 / 5.5 / 2.6, the combined one-year
+  δa_e 0.00121 / 0.00111 / 0.00074; Report 2's Table 5 moves in its
+  5 × 40.8 block and not at all at 18 × 137.5; the ⁶Li α tag at the
+  tagging optics is 0.315 / 0.223 / 0.291 and the ⁷Li α tag 0.987 /
+  0.991 / 0.994.  The δa_t/a_t "move" of the WP5 scan that the refresh
+  reported was a stale run-13 quote: the exact Jacobian of the ratio
+  inversion (8a98f91) had correctly reduced the error by up to 12 %, and
+  Table 5 was on it already.
+- ☑ **The unpolarized EMC baseline is data-driven, and the b₁ signal is
+  binned in Q².**  `unpolarized_emc_ratio` defaults to the per-nucleon F₂
+  of EPPS21 (Li-6) over CT18ANLO's free isoscalar nucleon — the proton
+  fit the modification is defined against — at Q² = 5 GeV² (nNNPDF3.0,
+  the digitized CBT ⁷Li curve and the legacy table reachable), with an
+  EPPS21 Hessian band; on it the two camps' valence strengths are 0.53
+  (CBT) and 0.21 (TMT), the CBT–TMT separation halves to 0.023 / 0.021 /
+  0.018 / 0.032 and the discrimination to 0.55 / 0.53 / 0.31 / 0.17σ per
+  bin at 10 fb⁻¹/u (1.8 / 1.7 / 1.0 / 0.5σ at 100; the
+  isotope caveat, Li-6 grid against a ⁷Li observable, is quantified against
+  the CBT curve).  `money_b1` draws the signal at each bin's Q² from
+  Miller's Q² set: |A_zz| 2.2 × 10⁻⁴ … 3.3 × 10⁻³, 1.6 / 4.7 / 7.3 / 10.4 /
+  5.5 / 5.8σ per bin (the move against the fixed slice is the bins' own
+  rate-weighted y and ⟨Q²⟩ in F₁, not Miller's Q² dependence, which is
+  flat in every accepted bin).
+- ☑ **The ⁷Li theory questions are written down**
+  (`docs/note_7li_theory_questions.md`): the spin-3/2 rank-2 basis and its
+  normalisation, the coherent cos 2φ amplitude beyond linear order for a
+  deformation fifty times the deuteron's, the α + t P-wave overlap with its
+  m-dependence, the coherent excitation of the 477.6 keV state and whether
+  its photon can be vetoed, FSI and two-body currents in the tagged α + t
+  channel, the tensor-sector radiative corrections, and the ⁶Li asks that
+  go with them, each with what the simulation needs, what exists, and to
+  whom the ask goes.
+- ☐ **Left**: D1 (the b₁-sector sign); the ⁷Li theory asks themselves;
+  whether the far-forward group's light-ion lattices confirm the ×2-field
+  assumption; a measured R₁₂ for a de-squeezed lattice.
+
+Tests: 312 evgen + 119 fastsim, 25 consistency checks.
+
 ## Development run 14 (2026-08-28): the pot aperture re-measured in the current ePIC geometry, the seven-bin |t| window, the run-plan share, the target-mass bound, the theory curves digitized
 
 Run 13 left nine items.  The current `eic_xl-nightly` container
@@ -107,10 +196,11 @@ reproducibility) before the rebuild.
   proton lattice's 19.2 m and 2.50 mrad: the published numbers stand on
   the ePIC baseline compact files and carry the alternative as
   `RP_APERTURE_MEASURED_LIGHT_ION_LATTICE` / `POT_LEVERS_LIGHT_ION_LATTICE`
-  (×0.64 on the edge); which lattice a ⁶Li fill runs in is the question
-  for the far-forward group.  The tagging-optics envelope keeps the
-  18 × 275 lever (its own lattice is unmeasured) with the per-configuration
-  levers opt-in.  The September-2024 table survives as
+  (×0.64 on the edge); which lattice a ⁶Li fill runs in was left as a
+  question for the far-forward group *(decided as an educated guess in
+  run 15: the baseline lattice at twice the field)*.  The tagging-optics
+  envelope kept the 18 × 275 lever with the per-configuration levers
+  opt-in *(the default since run 15)*.  The September-2024 table survives as
   `RP_APERTURE_SEP2024`; `tools/fullsim/README.md` carries the scans as
   the reproduction recipe.
 - ☑ **The seven-bin |t| window 0.017–0.25 GeV² is the published coherent
@@ -159,7 +249,8 @@ reproducibility) before the rebuild.
   CDKS Fig. 4/5; Miller Fig. 5/6) into `fastsim/polli_fastsim/data/`
   with the recipe in `SOURCES.md`.  The two-camp comparison is made on one
   ⁷Li baseline with TMT's nuclear matter carried by a valence strength
-  factor 0.397 (the pointwise ratio of effects is singular where the
+  factor 0.397 on the legacy table *(0.21 on the EPPS21 baseline of run 15,
+  where the CBT strength is 0.53)* (the pointwise ratio of effects is singular where the
   unpolarized ratio crosses one): the CBT ratio of effects is 2.25 /
   1.69 / 1.41 / 1.14 at x = 0.40–0.60 against TMT's 1.01 / 0.98 / 1.00 /
   1.08, so the discrimination sits at x ≈ 0.35–0.45 and not in the
@@ -206,7 +297,7 @@ reproducibility) before the rebuild.
   the b₁ default changed (the amplitude is exactly unchanged and the
   normalisation moves by ≤ 0.05 %).
 
-Tests: 305 evgen + 111 fastsim, 25 consistency checks.
+Tests: 305 evgen + 111 fastsim, 25 consistency checks *(at the end of run 14)*.
 
 ## Development run 13 (2026-08-28): the to-do audit, the low-count estimator, the α+d veto, the tagged chain on the real optics, the radiative bound
 
@@ -270,7 +361,8 @@ adversarially and repaired.  Reports 0–4 now carry the author line
   0.381 / 0.305 / 0.312 (tagging) at 1/7.1, 1/13.3, 1/9.5 of the
   luminosity — ×1.9, ×0.92, ×1.2 in tagged events (0.0284 / 0.0247 /
   0.0265 → 0.382 / 0.306 / 0.313 after run 14's per-configuration blind
-  block and b₁-free tagged kernel) — and the reach is the
+  block and b₁-free tagged kernel; 0.315 / 0.223 / 0.291 on run 15's
+  per-configuration transport) — and the reach is the
   result: at every published optics not one accepted spectator lies below
   k = 0.15 GeV/c (minimum 0.184), while at the tagging optics the median is
   0.145–0.162 with 44–52 % below 0.15, so money plot 4 becomes a curve.
@@ -345,7 +437,8 @@ the per-configuration optics (plans/10 A3, A4 ☑):
 - **⁶Li α-tag** at the Yellow Report optics: 1.7 / 1.5 / 1.6% at
   5 × 41 / 10 × 100 / 18 × 275 — the near-beam tail is inside the envelope
   at every configuration and only the slice below R = 0.95 survives; the
-  tagging optics recovers 35 / 27 / 28% at 1/7–1/13 of the luminosity.
+  tagging optics recovers 35 / 27 / 28% at 1/7–1/13 of the luminosity
+  *(31 / 22 / 29 % at 1/6.8–1/12.8 on run 15's transport)*.
   The legacy 73 µrad gave 17 / 2.5 / 1.8% (20 / 2.9 / 1.9% as it was
   applied, azimuth-blind); the old 1.85% was close at the
   top energy by coincidence (92 ≈ 73 µrad) and 12× wrong at the bottom.
@@ -544,7 +637,9 @@ morning of 2026-08-27 but the prose still carried the 50 GeV/u numbers.
   β*_x/β*_x,HA = 50 / 180 / 90 with the vertical plane at high acceptance
   (planar pots, rectangle envelope 10σ_h × 10σ_v with dispersion at the
   pots), ε = 0.42 / 0.32 / 0.33, L/L_HA = 1/7 / 1/13 / 1/9.5, horizontal
-  envelope 0.33 / 0.17 / 0.12 mrad: 2.6×10⁶ / 3.0×10⁶ / 6.1×10⁶ tagged
+  envelope 0.33 / 0.17 / 0.12 mrad *(0.37 / 0.25 / 0.33, 1/6.8 / 1/12.8 /
+  1/9.5 and 0.36 / 0.19 / 0.12 mrad on run 15's per-configuration
+  transport)*: 2.6×10⁶ / 3.0×10⁶ / 6.1×10⁶ tagged
   events per year at the 10 fb⁻¹/u placeholder, 2–6× below the 0.20 GeV
   reference; the shape term in the optics' own window (3.1–3.5% per unit
   P_zz) is a 9 / 8 / 11σ/yr measurement and a 1% exotic-glue term reaches

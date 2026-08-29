@@ -12,8 +12,11 @@ R2. Three Δ(x,Q²) shape variants, normalized so peak Δ/F₁ equals the
     high_x (α=1.5, β=2). The spread gives a shape-sensitivity band.
     The toy_delta_gluon shape (α=0.3, β=4) is the same as "low_x".
 
-R3. EMC ratio hook: NuclearF2 constructed with emc_ratio=unpolarized_emc_ratio.
-    Code: fastsim/polli_fastsim/polarized.py  (unpolarized_emc_ratio)
+R3. EMC ratio hook: NuclearF2 constructed with emc_ratio=legacy_emc_ratio,
+    i.e. unpolarized_emc_ratio frozen at mode='table' -- the 12-point shape
+    this note was written against, kept when the default moved to the
+    nuclear PDF grids on 2026-08-29.
+    Code: fastsim/polli_fastsim/polarized.py  (legacy_emc_ratio)
     Reference: EPPS21-era qualitative shape; replace before publication.
 
 R4. Two R = σ_L/σ_T parameterizations:
@@ -60,7 +63,7 @@ from polli_fastsim import beams, fom
 from polli_fastsim.beams import LI6, BeamConfig
 from polli_fastsim.asymmetries import a_cos2phi
 from polli_fastsim.inputs import get_backends
-from polli_fastsim.polarized import toy_delta_gluon, unpolarized_emc_ratio
+from polli_fastsim.polarized import legacy_emc_ratio, toy_delta_gluon
 from polli_fastsim.structure import NuclearF2
 import polli_fastsim.structure as structure_mod
 import polli_fastsim.asymmetries as asymmetries_mod
@@ -265,7 +268,7 @@ def bin_terms_realistic(cfg, scale, pzz, base, variant="mid_x",
     sc = fom.Scenario(lumi_fb_per_nucleon=1.0, run_share=run_share,
                       pol_ion_tensor=pzz, q2_min=2.0)
     # R3: apply EMC ratio hook
-    nf2_in = NuclearF2(cfg.ion, base=base, emc_ratio=unpolarized_emc_ratio)
+    nf2_in = NuclearF2(cfg.ion, base=base, emc_ratio=legacy_emc_ratio)
     proj = fom.project_rates(cfg, sc, nuclear_f2=nf2_in)
 
     nf2 = proj.extras["nf2"]

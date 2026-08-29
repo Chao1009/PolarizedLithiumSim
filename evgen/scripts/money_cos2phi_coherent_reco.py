@@ -8,7 +8,7 @@ level (plans/07 WP3 -> WP5) -- money plot 6 re-derived with
     6.1 (reco.tagging_optics_point) -- the horizontal beta* de-squeezed
     to the optimum of acceptance x luminosity, the vertical plane at the
     Yellow Report high-acceptance divergence, the pots following the
-    10 sigma envelope in both planes (0.33 x 3.8 mrad at 5 x 40.8) --
+    10 sigma envelope in both planes (0.36 x 3.8 mrad at 5 x 40.8) --
     because with the Yellow Report optics and the measured pot aperture
     no recoil survives at any configuration (plans/10).  The legacy
     defaults (proton-derived 73 microrad, a 2.5 : 1 slot) reproduce the
@@ -17,7 +17,7 @@ level (plans/07 WP3 -> WP5) -- money plot 6 re-derived with
     |t| = pT^2 reconstructed with x_L = 1, reco t bins.  The PUBLISHED
     binning (2026-08-28) is the seven bins of
     `recopseudo.T_EDGES_PUBLISHED`, 0.017 to 0.25 GeV^2: the aperture
-    floor at the tagging optics is |t|_min = 0.0064 / 0.0098 / 0.0094
+    floor at the tagging optics is |t|_min = 0.0079 / 0.0132 / 0.0094
     GeV^2 at the three configurations, so the window is an ANALYSIS
     choice above it, and it stops at 0.017 because a 0.006-0.017 bin
     empties a third to a half of its beta cells.  a_t is quoted at the
@@ -53,7 +53,7 @@ Three luminosity factors multiply and are NOT the same object:
 `--lumi-1yr` is the PROGRAMME luminosity of one EIC year; `--lumi-fraction`
 is this observable's share of it in the run plan (plans/07 WP2), ours to
 propose and 1.0 in every published number; and the optics fraction
-L/L_HA = 1/7 - 1/13 (`reco.tagging_optics_point`, printed beside it) is
+L/L_HA = 1/6.8 - 1/12.8 (`reco.tagging_optics_point`, printed beside it) is
 what the de-squeezed beta*_x costs at fixed wall time.  Inside all three,
 the flip plan divides the luminosity 0.5 / 0.5 between the two spin
 states.
@@ -212,7 +212,7 @@ def main():
                          "than the silicon package would buy (plans/09; "
                          "the Yellow Report high-acceptance 10 sigma_h "
                          "envelope is 2.2 / 1.8 / 0.92 mrad per "
-                         "configuration, the tagging optics' 0.33 / 0.17 "
+                         "configuration, the tagging optics' 0.36 / 0.19 "
                          "/ 0.12 -- farforward.yr_optics, "
                          "tagging_optics).  Needs --rp-aperture measured")
     ap.add_argument("--envelope-split", type=float, default=0.0,

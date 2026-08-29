@@ -95,11 +95,11 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
    requirement.  *2026-08-28 (run 11), re-measured at the tagging optics
    of Report 1 §6.1, where the coherent channel is now measured:* a 10⁻³
    change of the binding (horizontal) half-width between the fills moves
-   a_t by **−5.5 / −2.2 / −1.4 / −0.8 / −0.5 / −0.3 / −0.4 %** in the
-   seven |t| bins of the window adopted 2026-08-28, and 10⁻² by −54.1 /
-   −25.3 / −13.8 / −7.7 / −4.6 / −3.6 / −3.1 %, with a_e untouched
+   a_t by **−9.1 / −3.2 / −1.8 / −1.1 / −0.5 / −0.5 / −0.5 %** in the
+   seven |t| bins of the window adopted 2026-08-28, and 10⁻² by −83.3 /
+   −30.1 / −18.0 / −9.8 / −4.9 / −4.5 / −3.5 %, with a_e untouched
    (Report 2 Table 6); the worst bin at the other two configurations is
-   −12.5 % (10 × 99.5) and −10.1 % (18 × 137.5), always the lowest.  The
+   −31.2 % (10 × 99.5) and −10.1 % (18 × 137.5), always the lowest.  The
    tagging cutout's horizontal edge sits in a shallow part of the recoil
    spectrum and every bin stays live, so the ×100 amplification is gone,
    but the requirement is now edge-of-window dependent: per-mille
@@ -171,15 +171,27 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
    `fastsim/polli_fastsim/data/SOURCES.md`).  Two limits remain and are
    this item: CBT computes ⁷Li at Q² = 5 GeV² while TMT computes nuclear
    matter at Q² = 10, so the comparison needs a target/scale transfer (a
-   single valence strength factor, 0.397 for TMT, applied to CBT's own ⁷Li
-   unpolarized baseline), and the UNPOLARIZED ratio the whole construction
-   rests on is still the hand-written 12-point table awaiting EPPS21.  A
+   single valence strength factor).  *2026-08-29: the second half of this
+   item is closed.  The unpolarized baseline both camps are transferred
+   onto is EPPS21's ⁶Li F₂ per nucleon over CT18ANLO's free isoscalar
+   nucleon — EPPS21's own proton baseline, so the fit cancels — not the
+   hand-written 12-point table; its valence depletion is
+   0.03105 over 0.35 < x < 0.65, giving s_CBT = 0.5322 and s_TMT = 0.2113
+   where CBT's own model curve gave 1 and 0.397.  The transfer, and with
+   it the whole reach, halves.  What the closure leaves is the baseline
+   SPREAD — 0.01372 (nNNPDF3.0), 0.03105 (EPPS21), 0.05835 (CBT), with a
+   90% CL Hessian band on EPPS21 alone of +0.039 / −0.041 — which is now
+   the leading uncertainty on this figure of merit, wider than the
+   statistics.*  The scale transfer itself remains open.  A
    second ⁷Li-specific polarized-EMC calculation, from either camp, would
    remove both — that is what to ask Cloët for.*
 9. **b₁ and Δ theory for ⁶Li specifically.** Confirmed literature gaps:
    no b₁ prediction for any A > 2; no EIC Δ projection for any target.
    First-mover opportunity — co-author with theory.
    *Engage:* Cloët (ANL), Cosyn, Miller; lattice: Detmold/Shanahan.
+   *2026-08-29:* written up as an ask, and packaged with the ⁷Li ones
+   so that one message reaches the same people, in
+   `docs/note_7li_theory_questions.md` §7(a).
 10. **Radiative corrections on tensor observables** (A_zz, cos 2φ).
     Vector-case tools exist (DJANGOH/HERACLES); tensor RC uncharted.
     *Default:* **no band.**  An unpolarized QED study does not bound a
@@ -188,7 +200,9 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
     collinear-ISR migration, in `polligen/radiative.py`: +0.62 / +0.50 /
     +0.94 / +1.22% of Δ̂ at the four sweet spots in the published
     generator window, ≤ 2.9% once the low-Q² feed-in is opened
-    (Phase-1 step 1.4, plans/08 D3).
+    (Phase-1 step 1.4, plans/08 D3).  *2026-08-29:* carried as a ⁷Li ask
+    in `docs/note_7li_theory_questions.md` §6, where the spin-3/2 case
+    has not even the spin-1 formal starting point of #14 to build on.
 14. **Complete inclusive structure-function basis for spin-3/2** (⁷Li):
     rank-2 (b₁-analog) and rank-3 functions are not classified anywhere we
     can adopt; needed by the doubly polarized generator (plans/05 §5.2).
@@ -198,13 +212,27 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
     (Q_NN = (1,−1,−1,1) and c_eff = 3T for J = 3/2, verified), so what
     this item blocks is the structure function and not the machinery —
     scoped, with the rest of a ⁷Li channel, in plans/09 B3a.
+    *2026-08-29:* the ask itself — the basis, its normalization against a
+    named alignment tensor, the frame the alignment axis is defined in,
+    and the map from the source literature's P_zz to `spin`'s T — is
+    `docs/note_7li_theory_questions.md` §1.
 15. **VMC two-cluster overlaps with m-dependence** (α+d S/D for ⁶Li,
     α+t P for ⁷Li) to replace the two-parameter radial forms whose tail
     dominates tagged acceptances (e+d control: BeAGLE tails 2–13× Hulthén).
     *Engage:* R.B. Wiringa (ANL, local). *Default:* β = 0.20–0.40 band.
+    *2026-08-29:* the cost of that band is now measured on the ⁷Li P
+    wave — ⟨k⟩ = 0.1113 / 0.1333 / 0.1505 GeV/c and P(k > 0.3 GeV/c) =
+    0.0231 / 0.0522 / 0.0836 at β = 0.20 / 0.30 / 0.40, a factor 3.6 in
+    exactly the region where the tagged tensor asymmetries are O(1),
+    while the angular moment ⟨P₂⟩ = −T/5 is fixed by Clebsch–Gordan and
+    does not move — and the ask is `docs/note_7li_theory_questions.md`
+    §3.
 16. **FSI for cluster spectators beyond IA** (α rescattering off DIS
     debris; deuteron case solved in PRC 97:035209, pole extrapolation).
     *Engage:* Cosyn, Sargsian. *Default:* IA, quoted at small |t′|.
+    *2026-08-29:* the ⁷Li form of the same ask — a triton spectator, and
+    the two-body currents an A = 7 cluster pair carries — is
+    `docs/note_7li_theory_questions.md` §5.
 17. **HepMC3 convention for ion spin states** — none exists; plans/05
     step 5.D defines named attributes and proposes them upstream.
     *Engage:* ePIC MC/software group. *Default:* our attribute schema.
@@ -227,7 +255,9 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
     same conversation with the same group: ε_B0 cannot be rescaled to
     ⁷Li — the linear form gives −2.2 to −4.5, |ΔB₀| > B and c₂ > 1
     inside the tagged window — so ⁷Li has no scenario until the
-    amplitude exists.  Scoped in plans/09 B3a.
+    amplitude exists.  Scoped in plans/09 B3a, and written out as one
+    ask with two densities — α + t and α + d — in
+    `docs/note_7li_theory_questions.md` §2 and §7(b).
 
 ## Still open — detector / software
 
@@ -306,9 +336,10 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
     *Better still, and free:* the background #19 exists to reject is
     ⁶Li → α + d, and that is **two hits**. The relative momentum
     (κ = 60.7 MeV/c) is transverse and unboosted, so the α (4p_u) and the
-    d (2p_u) take opposite kicks and land a median 10.9 / 10.7 / 25.8 mm
-    apart at 18×275 / 10×100 / 5×41 — **21 to 52 pixels of the existing
-    500 µm pitch**, and 6 to 107 over the 16–84% band. An intact ⁶Li is
+    d (2p_u) take opposite kicks and land a median 10.9 / 10.7 / 17.3 mm
+    apart at 18×275 / 10×100 / 5×41 — **21 to 35 pixels of the existing
+    500 µm pitch**, and 6 to 82 over the 16–84% band (3.2–41.2 mm across
+    the three configurations). An intact ⁶Li is
     one hit. And the second fragment is a *veto*: conditioned on an α
     that fakes a coherent tag, the partner deuteron is recorded in **84%**
     of events at the tagging optics (0.02–0.25 at the published ones,
@@ -357,8 +388,8 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
     `farforward.sigma_theta_for` — 10σ_θ = 2.20 × 3.80, 1.80 × 1.80 and
     0.92 × 0.92 mrad for ⁶Li at 5 × 41 / 10 × 100 / 18 × 275 high
     acceptance — with the measured pot aperture as a second constraint
-    per axis, and the tagging optics of Report 1 §6.1 (0.33 × 3.80,
-    0.17 × 1.80, 0.12 × 0.92 mrad at 1/7.1, 1/13.3, 1/9.5 of the
+    per axis, and the tagging optics of Report 1 §6.1 (0.36 × 3.80,
+    0.19 × 1.80, 0.12 × 0.92 mrad at 1/6.8, 1/12.8, 1/9.5 of the
     luminosity) as the setting at which the coherent channel is
     published.  The single proton-derived pair the code carried until
     then — 73 μrad high acceptance and 164 μrad high divergence at every
@@ -441,8 +472,8 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
     everywhere, which it does not, and on the rigidity-scaled energies.
     Against the per-configuration envelopes the aperture is the binding
     constraint only at the top; and at the tagging optics, where the
-    channel is now measured, the ordering reverses outright — 0.42 / 0.32
-    / 0.33 tagged at 1/7.1 / 1/13.3 / 1/9.5 of the luminosity, with the
+    channel is now measured, the ordering reverses outright — 0.37 / 0.25
+    / 0.33 tagged at 1/6.8 / 1/12.8 / 1/9.5 of the luminosity, with the
     TOP configuration, which has four times the coherent rate at equal
     luminosity, the best covered (Report 4 §3).  What survives is the
     weaker statement the angular envelope alone makes at the *published*
@@ -479,8 +510,8 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
     silicon at 5 × 41 (2.50 against 2.20 mrad), so a closer approach alone
     buys a factor 77 there and nothing at the other two; under the tagging
     optics of Report 1 §6.1 a layer
-    that follows the 0.33 / 0.17 / 0.12 mrad envelope is the difference
-    between no tag and 0.41 / 0.31 / 0.32 with seven clean |t| bins each
+    that follows the 0.36 / 0.19 / 0.12 mrad envelope is the difference
+    between no tag and 0.36 / 0.25 / 0.32 with seven clean |t| bins each
     (`nearbeam_reach_gain.py`; the earlier ×26 / ×569 were artefacts of the
     73 μrad divergence).
 21. **Hadronic-method y resolution at y = 0.01–0.05 for e + light ions**

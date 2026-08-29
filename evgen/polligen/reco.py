@@ -101,13 +101,14 @@ from polli_fastsim.farforward import POT_R12, POT_DISPERSION  # noqa: E402
 
 
 def tagging_optics_point(config, slope_b=50.0, n_sigma=10.0, r_max=2000.0,
+                         levers="per-config",
                          n_grid=400, dispersion=True, optics="high-acceptance"):
     """The lithium TAGGING OPTICS of Report 1 Section 6.1 -- see
     polli_fastsim.farforward.tagging_optics_point, of which this is the
     re-export used by the coherent reconstruction chain."""
     from polli_fastsim import farforward as _ff
     return _ff.tagging_optics_point(config, slope_b=slope_b, n_sigma=n_sigma,
-                                    r_max=r_max, n_grid=n_grid,
+                                    r_max=r_max, levers=levers, n_grid=n_grid,
                                     dispersion=dispersion, optics=optics)
 
 
@@ -872,10 +873,13 @@ def _check_profile_convergence(grad, covm, label="(alpha, beta)", tol=1e-3):
     |dlnL/dA_c| sigma_c, dimensionless -- so it does not depend on the
     luminosity or on the number of bins.  The margin is enormous where the
     estimator is used -- 6e-15 over 200 Poisson draws of the sparsest
-    published |t| bin at its 48 counts per (alpha, beta) cell, and 2e-15
-    at one count per cell, against a tolerance of 1e-3 -- and the guard
-    first fires around a tenth of a count per cell, an occupancy no
-    repository command reaches."""
+    published |t| bin, measured at the 48 counts per (alpha, beta) cell it
+    held then and 45 at the per-configuration tagging levers of
+    2026-08-29, against a tolerance of 1e-3.  The guard DOES fire at one
+    count per cell, which no repository command reaches: over 200 draws of
+    that bin at `--lumi-1yr 0.22222` one stalls on the positivity boundary
+    at a gradient of 0.559 error bars and is refused, and the other 199
+    converge."""
     # |diag| so that this stays a test of the GRADIENT: with cov=
     # "observed" a fluctuation can make a variance negative, which is a
     # different complaint and surfaces as a nan error bar on its own
@@ -959,22 +963,24 @@ def harmonic_likelihood_fit_2d(counts, lumis, pzz, alpha_edges, beta_edges,
     optics over two hundred one-year pseudo-experiments (5 x 40.8, 12 x 24
     bins, money_cos2phi_coherent_reco.py --config 0 --optics tagging
     --n-mc 6000000 --ensemble 200): the ratio's a_t is biased by
-    +0.1 / -0.2 / -4.0 / -34.3 % in the four published |t| bins (1451,
-    620, 192, 48 counts per (alpha, beta) bin), this fit by
-    +0.4 / +0.3 / +0.3 / +0.7 %, with pulls of the mean
-    +2.0 / +1.0 / +0.5 / +0.9 against the ratio's +0.4 / -0.7 / -9.0 /
-    -42.1 -- and the first bin's residual is the response Monte Carlo's
+    -0.3 / -1.5 / -2.5 / -34.4 % in the four |t| bins of the earlier
+    window (1431, 607, 184, 45 counts per (alpha, beta) bin), this fit by
+    0.0 / -0.5 / +1.3 / -0.6 %, with pulls of the mean
+    -0.1 / -1.8 / +3.1 / -0.9 against the ratio's -1.2 / -5.4 / -5.8 /
+    -47.2 -- and the third bin's residual is the response Monte Carlo's
     own floor, not the estimator.  (Table 5 of Report 2 quotes the same
     comparison on the TWENTY draws its published columns use, where the
-    ratio reads 0.0 / -0.9 / -5.4 / -37 %; the two ensembles are not
+    ratio reads -0.3 / -0.2 / -2.8 / -33.9 %; the two ensembles are not
     mixed anywhere.)  Push the sparsest bin to ONE count per
-    (alpha, beta) cell and the ratio changes sign, mean -0.085 against
-    +0.182 injected, while this fit still returns +0.181.  Its quoted
-    errors are the ensemble spread at both occupancies, where the ratio's
-    are 62% larger than its own spread at one count per bin (the
-    compressed estimator fluctuates less than it says); and it is the
-    smaller of the two even in variance, 0.0200 against 0.0211 in the
-    sparsest published bin.
+    (alpha, beta) cell (`--lumi-1yr 0.22222`) and the ratio changes sign,
+    mean -0.073 over two hundred draws against +0.183 injected, while this
+    fit returns +0.205 +- 0.122 on the single draw the same command makes
+    (199 of the two hundred converge; the two-hundredth trips the
+    positivity guard above).  Its quoted errors are the ensemble spread at
+    both occupancies, where the ratio's are 55% larger than its own spread
+    at one count per bin (the compressed estimator fluctuates less than it
+    says); and it is the smaller of the two even in variance, 0.0186
+    against 0.0189 in the sparsest published bin.
 
     Empty bins contribute exactly nothing to (6) -- no infinite weight, no
     ad-hoc masking, no selection on n_b > 0 -- and a bin populated by one
@@ -982,9 +988,9 @@ def harmonic_likelihood_fit_2d(counts, lumis, pzz, alpha_edges, beta_edges,
     single-fill pathology of `spin_state_ratio` removed structurally
     rather than patched.  Coarser (alpha, beta) bins only ATTENUATE the
     ratio's bias -- in the sparsest chain bin, over the same two hundred
-    experiments, -34.3% at 12 x 24, -13.9% at 8 x 16 and -7.8% at 6 x 12
-    (--n-alpha/--n-beta) -- cost 17% on err(a_e) through the wider-bin
-    dilutions (0.0139 -> 0.0148 -> 0.0162), and run into a hard floor at
+    experiments, -34.4% at 12 x 24, -12.8% at 8 x 16 and -6.9% at 6 x 12
+    (--n-alpha/--n-beta) -- cost 15% on err(a_e) through the wider-bin
+    dilutions (0.0141 -> 0.0150 -> 0.0162), and run into a hard floor at
     Ka = 4, where <cos 2alpha> vanishes identically and the design is
     rank-deficient at 430 counts per bin: adaptive binning is a
     cross-check, not the fix.
@@ -1012,9 +1018,10 @@ def harmonic_likelihood_fit_2d(counts, lumis, pzz, alpha_edges, beta_edges,
     "expected" (default) is the conditional Fisher information at the
     observed bin totals, "observed" the Hessian at the solution; over
     Poisson draws of the sparsest published bin the two agree to 0.01% on
-    average at 48 counts per (alpha, beta) cell -- the sparsest bin of the
-    four-bin window published when this was measured, 46 in the sparsest
-    bin of the seven-bin window published now -- (0.5% worst case) and to
+    average at the 48 counts per (alpha, beta) cell at which this was
+    measured -- that bin holds 45 at the per-configuration tagging levers
+    of 2026-08-29, in the four-bin and seven-bin windows alike -- (0.5%
+    worst case) and to
     0.5% at one count per cell, where the observed form can fluctuate by
     14% -- which is why the expected one is the default.
 
@@ -1355,7 +1362,8 @@ def tag_pt_cut(sigma_theta, p_per_nucleon, a_beam=6, n_sigma=10.0):
 #
 # It is not the beam envelope and does not scale with it: the beamline
 # images an IP angle onto the pot plane with a horizontal lever
-# R12 = 19.24 / 21.25 / 29.97 m against a vertical R34 of 2.6-3.4 m, so
+# R12 = 19.24 / 21.25 / 29.97 m against a vertical R34 of 4.56 / 3.35 /
+# 2.93 m, so
 # what clears the pots' horizontal slot is theta_x, and the boundary is a
 # property of the optics and the mechanics.  The envelope and the
 # aperture are separate constraints and a track must clear BOTH;
@@ -1377,7 +1385,7 @@ def tag_pt_cut(sigma_theta, p_per_nucleon, a_beam=6, n_sigma=10.0):
 # first accepted angle of a 0.05 mrad ladder reproduces it to 1-4%:
 #
 #   c_x = 48 / 19.24 = 2.50 ,  32 / 21.25 = 1.51 ,  16 / 29.97 = 0.53 mrad
-#   c_y = --                ,  7.1 / 3.35 = 2.12 ,  2.7 / 2.93 = 0.92 mrad
+#   c_y = 29.6 / 4.56 = 6.49 ,  7.1 / 3.35 = 2.12 ,  2.7 / 2.93 = 0.92 mrad
 #
 # At 18 x 275 both half-widths shrink -- x by 1.9x, y by 2.5x -- which is
 # the 16 x 16 mm module and the 2.7 mm insertion of the current geometry
@@ -1386,31 +1394,50 @@ def tag_pt_cut(sigma_theta, p_per_nucleon, a_beam=6, n_sigma=10.0):
 # 0.53.  At 5 x 41 the aperture gets WORSE, also as predicted, because the
 # per-energy insertion retracts the pots for the larger low-energy beam.
 #
-# THE 5 x 41 VERTICAL PLANE IS SHUT, and c_y there encodes that rather
-# than a measured edge.  The insertion holds the central silicon off to
+# THE 5 x 41 VERTICAL PLANE IS SHUT, and its c_y says by how much rather
+# than where an edge is.  The insertion holds the central silicon off to
 # |y| >= 29.6 mm and the intermediate bands to 27.5 and 18.0, so the whole
 # 0.20-6.00 mrad vertical ladder produced exactly three Roman-pot rows at
-# phi = 90 and none at phi = 270.  Only one of the three sits above the
-# 29.6 mm module edge -- theta = 3.35 mrad, y = +30.94 mm -- and it is a
-# SINGLE hit in a SINGLE plane (S1L2, n = 1, dx = -0.91 mm) with both its
-# 0.05 mrad neighbours empty and B0 firing only from 4.55 mrad up.  That
-# is an isolated grazing hit, not an edge, and quoting it as c_y would be
-# anti-conservative: `rp_measure` accepts on |theta_x| > c_x OR
-# |theta_y| > c_y, so a too-small c_y OVER-ACCEPTS (0.04% of the 5 x 41
-# alpha spectator sample, 1.5% of its tag, would be admitted on a vertical
-# angle that reaches no silicon).
+# phi = 90 and none at phi = 270, and the lever the threshold has to be
+# divided by could not be regressed from that scan at all.  It was
+# measured on 2026-08-29 instead through a scratch geometry whose four
+# `offset_*_RP_section` constants are 0.0 cm -- the silicon slid onto the
+# beam axis, every field untouched -- which gives R34 = 4.56 m and, as its
+# control, R12 = 19.18 m against the 19.24 of the real insertion
+# (`farforward.POT_LEVERS`, tools/fullsim/README.md).  Hence
 #
-# c_y is therefore the smallest angle at which any 5 x 41 silicon could
-# possibly be reached: 29.6 mm divided by the LARGEST vertical lever
-# measured anywhere in the scan (R34 = 3.35 m at 10 x 100), = 8.84 mrad.
-# It is a strict lower bound on a plane that is shut in practice -- the
-# beam pipe is reached first, no spectator or coherent recoil of this
-# programme comes near it, and the acceptance integral is identical to
-# the one an infinite c_y gives to six digits (2.105e-3 either way).  A
+#   c_y (5 x 41) = 29.6 mm / 4.56 m = 6.49 mrad,
+#
+# which is past THETA_RP_MAX = 5 mrad, where the far-forward routing
+# ends: nothing this programme produces is carried that far in the first
+# place, which is what "shut" means here.  It is NOT shut by the 2.85
+# mrad of `farforward.THETA_RP_OUTER_MEASURED` -- that constant is a
+# HORIZONTAL edge, 54.8 mm of x on the 19.24 m horizontal lever, against
+# which 6.49 mrad of y is 29.6 mm on a 4.56 m lever, half the
+# displacement; angles across two planes with 4.2x different levers do
+# not compare, and the zero-insertion ladder carries clean on-the-fit-line
+# vertical rows out to 4.65 mrad.  Two further facts hold the entry: the
+# ladder runs only to 6.00 mrad, i.e. to y = 4.56 x 6.00 - 2.4 = 25 mm
+# short of the insertion, so c_y is an extrapolation of a MEASURED LEVER
+# and not a measured edge; and of 200 000 6Li alpha spectators at this
+# configuration exactly 2 clear it vertically without clearing c_x, both
+# past THETA_RP_MAX (`evgen/tests/test_nearbeam.py`).  The fitted
+# vertical orbit offset of -2.42 mm splits the two sides to 7.02 mrad
+# upward and 5.96 downward; 6.49 is the offset-free value and nothing
+# reaches either.  It replaces the 8.84 mrad
+# bound this entry carried while R34 was unmeasured -- 29.6 mm over the
+# largest vertical lever seen anywhere in the scan, R34 = 3.35 m at
+# 10 x 100 -- and the direction of the move matters: 6.49 < 8.84, so the
+# retired number was the anti-conservative one, admitting nothing real
+# but standing on an assumed lever rather than a measured one.  Nothing
+# downstream moves, because nothing reaches either: the 5 x 41 alpha tag
+# through this aperture (200k LI6_ALPHA_TAG, beta 0.30, seed 7) is
+# 1.90e-3 at 6.49 mrad against 1.89e-3 at 8.84 and at infinity alike --
+# the 2-in-200 000 of the paragraph above, and all of it past 5 mrad.  A
 # finite number is used rather than `inf` so that every downstream caller
 # that prints or plots the cutout keeps working.
 RP_APERTURE_MEASURED = {
-    "5x41": (2.50e-3, 8.84e-3),
+    "5x41": (2.50e-3, 6.49e-3),
     "10x100": (1.51e-3, 2.12e-3),
     "18x275": (0.53e-3, 0.92e-3),
 }
@@ -1436,8 +1463,10 @@ RP_APERTURE_SEP2024 = {
 #: systematic on the 5 x 41 row (`farforward.POT_LEVERS_LIGHT_ION_LATTICE`,
 #: RESULTS section 6, `lad_he4_5x41`: measured first-hit edge 1.60 mrad on
 #: +x and 1.70 on -x against the 1.61 the arithmetic gives).  The vertical
-#: is shut there too -- no accepted row in 0.2-6.0 mrad -- so c_y carries
-#: the same 8.84 mrad bound.
+#: is shut there too -- no accepted row in 0.2-6.0 mrad -- and no
+#: zero-insertion twin of the He4 file was built, so c_y repeats the
+#: baseline 6.49 mrad and is the one entry of this table that is not
+#: independently measured.
 #:
 #: ONLY 5 x 41 WAS CHECKABLE.  10 x 100 is None: the only Z/A = 0.5 file
 #: near that setting is `beamline_10x110_H2.xml` at 220 GV against the 6Li
@@ -1448,11 +1477,15 @@ RP_APERTURE_SEP2024 = {
 #: levers to 1%.
 #:
 #: Which of the two files a 6Li fill at 81.6 GV would actually run in is
-#: the open question this measurement hands to the far-forward working
-#: group (plans/09 B1).  The baseline table is the published default; the
-#: ratio of the two is the systematic to carry.
+#: not settled by anything in this repository, and the working assumption
+#: is stated rather than deferred: the ePIC BASELINE lattice of that ring
+#: setting at twice the field for the Z/A = 1/2 fill -- the same magnets,
+#: the same orbit, the transport the scan measured.  The baseline table is
+#: therefore the published default everywhere; the Z/A = 0.5 file is the
+#: alternative, and the ratio of the two (x0.64 on the 5 x 41 horizontal
+#: half-width) is the systematic to carry (plans/09 B1).
 RP_APERTURE_MEASURED_LIGHT_ION_LATTICE = {
-    "5x41": (1.61e-3, 8.84e-3),
+    "5x41": (1.61e-3, 6.49e-3),
     "10x100": None,
     "18x275": RP_APERTURE_MEASURED["18x275"],
 }
@@ -1528,18 +1561,21 @@ def rp_measure(Pprime, P, sigma_theta_xy, n_sigma=10.0, rng=None,
     THE ASPECT IS STILL THE WRONG WAY ROUND FROM cut_scale_xy, and by
     less than it was.  The re-measurement of 2026-08-28 (plans/09 B1) puts
     the aperture at (c_x, c_y) = (0.53, 0.92) mrad at 18 x 275, (1.51,
-    2.12) at 10 x 100 and 2.50 mrad horizontal with the vertical SHUT at
-    5 x 41: TALLER THAN IT IS WIDE wherever both axes are open, by
-    1.4-1.7x, where cut_scale_xy =
-    (2.5, 1.0) models a slot 2.5x wider than tall.  The factor is 3.5-4.4
+    2.12) at 10 x 100 and (2.50, 6.49) at 5 x 41, where the vertical is
+    measured but SHUT -- 6.49 mrad is past the 5 mrad at which the
+    far-forward routing ends (`farforward.THETA_RP_MAX`):
+    TALLER THAN IT IS WIDE at every configuration, by 1.4-2.6x, where
+    cut_scale_xy = (2.5, 1.0) models a slot 2.5x wider than tall.  The
+    factor is 3.5-6.5
     rather than the 5.8 the September-2024 numbers gave, but the SIGN of
     the aspect -- which is what sets the sign of the acceptance-induced
     cos 2phi_t and is the half of this that does not depend on the
     geometry version -- is unchanged.  The reason is optics, not
     mechanics: the far-forward line images an IP angle onto the pot plane
-    with R12 = 19-30 m horizontally against R34 = 2.6-3.4 m vertically,
-    ~9x stiffer in x, so a horizontal kick clears a horizontal slot far
-    sooner than a vertical one clears a vertical gap.
+    with R12 = 19-30 m horizontally against R34 = 2.9-4.6 m vertically,
+    4 to 10x stiffer in x and most so at the top configuration, so a
+    horizontal kick clears a horizontal slot far sooner than a vertical
+    one clears a vertical gap.
 
     Returns dict with theta_x/y, pT, phi_t, t_reco = -pT^2 (x_L set to 1),
     the acceptance mask and the cut half-widths in GeV.

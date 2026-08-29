@@ -171,34 +171,34 @@ configuration** — an invariance that is itself the derivation:
 
 That table is the circular-isotropic derivation, and run 12 replaced it
 with the horizontal-only de-squeeze priced immediately below; the absolute
-ask that follows from the corrected optimum is **β*_x ≈ 45 m at 5 × 41**
-(0.90 m × 49.7), with ≈ 107 m and ≈ 71 m at the other two configurations
-(Report 0 §4.2). Forty-five metres is the smallest of the three and sits
+ask that follows from the corrected optimum is **β*_x ≈ 42 m at 5 × 41**
+(0.90 m × 46.5), with ≈ 100 m and ≈ 71 m at the other two configurations
+(Report 0 §4.2). Forty-two metres is the smallest of the three and sits
 well inside the LHC's demonstrated forward-physics optics — TOTEM/ALFA ran
 β\* = 90 m and 2500 m against a nominal 0.55 m. It does not, however, relax
 the IR aperture, as the superseded ×14.5 would have: that optimum shrank the
 beam in the final-focus quadrupoles (β ≈ β\* + L²/β\* ≈ 15 m at the first
-quad against 29 m today, for L ≈ 5 m), whereas a 45 m horizontal de-squeeze
-leaves β_x ≈ 46 m there, larger than today. Aperture, matching and
+quad against 29 m today, for L ≈ 5 m), whereas a 42 m horizontal de-squeeze
+leaves β_x ≈ 43 m there, larger than today. Aperture, matching and
 chromaticity are all questions for C-AD.
 
 **Priced (2026-08-27, `evgen/scripts/tagging_optics.py`, Report 1 §6.1):**
 with the envelope as planar pots see it (a rectangle 10σ_h × 10σ_v) only
 the horizontal plane needs the de-squeeze, and the optimum of ε × L sits
-at β*_x/β*_x,HA = 49.7 / 175.6 / 89.3 with the vertical plane at high
-acceptance (L/L_HA = 1/7.1 / 1/13.3 / 1/9.5, ε = 0.42 / 0.32 / 0.33,
+at β*_x/β*_x,HA = 46.5 / 164.1 / 89.3 with the vertical plane at high
+acceptance (L/L_HA = 1/6.8 / 1/12.8 / 1/9.5, ε = 0.37 / 0.25 / 0.33,
 `farforward.tagging_optics_point`) rather than at the
-circular-isotropic 14.5 / 57.7 / 28.6 above: 2.6×10⁶ / 3.0×10⁶ / 6.1×10⁶
-tagged events per year at the 10 fb⁻¹/u placeholder — still 3–8× below
+circular-isotropic 14.5 / 57.7 / 28.6 above: 2.4×10⁶ / 2.4×10⁶ / 6.2×10⁶
+tagged events per year at the 10 fb⁻¹/u placeholder — still 4–10× below
 what IR-8's secondary focus (≈ 20%, our interpolation) would give at the
 same luminosity.  Two assumptions stated there: the electron β* raised in
 step, and a parallel-to-point far-forward transport for the de-squeezed
 lattice (R₁₁σ* ≪ R₁₂σ_θ at the pots), which is the first thing to ask C-AD.
 
 **But the detector must follow.** At the tagging optics the horizontal
-10σ envelope is 0.33 / 0.17 / 0.12 mrad while the measured silicon edge is
+10σ envelope is 0.36 / 0.19 / 0.12 mrad while the measured silicon edge is
 2.50 / 1.51 / 0.53 mrad (`tools/fullsim`, re-measured 2026-08-28 in the
-current ePIC geometry), 7.6 / 8.9 / 4.4 times outside it, so
+current ePIC geometry), 6.9 / 7.9 / 4.5 times outside it, so
 the geometry pins the acceptance and the whole β\* gain is wasted unless the
 pots follow the envelope in. The two levers are
 strictly multiplicative, and the second one is the near-beam granularity
@@ -294,10 +294,10 @@ move; the pure envelope in both planes would read
 9.4×10⁻¹⁰ / 2.0×10⁻¹⁹ / 1.2×10⁻⁵, is the aperture alone and therefore
 inside the beam at the two upper configurations, where it is not a
 reachable number).  At the tagging
-optics the envelope is 0.33 / 0.17 / 0.12 mrad and the silicon at
-0.53–2.50 mrad tags zero; pots that follow the envelope tag 0.42 / 0.32 /
-0.33 of coherent recoils and 0.35 / 0.28 / 0.29 of α spectators at
-1/7–1/13 of the luminosity, with all seven bins of the published |t|
+optics the envelope is 0.36 / 0.19 / 0.12 mrad and the silicon at
+0.53–2.50 mrad tags zero; pots that follow the envelope tag 0.37 / 0.25 /
+0.33 of coherent recoils and 0.31 / 0.22 / 0.29 of α spectators at
+1/6.8–1/12.8 of the luminosity, with all seven bins of the published |t|
 window per configuration through the chain (`nearbeam_reach_gain.py`).  The layer and the optics
 are multiplicative levers.
 
@@ -350,7 +350,7 @@ high-acceptance / high-divergence choice actually names.
   ×77 the aperture scan prints (7.2×10⁻⁸ against 9.4×10⁻¹⁰) on a tagged
   fraction of 9×10⁻¹⁰, which is nothing that matters.  The
   near-beam layer pays only *under a tagging optics*, where it is the
-  difference between no coherent tag at all and 32–42%.
+  difference between no coherent tag at all and 25–37%.
 * **reports/1 (cos 2φ projections) and reports/3 (detector study)** —
   both quote acceptances conditioned on the single proton-derived σ_θ.
   Neither should be circulated further without the band of §10.3 or an

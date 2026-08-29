@@ -160,19 +160,19 @@ target significance by 1/*f*.
 **Plan A — one ⁶Li year per configuration, split between the coherent and
 the inclusive channel.**  The coherent channel is given exactly the share
 that buys 5σ on the deformation (shape) term in the year:
-*f*<sub>coh</sub> = (5/9.3)², (5/8.3)², (5/10.7)² = 0.289 / 0.363 / 0.218
-from the 9.3 / 8.3 / 10.7 σ per year of `tagging_optics.py` at the
+*f*<sub>coh</sub> = (5/9.4)², (5/8.3)², (5/10.7)² = 0.283 / 0.363 / 0.218
+from the 9.4 / 8.3 / 10.7 σ per year of `tagging_optics.py` at the
 tagging optics.  The rest runs at the Yellow Report high-acceptance
 optics and is shared *s* = 1, ½, ⅓ among the three inclusive ion fills.
 
 | configuration | *f*<sub>coh</sub> | δa_e coherent, 1 yr at *f*<sub>coh</sub> | inclusive share, *s* = 1 | δ(Δ/F₁) | yr to 5σ | *s* = ½ | δ(Δ/F₁) | yr to 5σ | *s* = ⅓ | δ(Δ/F₁) | yr to 5σ |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| 5 × 40.8 | 0.289 | 0.00221 | 0.711 | 3.067×10⁻⁴ | 2.35 | 0.355 | 4.337×10⁻⁴ | 4.70 | 0.237 | 5.312×10⁻⁴ | 7.05 |
-| 10 × 99.5 | 0.363 | 0.00173 | 0.637 | 3.202×10⁻⁴ | 2.56 | 0.319 | 4.529×10⁻⁴ | 5.13 | 0.212 | 5.546×10⁻⁴ | 7.69 |
+| 5 × 40.8 | 0.283 | 0.00227 | 0.717 | 3.054×10⁻⁴ | 2.33 | 0.358 | 4.319×10⁻⁴ | 4.66 | 0.239 | 5.290×10⁻⁴ | 6.99 |
+| 10 × 99.5 | 0.363 | 0.00184 | 0.637 | 3.202×10⁻⁴ | 2.56 | 0.319 | 4.529×10⁻⁴ | 5.13 | 0.212 | 5.546×10⁻⁴ | 7.69 |
 | 18 × 137.5 | 0.218 | 0.00158 | 0.782 | 3.341×10⁻⁴ | 2.79 | 0.391 | 4.725×10⁻⁴ | 5.58 | 0.261 | 5.786×10⁻⁴ | 8.37 |
 
 δa_e is the combined one-year error on the exotic-glue coefficient over
-the seven |t| bins, 0.00119 / 0.00104 / 0.00074 at the full year
+the seven |t| bins, 0.00121 / 0.00111 / 0.00074 at the full year
 (`money_cos2phi_coherent_reco.py --optics tagging --exact --n-mc 600000`,
 per configuration), divided by √*f*<sub>coh</sub>.  δ(Δ/F₁) is the error
 on the Δ/F₁ scale after one programme year, 2.586 / 2.556 / 2.954 ×10⁻⁴
@@ -188,24 +188,24 @@ The direct and the rescaled values agree to the last digit printed
 
 What *f*<sub>coh</sub> does to the rest of the coherent line is the same
 arithmetic on the numbers `tagging_optics.py` publishes at the full year
-(rerun 2026-08-28: N_tag/yr = 2.59 / 3.01 / 6.15 ×10⁶, best-bin 5σ floor
-1.67 / 2.10 / 1.62 % per unit P_zz, 2.8 / 4.4 / 2.6 years to 5σ on a 1%
-exotic-glue term, from ε = 0.423 / 0.323 / 0.332 at r_h = 49.7 / 175.6 /
-89.3 and L/L_HA = 1/7.1 / 1/13.3 / 1/9.5):
+(rerun 2026-08-29 on the per-configuration levers: N_tag/yr = 2.37 / 2.42 /
+6.15 ×10⁶, best-bin 5σ floor 1.74 / 2.34 / 1.62 % per unit P_zz, 3.0 / 5.5 /
+2.6 years to 5σ on a 1% exotic-glue term, from ε = 0.374 / 0.251 / 0.332 at
+r_h = 46.5 / 164.1 / 89.3 and L/L_HA = 1/6.8 / 1/12.8 / 1/9.5):
 
-| at *f*<sub>coh</sub> = 0.289 / 0.363 / 0.218 | 5 × 40.8 | 10 × 99.5 | 18 × 137.5 |
+| at *f*<sub>coh</sub> = 0.283 / 0.363 / 0.218 | 5 × 40.8 | 10 × 99.5 | 18 × 137.5 |
 |---|---|---|---|
-| tagged events in the year (× *f*<sub>coh</sub>) | 7.5×10⁵ | 1.09×10⁶ | 1.34×10⁶ |
-| best-bin 5σ floor, /√*f*<sub>coh</sub> | 3.11 % | 3.49 % | 3.47 % |
-| years to 5σ on a 1% exotic-glue term, /*f*<sub>coh</sub> | 9.7 | 12.1 | 11.9 |
+| tagged events in the year (× *f*<sub>coh</sub>) | 6.7×10⁵ | 8.8×10⁵ | 1.34×10⁶ |
+| best-bin 5σ floor, /√*f*<sub>coh</sub> | 3.27 % | 3.88 % | 3.47 % |
+| years to 5σ on a 1% exotic-glue term, /*f*<sub>coh</sub> | 10.6 | 15.2 | 11.9 |
 
 The last row is the reason "what the coherent channel needs" has two
 answers and they differ by an order of magnitude.  Read as *5σ on the
 deformation (shape) term within the year* — the null test the deuteron
 cannot offer, and the thing the sign flip is a prediction about — the
-channel needs *f*<sub>coh</sub> = 0.289 / 0.363 / 0.218 and Plan A is
-affordable.  Read as *5σ on a 1% exotic-glue term* it needs 2.8 / 4.4 /
-2.6 **full** years at the full year and 9.7 / 12.1 / 11.9 programme years
+channel needs *f*<sub>coh</sub> = 0.283 / 0.363 / 0.218 and Plan A is
+affordable.  Read as *5σ on a 1% exotic-glue term* it needs 3.0 / 5.5 /
+2.6 **full** years at the full year and 10.6 / 15.2 / 11.9 programme years
 at *f*<sub>coh</sub>, so no share of one year buys it and the question
 becomes how many years the programme runs, not how one is divided.  The
 tables here are built on the first reading; the second is the ten-year
@@ -219,17 +219,17 @@ with 3.34 / 3.27 / 4.36 years to 5σ; δA_zz per x-bin at P_zz = 0.8 goes
 6.98 / 6.63 / 7.30 ×10⁻⁵ and 2.66 / 8.77 ×10⁻⁴ (x = 0.0035 / 0.0089 /
 0.0282 / 0.2818 / 0.5623) to 9.88 / 9.37 / 10.3 ×10⁻⁵ and 3.76 / 12.4
 ×10⁻⁴ (`money_b1.py`); and the ⁷Li polarized-EMC δΔR goes 0.0477 /
-0.0511 / 0.0619 / 0.1237 to 0.0675 / 0.0722 / 0.0876 / 0.1749 at
+0.0509 / 0.0615 / 0.1224 to 0.0674 / 0.0719 / 0.0870 / 0.1731 at
 x = 0.09 / 0.28 / 0.45 / 0.71 (`money_polemc.py --ion 7Li`, toy inputs).
 
 **Plan A × B — ⁶Li takes half a year and splits it, ⁷Li takes the
-other half.**  The coherent share becomes ½ *f*<sub>coh</sub> = 0.145 /
-0.181 / 0.109, δa_e becomes 0.00313 / 0.00244 / 0.00224 and the shape
+other half.**  The coherent share becomes ½ *f*<sub>coh</sub> = 0.141 /
+0.181 / 0.109, δa_e becomes 0.00322 / 0.00261 / 0.00224 and the shape
 term falls to 5/√2 = **3.5σ at every configuration** — by construction,
 *f*<sub>coh</sub> having been defined to put it at exactly 5σ — so it
 needs two years rather than one; the ⁶Li inclusive share at *s* = 1
-is 0.355 / 0.319 / 0.391, which is numerically the *s* = ½ column of
-Plan A and gives the same 4.337 / 4.529 / 4.725 ×10⁻⁴ and 4.70 / 5.13 /
+is 0.358 / 0.319 / 0.391, which is numerically the *s* = ½ column of
+Plan A and gives the same 4.319 / 4.529 / 4.725 ×10⁻⁴ and 4.66 / 5.13 /
 5.58 years; ⁷Li is Plan B's column.
 
 Two second-order effects the tables above ignore, in the conservative
@@ -238,10 +238,10 @@ direction, and one thing that must not be rescaled at all.
 The inclusive measurement does not stop during the coherent share: the
 tagging optics de-squeezes the horizontal β* only and inclusive DIS is
 blind to the far-forward acceptance, so those stores still deliver
-1/7.1, 1/13.3 and 1/9.5 of the high-acceptance luminosity to it.  The
+1/6.8, 1/12.8 and 1/9.5 of the high-acceptance luminosity to it.  The
 effective inclusive share is (1 − *f*<sub>coh</sub>) +
-*f*<sub>coh</sub> L/L<sub>HA</sub> = 0.752 / 0.664 / 0.805 rather than
-0.711 / 0.637 / 0.782, which is 2.7 / 2.1 / 1.4 % off every inclusive
+*f*<sub>coh</sub> L/L<sub>HA</sub> = 0.759 / 0.665 / 0.805 rather than
+0.717 / 0.637 / 0.782, which is 2.8 / 2.2 / 1.4 % off every inclusive
 error in Plan A.
 
 The longitudinal fills are shared, not additive: one set of
