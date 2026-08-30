@@ -10,6 +10,8 @@ import sys
 import numpy as np
 import pytest
 
+_trapezoid = getattr(np, "trapezoid", None) or np.trapz
+
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 
 from polligen import bookkeeping as bk  # noqa: E402
@@ -52,7 +54,7 @@ def test_cdf_is_the_integral_of_the_density():
     closed form is exact by construction."""
     q2 = 3.13
     z = np.linspace(1e-2, 1.0, 200001)
-    num = float(np.trapz(rad.d_electron(z, q2), z))
+    num = float(_trapezoid(rad.d_electron(z, q2), z))
     assert num == pytest.approx(float(rad.cdf_z(1.0, q2)
                                       - rad.cdf_z(1e-2, q2)), rel=1e-6)
     # and moment_z(order=0) is the same primitive
