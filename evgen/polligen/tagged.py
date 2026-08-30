@@ -170,12 +170,17 @@ class TaggedChannel:
 
 # --- default channels (radial betas carry the model band, as in fastsim) --
 
-# alpha-d D-state probability chosen so the embedded-deuteron vector
-# dilution 1 - (3/2) P_D reproduces the 0.87 of b1_li6_from_deuteron
-# (SCENARIO -- VMC overlaps are the scheduled replacement, plans/04 #15).
-P_D_LI6 = 0.0867
-# deuteron D-state probability (AV18-like)
-P_D_DEUTERON = 0.045
+# The two D-state probabilities are RE-EXPORTED from polli_fastsim.beams,
+# which is where they live since 2026-08-29: the inclusive effective
+# polarization of 6Li (beams.LI6_CLUSTER_POLARIZATION, the two dilutions
+# multiplied) and the tagged S/D interference below are then the same
+# wave function seen in two experiments, and cannot drift apart.  The
+# names, values and meanings are unchanged -- alpha-d D state chosen so
+# the embedded-deuteron vector dilution 1 - (3/2) P_D reproduces the 0.87
+# of b1_li6_from_deuteron (SCENARIO -- VMC overlaps are the scheduled
+# replacement, plans/04 #15), and the deuteron's own AV18-like D state.
+P_D_LI6 = beams.P_D_LI6
+P_D_DEUTERON = beams.P_D_DEUTERON
 
 
 def li6_alpha_channel(beta=0.30, p_d=P_D_LI6):

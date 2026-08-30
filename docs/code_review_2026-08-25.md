@@ -31,6 +31,17 @@
 > factor.  It stays ≤ 0.15% of everything published, and the exposure is
 > the Δ/F₁ ~ 10⁻³ scenario at x ≳ 0.2, Q² ≈ 1.
 
+> *2026-08-29, on (iv):* the kernel now exists and the estimate above is
+> measured rather than reasoned.  The ratio does **not** hold, and not
+> only in size: the twist-3 Eq. (17d) channel enters with the sign
+> opposite to the leading-twist one and cancels it, the three channels
+> standing as 3 : −3 : 1, so the full combination is 0.84–1.01× Eq. (17e)
+> alone rather than 6.9× it.  The review's Δ_fake = γ²b₁/6 was therefore
+> the right size after all.  The impact is **0.109%** of the amplitude at
+> the worst spot and ≤ 0.033% at the published configuration, inside the
+> ≤ 0.15% claimed here, and its sign cancels part of the amplitude
+> instead of faking one (plans/08 D2, G2 below).
+
 
 Scope: the whole simulation code (`evgen/polligen`, `evgen/scripts`,
 `fastsim/polli_fastsim`, `fastsim/scripts`, both test suites), audited
@@ -93,7 +104,9 @@ full test suites (118 passed: 94 evgen + 24 fastsim).
   where the reference (Cosyn Eq. 27, the HERMES extraction relation, and a
   direct contraction of HJM's tensor) gives −(2/3)b₁/F₁; magnitudes and
   the Δ sector are unaffected, the sign of Δ itself cannot be checked
-  without JM 1989 (§6, G1); (ii) the fast-sim money-delta scripts'
+  without JM 1989 (§6, G1) — *the reference sign was adopted on
+  2026-08-29 and the anchor inverted with it (plans/08 D1); the Δ sign
+  remains open*; (ii) the fast-sim money-delta scripts'
   "R1998" returns R = σ_L/σ_T = 1 at x ≲ 0.1, Q² ≲ 5 GeV² (Θ multiplies
   all three terms), making the July fast-sim L_5σ values ≈ 1.5–2× too
   pessimistic; polligen and the R-plots use a different (toy) R and are
@@ -354,7 +367,7 @@ beyond |η| = 3.5, consistent with the selection.
 | Deformation coefficient c₂ = 2a₂ | Mäntysaari et al. Eq. (9) (refs/2408.13213v1.pdf) | `coherent.cos2phi_coefficient_deformation` | consistent (money plot 6 injects a₂: conservative ×2, stated) |
 | u₁, u₂ y-factors and bounds | Nikolaev–Pronyaev–Zakharov Eq. (1); ZEUS NPB 816:1 Sec. 10.2 | `money_cos2phi_coherent_reco.py` defaults | consistent; defaults at the 1σ edge |
 | t = −(p_T² + M²x_P²)/(1 − x_P), t_min | light-cone kinematics | `reco.recoil_fourvector`, `t_from_fourvectors` | consistent (test) |
-| Tensor-SF leakage: cos φ at O(γ), cos 2φ at O(γ²) | Cosyn et al. Eqs. 17d–e (refs/2410.12764v1.pdf) | report §2 (not in the code; ≤ 3% at the sweet spots) | consistent |
+| Tensor-SF leakage: cos φ at O(γ), cos 2φ at O(γ²) | Cosyn et al. Eqs. 17d–e (refs/2410.12764v1.pdf) | report §2 (not in the code at review time; in it since 2026-08-29 behind `tensor_gamma`, and measured at ≤ 0.109% of the amplitude — G2) | consistent |
 
 ## 4. What each script is (truth-level projection vs reconstructed level)
 
@@ -485,6 +498,14 @@ document b₁ ≡ −b₁^HJM everywhere), add a test against Cosyn Eq. (27),
 and obtain JM 1989 to fix the Δ sign convention before any sign of an
 extracted Δ is quoted. Not changed in this pass.
 
+*Closed 2026-08-29 (plans/08 D1): the literature convention is adopted,
+`TENSOR_LL_SIGN = -1`, and the anchor below is inverted with it — the
+identity is asserted against Cosyn Eq. (27) itself now, with no reference
+to the constant, so restoring the repository's private +1 fails it.  The
+Δ sign, which needs JM 1989, is untouched and still open.  Nothing
+published moves: `money_b1.py` (which plots |A_zz|) reproduces its figure
+byte for byte and `money_tagged_azz.py --events 400000` every digit.*
+
 *Half done 2026-08-25 (plans/08 B2).* The sign is now the single
 constant `asymmetries.TENSOR_LL_SIGN`, imported by `xsec`, and
 `evgen/tests/test_tensor_convention.py` is the repository's first
@@ -512,6 +533,30 @@ and Δ/F₁ = 10⁻³ this is 3% at x = 0.05 and 40% at x = 0.2 (0.1–2% for
 correct for the sweet spots only. *Action:* add the Eq. (17e) term to
 the kernel and subtract it with the A_zz measured in the same data (κ);
 list it in the plans/07 systematics.
+
+*Closed 2026-08-29 (plans/08 D2), and the action was too small in scope
+but right in size.*  What went into the kernel is not the Eq. (17e) term
+but the whole finite-γ tensor sector — Cosyn Eqs. (9), (10), (14), (16),
+(17a–e) and (24), with the b₃/b₄ slots — as
+`InclusiveKernel(tensor_gamma=True)`, off by default so that the massless
+path stays bit-for-bit.  Eq. (17e) is one of three channels and the
+smallest, but the other two very nearly annihilate each other: T_LL (the
+rate term seen through the tilted axis) and T_LT (Eq. 17d) are each about
+three times it and of OPPOSITE sign, so the full combination is
+0.84–1.01× Eq. (17e) alone at the published sweet spots.  Measured by
+`evgen/scripts/tensor_gamma_leakage.py` at the twelve of them, the
+effective Δ is (0.14–0.16) γ²b₁ — this review's γ²b₁/6 to within the
+higher-twist slots — and the leakage is 0.109% of the published amplitude
+at the worst spot (5 × 41, x = 0.089, Q² = 1.14), ≤ 0.033% at 10 × 99.5
+and ≤ 0.027% at 18 × 137.5.  This review's "3% at x = 0.05 and 40% at
+x = 0.2" for Δ/F₁ = 10⁻³ therefore stands unscaled as the exposure of
+that scenario.  The relative sign of the three channels is not readable
+off the equations alone — the first pass had it the other way, and
+quoted 0.74% — and is fixed instead by the two finite-γ rows of Cosyn's
+own Table 1, both of which the kernel reproduces to 1e-10.  The overall
+sign, which needed D1 first, is negative at every spot: it opposes the
+amplitude of a negative Δ rather than faking one.  It is listed in the
+plans/07 systematics row and in the referee register.
 
 **G3 — LOW:** the φ accept–reject (`sample.py:229–238`) checks only
 1 + w_avg > 0, not |a₁| + |a₂| ≤ 1 + w_avg; for unphysical amplitudes it
@@ -706,6 +751,17 @@ updating those).
 polarizations 1/3 per nucleon combined with /A in `fom.py` give
 g₁(⁶Li)/g₁(d) = 0.119 per nucleon — the 2-of-6 dilution applied twice
 in the A_∥ projections.
+
+*Closed in two halves, and neither number above survives.  2026-08-28
+(plans/08 D7): the structural half — `ToyG1.g1_nucleus` weights by Z and
+N as `NuclearF2.f2a` does, every `Ion` slot is per-nucleon, and the
+second dilution is gone (0.119 → 0.358).  2026-08-29 (plans/04 #6): the
+value — the cluster picture, `beams.LI6_CLUSTER_POLARIZATION` =
+(1 − 1.5 P_D^{α−d})(1 − 1.5 P_D^{d}) = 0.81123 whole-nucleus, 0.81123/3
+in each slot, and the deuteron's slot the exact 1 − 1.5 P_D^{d} = 0.9325,
+so per-nucleon g₁(⁶Li)/g₁(d) = (1 − 1.5 P_D^{α−d})/3 = **0.290**.  The
+1/3 is reachable and pinned as `beams.LI6_NAIVE_ONE_THIRD`.  Nothing
+published moved with either half.*
 
 **S14 — LOW:** no crossing angle in the fast-sim (the |η| = 3.5 edge
 moves by 0.15–0.5 units); the reco layer has it.

@@ -72,7 +72,8 @@ simulations within the broader EIC program."*
   EPIOS explicitly motivates "b₁ of the deuteron, free or embedded in ⁶Li".
   *2026-08-28: the ⅓·P_d form is right but P_d is the wrong rank.  b₁ is a
   rank-2 structure function, so the deuteron's alignment survives the α–d
-  motion as the TENSOR dilution 1 − (9/10)P_D = 0.921947, not the vector
+  motion as the TENSOR dilution 0.921947 — the tagged model's quadrature,
+  which the closed form 1 − (9/10)P_D approximates — not the vector
   0.87, and b₁(⁶Li)/nucleon = (2/6) × 0.921947 × b₁(d) = 0.307·b₁(d)
   (`polarized.LI6_B1_RANK2_TRANSFER` and `LI6_B1_PER_NUCLEON`, pinned
   against `TaggedModel.tensor_dilution()` in `evgen/tests/test_tagged.py`;
@@ -143,8 +144,14 @@ simulations within the broader EIC program."*
   | ³He | −0.028 | +0.86 | Bissey PRC 65:064317 |
   Convention warning: Cloët's slides quote P_p = P_n = 1/3 for ⁶Li — this
   is the per-nucleon-normalized dilution (2 polarized of 6 nucleons);
-  whole-nucleus values are ≈ 0.87×0.93 ≈ 0.81 per cluster nucleon. Fix the
-  convention in step 1.1 before quoting FOMs (factor 2.4 at stake).
+  whole-nucleus values are ≈ 0.87×0.93 ≈ 0.81 per cluster nucleon.
+  *2026-08-29: settled on the cluster picture by author decision
+  (plans/04 #6). `beams.LI6` carries 0.86995 × 0.9325 = 0.81123
+  whole-nucleus, computed from the same two D-state probabilities the
+  tagged sector uses rather than transcribed, so per-nucleon
+  g₁(⁶Li)/g₁(d) = 0.290 exactly; the 1/3 survives as
+  `beams.LI6_NAIVE_ONE_THIRD`, 1.233 times as large. Vector only — the
+  tensor ⅓ dilution and the rank-2 transfer 0.9219 are untouched.*
 - JLab benchmark to beat: **E12-14-001** (CLAS12, Brooks–Kuhn): ⁷LiD +
   ⁶LiH targets, 0.06 < x < 0.8, 1 < Q² < 15 GeV², point-to-point syst
   3.2–4.2% + 4% scale, sensitive to depletion > 5%. EIC adds x < 0.06,

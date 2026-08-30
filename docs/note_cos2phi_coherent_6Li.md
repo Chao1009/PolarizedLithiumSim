@@ -63,8 +63,11 @@ home for all Δ models and constraints, every consumer switching by
 name. Default: `moment_A`, the sum-rule-constrained ansatz of the
 merged money_delta suite, Δ = A·α_s(Q²)·F₁·x^a(1−x)^b with A solved
 from the bag-model moment ∫x Δ dx = −0.012·α_s (Sather–Schmidt), times
-the ⁶Li per-nucleon dilution 1/3 (Cloët convention; the whole-nucleus
-P_zz is a separate factor — plans/04 #6). `moment_B` (no F₁ factor,
+the ⁶Li per-nucleon dilution 1/3 (two polarized nucleons of six; the
+whole-nucleus P_zz is a separate factor). It is a counting fraction and
+not a polarization: plans/04 #6 closed on 2026-08-29 at 0.81123 for the
+VECTOR polarization of that pair, which is rank 1 and no substitute
+here, Δ being rank 2 like b₁ (plans/08 D9). `moment_B` (no F₁ factor,
 conservative; factor ~2–8 below A) and the legacy `toy` shape are one
 flag away. Sweet-spot super-bins per Q² band: Q² = 1.1 → 14 GeV² at
 x ≈ 0.02–0.14.

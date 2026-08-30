@@ -62,6 +62,20 @@ Two corrections of 2026-08-28 (plans/09 B2) change what this figure says.
     below): with the toy shape the closure read +0.4471 / -0.1019, the
     -0.008 being the double-counted b1.
 
+TWO SIGNS MEET HERE, AND THEY ARE INDEPENDENT.  The asymmetry this
+figure measures is the WAVE-FUNCTION one, A_zz^wf = (n_+1 + n_-1 -
+2 n_0)/(n_+1 + n_-1 + n_0) of `tagged.azz_tensor_curve`: its sign is fixed
+by the alpha-d S/D interference of the two-cluster model -- by which
+spin-projection state puts more spectator strength at that k -- and by
+nothing else.  The INCLUSIVE tensor sign, `asymmetries.TENSOR_LL_SIGN`,
+which since 2026-08-29 is the literature's (A_zz = -(2/3) b1/F1, Cosyn
+et al. Eq. 27 / HERMES; plans/08 D1), enters this script only through the
+b1 rate shift w_avg of the struck cluster's kernel, at the 10^-3 level of
+a quantity that is O(1) here.  Flipping it changes no digit of the
+numbers below, which is why D1 could be decided without re-running this
+figure: it was verified by re-running it anyway, at the published
+`--events 400000`, and every printed digit is unchanged.
+
 Output: `money_tagged_azz_6Li.png` for the published combination
 (--config 1 --optics menu) and `money_tagged_azz_6Li_<key>_<optics>.png`
 otherwise, so no exploratory run can overwrite the published artefact.

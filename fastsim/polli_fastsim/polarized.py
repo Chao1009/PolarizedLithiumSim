@@ -863,8 +863,11 @@ def close_kumano_integral(mode="cdks"):
 
 # The rank-2 transfer of the embedded deuteron's tensor polarization to
 # 6Li, from the tagged two-cluster spin model:
-# `polligen.tagged.TaggedModel(li6_alpha_channel()).tensor_dilution()` =
-# 1 - (9/10) P_D at P_D = 0.0867 (pinned in evgen/tests/test_tagged.py).
+# `polligen.tagged.TaggedModel(li6_alpha_channel()).tensor_dilution()`
+# evaluated at `beams.P_D_LI6` (pinned in evgen/tests/test_tagged.py).
+# It is a quadrature over the channel and not a closed form: the closed
+# form 1 - (9/10) P_D gives 0.921970 against the 0.9219467 measured, so
+# the two are pinned to each other at 1e-4 and not asserted equal.
 # The 0.87 it replaces is the VECTOR dilution 1 - (3/2) P_D -- the wrong
 # rank for b1, and the whole of plans/08 D9.
 LI6_B1_RANK2_TRANSFER = 0.921947

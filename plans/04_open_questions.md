@@ -122,17 +122,56 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
 
 ## Still open — generator / theory
 
-6. **⁶Li effective-polarization convention** (a factor 1.23 in the g₁ FOM
-   since 2026-08-28, a factor 2.4 before it): slides' P_p = P_n = 1/3
-   (per-nucleon-normalized) vs cluster-model whole-nucleus ≈ 0.81
-   (= 0.87 P_d × 0.93 D-state). ⁷Li is settled: P_p = +0.866,
+6. **⁶Li effective-polarization convention** — ☑ **closed 2026-08-29**
+   (author decision), on the **cluster picture**.  The ⁶Li spin is carried
+   by the α–d relative motion and by the deuteron inside it; the α is
+   J = 0 and contributes nothing, so the polarized proton and neutron are
+   each polarized along the ⁶Li spin by the product of the two vector
+   dilutions, (1 − 1.5 P_D^{α−d})(1 − 1.5 P_D^{d}) = 0.86995 × 0.9325 =
+   **0.81123** whole-nucleus, which in the per-nucleon slot convention of
+   D7 is P_p = P_n = 0.81123/3 = 0.27041 (`beams.LI6`).  The alternative
+   it retires is Cloët's slides' P_p = P_n = 1/3, i.e. a whole-nucleus
+   1.0 — 1.233 times as large, and the optimistic end of the pair since
+   D7 — which survives as `beams.LI6_NAIVE_ONE_THIRD` and is pinned as
+   the pre-2026-08-29 value.  ⁷Li was already settled: P_p = +0.866,
    P_n = −0.037.
-   *Engage:* I. Cloët (ANL, local). *Default in code:* 1/3, which under the
-   per-nucleon convention is Z·P_p = N·P_n = 1 whole-nucleus, i.e. the
-   **larger and therefore optimistic** end of the pair — the opposite of
-   what it was when the same slot was read as a whole-nucleus number.
-   Switch after resolution.
-   *2026-08-28: the STRUCTURAL half of this is closed (plans/08 D7).
+   The other reading of the same quantity is ab initio and is not
+   retired but not adopted: six-body VMC (Wiringa et al. PRC 89:024305
+   Table I, 1.924 spin-up against 1.076 spin-down protons and neutrons
+   in M = 1 — the table ⁷Li's own slots are read from, and plans/01's
+   verified fact-check entry) gives **0.848** whole-nucleus, 4.5% above
+   the cluster product, and read backwards implies an α–d vector factor
+   0.848/0.9325 = 0.909 rather than E155's 0.870.  The cluster
+   construction is preferred anyway because it shares one wave function
+   with the tagged sector instead of transcribing a constant that no
+   other observable here would then constrain; **0.81–0.85 is the band**
+   recorded with the adopted value (plans/02 step 1.1 item 2), and #15
+   below — a VMC α–d overlap — is what would collapse it rather than
+   bracket it.
+   The decisive property is not the number but where it comes from: the
+   two D-state probabilities now live in `polli_fastsim.beams`
+   (`P_D_LI6` = 0.0867, `P_D_DEUTERON` = 0.045) and `polligen.tagged`
+   re-exports them, so the inclusive effective polarization and the
+   tagged α–d S/D interference are the same wave function seen in two
+   experiments and cannot drift apart; the deuteron's own slot is the
+   expression 1 − 1.5 P_D^{d} verbatim, which makes per-nucleon
+   g₁(⁶Li)/g₁(d) = (1 − 1.5 P_D^{α−d})/3 = **0.290** exactly — the
+   deuteron's D state cancels between the two isoscalar ions — where the
+   naive constant gave 0.358.  What moved with it: g₁(⁶Li) is multiplied
+   by 0.81123 and nothing else in the repository changes.  `target_mass_
+   bound.py` is byte-identical (its shifts are ratios linear in g₁),
+   `money_tagged_azz.py` is byte-identical (unpolarized electrons), and
+   `closure_fom.py`'s ⁶Li A_∥ panel moves within its Monte-Carlo band —
+   worst |spread/analytic − 1| 0.20 → 0.18 in the same x = 0.00105 bin,
+   ⟨N⟩ 2970 → 2974, against a 95% band of 0.15.  The one unpublished
+   number that scales is `money_polemc.py --ion 6Li`, whose δΔR rises by
+   the full 1.233 (0.0496 → 0.0612 at x = 0.09); the published
+   polarized-EMC reach is ⁷Li and does not move.  This is the **vector**
+   (g₁) polarization only: the tensor sector's ⅓ dilution and the rank-2
+   transfer 0.9219 are a different object and are untouched (plans/08 D9).
+   *Engage (no longer blocking):* I. Cloët (ANL, local) — a VMC α–d
+   overlap would replace the α–d D-state scenario, which is #15.
+   *2026-08-28: the STRUCTURAL half of this was closed first (plans/08 D7).
    `ToyG1.g1_nucleus` now weights by Z and N exactly as `NuclearF2.f2a`
    does, every `Ion` slot is per-nucleon, and `beams.LI7` holds the verified
    VMC sums divided by Z and N so that the published ⁷Li path is
@@ -141,20 +180,20 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
    that gone, per-nucleon g₁(⁶Li)/g₁(d) is 0.358 instead of 0.119, against
    the cluster picture's 0.29.  The same change gives ³He's proton term the
    ×2 the Bissey numbers intend and the struck triton of `polligen.tagged`
-   its second neutron.  The VALUE — 1/3 against 0.81 — is untouched and
-   still this item, but the gap it spans is now 1.23 rather than 2.4 and
-   the default sits at the optimistic end of it, which is worth saying out
-   loud in any FOM that quotes a ⁶Li g₁.  Nothing published moves with it:
+   its second neutron.  The VALUE — 1/3 against 0.81 — was untouched by it,
+   but the gap it spans became 1.23 rather than 2.4 and the default sat at
+   the optimistic end of it, which is what the decision above turned
+   round.  Nothing published moved with the structural half:
    `fom.project_observables`' err_azz and err_g1_over_f1 are counting
    errors that carry no eff_pol, `phase_space_map.py` defaults to ⁷Li, and
    every published cos 2φ / Δ figure runs the transverse categories at
    θ_S = π/2 with unpolarized electrons, where the g₁ term enters only
    through cos θ_S = 0 — w_avg and a₂ are bit-for-bit unchanged there.  The
-   tripling shows up only in the longitudinal vector-L term (w_avg at
-   θ_S = 0 moves from 0.000365 … 0.001409 to 0.000197 … 0.002148 across
-   (x, Q²) = (0.005, 1.1) … (0.28, 25)), i.e. in `closure_fom.py`'s A_∥
-   panel, whose estimator variance is 1/(P_e P_z)²N to O(A_∥²) ≤ 2×10⁻⁵ —
-   below its own Monte-Carlo band.  The measurement is recorded in
+   tripling showed up only in the longitudinal vector-L term, i.e. in
+   `closure_fom.py`'s A_∥ panel, whose estimator variance is
+   1/(P_e P_z)²N to O(A_∥²) ≤ 2×10⁻⁵ — below its own Monte-Carlo band.
+   The same term is where the 2026-08-29 value change shows up, and the
+   current measurement of it is recorded in
    `fastsim/polli_fastsim/beams.py` beside the constant.*
 7. **BeAGLE light-ion guidance / maintenance.** See A4.
    *Engage:* M. Baker, A. Jentsch, Z. Tu, W. Chang.
@@ -582,7 +621,7 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
 | A1–A4 | answered | adopt | encode in fastsim + plans (done); verify with owners |
 | 1–2 | P survival, transverse@IP | open | EPIOS contacts; aim INT 2027 |
 | 3–5 | tensor ops, lumi, polarimetry | open | EPIOS; state assumptions in every plot |
-| 6 | ⁶Li P convention | open | ask Cloët (local) — **first, cheapest, factor-2.4 impact** |
+| 6 | ⁶Li P convention | ☑ **closed 2026-08-29** | cluster picture, 0.81123 whole-nucleus from the tagged sector's own wave function (`beams.LI6_CLUSTER_POLARIZATION`), band 0.81–0.85 against the ab-initio VMC reading 0.848; the naive 1/3 stays reachable and pinned.  A VMC α–d overlap would sharpen P_D^{α−d} — that is #15 |
 | 7 | BeAGLE access+guidance | open | SDCC/ifarm accounts + email authors — **long pole, start now** |
 | 8–10 | theory inputs | open | Cloët/Cosyn/Miller engagement |
 | 11 | FF transfer matrices + optics at Li rigidities | **split** | optics half → plans/10 D1–D3 (C-AD, provisionally answered in §10.3); transfer matrices → plans/09 D3 (ePIC FF WG) |

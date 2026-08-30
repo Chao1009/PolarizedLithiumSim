@@ -87,7 +87,7 @@ into the letter's far-forward requirement.
 |---|---|---|---|---|---|
 | 1 | structure functions | TOY in money plots 5–7 (grids exist behind interface; money_delta line ran EPPS21) | production plots on EPPS21nlo_CT18Anlo_Li6 + R1998; toy kept as cross-check band | WP1 | **yes** |
 | 2 | polarization placeholder | single P_zz = 0.6, full luminosity in one fill | δA vs P_zz ∈ {0.4, 0.6, 0.8} and fill-share ∈ {0.5, 1}; one table | WP2 | **yes** |
-| 3 | dilution convention (plans/04 #6) | 1/3 baseline (Cloët convention); cluster picture gives ≈0.81 (×2.4) | keep 1/3 as conservative baseline, quote the cluster value as labeled upside; ask Cloët (D3) | WP2 | yes (one paragraph) |
+| 3 | dilution convention (plans/04 #6, closed 2026-08-29) | ⅓ per-nucleon baseline; the ×2.4 cluster upside is withdrawn — the cluster value settled at 0.81123 is the VECTOR polarization of the pair, and Δ is rank 2, where the same wave function transfers 0.92 (plans/08 D9) | state the ⅓ and its rank in one paragraph, with no upside claimed; whether Δ should carry the rank-2 0.92 as b₁ does (⅓ → 0.3073) is a question for the Δ registry, not for the convention | WP2 | no longer blocking (one paragraph) |
 | 4 | detector level | generator-level φ′; smearing machinery exists (money_delta_20260729: ePIC tracking + ε_eID, Case-3 retains ~92% S/N) | reco-level amplitude dilution + δA inflation per super-bin; 2-D φ-hole closure (plans/03 2.3.3) | WP3 | **yes** |
 | 5 | radiative corrections | uncalculated for tensor observables (flagged); **the collinear-ISR migration is bounded — Δ̂ by +0.5 to +1.2% in the published generator window, ≤ 2.9% with the low-Q² feed-in opened up, ≤ 0.25% behind an E − p_z window (a documented contingency, not applied), against the 5% gate (WP4 closed 2026-08-28)** | quantified migration bound + spin-state-ratio cancellation argument (common acceptance, bunch-by-bunch) + explicit open-theory statement | WP4 | yes (as a bound, not a calculation) |
 | 6 | coherent optics cut | two-point (0.20/0.45 GeV); Li optics undocumented (report assumption #1) | acceptance, N_tag, δA as curves vs pT_cut ∈ [0.1, 0.7] GeV; IR-8 alternative with published efficiencies; t_min and ×0.73 rate-weighting folded into the central curve | WP5 | **yes** |
@@ -129,12 +129,14 @@ into the letter's far-forward requirement.
   flag (`--run-share` / `--lumi-fraction`, default 1.0), the 1/√f law is verified
   against direct reruns rather than assumed, and Plans A, B and A×B are tabulated.
   The P_zz half of the same table is still to write.*
-- ☐ Dilution paragraph: 1/3 baseline; 0.81-cluster upside as the labeled
-  alternative (amplitudes ×2.4); one email to I. Cloët (D3) — do not block.
-  ☐ *2026-08-28: the paragraph is written (Report 1 §3.2 and assumption row 3)
-  and 1/3 is the code default, with the ×2.4 exact because the bag-moment
-  normalization is solved before the dilution multiplies Δ. The email is unsent —
-  external, plans/04 #6.*
+- ☑ Dilution paragraph: ⅓ baseline, no upside claimed.
+  ☑ *2026-08-28: the paragraph is written (Report 1 §3.2 and assumption row 3)
+  and ⅓ is the code default. 2026-08-29: the ×2.4 upside is withdrawn there and
+  in Report 1 §4. plans/04 #6 closed on the cluster picture, but at 0.81123 and
+  as a VECTOR polarization: the gap the upside was quoted from had already
+  shrunk to 1.23 with the per-nucleon convention, and Δ is rank 2, where the
+  α–d wave function transfers 0.92 rather than 0.87 (plans/08 D9). No Δ
+  amplitude moves.*
 - Acceptance: Table 1 of the letter exists. Effort: 1 day.
 
 #### The run plan, priced (2026-08-28)
@@ -627,7 +629,7 @@ cutout geometry as the assumption it is (#20).
 | 3 | Simulation framework: beams (EPIOS), polligen validation (one paragraph), grid SFs, acceptance, statistics method | 500 | Fig. 1 |
 | 4 | Inclusive projections: φ′ pseudo-data, amplitude vs x, xΔ extraction, A-vs-B discrimination | 700 | Figs. 2–3, Table 1 |
 | 5 | Coherent channel: detection at IP6/IR-8, rate model bands, anchored a₂, sign flip, null test, two-component fit | 700 | Fig. 4 |
-| 6 | Systematics and assumptions: reco dilution, RC bound (collinear-ISR migration ≤ 2.9% of Δ̂, ≤ 0.25% behind an E − p_z window (a documented contingency, not applied); tensor-sector RC still uncalculated), polarimetry, purity via |t| fit, acceptance stability between the spin-state samples (bunch-by-bunch requirement: a 10⁻³ difference of the cos 2φ′ efficiency harmonic fakes half the signal), K model dependence (3–11% between Δ shapes with the bin-by-bin factor, ≤ 1.2% with the folded shape fit), O(γ²) b₁ leakage — **not** γ²b₁/6: the full Cosyn Eq. (17e) combination is ≈ 6.9× that, so the bound is γ²b₁ × 1.15, still ≤ 0.15% of everything published and exposed only at Δ/F₁ ~ 10⁻³ and x ≳ 0.2, Q² ≈ 1 (plans/08 D2) — R model in Δ/F₁ = −2(1+R)Â, now the published R1998 and worth +16.6 / +18.0 / +4.7 / −4.4% at the sweet spots — code review 2026-08-25 — condensed assumptions | 450 | — |
+| 6 | Systematics and assumptions: reco dilution, RC bound (collinear-ISR migration ≤ 2.9% of Δ̂, ≤ 0.25% behind an E − p_z window (a documented contingency, not applied); tensor-sector RC still uncalculated), polarimetry, purity via |t| fit, acceptance stability between the spin-state samples (bunch-by-bunch requirement: a 10⁻³ difference of the cos 2φ′ efficiency harmonic fakes half the signal), K model dependence (3–11% between Δ shapes with the bin-by-bin factor, ≤ 1.2% with the folded shape fit), O(γ²) b₁ leakage, measured since 2026-08-29 rather than bounded (`evgen/scripts/tensor_gamma_leakage.py` on the exact finite-γ tensor kernel, plans/08 D2): Δ_fake = (0.14–0.16) γ²b₁ — the full Cosyn combination, whose leading-twist and twist-3 channels stand as T_LL : T_LT : T_TT = 3 : −3 : 1 and cancel, leaving the twist-4 Eq. (17e) term almost alone — worth **0.109%** of the cos 2φ amplitude at the worst of the twelve sweet spots (5 × 41, x = 0.089, Q² = 1.14), ≤ 0.033% at 10 × 99.5 and ≤ 0.027% at 18 × 137.5; negative at every spot in the adopted tensor convention, so it cancels part of the amplitude of the moment-constrained models rather than faking one, and subtractable with the A_zz of the same data because it is proportional to b₁ (b₃ = b₄ = 0.1 b₂, which breaks the cancellation, would move it to 0.175%) — R model in Δ/F₁ = −2(1+R)Â, now the published R1998 and worth +16.6 / +18.0 / +4.7 / −4.4% at the sweet spots — code review 2026-08-25 — condensed assumptions | 450 | — |
 | 7 | Summary and outlook (theory and machine asks) | 250 | — |
 
 Title candidates (D5): (a) "Nuclear gluonometry with a tensor-polarized ⁶Li
@@ -641,6 +643,7 @@ double-helicity-flip structure function of ⁶Li at the EIC"; (c) variant of
 |---|---|---|
 | "The Δ model is arbitrary" | moment-constrained (Δ⁺⁺ bag provenance stated); A/B interpretations bracket; the measurement discriminates them — that is the point | §2, §4 |
 | "Bag moment ported to a nucleus" | labeled scenario; literature brackets both directions (NPLQCD suppression vs binding enhancement); x-shape ours by necessity (S–S give none) | §2, §6 |
+| "The b₁ sector contaminates the cos 2φ amplitude at finite γ" | measured, not bounded: the exact Cosyn kernel (b₃/b₄ slots, Eqs. 9/10/14/17/24), anchored on both finite-γ rows of that paper's own Table 1, puts it at 0.109% of the amplitude at the worst of the twelve sweet spots and ≤ 0.033% at the published configuration, with the sign that cancels rather than fakes, and it is proportional to b₁ — which the same experiment measures in its longitudinal fills | §6, plans/08 D2 |
 | "No tensor radiative corrections" | quantified migration bound (≤ 2.9% of Δ̂ with the low-Q² feed-in opened up, ≤ 0.25% with an E − p_z window (a documented contingency, not applied); Report 2 §7); collinear ISR fakes no cos 2φ′ at all and cancels in the spin-state ratio; open-theory statement with citation trail | §6 (WP4) |
 | "Li beams do not exist; no luminosity" | EPIOS PRC 113:060501 feasibility; stated 10 fb⁻¹/u with linear scaling; P_zz band quoted | §3, Table 1 |
 | "Coherent fraction is invented" | explicit f₀ band bracketing HERA ep and heavy-A saturation; first-of-kind labeled; IP-Glasma ask on record | §5 |

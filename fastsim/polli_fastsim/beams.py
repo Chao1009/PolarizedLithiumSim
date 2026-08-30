@@ -107,6 +107,46 @@ def epios_window_of(proton_energy, shift_gamma=2.7, tol=0.005):
     return None
 
 
+# --- the 6Li cluster wave function ---------------------------------------
+#
+# ONE SOURCE OF TRUTH for the two D-state probabilities the 6Li cluster
+# picture is built from.  They live here, in the module every spin
+# consumer already imports, and `polligen.tagged` re-exports them under
+# the same names, so the INCLUSIVE effective polarization below and the
+# TAGGED S/D interference of `tagged.li6_alpha_channel` cannot drift
+# apart: they are the same wave function seen in two experiments.
+
+#: alpha-d relative D-state probability.  Chosen so that the embedded
+#: deuteron's vector dilution 1 - (3/2) P_D reproduces the 0.87 of
+#: `polarized.b1_li6_from_deuteron` (SCENARIO -- VMC overlaps are the
+#: scheduled replacement, plans/04 #15).
+P_D_LI6 = 0.0867
+#: the deuteron's own D-state probability (AV18-like).
+P_D_DEUTERON = 0.045
+
+#: Vector depolarization 1 - (3/2) P_D of a spin-1 system with D-state
+#: probability P_D.  The deuteron slot below carries the second of these
+#: verbatim, so the two ions are built from one expression and their
+#: ratio is exact rather than rounded.
+ALPHA_D_VECTOR_POLARIZATION = 1.0 - 1.5 * P_D_LI6        # 0.86995
+DEUTERON_VECTOR_POLARIZATION = 1.0 - 1.5 * P_D_DEUTERON  # 0.9325
+
+#: WHOLE-NUCLEUS vector polarization of the two polarized nucleons of
+#: 6Li in the cluster picture (author decision 2026-08-29, plans/04 #6).
+#: The 6Li spin is carried by the alpha-d relative motion and by the
+#: deuteron inside it, so a nucleon of that deuteron is polarized along
+#: the 6Li spin by the PRODUCT of the two dilutions -- 0.86995 x 0.9325 =
+#: 0.81123.  The alpha contributes nothing (J = 0).
+LI6_CLUSTER_POLARIZATION = (ALPHA_D_VECTOR_POLARIZATION
+                            * DEUTERON_VECTOR_POLARIZATION)
+
+#: The retired alternative, kept reachable and pinned: Cloet's slides use
+#: P_p = P_n = 1/3, i.e. a whole-nucleus Z*P_p = N*P_n = 1 -- one fully
+#: polarized proton and neutron out of three each.  It was the default
+#: before 2026-08-29 and is 1/0.81123 = 1.233 times the cluster value.
+LI6_NAIVE_ONE_THIRD = 1.0 / 3.0
+
+
 @dataclass(frozen=True)
 class Ion:
     name: str
@@ -126,23 +166,39 @@ class Ion:
     # 3He: Bissey PRC 65:064317 -- verified, and per-nucleon already, so
     #      the proton term now carries the factor Z=2 the literature
     #      intends and that the old whole-nucleus reading dropped.
-    # 6Li: UNRESOLVED convention, and D7 changed which way it errs.
-    #      Cloet slides use P_p=P_n=1/3 (per-nucleon 2-of-6 dilution);
-    #      the cluster picture gives ~0.81 whole-nucleus (0.87 P_d x 0.93
-    #      D-state; Schellingerhout PRC 48:2714).  Under the per-nucleon
-    #      convention Z*P_p = N*P_n = 3 x 1/3 = 1, i.e. a WHOLE-NUCLEUS
-    #      1.0 against the cluster picture's 0.81: a factor 1.23, and 1/3
-    #      is now the LARGER, optimistic end of the pair.  Before D7 the
-    #      same slot was read as whole-nucleus, so it was 1/3 against
-    #      0.81 -- a factor 2.4, and the conservative end.  The gap
-    #      shrank because the double dilution went, not because anyone
-    #      resolved the convention; the VALUE is still open with
-    #      I. Cloet -- plans/04_open_questions.md item 6.  Per-nucleon
-    #      g1(6Li)/g1(d) is 0.358 = (1/3)/0.93 against the cluster
-    #      picture's 0.29.
-    #      WHAT DEPENDS ON IT, measured 2026-08-28 so the choice can be
-    #      revisited cheaply: g1(6Li) tripled at D7, but no published
-    #      figure moved.  `fom.project_observables`' err_azz and
+    # 6Li: the CLUSTER PICTURE, since the author decision of 2026-08-29
+    #      that closed plans/04_open_questions.md item 6.  The 6Li spin
+    #      is carried by the deuteron cluster, so a nucleon of that
+    #      deuteron is polarized along the 6Li spin by the product of
+    #      the alpha-d and deuteron vector dilutions,
+    #      LI6_CLUSTER_POLARIZATION = 0.86995 x 0.9325 = 0.81123
+    #      whole-nucleus (Schellingerhout PRC 48:2714), and the slots
+    #      hold a third of it each so that Z*P_p = N*P_n = 0.81123.
+    #      Built from the SAME two D-state probabilities the tagged
+    #      sector uses -- P_D_LI6 and P_D_DEUTERON above, re-exported by
+    #      polligen.tagged -- so the inclusive and tagged 6Li share one
+    #      wave function, and from the same expression the deuteron slot
+    #      carries, so the ratio below is exact.  NOT adopted, and the
+    #      upper end of the band: the six-body VMC of Wiringa PRC
+    #      89:024305 Table I -- the table LI7's slots come from -- counts
+    #      1.924 spin-up against 1.076 spin-down protons (and neutrons)
+    #      in the M = 1 state, i.e. the same whole-nucleus quantity read
+    #      ab initio as 0.848, 4.5% above this one, and implying an
+    #      alpha-d factor 0.848/0.9325 = 0.909 in place of E155's 0.870.
+    #      The cluster construction is adopted over it because it and the
+    #      tagged sector are then one wave function rather than two
+    #      transcribed constants; 0.81-0.85 is the band (plans/02 step
+    #      1.1 item 2, plans/04 #6, and #15 for the VMC alpha-d overlap
+    #      that would replace the scenario P_D_LI6 altogether).  The
+    #      retired alternative, Cloet's per-nucleon 1/3, survives as
+    #      LI6_NAIVE_ONE_THIRD: it is a whole-nucleus 1.0, i.e. 1.233
+    #      times this one and above the band.
+    #      Per-nucleon g1(6Li)/g1(d) is (1-1.5*P_D_LI6)/3 = 0.290 -- the
+    #      deuteron's own dilution cancels between the two isoscalar
+    #      ions -- against the 0.358 the naive constant gave.
+    #      WHAT MOVED WITH IT, measured 2026-08-29: g1(6Li) is
+    #      multiplied by 0.81123 and no published number in the
+    #      repository changes.  `fom.project_observables`' err_azz and
     #      err_g1_over_f1 are counting errors and carry no eff_pol;
     #      `phase_space_map.py` defaults to 7Li; and every published
     #      cos 2phi / Delta figure runs the transverse categories of
@@ -151,11 +207,15 @@ class Ion:
     #      cos(theta_S) = 0 and through a_1's lam_e = 0 -- w_avg and a_2
     #      are bit-for-bit unchanged there.  The one place it does move
     #      is the longitudinal vector-L term of `xsec.InclusiveKernel`,
-    #      w_avg at theta_S = 0, m = 1, lam_e P_e = 0.7: 0.000365 /
-    #      0.000868 / 0.001218 / 0.002323 / 0.002335 / 0.001409 ->
-    #      0.000197 / 0.000789 / 0.001261 / 0.002526 / 0.002730 /
-    #      0.002148 at (x, Q2) = (0.005, 1.1) ... (0.28, 25).  That is
-    #      the closure_fom.py A_par panel, whose estimator variance is
+    #      w_avg at theta_S = 0, m = 1, lam_e P_e = 0.7 with no b1, which
+    #      is exactly proportional to the constant: at 10 x 99.5 GeV/u it
+    #      is -0.000247 / 0.000010 / 0.000129 / 0.000363 / 0.000500 /
+    #      0.000862 against the naive constant's -0.000304 / 0.000012 /
+    #      0.000159 / 0.000448 / 0.000616 / 0.001063, over the six
+    #      accepted grid cells nearest (x, Q2) = (0.005, 1.1) ...
+    #      (0.28, 25) -- the ratio is 0.811228 in every one of them (the
+    #      probe is in docs/reproduction_manual.md).  That is the
+    #      closure_fom.py A_par panel, whose estimator variance is
     #      1/(P_e P_z)^2 N up to O(A_par^2) <= 2e-5 -- below its own
     #      Monte-Carlo band.
     eff_pol_p: float = 0.0
@@ -192,9 +252,14 @@ class Ion:
 
 
 PROTON = Ion("p", 1, 1, 0.5, eff_pol_p=1.0, eff_pol_n=0.0)
-DEUTERON = Ion("d", 2, 1, 1.0, eff_pol_p=0.93, eff_pol_n=0.93)  # 1-1.5*w_D
+# the deuteron's slot IS the expression 6Li's is built from, so the two
+# agree bit for bit and the ratio of their g1 is (1-1.5*P_D_LI6)/3 exactly
+DEUTERON = Ion("d", 2, 1, 1.0, eff_pol_p=DEUTERON_VECTOR_POLARIZATION,
+               eff_pol_n=DEUTERON_VECTOR_POLARIZATION)
 HE3 = Ion("3He", 3, 2, 0.5, eff_pol_p=-0.028, eff_pol_n=0.86)
-LI6 = Ion("6Li", 6, 3, 1.0, eff_pol_p=1.0 / 3.0, eff_pol_n=1.0 / 3.0)
+# LI6_CLUSTER_POLARIZATION/3 per slot: whole-nucleus 0.81123 (2026-08-29)
+LI6 = Ion("6Li", 6, 3, 1.0, eff_pol_p=LI6_CLUSTER_POLARIZATION / 3.0,
+          eff_pol_n=LI6_CLUSTER_POLARIZATION / 3.0)
 # 0.866/3 and -0.037/4: the whole-nucleus VMC sums per nucleon (D7).
 LI7 = Ion("7Li", 7, 3, 1.5, eff_pol_p=0.866 / 3.0, eff_pol_n=-0.037 / 4.0)
 

@@ -40,14 +40,34 @@ the numbers are.
 
 The quoted |A_zz| row is evaluated on the dense x grid at the bins'
 interpolated (Q2, y), NOT by interpolating the ~39 coarse bin values:
-|A_zz| passes through Miller's zero crossing at x = 0.577, so the
-bin-to-bin interpolation moved the headline at x = 0.5 by 24% (2.55e-3
-against the 3.33e-3 the same kinematics give). The plotted markers and
+|A_zz| passes through the upper of Miller's two zero crossings, at
+x = 0.577, so the bin-to-bin interpolation moved the headline at
+x = 0.5 by 24% (2.55e-3 against the 3.33e-3 the same kinematics give).
+The plotted markers and
 the per-bin significance row are on the bin centres, where they are exact.
 
 `--lumi` is the programme luminosity and `--run-share` the fraction of it
 this observable is given (plans/07 WP2); the errors scale as
 1/sqrt(lumi x share) and every published curve is at share 1.
+
+THE PLOTTED QUANTITY STAYS |A_zz|, and deliberately so.  Since 2026-08-29
+the sign of the tensor rate sector is no longer a private convention of
+this repository but the literature's (`asymmetries.TENSOR_LL_SIGN = -1`,
+plans/08 D1), so the signed asymmetry is now well defined and is
+
+    A_zz = -(2/3) (b1/F1) / (1 + eps(y) R)     (axis along q),
+
+negative wherever b1 is positive.  Miller's b1 crosses zero TWICE over
+the digitized range, at x = 0.301 and x = 0.577 (both pinned in
+`tests/test_digitized_curves.py`), so A_zz is negative below the first
+crossing, positive between the two and negative again above the second;
+of the six bins quoted above only x = 0.45 falls in the positive window.
+What this figure is for is reach: it draws the signal against
+delta(A_zz) on one LOGARITHMIC axis, and a signed curve cannot be drawn
+there at all, nor compared with an error bar if it could.  The sign
+belongs in the caption and in the text, and it is stated in both; no
+flag is added, because
+nothing here computes it.
 """
 
 import argparse
@@ -172,10 +192,11 @@ def main():
         xb, q2b, yb, okb = bin_kinematics(args.lumi, args.run_share,
                                           backends["base"])
         # The bin centres are ~39 coarse log-spaced points and |A_zz|
-        # oscillates through Miller's zero crossing at x = 0.577, so
-        # interpolating the BIN VALUES to a quoted x is an artefact of the
-        # binning and not a value of the observable (it moved the headline
-        # at x = 0.5 by 24%).  The quoted numbers are therefore evaluated
+        # oscillates through the upper of Miller's two zero crossings,
+        # at x = 0.577, so interpolating the BIN VALUES to a quoted x is
+        # an artefact of the binning and not a value of the observable
+        # (it moved the headline at x = 0.5 by 24%).  The quoted numbers
+        # are therefore evaluated
         # on the dense x grid at the bins' own kinematics, carried there
         # by the same interpolation the plot's dashed slice uses; the
         # plotted markers and the per-bin significance row stay on the

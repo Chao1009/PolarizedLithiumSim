@@ -1,4 +1,5 @@
-"""g1A normalisation: Z and N carried, 7Li held bit-for-bit (plans/08 D7).
+"""g1A normalisation: Z and N carried, 7Li held bit-for-bit (plans/08 D7),
+and the 6Li slot on the cluster picture since 2026-08-29 (plans/04 #6).
 
 `ToyG1.g1_nucleus` used to read the Ion's effective polarizations as
 WHOLE-NUCLEUS sums while every caller divided by A, so 6Li's per-nucleon
@@ -56,15 +57,67 @@ def test_he3_proton_term_carries_its_factor_two():
 
 
 def test_li6_per_nucleon_g1_ratio_to_the_deuteron():
-    """The number D7 quotes: per-nucleon g1(6Li)/g1(d) is 0.358, not the
-    0.119 the double dilution gave.  The VALUE of the 6Li slot (1/3 vs the
-    0.81 cluster picture) stays plans/04 #6 -- only the double counting is
-    gone.  1/3 / 0.93 = 0.3584 exactly, since both ions are isoscalar."""
+    """Per-nucleon g1(6Li)/g1(d) = (1 - 1.5 P_D_LI6)/3 = 0.290.
+
+    Both ions are isoscalar, so the ratio is the ratio of the slots,
+    P(6Li)/P(d).  In the cluster picture adopted 2026-08-29 (plans/04 #6)
+    P(6Li) = (1 - 1.5 P_D_LI6)(1 - 1.5 P_D_DEUTERON)/3 and P(d) is the
+    second factor alone, so the DEUTERON'S OWN D state cancels and what
+    is left is the alpha-d dilution over the three protons (neutrons) the
+    per-nucleon slot convention divides by.  It was 0.3584 = (1/3)/0.93
+    while the naive Cloet constant and the rounded deuteron slot were the
+    default, i.e. 1.233 times as large, and 0.119 before the double
+    dilution went at D7."""
     g1 = polarized.ToyG1()
     ratio = ((g1.g1_nucleus(beams.LI6, X, Q2) / beams.LI6.A)
              / (g1.g1_nucleus(beams.DEUTERON, X, Q2) / beams.DEUTERON.A))
-    assert np.allclose(ratio, 0.3584, atol=5e-4)
-    assert ratio.mean() == pytest.approx((1.0 / 3.0) / 0.93, rel=1e-12)
+    assert np.allclose(ratio, 0.290, atol=5e-4)
+    assert ratio.mean() == pytest.approx(
+        (1.0 - 1.5 * beams.P_D_LI6) / 3.0, rel=1e-12)
+
+
+def test_li6_slots_are_the_cluster_constants_and_nothing_hard_coded():
+    """The 6Li slot is built from the wave function the tagged sector
+    uses, not from a transcribed 0.81 (author decision 2026-08-29)."""
+    assert beams.P_D_LI6 == 0.0867 and beams.P_D_DEUTERON == 0.045
+    assert beams.LI6_CLUSTER_POLARIZATION == pytest.approx(
+        (1.0 - 1.5 * beams.P_D_LI6) * (1.0 - 1.5 * beams.P_D_DEUTERON),
+        rel=0, abs=0)
+    assert beams.LI6_CLUSTER_POLARIZATION == pytest.approx(0.81123, abs=5e-6)
+    # whole-nucleus Z*P_p = N*P_n = the cluster polarization itself
+    for slot in (beams.LI6.Z * beams.LI6.eff_pol_p,
+                 beams.LI6.N * beams.LI6.eff_pol_n):
+        assert slot == pytest.approx(beams.LI6_CLUSTER_POLARIZATION,
+                                     rel=1e-15)
+    # and the deuteron carries the SAME expression, bit for bit, which is
+    # what makes the ratio above exact
+    assert (beams.DEUTERON.eff_pol_p
+            == 1.0 - 1.5 * beams.P_D_DEUTERON == beams.DEUTERON.eff_pol_n)
+    # the tagged sector re-exports these, it does not keep its own copies
+    sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2]
+                           / "evgen"))
+    from polligen import tagged
+    assert tagged.P_D_LI6 is beams.P_D_LI6
+    assert tagged.P_D_DEUTERON is beams.P_D_DEUTERON
+
+
+def test_naive_one_third_stays_reachable_as_the_pre_20260829_value():
+    """The retired Cloet convention, pinned: a whole-nucleus 1.0, 1.233
+    times the cluster picture, and the g1(6Li) every number published
+    before 2026-08-29 was computed with."""
+    import dataclasses
+
+    assert beams.LI6_NAIVE_ONE_THIRD == 1.0 / 3.0
+    naive = dataclasses.replace(beams.LI6,
+                                eff_pol_p=beams.LI6_NAIVE_ONE_THIRD,
+                                eff_pol_n=beams.LI6_NAIVE_ONE_THIRD)
+    assert naive.Z * naive.eff_pol_p == pytest.approx(1.0, rel=1e-15)
+    g1 = polarized.ToyG1()
+    got = g1.g1_nucleus(beams.LI6, X, Q2)
+    old = g1.g1_nucleus(naive, X, Q2)
+    assert np.allclose(got, old * beams.LI6_CLUSTER_POLARIZATION, rtol=1e-14)
+    assert beams.LI6_NAIVE_ONE_THIRD / (beams.LI6_CLUSTER_POLARIZATION / 3.0) \
+        == pytest.approx(1.233, abs=5e-4)
 
 
 def test_ion_slots_are_all_per_nucleon():

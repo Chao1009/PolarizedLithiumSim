@@ -19,8 +19,8 @@ an INDEPENDENT pseudo-measurement (1-year and 10-year EIC programs).
 Panels: Delta(x) at the three sweet-spot Q2 slices (the Q2-band picks of
 money_cos2phi.py), with the injected moment_A curve and the conservative
 moment_B alternative -- the extraction resolves the A-vs-B ansatz
-spread bin by bin.  Delta is per nucleon with the 6Li dilution 1/3
-included (plans/04 #6 convention); statistical only, backgrounds and
+spread bin by bin.  Delta is per nucleon with the 6Li counting dilution
+1/3 included (2 of 6 nucleons); statistical only, backgrounds and
 tensor RC unquantified (plans/06).
 
 Usage:  python3 scripts/money_delta_extraction.py

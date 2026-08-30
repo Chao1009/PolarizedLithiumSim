@@ -36,20 +36,26 @@ Shape variants (money_delta convention): low_x (a,b) = (0.3, 4.0),
 mid_x (0.7, 3.0) [production default], high_x (1.5, 2.0); shapes are
 peak-normalized so `A * alpha_s` is the peak Delta/F1 (interp. A).
 
-Convention note (plans/04 #6).  The money_delta suite folds the 2-of-6
-per-nucleon dilution of 6Li into P_zz (their PZZ = 0.8/3 = 0.267).  Our
-kernels keep P_zz as the whole-nucleus fill polarization, so the same
-physics is expressed here with the `dilution` factor multiplying Delta
-(default 1/3 for 6Li, the conservative Cloet convention already used in
-beams.LI6): P_zz = 0.8 with dilution = 1/3 reproduces their numbers
-exactly.  Do not set dilution != 1 AND use a per-nucleon-normalized
-P_zz at the same time.  The b1 sector now uses the same convention
-(closed 2026-08-28, plans/08 D9): `polarized.b1_li6_from_deuteron`
-carries `LI6_B1_PER_NUCLEON = 2/6` alongside the rank-2 transfer
-0.921947, so a combined tensor fit sees one dilution, not two.  Before
-that the b1 money plot drew a signal with the VECTOR 0.87 and no
-per-nucleon factor at all against errors with neither -- a factor 2.83
-between signal and error.
+Convention note.  The money_delta suite folds the 2-of-6 per-nucleon
+dilution of 6Li into P_zz (their PZZ = 0.8/3 = 0.267).  Our kernels keep
+P_zz as the whole-nucleus fill polarization, so the same physics is
+expressed here with the `dilution` factor multiplying Delta (default 1/3
+for 6Li): P_zz = 0.8 with dilution = 1/3 reproduces their numbers
+exactly.  The 1/3 is a COUNTING fraction -- two polarized nucleons of
+six -- and not a polarization.  In particular it is not
+`beams.LI6.eff_pol_p`, which since 2026-08-29 is the cluster picture's
+0.81123/3 (plans/04 #6): that is the VECTOR polarization of the pair,
+rank 1, while Delta is rank 2 like b1, where the same wave function
+transfers 0.921947.  Whether Delta should carry that rank-2 transfer as
+b1 does (1/3 -> 0.3073) is a question for this registry and is open;
+nothing published assumes it.  Do not set dilution != 1 AND use a
+per-nucleon-normalized P_zz at the same time.  The b1 sector now uses
+the same convention (closed 2026-08-28, plans/08 D9):
+`polarized.b1_li6_from_deuteron` carries `LI6_B1_PER_NUCLEON = 2/6`
+alongside the rank-2 transfer 0.921947, so a combined tensor fit sees one
+dilution, not two.  Before that the b1 money plot drew a signal with the
+VECTOR 0.87 and no per-nucleon factor at all against errors with neither,
+a factor 2.83 between signal and error.
 
 Assumption made explicit (2026-08-10 audit): the Sather-Schmidt moment
 was computed for a single bag (Delta++) target; applying it to the

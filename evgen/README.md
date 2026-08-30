@@ -15,7 +15,7 @@ next. Imports `../fastsim/polli_fastsim` — nothing there is duplicated.
 
 ```bash
 cd evgen
-python3 -m pytest tests/ -q            # 312 tests
+python3 -m pytest tests/ -q            # 323 tests
 python3 scripts/closure_fom.py --ion 6Li --events 200000 --trials 200
 python3 scripts/closure_fom.py --ion 7Li --events 200000 --trials 200
 python3 scripts/money_tagged_azz.py --events 400000       # money plot 4 (--config, --optics, --lumi-fraction)
@@ -31,6 +31,7 @@ python3 scripts/coherent_optics_scan.py   # WP5: the coherent tag vs the near-be
 python3 scripts/tagging_optics.py         # report 1 §6.1: a lithium tagging optics at IP6, priced in luminosity
 python3 scripts/hfs_acceptance.py --config 1 --sample samples/pythia8_e10_p99.5_dis.npz samples/pythia8_e10_n99.5_dis.npz  # report 2 §3: where the hadronic E - p_z sum goes
 python3 scripts/target_mass_bound.py       # how big is the γ² term A∥ now carries, and what g₂ leaves open (prints, no figure)
+python3 scripts/tensor_gamma_leakage.py   # the OTHER γ² term: how much of the b₁–b₄ sector reaches cos 2φ (prints, no figure)
 python3 scripts/eic_beam_figures.py       # report 3: the ion energy menu and the divergence
 python3 scripts/nearbeam_aperture_scan.py # plans/09: what every near-beam aperture is worth (--isotope 7Li for the 7Li alpha panel)
 python3 scripts/nearbeam_reach_gain.py    # plans/09: the coherent chain at both apertures (--lumi-fraction)
@@ -63,7 +64,7 @@ plans/07 WP2 and the arithmetic is pinned by `tests/test_run_share.py`.
 |---|---|
 | `polligen/nearbeam.py` | plans/09: thin-film energy deposit; the hot-spot firing threshold I_th/I_c = 1 − 2r_s/w with r_s ∝ z (anchored on Argonne's *extrapolated* 134 nm, arXiv:2312.13405); and a sampled Landau with `zid_fake_rate`, which says how much charge information the ⁶Li/α separation actually needs — one bit per plane costs a factor 1.4 against the Neyman-Pearson optimum, and the nanowire loses on fill factor instead |
 | `polligen/spin.py` | ρ(m,m′) for J = 1, 3/2: Wigner-d/CG, populations ↔ normalized (vector, tensor, octupole) moments, arbitrary quantization axis, spin-temperature (max-entropy) fills |
-| `polligen/xsec.py` | doubly polarized inclusive master formula: HJM spin-1 tensor sector (b₁/b₂, Δ cos 2φ), vector sector A∥ = D·g1/F1 (+ γ-suppressed g_T term, g₂ = g₂^WW), spin-3/2 rank-0/1 exact + rank-2 scenario slots; the exact finite-γ A∥ = D_γ(A₁ + ηA₂) behind `target_mass=True` (**default on** since 2026-08-29; the term is ≤ 0.6% at the published sweet spots and the twist-3 residual it leaves is an order of magnitude smaller — `scripts/target_mass_bound.py`) |
+| `polligen/xsec.py` | doubly polarized inclusive master formula: HJM spin-1 tensor sector (b₁/b₂, Δ cos 2φ), vector sector A∥ = D·g1/F1 (+ γ-suppressed g_T term, g₂ = g₂^WW), spin-3/2 rank-0/1 exact + rank-2 scenario slots; the exact finite-γ A∥ = D_γ(A₁ + ηA₂) behind `target_mass=True` (**default on** since 2026-08-29; the term is ≤ 0.6% at the published sweet spots and the twist-3 residual it leaves is an order of magnitude smaller — `scripts/target_mass_bound.py`); the exact finite-γ TENSOR sector (Cosyn et al. Eqs. 9/10/14/16/17/24, b₃/b₄ slots) behind `tensor_gamma=True`, **default off** — its O(γ²) leakage into cos 2φ is carried as a systematic and measured by `scripts/tensor_gamma_leakage.py` (≤ 0.109% of the amplitude, sign cancelling) rather than corrected for |
 | `polligen/bookkeeping.py` | run plans (helicity flips, tensor thirds, transverse fills), relative-luminosity offsets + first-order bias formulas, polarimetry smearing, per-(run,bunch) rng streams |
 | `polligen/sample.py` | grid inverse-CDF sampler: per-spin-state Poisson rates (φ-averaged modulation shifts counting rates), φ accept-reject, Mode-W weight matrices |
 | `polligen/estimators.py` | analysis-side estimators: helicity-flip, tensor thirds, cos 2φ moment + binned LSQ fit (holey-φ robust), luminosity-corrected yields |

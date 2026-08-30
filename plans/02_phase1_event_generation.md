@@ -37,8 +37,9 @@ Done in this session: `fastsim/polli_fastsim` (tested, 6/6 passing).
 
 ## Step 1.1 ◐ Pin down scenario inputs (1–2 weeks, mostly reading)
 
-*2026-08-28: items 1 and 4 are done (notes below); item 2's record is in place
-but the value itself is external (plans/04 #6); item 3 is untouched — the
+*2026-08-28: items 1 and 4 are done (notes below); item 2's record is in place,
+and its value was settled on 2026-08-29 (plans/04 #6, the cluster picture);
+item 3 is untouched — the
 analysis still runs the generic 40×30 log grid, not the YR ~5 bins/decade. The
 header glyph was ☐ and is set to ◐ here on the audit's own reading — the step
 itself stays open, and no other open item's marker was moved.*
@@ -60,12 +61,24 @@ itself stays open, and no other open item's marker was moved.*
    ≈ 0.81 per cluster nucleon whole-nucleus. ⁷Li verified: P_p = +0.866,
    P_n = −0.037 (QMC via E12-14-001). Record adopted values + band in
    `beams.py`; cross-check against EPIOS Fig. 4 / I. Cloët directly (ANL).
-   ☐ *2026-08-28: the record exists (`beams.py` adopts 1/3 with the band and
-   provenance) but it was written with this bullet, so what remains is the
-   resolution itself — external, plans/04 #6. And the recorded value is not the
-   operative one: `ToyG1.g1_nucleus` reads the per-nucleon 1/3 as whole-nucleus
-   while callers divide by A, applying the 2-of-6 dilution twice (plans/08 D7);
-   the fix changes a documented convention, so it is the author's call.*
+   ☑ *2026-08-28: the structural half — `ToyG1.g1_nucleus` was reading the
+   per-nucleon 1/3 as whole-nucleus while callers divided by A, applying the
+   2-of-6 dilution twice (plans/08 D7). 2026-08-29: the value, by author
+   decision — the cluster picture, `beams.LI6_CLUSTER_POLARIZATION` =
+   (1 − 1.5 P_D^{α−d})(1 − 1.5 P_D^{d}) = 0.81123 whole-nucleus, built in
+   `beams.py` from the two D-state probabilities `polligen.tagged`
+   re-exports rather than from a transcribed 0.81, so the inclusive and
+   tagged sectors share one wave function. The 1/3 stays reachable and
+   pinned as `LI6_NAIVE_ONE_THIRD` (plans/04 #6). The band this item asks
+   for is recorded with it, in the same `beams.py` comment: **0.81–0.85**,
+   the upper end the six-body VMC reading of the same whole-nucleus
+   quantity (Wiringa et al. PRC 89:024305 Table I, 1.924/1.076 → 0.848 —
+   the table ⁷Li's slots are read from), which implies an α–d factor
+   0.909 rather than E155's 0.870 and is not adopted because it would be
+   a transcribed constant where the cluster product is the tagged
+   sector's own wave function. The cross-check against I. Cloët is still
+   to be had, and #15 (a VMC α–d overlap) is what would close the band
+   rather than bracket it.*
 3. Binning conventions: match HERMES b₁ x-points (zero crossing at x ≈ 0.2,
    b₁ ~ 0.1 at x ~ 0.01), E12-14-001 (0.06 < x < 0.8) and YR inclusive
    binning (~5 bins/decade) so every comparison is one-to-one.
@@ -452,4 +465,4 @@ with 1.4 → 1.6 → 1.7. Total ≈ 3–4 months of focused effort; BeAGLE acces
 | No nuclear PDF grids at A=6,7 | interpolate EPPS21 in A; or convolution from d/³He/⁴He — *superseded (2026-08-28): A = 6 grids exist and are in use (EPPS21nlo_CT18Anlo_Li6, nNNPDF30 A6, compared against each other in the money-Δ line); the risk survives for ⁷Li alone, where LHAPDF has nothing* |
 | Transverse ion polarization at IP unavailable | gluonometry FOM quoted conditional on rotator configuration; raise early with EPIOS/C-AD (04_open_questions) — *2026-08-28: the conditional quoting is done (`money_delta.py` docstring, Report 1 §3.1 and Table 4 #8); the raise itself has not happened — plans/04 #2 records owner and default, no contact yet* |
 | Tensor (λ=0) bunches operationally undefined | source RF transitions can prepare m=0; needs machine fill-pattern concept — document requirement, don't solve — ☑ *2026-08-28: documented past the ask — plans/04 #3 carries the requirement plus the measured consequence (a 10⁻³ inter-fill difference of the cos 2φ′ harmonic fakes 5.6×10⁻⁴), which turns bunch-by-bunch alternation into a requirement of the measurement (Reports 1 and 2)* |
-| ⁶Li effective-polarization convention (1/3 vs 0.81, factor 2.4 in FOM) | resolve in step 1.1 with Cloët before any public plot |
+| ⁶Li effective-polarization convention (1/3 vs 0.81, factor 2.4 in FOM) | resolve in step 1.1 with Cloët before any public plot — ☑ *2026-08-29: resolved by author decision on the cluster picture, 0.81123 whole-nucleus from the tagged sector's own wave function; the gap was 1.23 rather than 2.4 once the double dilution went (plans/04 #6, plans/08 D7)* |

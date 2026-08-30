@@ -10,12 +10,14 @@ tests compare against a LITERATURE relation instead:
 
         A_zz = -(2/3) b1 / F1
 
-The program's transcription of Hoodbhoy-Jaffe-Manohar gives the opposite
-sign, carried by the single constant `asymmetries.TENSOR_LL_SIGN`.  The
-tests below are written against that constant, so they are green today
-and become the switch when the author settles the convention
-(plans/08 D1); they also pin the exact kinematic factor that relates the
-code's low-y form to the literature's simple ratio.
+Since 2026-08-29 this IS the program's convention (author decision,
+plans/08 D1): `asymmetries.TENSOR_LL_SIGN = -1`.  The first test below is
+therefore written against the literature relation itself, with no
+reference to the constant, so that flipping the constant back to the
+repository's old private convention (+1, the raw Hoodbhoy-Jaffe-Manohar
+transcription of docs/Discussions.pptx p.5) fails it.  It also pins the
+exact kinematic factor that relates the code's low-y form to the
+literature's simple ratio.
 """
 
 import pathlib
@@ -46,9 +48,10 @@ def _eps(y):
     return (1.0 - y) / (1.0 - y + 0.5 * y * y)
 
 
-def test_azz_matches_cosyn_eq27_up_to_the_program_sign():
-    """A_zz(theta_S = 0) (1 + eps(y) R) == TENSOR_LL_SIGN * (2/3) b1/F1,
-    EXACTLY and at every y.
+def test_azz_matches_cosyn_eq27():
+    """A_zz(theta_S = 0) (1 + eps(y) R) == -(2/3) b1/F1, EXACTLY and at
+    every y -- Cosyn Eq. (27) as written, the convention adopted
+    2026-08-29.
 
     Derivation: with b2 = 2x b1 and F2 = 2x(1+R) F1 (the repository's own
     Callan-Gross-with-R relation), the (1-y)/(x y^2) terms of numerator
@@ -66,10 +69,10 @@ def test_azz_matches_cosyn_eq27_up_to_the_program_sign():
         for y in (0.01, 0.05, 0.2, 0.6, 0.9):
             azz = float(asym.azz(b1, f1, f2, x, y))
             assert azz * (1.0 + _eps(y) * r) == pytest.approx(
-                asym.TENSOR_LL_SIGN * (2.0 / 3.0) * b1 / f1, rel=1e-12)
+                -(2.0 / 3.0) * b1 / f1, rel=1e-12)
 
 
-def test_the_program_sign_is_opposite_to_the_literature():
+def test_the_program_sign_is_the_literature_sign():
     """Stated as a test so that flipping TENSOR_LL_SIGN is a deliberate
     act with a visible consequence, not a silent one."""
     x, q2, y, b1 = 0.056, 1.14, 0.05, 0.037
@@ -77,11 +80,15 @@ def test_the_program_sign_is_opposite_to_the_literature():
     f2 = 2.0 * x * (1.0 + r)
     cosyn = -(2.0 / 3.0) * b1                     # Cosyn Eq. (27), F1 = 1
     program = float(asym.azz(b1, 1.0, f2, x, y)) * (1.0 + _eps(y) * r)
-    assert asym.TENSOR_LL_SIGN == +1.0, (
-        "TENSOR_LL_SIGN was changed: this is plans/08 D1.  Update the "
-        "sign of kappa in the reconstruction-chain report and any "
-        "kappa-based subtraction at the same time.")
-    assert program == pytest.approx(-cosyn, rel=1e-12)
+    assert asym.TENSOR_LL_SIGN == -1.0, (
+        "TENSOR_LL_SIGN was changed away from the literature convention "
+        "adopted 2026-08-29 (plans/08 D1, Cosyn et al. Eq. 27 / HERMES). "
+        "Restoring the repository's old +1 flips the sign of A_zz at "
+        "fixed b1, of the by-product kappa of the spin-state ratio and "
+        "of the O(gamma^2) tensor leakage into cos 2phi: update the "
+        "reconstruction-chain report and every kappa-based subtraction "
+        "at the same time.")
+    assert program == pytest.approx(cosyn, rel=1e-12)
 
 
 def test_kernel_thirds_combination_reproduces_azz_with_its_sign():

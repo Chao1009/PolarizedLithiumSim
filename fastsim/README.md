@@ -51,12 +51,12 @@ yes | python3 -m parton install nNNPDF30_nlo_as_0118_A6_Z3   # money_polemc's se
 
 | module | content |
 |---|---|
-| `beams.py` | species (d, ³He, ⁶Li, ⁷Li), γ-matched energies with rigidity-capped tops (plans/10 A0), verified ⁷Li P_p/P_n |
+| `beams.py` | species (d, ³He, ⁶Li, ⁷Li), γ-matched energies with rigidity-capped tops (plans/10 A0), verified ⁷Li P_p/P_n, and the ⁶Li cluster wave function — `P_D_LI6`, `P_D_DEUTERON` and the vector polarization `LI6_CLUSTER_POLARIZATION` = 0.870 × 0.9325 = 0.811 they build, which `polligen.tagged` re-exports so the inclusive and tagged sectors share one wave function, band 0.81–0.85 against the six-body VMC reading 0.848 (plans/04 #6, 2026-08-29) |
 | `kinematics.py` | DIS variables, scattered-electron lab kinematics, acceptance masks |
 | `structure.py` | **TOY** F2 (±40% vs CT18, see validate_inputs) + `PartonF2` grid backend (five flavours; caveat 5), nuclear builder, NC cross section |
 | `polarized.py` | **TOY** g1 + `PartonG1` (NNPDFpol11, three flavours); **digitized** theory curves in `data/` (`data/SOURCES.md`): CBT PLB 642:210 Fig. 6 and TMT PLB 783:247 Fig. 4 polarized EMC, Miller PRC 89:045203 Fig. 5 and CDKS PRD 95:074036 Fig. 4 b₁; Δ scenarios |
-| `delta_models.py` | **unified Δ(x,Q²) model registry** — single home for all double-helicity-flip models: `toy`, sum-rule-constrained `moment_A`/`moment_B` (ported from the `money_delta` suite; ∫xΔdx = −0.012·α_s), shape variants, per-nucleon dilution convention (plans/04 #6); every consumer switches by name |
-| `asymmetries.py` | spin-1 master-formula asymmetries (A∥, A_zz, A_cos2φ) + error estimators (toy-MC validated, `tests/test_closure.py`) |
+| `delta_models.py` | **unified Δ(x,Q²) model registry** — single home for all double-helicity-flip models: `toy`, sum-rule-constrained `moment_A`/`moment_B` (ported from the `money_delta` suite; ∫xΔdx = −0.012·α_s), shape variants, per-nucleon counting dilution 2/6 (a rank-2 sector — not the vector polarization of `beams.LI6`; see the module's convention note); every consumer switches by name |
+| `asymmetries.py` | spin-1 master-formula asymmetries (A∥, A_zz, A_cos2φ) + error estimators (toy-MC validated, `tests/test_closure.py`); the tensor-sector sign lives here as the single constant `TENSOR_LL_SIGN`, since 2026-08-29 the literature's (A_zz = −(2/3) b₁/F₁ for the axis along q, Cosyn et al. Eq. 27 / HERMES, pinned externally in `evgen/tests/test_tensor_convention.py`) |
 | `fom.py` | luminosity scenarios → events/bin → δ(observable); Q²-combination helper |
 | `spectator.py` | α+d / α+t cluster momentum densities (S/P-wave), lab boost → (pT, θ, R); both fragments of one breakup jointly (`breakup_lab_kinematics`, plans/09 B4) |
 | `farforward.py` | verified far-forward windows (RP/OMD/B0/ZDC) + rigidity routing |
@@ -172,7 +172,12 @@ arithmetic is pinned by `tests/test_run_share.py`.
   digitized Miller b₁ and the rank-2 transfer 0.921947 × 2/6 = 0.3073,
   |A_zz| is 2.2×10⁻⁴ at x = 0.005 rising to 1.4×10⁻³ at x = 0.07 and
   3.3×10⁻³ at 0.5, i.e. 1.6 / 4.7 / 7.3 / 10.4 / 5.5 / 5.8 σ per bin at
-  x = 0.0035 / 0.009 / 0.028 / 0.071 / 0.18 / 0.45 (P_zz = 0.6).  The CDKS
+  x = 0.0035 / 0.009 / 0.028 / 0.071 / 0.18 / 0.45 (P_zz = 0.6).  The
+  figure plots the modulus; the sign, unambiguous since the convention of
+  2026-08-29, is A_zz = −(2/3)(b₁/F₁)/(1 + εR); Miller's b₁ crosses zero
+  twice, at x = 0.301 and x = 0.577, so A_zz is negative below the first
+  crossing, positive between the two and negative again above the second,
+  and of the six bins only x = 0.45 falls in the positive window.  The CDKS
   convolution scenario is |A_zz| = 10⁻⁵ at low x rising to 4×10⁻⁴ at
   x = 0.5, below 0.2 σ everywhere: the two
   camps are now "measurable" and "not measurable", not a factor ten.  Since

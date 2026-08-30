@@ -12,8 +12,10 @@ The Delta(x, Q2) input comes from the unified model registry
 constraints): default `moment_A` -- the sum-rule-constrained ansatz of
 the money_delta suite, Delta = A alpha_s F1 x^a(1-x)^b with A solved
 from int x Delta dx = -0.012 alpha_s (Sather-Schmidt bag moment) --
-with the 6Li per-nucleon dilution 1/3 (plans/04 #6 convention; the
-whole-nucleus P_zz stays a separate factor).  `moment_B` (no F1 factor,
+with the 6Li per-nucleon dilution 1/3 (two polarized nucleons of six;
+the whole-nucleus P_zz stays a separate factor).  It is a counting
+fraction, not the vector polarization of `beams.LI6` -- see the
+convention note in `delta_models`.  `moment_B` (no F1 factor,
 the conservative reading) and the legacy `toy` shape are one flag away.
 
 Detection assumption: scattered electron only (Scenario e' cuts).
@@ -146,7 +148,7 @@ def main():
                     choices=sorted(dm.VARIANTS))
     ap.add_argument("--dilution", type=float, default=1.0 / 3.0,
                     help="6Li per-nucleon dilution folded into Delta "
-                         "(plans/04 #6); P_zz stays whole-nucleus")
+                         "(2 of 6 nucleons); P_zz stays whole-nucleus")
     ap.add_argument("--scale", type=float, default=1e-2,
                     help="peak Delta/F1 (toy model only)")
     ap.add_argument("--lumi-1yr", type=float, default=10.0,

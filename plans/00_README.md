@@ -56,6 +56,61 @@ brings to the EIC, in support of the ANL polarized ⁶,⁷Li ion-source program
 5. **Calendar anchor**: INT program on polarized ion beams at EIC,
    March 22 – April 2, 2027 — target for Phase-1 money plots.
 
+## Development run 16 (2026-08-29): the tensor sign to the literature convention, the exact finite-γ tensor kernel, the ⁶Li effective polarization from the cluster picture
+
+Three author decisions of 2026-08-29 — the b₁-sector sign follows the
+literature, the finite-γ tensor kernel gated on it is closed, and the
+⁶Li vector polarization takes the cluster picture — implemented in two
+streams, each reviewed adversarially and repaired, then verified.
+
+- ☑ **D1 closed.**  `asymmetries.TENSOR_LL_SIGN = −1`: A_zz(θ_S = 0)
+  (1 + εR) = −(2/3) b₁/F₁ with P_zz = n₊ + n₋ − 2n₀, the convention of
+  Cosyn et al. (EPJ A 61 (2025) 83, Eq. 27) and HERMES; the external
+  test now pins the literature relation itself, without reference to the
+  constant.  The tagged wave-function sign is defined independently and
+  unchanged; `money_b1` plots |A_zz|, and the sign reaches the published
+  numbers only through the 10⁻³ of the rate the b₁ term carries — one
+  rounding crossing (δA at the mid configuration's third sweet spot,
+  2.750 → 2.749 × 10⁻⁴, quoted 2.7) and the worst-bin label of
+  `closure_fom`'s A_zz panel.
+- ☑ **D2 closed — and the review caught two transcription errors before
+  a number was quoted.**  `polligen.xsec` carries the exact finite-γ
+  tensor sector after Cosyn Eqs. 9/10/14/17/24 (`cosyn_tensor_sfs`,
+  the b₃/b₄ slots, `_tensor_harmonics_gamma` in the photon frame;
+  `InclusiveKernel(tensor_gamma=…)`, default off so the massless path is
+  bit-for-bit and the leakage is carried as a systematic).  The
+  implementer read the factor 2 of Eq. (17a) onto the whole bracket and
+  recorded a "discrepancy with the paper's Table 1"; the reviewer showed
+  from the glyph layout of the PDF and from Table 1 row 2 (reproduced to
+  10⁻¹⁰ with the correct bracket) that the paper is self-consistent and
+  the repository was wrong.  Anchoring the geometry on Table 1 row 3
+  then exposed a second error — the paper's own Eq. (22b) carries a sign
+  out of step with its Table 1, Fig. 5 and Fig. 2, and the module had
+  followed the equation — after which the leading-twist and twist-3
+  channels cancel (3 : −3 : 1) and the leakage of the b sector into the
+  cos 2φ amplitude is the twist-4 Eq. (17e) term almost alone: −0.11 /
+  −0.02 / −0.09 / −0.02 % at 5 × 40.8, −0.011 / −0.002 / −0.033 /
+  −0.026 % at the published configuration, ≤ 0.03 % at the top —
+  Δ_fake/(γ²b₁) = 0.14–0.16, negative everywhere (it cancels part of a
+  negative Δ rather than faking one) and proportional to b₁, hence
+  subtractable with A_zz; b₃ = b₄ = 0.1 b₂ breaks the cancellation and
+  sets the width at 0.18 %.  "γ²b₁ × 1.15, ≤ 0.15 %" is retired
+  everywhere; `tensor_gamma_leakage.py` prints the table in a second.
+- ☑ **D7's value: the cluster picture.**  `beams.LI6` carries
+  (1 − 1.5 P_D^{αd})(1 − 1.5 P_D^d) = 0.870 × 0.9325 = 0.811 whole-nucleus
+  (0.270 per nucleon), from the same P_D constants the tagged sector uses
+  — one wave function for both — so the per-nucleon g₁(⁶Li)/g₁(d) is
+  (1 − 1.5 P_D^{αd})/3 = 0.290; the naive ⅓ stays reachable and pinned.
+  The six-body VMC count (Wiringa et al., 1.924 up against 1.076 down)
+  gives 0.848, 4.5 % above, and is recorded as the top of a 0.81–0.85
+  band; nothing published moves (the polarized-electron ⁶Li path is used
+  by no headline number; `closure_fom`'s ratio is unchanged).
+- ☐ **Left**: switching `tensor_gamma` on (a chain change: the extraction
+  does not subtract the tensor leakage); the ⁷Li theory asks; the
+  light-ion lattice confirmation; a de-squeezed lattice's own R₁₂.
+
+Tests: 323 evgen + 121 fastsim, 25 consistency checks.
+
 ## Development run 15 (2026-08-29): the target-mass term on, the light-ion lattice and the tagging optics decided, the coherent chain on its own transport, the theory curves on a data-driven baseline, the ⁷Li theory note
 
 The author's decisions of 2026-08-29 — switch the finite-γ term on if it
@@ -259,12 +314,13 @@ reproducibility) before the rebuild.
   Miller's absolute b₁ with the rank-2 transfer 0.9219 × ⅓ (D9: the
   vector 0.87 was the wrong rank and the 2/6 was missing, a factor 2.8
   between signal and error bars): |A_zz| = 2.4 × 10⁻⁴ at x = 0.005 to
-  1.4 × 10⁻³ at 0.07, i.e. 1.7 / 4.8 / 7.6 / 10.9σ per bin at P_zz = 0.6,
+  1.4 × 10⁻³ at 0.07, i.e. 1.7 / 4.8 / 7.6 / 10.9σ per bin at P_zz = 0.6
+  *(2.2 × 10⁻⁴ … and 1.6 / 4.7 / 7.3 / 10.4σ on run 15's binned signal)*,
   the convolution camp below 0.2σ — the b₁ case is weaker than Report 0
   said and now says so.  D7: `g1_nucleus` weights by Z and N as `f2a`
   does, the ⁷Li constants rescaled bit-for-bit, ⁶Li's double dilution gone
-  (g₁(⁶Li)/g₁(d) 0.119 → 0.358 per nucleon; the value 1/3 vs 0.81 stays
-  plans/04 #6), the triton mirrored on ³He.  The Cosyn–Weiss deuteron gate
+  (g₁(⁶Li)/g₁(d) 0.119 → 0.358 per nucleon; the value 1/3 vs 0.81 stayed
+  plans/04 #6 *until run 16: the cluster picture, 0.811, ratio 0.290*), the triton mirrored on ³He.  The Cosyn–Weiss deuteron gate
   is closed analytically: the P₂(cos θ_k) factor to 10⁻⁵, the envelope
   peak at k = 0.310 GeV/c against their 0.30, A_T∥ = −2A_zz^wf reaching
   +1.000 / −2.000.  The digitized b₁ also exposed two defects: frozen at
@@ -891,7 +947,8 @@ left as author decisions (D1, D7, D9).
   green.  `asymmetries.TENSOR_LL_SIGN` is now the single constant and
   A_zz(θ_S = 0)(1 + ε(y)R) = SIGN·(2/3)b₁/F₁ — exact, F₂-free — is pinned
   against Cosyn Eq. (27).  Verified non-blind: flipping it fails only that
-  file.  The decision itself stays the author's (D1).
+  file.  The decision itself stayed the author's (D1) *until run 16, when
+  the literature sign was adopted*.
 - ☑ **Kernel hygiene**: an exact positivity guard on the φ density (G3 —
   the accept–reject silently sampled max(W, 0)); one rank-2 geometry for
   J = 1 and J = 3/2 (the spin-3/2 branch's rate and cos 2φ channels
@@ -972,9 +1029,9 @@ Tests: 143 evgen + 25 fastsim (from 94 + 24 at the start of run 6).
   Σ_h = 0.2–0.5 GeV at the sweet spots (no published ePIC number, #21);
   report §3 numbers corrected (δQ²/Q² = 5% with the unsourced 3 mrad
   angular table, φ′ dilution 0.99); K model dependence 3–11%;
-  EMCal term applied at all η. Outside the chain: the b₁-sector sign is
+  EMCal term applied at all η. Outside the chain: the b₁-sector sign was
   opposite to HJM/HERMES/Cosyn Eq. (27) (A_zz = −(2/3)b₁/F₁; Δ sector
-  untouched) and the fast-sim `r1998` returns R = 1 at low x (July
+  untouched; *the literature sign adopted in run 16*) and the fast-sim `r1998` returns R = 1 at low x (July
   L_5σ values 1.5–2× too pessimistic; polligen unaffected) — both
   left for an author decision. Documentation-only changes in this pass.
 - ◐ **WP3-HFS: hadronic final state and hadron-side detection**

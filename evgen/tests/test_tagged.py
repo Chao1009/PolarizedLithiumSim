@@ -711,7 +711,9 @@ def test_li7_two_samplers_agree_once_the_acceptance_definition_matches():
 def test_li6_b1_rank2_transfer_constant_is_pinned_to_the_model(li6):
     """`polarized.LI6_B1_RANK2_TRANSFER` is not a free number: it is the
     tagged model's own rank-2 dilution for the alpha-tagged embedded
-    deuteron, and the closed form 1 - (9/10) P_D at P_D = P_D_LI6.  The
+    deuteron, a quadrature which the closed form 1 - (9/10) P_D at
+    P_D = P_D_LI6 approximates to better than 1e-4 -- both tolerances
+    below are that, and neither is an assertion of equality.  The
     0.87 it replaces on the b1 money plot is the VECTOR dilution
     1 - (3/2) P_D -- the wrong rank for a tensor structure function, which
     is the whole of plans/08 D9.  The test lives in evgen because it needs

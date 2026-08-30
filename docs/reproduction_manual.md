@@ -167,12 +167,12 @@ automatically.
 ## 2 · The five-minute check: the test suites
 
 ```bash
-cd evgen   && python3 -m pytest tests/ -q     # 312 passed, ~60 s
-cd fastsim && python3 -m pytest tests/ -q     # 119 passed, ~19 s
+cd evgen   && python3 -m pytest tests/ -q     # 323 passed, ~60 s
+cd fastsim && python3 -m pytest tests/ -q     # 121 passed, ~19 s
 python3 tools/consistency_check.py --verbose  # 25 checks, whole repository
 ```
 
-431 tests, all of which run without the PDF grids except four of the five
+444 tests, all of which run without the PDF grids except four of the five
 in `fastsim/tests/test_grids.py`, which skip.  These are not smoke tests:
 they pin physics identities against independent constructions — the
 spin-1 cross section against an explicit density-matrix trace, the
@@ -676,11 +676,54 @@ python3 scripts/closure_fom.py             --outdir .    # estimator closure vs 
 python3 scripts/money_tagged_azz.py        --outdir . --events 400000   # 3 s, money plot 4
 python3 scripts/tagged_polarimetry_7li.py  --outdir .                  # 3 s
 python3 scripts/target_mass_bound.py                                   # 2 s, prints only
+python3 scripts/tensor_gamma_leakage.py                                # 1 s, prints only
 ```
 
 `closure_fom.py` is the one to run if you doubt the generator: it
 compares the spread of pseudo-experiments against the analytic error
 formulas over ~65 x bins.
+
+Its A_∥ panel is the only place in the repository where the ⁶Li vector
+effective polarization of `beams.LI6` reaches a figure, which is why the
+value adopted on 2026-08-29 (plans/04 #6) moves so little.  The term it
+enters through is the vector-L piece of the master formula, and this
+probe prints it on both constants at once:
+
+```python
+# saved as vecL.py and run from evgen/ as: python3 vecL.py
+import dataclasses, pathlib, sys
+import numpy as np
+sys.path.insert(0, str(pathlib.Path("../fastsim").resolve()))
+from polligen.xsec import EventSpinState, InclusiveKernel
+from polli_fastsim import beams, fom
+
+cfg = beams.default_configs("6Li")[1]
+s = cfg.sqrt_s_per_nucleon ** 2
+proj = fom.project_rates(cfg, fom.Scenario())
+X, Q2 = proj.x, proj.q2
+naive = dataclasses.replace(beams.LI6, eff_pol_p=beams.LI6_NAIVE_ONE_THIRD,
+                            eff_pol_n=beams.LI6_NAIVE_ONE_THIRD)
+state = EventSpinState(+1, 0.7, 1.0, 1.0)          # theta_S = 0, m = 1
+cells = [(0.005, 1.1), (0.02, 2.5), (0.05, 5.0), (0.1, 10.0),
+         (0.18, 15.0), (0.28, 25.0)]
+for tag, ion in (("cluster", beams.LI6), ("naive 1/3", naive)):
+    kern = InclusiveKernel(ion, b1_func=None)       # vector-L term alone
+    w = kern.amplitudes(kern.tables(X, Q2), X, Q2, s, state)[0]
+    vals = []
+    for (xt, qt) in cells:
+        d = np.where(proj.accepted, np.log(X / xt) ** 2
+                     + np.log(Q2 / qt) ** 2, np.inf)
+        i, j = np.unravel_index(np.argmin(d), d.shape)
+        vals.append(w[i, j])
+    print("%-10s " % tag + " / ".join("%.6f" % v for v in vals))
+```
+
+It prints −0.000247 / 0.000010 / 0.000129 / 0.000363 / 0.000500 /
+0.000862 for the cluster picture against −0.000304 / 0.000012 /
+0.000159 / 0.000448 / 0.000616 / 0.001063 for the retired 1/3, at the
+cells (0.004467, 1.135), (0.02239, 2.427), (0.04467, 5.191),
+(0.08913, 11.1), (0.1778, 14.3) and (0.2818, 23.74) — a uniform ratio of
+0.811228, the term being linear in g₁.
 
 Since 2026-08-29 the master formula carries its target-mass term by
 default (`xsec.InclusiveKernel(target_mass=True)`, author decision of that
@@ -705,11 +748,28 @@ published spot's shift to two digits; there the two lowest-Q² sweet
 spots of each configuration (Q² = 1.135 GeV² at the two lower ones,
 1.462 at the top) sit below the grids' Q² floor and are reported, with
 their Q², as not evaluable.  It is the source of every A_∥ γ² number in
-Reports 0–2 — the b₁–b₄ cos 2φ leakage bound of Report 1 §2 and
-Report 2 §4.1 is a separate calculation (plans/08 D2) — and of the γ²
+Reports 0–2 and of the γ²
 statements in the docstrings of `asymmetries.a_parallel` and
 `polligen/xsec.py` and in the comment above the g₁/F₁ division in
 `fom.project_observables`.
+
+The b₁–b₄ leakage into cos 2φ of Report 1 §2 and Report 2 §4.1 is the
+OTHER finite-γ effect and has its own script, `tensor_gamma_leakage.py`,
+on the same twelve sweet spots (it imports `target_mass_bound`'s
+`published_spots`, so the two tables are the same bins).  It runs the
+exact tensor kernel of plans/08 D2 —
+`xsec.InclusiveKernel(tensor_gamma=True)`, Cosyn Eqs. (9), (10), (14),
+(16), (17a–e) and (24), which is OFF by default so that every published
+number stays on the massless path — and prints, per spot, the tensor
+cos 2φ amplitude, the equivalent Δ_fake it corresponds to, the
+coefficient Δ_fake/(γ²b₁) that replaced the earlier bound 1.15, the
+leakage as a fraction of the published Δ amplitude, and the ratio of the
+full combination to the Eq. (17e) term alone — a ratio near unity,
+because the leading-twist and twist-3 channels enter with opposite signs
+and cancel.  `--b3-frac` and
+`--b4-frac` fill the two higher-twist slots as a fraction of b₂; they are
+zero by default because nothing measures them, and because they break
+that cancellation they, and not γ², set the width of the systematic.
 
 The two tagged scripts take `--config {0,1,2}` and `--optics
 {menu,legacy,high-acceptance,high-divergence,tagging}` since 2026-08-28
@@ -1686,6 +1746,10 @@ trust anything downstream of it.
 | ⁷Li t-tag, β = 0.30 | same | 0.7777 / 0.9185 / 0.9386 (YR HA), 0.7797 / 0.9218 / 0.9406 (tagging).  This is the row the B1 measurement transformed: the over-rigid triton was routed as lost and read 0.033 / 0.004 / 0.005.  Almost all of it is route 6, RP-inner (0.745 / 0.915 / 0.933), so the tagging optics moves it by under 0.3 points — the tag is dispersive, not angular |
 | … on the tagged generator instead | `evgen/scripts/tagged_polarimetry_7li.py` | Roman-Pot tag 0.9617 / 0.9678 / 0.9728 (YR HA), 0.9800 / 0.9909 / 0.9919 (tagging); the script also prints `acc(any far-fwd)` = 0.9699 / 0.9690 / 0.9751 and 0.9882 / 0.9921 / 0.9942, which is the definition the row above tabulates.  The two ⁷Li densities are identical (both pure P wave): the 0.7-point gap at 5 × 41 is the B0, which takes 1.1% of the α there and enters `1 - lost` but not the Roman-Pot mask, and the rest of the `1 - lost` margin is the over-rigid tail `farforward.over_rigid_route` began routing on 2026-08-28, evaluated against the per-configuration blind block since the review of the same day gave the script its `pot_config` (§4.1).  Like for like and inside the tagged model's k ≤ 1.2 GeV/c grid the pure model gives 0.9626 / 0.9683 / 0.9736 — 0.1 point.  For ⁶Li the two differ by the D wave — §4.1 |
 | polarized-EMC reach and the CBT–TMT separation | `scripts/money_polemc.py --ion 7Li --pdf grid` | on the EPPS21 baseline (the default since 2026-08-29): δΔR 0.0423 / 0.0403 / 0.0595 / 0.1868 at x = 0.09 / 0.28 / 0.45 / 0.71 against a separation of 0.023 / 0.021 / 0.018 / 0.032 — 0.55 / 0.53 / 0.31 / 0.17 σ per bin at 10 fb⁻¹/u and 1.75 / 1.66 / 0.97 / 0.53 σ at 100, best in the bin at x = 0.141 (0.62 σ, 1.95 σ) with 0 of 23 bins above 1 σ — but read the window-restricted line instead: best bin x = 0.355 at 0.45 σ and 1.43 σ, 0 of 3 bins above 1 σ, the unrestricted best bin being carried by the transfer (§3.1b).  The banner carries the baseline valence depletion and the transfer factors it implies: 0.03105 with s_CBT = 0.5322 and s_TMT = 0.2113 (`epps21`, whose free-nucleon denominator is CT18ANLO — EPPS21's own proton baseline — since 2026-08-29), 0.01372 with 0.2351 / 0.0933 (`nnnpdf`), 0.05835 with 1.0000 / 0.3970 (`cbt`) and 0.06459 with 1.1070 / 0.4395 (`table`); `--emc-band` adds EPPS21's 90% CL Hessian band on it, 0.03105 +0.03933 −0.04061 (on the same 301-point quadrature as the banner since 2026-08-29, so its centre IS the banner's depletion).  The same run prints the published-curve separation, max 0.0078 over 0.028 < x < 0.3 against the 0.0212–0.0243 the transferred pair shows there, and max 0.1048 above x = 0.35.  `--pdf toy`, which writes the published PNG: errors 0.0477 / 0.0509 / 0.0615 / 0.1224, best bin x = 0.089 at 0.49 σ, valence window x = 0.355 at 0.38 σ and 1.22 σ.  `--emc-baseline cbt` returns the pre-2026-08-29 reading, separations 0.044 / 0.040 / 0.034 / 0.059 and 1.04 / 0.99 / 0.57 / 0.32 σ with 5 of 23 bins above 1 σ; `--emc-mode constant` returns the pre-digitization separations 0.007 / 0.016 / 0.049 / 0.118 and the old best bin x = 0.562 |
+| ⁶Li vector effective polarization | `python3 -c "from polli_fastsim import beams; print(beams.LI6_CLUSTER_POLARIZATION, beams.LI6.eff_pol_p)"` | 0.811228375 whole-nucleus and 0.27040945833 per slot — the cluster picture, adopted by author decision on 2026-08-29 (plans/04 #6).  It is (1 − 1.5 P_D^{α−d})(1 − 1.5 P_D^{d}) = 0.86995 × 0.9325 computed from `beams.P_D_LI6` = 0.0867 and `beams.P_D_DEUTERON` = 0.045, the two constants `polligen.tagged` re-exports, so the inclusive and tagged sectors share one wave function; `beams.DEUTERON`'s slot is the second factor itself, which makes per-nucleon g₁(⁶Li)/g₁(d) = (1 − 1.5 P_D^{α−d})/3 = 0.28998 exactly.  The band recorded with the adopted value is 0.81–0.85, its upper end the six-body VMC reading of the same whole-nucleus quantity, 0.848 (Wiringa et al. PRC 89:024305 Table I, 1.924/1.076 — the table `beams.LI7`'s own slots are read from), which implies an α–d factor 0.909 rather than E155's 0.870 and is not adopted because it would enter as a transcribed constant.  The retired Cloët constant is `beams.LI6_NAIVE_ONE_THIRD` = 1/3, a whole-nucleus 1.0 and 1.233 times as large and above the band; every ⁶Li g₁ published before 2026-08-29 was computed with it |
+| … what the change moves | the three commands below | `target_mass_bound.py` and `money_tagged_azz.py --events 400000` reprint byte-identically (the first because its shifts are ratios linear in g₁, the second because its electrons are unpolarized); `closure_fom.py`'s ⁶Li A_∥ panel moves max \|spread/analytic − 1\| 0.20 → 0.18 in the same x = 0.00105 bin at ⟨N⟩ 2970 → 2974, inside its own 0.15 band, and its A_zz and cos 2φ panels and both ⁷Li panels do not move with the polarization value (the A_zz panel's worst bin does move with run 16's tensor sign, +0.23 at x = 0.00126 → +0.22 at x = 0.00603, ⟨N⟩ 3257 → 4316, both isotopes).  The isolation probe is `closure_fom.py` run with `beams.LI6` and `beams.IONS["6Li"]` replaced by `dataclasses.replace(beams.LI6, eff_pol_p=beams.LI6_NAIVE_ONE_THIRD, eff_pol_n=beams.LI6_NAIVE_ONE_THIRD)` before the script is executed |
+| … the one script that scales in full | `fastsim/scripts/money_polemc.py --ion 6Li` | δΔR at 10 fb⁻¹/u rises by the whole 1.233, 0.0496 / 0.0374 / 0.0409 / 0.0761 → 0.0612 / 0.0461 / 0.0504 / 0.0938 at x = 0.09 / 0.28 / 0.45 / 0.71, the best bin from 0.62σ to 0.50σ and the valence-window bin at x = 0.355 from 0.55σ to 0.45σ, with 22 rather than 23 bins surviving the ≥ 100-event floor.  The published polarized-EMC reach is the ⁷Li row above and does not move |
+| … the vector-L term of the master formula | the §4.1 probe | at 10 × 99.5 GeV/u, w_avg at θ_S = 0, m = 1, λ_e P_e = 0.7 and no b₁ is −0.000247 / 0.000010 / 0.000129 / 0.000363 / 0.000500 / 0.000862 over the six accepted grid cells nearest (x, Q²) = (0.005, 1.1) … (0.28, 25), against −0.000304 / 0.000012 / 0.000159 / 0.000448 / 0.000616 / 0.001063 on the retired constant — the ratio is 0.811228 in every cell, the term being linear in g₁ |
 | b₁ signal and reach | `scripts/money_b1.py` | transfer 0.921947 × 2/6 = 0.307316, signal Q² binned (the default since 2026-08-29) at ⟨Q²⟩ = 3.23 / 3.97 / 5.55 / 8.87 / 18.69 / 52.42 GeV²; \|A_zz\| = 2.16×10⁻⁴ / 4.69×10⁻⁴ / 7.46×10⁻⁴ / 1.35×10⁻³ / 1.34×10⁻³ / 3.33×10⁻³ (digitized Miller) and 1.02×10⁻⁵ / 1.12×10⁻⁵ / 6.60×10⁻⁶ / 1.26×10⁻⁶ / 6.76×10⁻⁵ / 4.12×10⁻⁴ (CDKS convolution) at x = 0.005 / 0.01 / 0.03 / 0.07 / 0.2 / 0.5, against δA_zz = 9.31×10⁻⁵ / 8.84×10⁻⁵ / 9.73×10⁻⁵ / 3.55×10⁻⁴ / 1.17×10⁻³ at P_zz = 0.6: 1.6 / 4.7 / 7.3 / 10.4 / 5.5 / 5.8 σ per bin for Miller and ≤ 0.2 σ everywhere for CDKS.  `--transfer legacy` gives 4.5 / 13.2 / 20.7 / 29.5 / 15.5 / 16.4 σ; `--signal-q2 fixed` restores the retired fixed slice; the quoted \|A_zz\| are evaluated on the dense x grid at the bins' interpolated (Q², y), not interpolated from the ~39 bin values across Miller's x = 0.577 zero crossing |
 | the digitized curves' ratio of effects | the §3.1b snippet | CBT 2.25 / 1.69 / 1.41 / 1.14 against TMT 1.01 / 0.98 / 1.00 / 1.08 at x = 0.40 / 0.45 / 0.50 / 0.60; CBT's minimum 1.06 at x = 0.696; the unpolarized ratios pass through 1 at x = 0.280 and 0.840 (CBT) and 0.721 (TMT), which is why the transfer is a valence-window strength factor (1 for CBT, 0.397009 for TMT); the two published polarized curves agree to better than 0.008 over 0.028 < x < 0.30, and inside the valence window the transferred TMT depletion tracks ⁷Li's own unpolarized 0.034 / 0.048 / 0.087 at x = 0.40 / 0.45 / 0.65 to within 0.005 against CBT's 0.077 / 0.082 / 0.094, so ΔR separates by 0.040 at x = 0.36 and 0.011 at 0.65 |
 | A_bag triple (frozen R) | `scripts/money_delta_20260729.py --emit-a-bag-reference` | −0.317767 / −0.310041 / −0.296750 |
@@ -1698,7 +1762,7 @@ trust anything downstream of it.
 
 | what | command (from `evgen/`) | expected |
 |---|---|---|
-| 5R sweet spots (x, Q²) | `scripts/money_cos2phi.py` | (0.028, 1.14), (0.011, 1.14), (0.071, 3.13), (0.141, 14.3); A = 7.4 / 4.4 / 9.5 / 9.5 ×10⁻³, δA = 1.7 / 1.4 / 2.8 / 4.5 ×10⁻⁴ (1 yr) |
+| 5R sweet spots (x, Q²) | `scripts/money_cos2phi.py` | (0.028, 1.14), (0.011, 1.14), (0.071, 3.13), (0.141, 14.3); A = 7.4 / 4.4 / 9.5 / 9.5 ×10⁻³, δA = 1.7 / 1.4 / 2.7 / 4.5 ×10⁻⁴ (1 yr) |
 | 5R sweet-spot purity, 25% stand-in | `scripts/money_cos2phi_reco.py` | 0.66 / 0.63 / 0.69 / 0.69 (D = 0.92 / 0.99 / 0.90 / 0.96); δÂ = 1.2 / 0.9 / 1.6 / 2.9 ×10⁻⁴ |
 | 5R sweet-spot purity, PYTHIA HFS, uncalibrated | `… --y-source hfs --hfs-sample …` | 0.42 / 0.53 / 0.49 / 0.68 |
 | 5R amplitude dilution D, PYTHIA HFS, uncalibrated | same | 0.79 / 0.84 / 0.83 / 0.95 |
@@ -1711,6 +1775,7 @@ trust anything downstream of it.
 | … top config | `--config 2` | 0.23 / 0.19 / 0.21 / 0.18 |
 | unfolding model dependence (moment_B prior) | `scripts/money_cos2phi_reco.py --unfold-scan` | bin-by-bin (−4.1, +8.0, −5.5, +4.9)% → folded (−1.5, −1.8, −0.3, +0.5)% |
 | the γ² (target-mass) bound on A_∥ | `scripts/target_mass_bound.py` | cap 0.0965; grid maxima 0.0854 / 0.0577 / 0.0258 (⁶Li) and 0.0854 / 0.0577 / 0.0332 (⁷Li); sweet spots max γ² 0.00564 and max A_∥ shift 0.56% at 10 × 99.5 (0.49% at 18 × 137.5, 2.46% at 5 × 40.8), where the lab-angle azimuth shortcut errs by at most 1.38 / 1.21 / 5.94 mrad; polarized-EMC ΔR carries a target-mass term of 0.120 / 0.456 / 0.731 / 1.084% at x = 0.089 / 0.282 / 0.447 / 0.708 — computed since 2026-08-29, not a bias — against the same weights' δΔR = 0.0477 / 0.0509 / 0.0615 / 0.1224 (the toy inputs the block prints; the grid-input δΔR of Report 0's Table 3 is 0.042 / 0.040 / 0.060 / 0.187), the rate-weighted ⟨γ²⟩ over the same window running 0.001291 / 0.004525 / 0.007067 / 0.010190, i.e. 0.0102 in the top bin and below 0.010 in the other three; the twist-3 residual at g₂ = 0 is 1.55×10⁻⁵ / 3.43×10⁻⁴ / 7.76×10⁻⁴ / 1.59×10⁻³ and half that, with the opposite sign, at 1.5 g₂^WW; tagged-triton overlay ≤ 2.09% at the published configuration and 5.04% at 5 × 40.8 |
+| the O(γ²) b₁–b₄ leakage into cos 2φ | `scripts/tensor_gamma_leakage.py` | on the same twelve sweet spots, with the exact tensor kernel (`tensor_gamma=True`, b₃ = b₄ = 0, toy b₁): equivalent Δ_fake = (0.14–0.16) γ²b₁ — the coefficient that replaces the bound 1.15 — and a leakage of −0.109 / −0.016 / −0.093 / −0.022% of the published Δ amplitude at the four spots of 5 × 40.8, −0.011 / −0.002 / −0.033 / −0.026% at 10 × 99.5 and −0.003 / −0.0004 / −0.005 / −0.027% at 18 × 137.5 (each in the order the script prints them), i.e. NEGATIVE everywhere: it cancels part of the amplitude of the moment-constrained (Δ < 0) models rather than faking one, and being ∝ b₁ it is subtractable with the A_zz of the same fills.  The full combination is 0.84–1.01× the Eq. (17e) term alone (exactly 1 as γ² and y → 0, where the three channels stand as T_LL : T_LT : T_TT = 3 : −3 : 1), so the ratio 6.9 anticipated in plans/08 D2 was wrong in sign as well as size: the twist-3 Eq. (17d) channel cancels the leading-twist one instead of adding to it, which the two finite-γ rows of Cosyn's own Table 1 fix (both reproduced to 1e-10 in `tests/test_tensor_gamma.py`).  `--b3-frac 0.1 --b4-frac 0.1` breaks that cancellation and moves the coefficient to 0.23–0.26 and the worst leakage to −0.175%, which is what the unmeasured higher-twist slots are worth |
 | collinear-ISR migration bound (plans/07 WP4) | `scripts/money_cos2phi_reco.py --isr --n-mc-per-cell 1600` | one draw at the default seed 20260824: Δ̂ biased by +0.616 / +0.501 / +0.804 / +1.240% at the four sweet spots; ⟨z⟩ = 0.0245, 26.6% of the rate radiates above z = 10⁻⁴, ⟨z\|z>10⁻⁴⟩ = 0.0923, t = 0.0700 at ⟨Q²⟩ = 4.37 GeV²; the covariant azimuth's residual under k → (1−z)k is 2.6×10⁻² rad and fakes cos 2φ′ at 9×10⁻⁸ |
 | … the PUBLISHED bound, averaged over eight response seeds (`$S` below is that list) | `… --isr --isr-seeds $S --n-mc-per-cell 1600`, `S=20260824,20260925,20261026,20261127,20261228,20270129,20270302,20270403` | +0.62 ± 0.03 / +0.50 ± 0.02 / +0.94 ± 0.03 / +1.22 ± 0.02%; purity 0.653 → 0.638, 0.633 → 0.613, 0.679 → 0.659, 0.684 → 0.640; efficiency 0.414 → 0.404, 0.590 → 0.572, 0.374 → 0.369, 0.653 → 0.634 |
 | … with the low-Q² feed-in opened up | `… --isr --isr-seeds $S --isr-gen-q2min 0.05` | +2.26 ± 0.03 / +2.24 ± 0.10 / +1.88 ± 0.07 / +1.88 ± 0.05%.  Worst spot over the window sequence 0.7 → 0.35 → 0.15 → 0.05 → 0.02 GeV²: 1.22 → 1.87 → 2.81 → 2.26 → 2.34%, so the bound saturates in a 1.8–2.8% band and **≤ 2.9%** is what the ≤5% gate is read against |
@@ -1841,6 +1906,7 @@ in `fastsim/` and `evgen/` together is about sixteen minutes, half of it
 | `fastsim/tagging_acceptance` | 3 | `evgen/money_tagged_azz` | 3 |
 | `tools/digitize_figure` (per curve set) | 1 | `evgen/target_mass_bound` | 2 |
 | | | `evgen/target_mass_bound --pdf grid` | **209** |
+| | | `evgen/tensor_gamma_leakage` | 1 |
 | `fastsim/diag_sig2_grid` | 1 | `evgen/tagged_polarimetry_7li` | 3 |
 | `fastsim/coverage_and_stat_maps` | 7 | `evgen/coherent_optics_scan` | 3 |
 | `evgen/nearbeam_aperture_scan` | 7 | `evgen/nearbeam_reach_gain` | 9 |

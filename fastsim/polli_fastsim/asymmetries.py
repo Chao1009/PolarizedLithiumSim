@@ -10,9 +10,15 @@ as in J. Maxwell's slides, docs/Discussions.pptx p.5):
 
   a_m = (1/4) c_m (3 cos^2 theta_m - 1),  c_m = 3|lambda_m| - 2 -> (1,-2,1)
 
+The b1, b2 terms carry the overall sign TENSOR_LL_SIGN below, which
+since 2026-08-29 is the LITERATURE one (Cosyn et al. Eq. 27, HERMES) and
+not the transcription above: the master formula as written has the
+opposite sign of b1 to the b1 every published number is quoted in.
+
 Conventions chosen here (document in any plot):
   Azz  = (s+ + s- - 2 s0) / (s+ + s- + s0)        (longitudinal, theta_m=0)
-       = (2/3) [b1 + (1-y)/(x y^2) b2] / [F1 + (1-y)/(x y^2) F2] -> measures b1
+       = -(2/3) [b1 + (1-y)/(x y^2) b2] / [F1 + (1-y)/(x y^2) F2]
+       = -(2/3) (b1/F1) / (1 + eps(y) R)  exactly -> measures b1
   A2phi(lambda=+-1, theta_m=90deg)
        = -(1-y)/y^2 * Delta / D_phi  with D_phi = F1 + (1-y)/(x y^2) F2
 """
@@ -30,21 +36,34 @@ M_NUCLEON = 0.9383
 # Sign of the tensor RATE (b1, b2) sector, and the single place it is
 # set for the whole program (polligen.xsec imports this constant).
 #
-#   +1  the program's transcription of Hoodbhoy-Jaffe-Manohar
-#       (docs/Discussions.pptx p.5), giving Azz = +(2/3) b1/F1
-#   -1  the HJM/HERMES convention as written by Cosyn, Roldan Tomei,
-#       Sosa and Zec, EPJ A 61 (2025) 83 (arXiv:2410.12764) Eq. (27),
-#       Azz = -(2/3) b1/F1
+#   -1  THE CONVENTION OF THIS PROGRAM SINCE 2026-08-29 (author decision,
+#       plans/08 D1): the literature one, as written by Cosyn, Roldan
+#       Tomei, Sosa and Zec, EPJ A 61 (2025) 83 (arXiv:2410.12764)
+#       Eq. (27) and used by HERMES,
 #
+#           Azz = -(2/3) b1/F1     (axis along q, Bjorken limit)
+#
+#       with P_zz = n+ + n- - 2 n0 the tensor polarization, i.e. b1 > 0
+#       means the m = 0 state is the one with the LARGER cross section.
+#   +1  the repository's own private convention until that date -- the
+#       transcription of Hoodbhoy-Jaffe-Manohar in docs/Discussions.pptx
+#       p.5, giving Azz = +(2/3) b1/F1.  Kept reachable by setting this
+#       constant back, which is the whole of the change: nothing else in
+#       the program knows the sign.
+#
+# The decision was taken on the literature and not on a new derivation:
+# Jaffe-Manohar PLB 223 (1989) 218 is still not in refs/, so what is
+# adopted is the convention every published b1 number is quoted in (the
+# HERMES extraction and the Cosyn et al. re-analysis of it), which is the
+# only way an extracted b1 of this programme can be compared with them.
 # The two differ by the sign of b1 itself, so |Azz| and the whole Delta
-# (cos 2phi) sector are unaffected; what flips is the sign of the
-# by-product kappa of the spin-state ratio, and with it the sign of any
-# O(gamma^2) b-sector subtraction built on kappa.  Settling it needs
-# Jaffe-Manohar PLB 223 (1989) 218, which is not in refs/ (code review
-# G1, recommendation 0a; plans/08 D1).  Changing this constant is the
-# whole of that decision: tests/test_tensor_convention.py pins the
-# identity it controls.
-TENSOR_LL_SIGN = +1.0
+# (cos 2phi) sector are unaffected; what flips is the sign of Azz at
+# fixed b1, of the by-product kappa of the spin-state ratio, and of any
+# b-sector subtraction built on kappa -- including the O(gamma^2) tensor
+# leakage into cos 2phi, which is why plans/08 D2 was gated on this.
+# tests/test_tensor_convention.py pins the identity the constant
+# controls, in Cosyn's own form.
+TENSOR_LL_SIGN = -1.0
 
 
 def depolarization_d(y, x, q2, r_func=None):
@@ -199,7 +218,12 @@ def phi_averaged_density(f1, f2, x, y):
 
 
 def azz(b1, f1, f2, x, y, b2=None, theta_m=0.0):
-    """Tensor asymmetry from the master formula. b2 defaults to 2x*b1."""
+    """Tensor asymmetry from the master formula. b2 defaults to 2x*b1.
+
+    Carries TENSOR_LL_SIGN, so with the convention adopted 2026-08-29
+    A_zz(theta_m = 0) (1 + eps R) = -(2/3) b1/F1 exactly, at every y
+    (Cosyn et al. Eq. 27; pinned in evgen/tests/test_tensor_convention.py).
+    """
     if b2 is None:
         b2 = 2.0 * x * b1
     geom = 0.5 * (3.0 * np.cos(theta_m) ** 2 - 1.0)  # =1 at theta_m=0

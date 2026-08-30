@@ -39,12 +39,12 @@ long it takes, what the answer should be, and what cannot be reproduced
 here and why.
 
 ```bash
-# fast simulation (119 tests; PDF-grid tests need the `parton` package
+# fast simulation (121 tests; PDF-grid tests need the `parton` package
 # with CT18NLO, CT18ANLO, EPPS21nlo_CT18Anlo_Li6, nNNPDF30_nlo_as_0118_A6_Z3
 # and NNPDFpol11_100 installed)
 cd fastsim && python -m pytest tests/ -q
 
-# event generator (312 tests)
+# event generator (323 tests)
 cd evgen && python -m pytest tests/ -q
 
 # money plots (outputs land next to the scripts' working directory)
