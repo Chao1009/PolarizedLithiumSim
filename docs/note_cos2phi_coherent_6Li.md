@@ -89,7 +89,7 @@ inherited from that line, made explicit in the 2026-08-10 audit):
 low-Q² amplitudes by ~10%.)
 
 Under the moment constraint the measurement is no longer a null test:
-every sweet-spot bin is a 21–44σ effect in year 1, and the
+every sweet-spot bin is a 21–43σ effect in year 1, and the
 moment_A-vs-moment_B spread — the dominant ansatz systematic (their
 notes: factor 2–8 in reach) — is itself resolved by the amplitude-vs-x
 shape. At 10-year precision the statistical errors (≈ 5×10⁻⁵) sit

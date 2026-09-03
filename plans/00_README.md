@@ -16,8 +16,9 @@ brings to the EIC, in support of the ANL polarized ⁶,⁷Li ion-source program
 | [06_cos2phi_coherent_backgrounds.md](06_cos2phi_coherent_backgrounds.md) | cos 2φ money plots as projected data points (sweet-spot bins); the coherent intact-⁶Li channel (RP tag, 13.5% HA acceptance) and its full background budget (α+d beam-blindness, T=1 veto pattern, Z-ID question #19) |
 | [07_plb_letter_gluonometry.md](07_plb_letter_gluonometry.md) | The PLB-class simulation letter: scope decision (gluonometry, inclusive + coherent), gap analysis vs referees, work packages WP1–WP7 (grid SFs, reco closure, RC bound, coherent curves, paper production), skeleton, risk register, timeline to the INT program (submit Jan 2027) |
 | [../docs/reproduction_manual.md](../docs/reproduction_manual.md) | **How to reproduce any of it**: environment (Python, PDF grids, PYTHIA 8, eic-shell, a headless browser), every command with its measured runtime and expected output, the third-party generators (PYTHIA 8, BeAGLE over xrootd, ePIC/npsim), the numbers to check against, and what cannot be reproduced here and why |
+| [../docs/consistency_review_2026-09-02.md](../docs/consistency_review_2026-09-02.md) | **The consistency review of Reports 0–4** (2026-09-02, on the run-16 state): the five reports read against each other and against the code, the scripts, the manual and the plans — 260 findings, the 193 contradictions and defects fixed in run 17 along with the 53 wording suggestions of §3b, and the ten mechanical checks of §5.2 built as modules under `tools/checks/` (the sweep is 51 checks with them); its three author decisions are registered as plans/04 #22–24 |
 | [08_simulation_chain_completion.md](08_simulation_chain_completion.md) | Completing the simulation chain (2026-08-25): the 23 gaps that survived an adversarial audit of the reconstruction chain, the kernel, the hadronic final state and the fast simulation — ordered, with the convention items reserved for the author (D1, D7, D9) and the externally blocked tail (D2–D8) separated out |
-| [09_nearbeam_nanowire_far_forward.md](09_nearbeam_nanowire_far_forward.md) | A near-beam layer for the far-forward lithium tags (2026-08-26; §9.0 re-derived 2026-08-28 on the Yellow Report divergences — at the published optics the machine binds everywhere and a closer approach buys nothing; at the tagging optics a layer that follows the 0.12–0.33 mrad envelope is the difference between no tag and a 32–42% tag), whether a superconducting nanowire can deliver it, the hot-spot firing-threshold answer to open question #19, the obstacle table, and the correction that the ePIC pot geometry has moved since the snapshot `tools/fullsim` measured — report in `reports/nanowire_far_forward.html` |
+| [09_nearbeam_nanowire_far_forward.md](09_nearbeam_nanowire_far_forward.md) | A near-beam layer for the far-forward lithium tags (2026-08-26; §9.0 re-derived 2026-08-28 on the Yellow Report divergences and restated 2026-08-29 on the per-configuration transport — at the published optics the machine binds at 10 × 100 and 18 × 275, where a closer approach buys nothing, and the silicon re-measured on 2026-08-28 binds at 5 × 41, where it is worth a factor 77; at the tagging optics a layer that follows the 0.12–0.36 mrad envelope is the difference between no tag and a 25–37% tag), whether a superconducting nanowire can deliver it, the hot-spot firing-threshold answer to open question #19, the obstacle table, and the correction that the ePIC pot geometry has moved since the snapshot `tools/fullsim` measured — report in `reports/nanowire_far_forward.html` |
 | [10_beam_divergence_light_ions.md](10_beam_divergence_light_ions.md) | **The beam energies and the divergence the whole far-forward programme rests on** (2026-08-27): every far-forward acceptance is exp(−B(10σ_θ·A·p_u)²). Two corrections. **The energies**: EIC ions are γ-matched, not rigidity-scaled — the rings must share a revolution period, so ⁶Li sits at **40.8 / 99.5 / 137.5 GeV/u**, not 20.5 / 50 / 137.5. **The divergence**: σ_θ was one energy-independent, isotropic, proton-derived 72.7 µrad; YR Tables 10.1/10.2 give it per configuration and optics, and the species step applies *only* where rigidity binds — so ⁶Li carries the proton's **220/380 and 180/180 µrad** at the two lower configurations and pays √2 only at the top (**92/92**). Together these cost the coherent tag six to twenty-four orders of magnitude, and the recovery needs a two-ring β* de-squeeze the machine may not have |
 
 ## The physics in three lines
@@ -26,7 +27,7 @@ brings to the EIC, in support of the ANL polarized ⁶,⁷Li ion-source program
    the EIC ring likely cannot keep polarized): tensor structure function b₁
    and the purely gluonic double-helicity-flip Δ(x,Q²) ("nuclear
    gluonometry"), plus medium modification via ⁶Li-vs-d comparison.
-2. **⁷Li (spin-3/2)** = effective polarized proton in-medium (P_p ≈ 0.86):
+2. **⁷Li (spin-3/2)** = effective polarized proton in-medium (P_p ≈ 0.87):
    the polarized EMC effect over an order of magnitude more x–Q² than JLab,
    discriminating mean-field vs SRC origins of the EMC effect.
 3. **Collider-mode spectator tagging** (α, t, n in Roman Pots/OMD/B0/ZDC)
@@ -55,6 +56,178 @@ brings to the EIC, in support of the ANL polarized ⁶,⁷Li ion-source program
    with partial snakes; ~138/~117 GeV/u top energies.
 5. **Calendar anchor**: INT program on polarized ion beams at EIC,
    March 22 – April 2, 2027 — target for Phase-1 money plots.
+
+## Development run 17 (2026-09-02): the consistency review of Reports 0–4 and its fixes
+
+The five circulate-able reports were read against each other and against
+the repository that produces them — the code, the scripts behind every
+quoted number, the manual, the plans and the public front page — in two
+adversarial rounds, and what the review found was repaired.  Round 1
+(2026-08-30/31, Fable throughout) built a claim ledger per report and
+compared them per report, per pair and per topic, 270 raw entries merging
+into F001–F117; round 2 (2026-09-01/02) put Opus finders on the lenses
+round 1 lacked — arithmetic, assumptions, figures, script outputs re-run
+against the text, cross-references, and the ancillary documents — for
+F118–F254, and a completeness critic added C001–C006 and closed the
+external-source lens.  Every finding then went to an Opus refuter (brief:
+prove it wrong) and an independent Opus adjudicator (brief: name the stale
+side), and a judge ruled from the primary sources, re-running the
+producing script wherever a number was in question — Fable for the
+blocking finding, the majors and the unresolved classes, Opus for the
+rest.  Record: `docs/consistency_review_2026-09-02.md`.
+
+- ☑ **260 findings, 196 of them to fix**: 58 contradictions (17 major),
+  135 defects (6 major) and 3 author decisions; 11 dismissed; 53 minor
+  findings of class *soft* were not adjudicated and were reported as
+  wording suggestions (§3b).  The mechanical sweep (`tools/consistency_check.py`,
+  25 checks at the time) passed throughout — this was the semantic layer
+  it cannot see.
+- ☑ **The corrections that moved a number.**  The tagging-optics pot
+  approach is **6.9 / 7.9 / 4.5** per configuration, not "7.6–7.7 at all
+  three": Reports 1 §6.1 and 3 §4.2 had priced it against a vertical
+  insertion constant (the 2.4 cm array half-height) read as a horizontal
+  edge, overstating the ask at 18 × 275 by 1.7× (F001, blocking).
+  `README.md`'s "tritons need IR-8" is withdrawn — the over-rigid ⁷Li
+  triton is tagged at IP6 in 78 / 92 / 94 % since run 14 (F118,
+  blocking).  The ⁷Li α tag's "97 % at every configuration and optics"
+  now carries run 14's caveat everywhere it is quoted: in angle, with the
+  measured per-band insertion leaving **57 %, station 2 only**, at 5 × 41
+  (F009 / F121).  "5σ on a 1 % exotic-glue term in 3.0 / 5.5 / 2.6 years"
+  is labelled as the counting floor of the single best (x, Q²) super-bin
+  (19 / 10 / 9 % of the tagged sample) against the seven-|t|-bin fit of
+  the whole sample in the same reports, δa_e = 0.00121 / 0.00111 /
+  0.00074 per year, 8–14σ on 1 % in one year (F007).  Tensor polarimetry
+  is **≤ 5 %, 3 % the optimistic case** in Reports 0 and 1 as well, the
+  value specification T1 took in run 10 (F004); Report 2 §2's b₁ display
+  carries run 16's sign (`TENSOR_LL_SIGN = −1`) at the formula and not
+  only in §4.3 (F013); Report 3 §4.2's companion β* asks are **≈ 150 m
+  and ≈ 230 m** on the same footing as the 42 m headline (F100), its §8
+  no longer denies the ⁷Li α + t tag its own §5 prices at the published
+  optics, and its Table 9 gains the transverse-spin-direction row every
+  cos 2φ projection assumes (F136 / F137).  Three α + d numbers left
+  behind by run 15 are restated: joint recording 17–25 %, the abstract's
+  separation 3–41 mm, the partner veto 0.79 / 0.82 / 0.84 at the measured
+  edges (F014 / F015 / F143).  The front page and the repository map are
+  brought forward from their three-report, pre-run-15 state — card dates,
+  22–31 % α tag, 0.12–0.36 mrad, the machine binding at 10 × 100 and
+  18 × 275 with the silicon at 5 × 41, sixteen assumptions, five numbered
+  reports (F119 / F133 / F138 / F144 / F214 / F238 / C004).  The manual's
+  expected-number rows are re-derived from the scripts they document
+  (polarized-EMC reach 0.45 / 1.43σ, the 7R response term 0.13–1.03 % (median 0.25 %),
+  the syst-scan floor, the pre-EPPS21 ratio of effects — F120 / F123 /
+  F128 / F068 / F189), and Report 3 Table 8's η span is the twelve sweet
+  spots' **−3.4 to −0.9**, one of them in the barrel, not the mid
+  configuration's four (F134).
+- ☑ **Applied**: the 193 findings' edits (the three author decisions excepted) land on 33 documents and
+  scripts — the five
+  report templates and `reports/index.html`, `README.md`,
+  `docs/reproduction_manual.md` (with the dated addenda of the 08-25
+  code review and the coherent note), `plans/00`, `01`, `04`, `06`, `07`,
+  `08`, `09` and `10`, `evgen/README.md`, `fastsim/README.md`,
+  `refs/README.md`, and twelve scripts or modules whose figure titles,
+  legends, help strings and docstrings carried retired numbers — plus the
+  review itself.  The nine findings that reach a figure had it
+  regenerated, and all five reports were rebuilt.
+- ☑ **The 53 wording suggestions of §3b are settled.**  Forty-five took an
+  edit; the other eight — F045, F075, F080, F085, F094, F105, F162 and
+  F164 — are the rows whose §3b fix column is "—", the adjudicator's own
+  recommendation of no change, and were declined.  None moves a
+  number; each names a passage that reads as more certain, more general
+  or more anonymous than the repository supports, and the fix is a label
+  — an estimator named, a placeholder called one, a triple attributed to
+  the configuration it belongs to.  By report (a suggestion can touch
+  several, which is why the ids below outnumber the forty-five): Report 0 — F016, F017,
+  F023, F024, F027, F029, F032, F039, F040, F046, F047, F052, F147, F148,
+  F150, F151, F152, F156, F157, F159; Report 1 — F027, F030, F055, F058,
+  F059, F063, F070, F072, F077, F079; Report 2 — F030, F032, F063, F065,
+  F084, F088, F091; Report 3 — F037, F040, F042, F049, F076, F077, F091,
+  F099, F103, F107; Report 4 — F039, F040, F073, F076, F095, F096, F112,
+  F151; and in `README.md`, F161, with the manual half of F147 in the
+  reproduction manual.  Each report's
+  Appendix A row lists the ids it took.
+- ☑ **The three author decisions are registered rather than answered.**
+  **F226** — Table 9 row 2's "ξ_p stays ≤ 0.015" has no source in the
+  repository; a published EIC beam-beam limit, or ours to assume?
+  **F237** — the 0.6 % upper end of the ePIC full-simulation momentum
+  resolution has no identifiable producer; the one published slice
+  (S. Maple, ePIC seminar Dec 2024, slide 47) gives 0.45 % at 1 GeV/c.
+  **F254** — Report 4 §7's "relocation is worth ≤ ×1.75" reproduces in no
+  unit and contradicts §2's ×77 for the same move, and the "30–60× short
+  of the 0.1 rigidity threshold" is 53× on the report's own rigidity.
+  All three are now items **22, 23 and 24 of `plans/04_open_questions.md`**,
+  in that register's form — the review's question quoted, the passages
+  named, the owner the authors, and the interim default that the text
+  stands as written until the source is located.  The review's placeholder
+  edits (§2.5) are deliberately not applied.
+- ☑ **The ten mechanical checks §5.2 specifies** are in, as modules under
+  `tools/checks/` that `tools/consistency_check.py` imports — 26 checks in
+  all, which take the sweep from 25 to 51:
+  - `retired_strings.py` — no live document carries a number or phrasing
+    an earlier run retired, against `tools/retired_numbers.json` (51
+    entries, seeded with this review's); history is exempt by
+    construction (Appendix A rows, run sections dated before the entry).
+  - `sign_convention.py` — `TENSOR_LL_SIGN` is still −1, and every
+    template that displays the master formula states the convention
+    within twelve lines of the display.
+  - `canonical_numbers.py` — every far-forward triple the reports quote
+    (tagging envelope, pot ask, measured silicon aperture, transport
+    levers, blind block, α tag, α + d partner veto) matches what
+    `farforward`, `reco` and a fixed-seed replay give at import.
+  - `front_page.py` — `reports/index.html` cards name every date of their
+    report's dateline and print no number that is not in its abstract,
+    every companion link in the footer resolves, and `README.md`'s
+    repository map names every report template by number.
+  - `citations.py` — every [n] marker resolves to an entry of the
+    report's own reference list and every entry is cited at least once;
+    every "Report N §/Table/Figure" pointer resolves in the report it
+    names; every "plans/NN #k" pointer resolves to that item.
+  - `appendix_completeness.py` — the newest Appendix A revision row names
+    every table whose cells that revision changed, read off the diff.
+  - `figure_captions.py` — captions against the scripts that draw them:
+    every panel letter a caption uses is drawn, no letters are drawn by a
+    script that saves one PNG per axis, every quoted label exists in the
+    script, and a value read below a panel's y-floor records the floor.
+  - `sweet_spot_kinematics.py` — Report 2 Table 3's cells, every
+    sweet-spot y and δy/y statement, and the η spans of Reports 2 and 3,
+    recomputed from the selector with `kinematics` and `reco`.
+  - `specifications.py` — Report 2 §6 and Report 3 Table 9 give the same
+    tolerance to each specification the programme sets, and the count of
+    Table 9's assumptions quoted in words is its row count.
+  - `rederived_numbers.py` — every command in the manual names a script
+    whose argparse takes its flags (0.2 s, in the default sweep); and,
+    under `--full` alone, the manual's 55 expected numbers are what the
+    scripts print today — fifteen runs into a scratch directory outside
+    the repository, about two minutes, so the default sweep stays under a
+    minute for the fastsim suite.
+  Together they would have caught roughly two thirds of the verified
+  findings.  The `figure_captions.py` title-extent measurement is the
+  other `--full`-only check; both sweeps pass, 51 of 51.
+- ☑ **The residuals the new checks and the verifier caught are fixed.**
+  Three classes of check residual.  *Stale check counts* left by the ten
+  modules themselves: the manual's §2 (the command comment and the group
+  paragraph, now eleven groups with the six new ones named) and
+  `evgen/README.md`.  *Documents the checks found behind*: `README.md`'s
+  `reports/` row, which did not record the 2026-09-02 correction; Report 3's
+  Appendix A row, whose "the EPIOS rows" belongs to Table 2; the manual's
+  target-mass bound, 1.20 and 5.93 mrad from a fresh run of
+  `target_mass_bound.py` (1.201 / 5.931), which the re-derivation check had
+  been anchored on the pre-correction wording of; and Report 3 Table 9 item
+  16, whose phrasing of the run-plan share no longer matched the statement
+  the sweep looks for now that row 3 names the 10 fb⁻¹/u year.  *A false
+  positive of scoping*, fixed in the check rather than the document:
+  `front_page.py` read the first date of a repository-map row that names
+  two, so a row that did name the newest failed; it now takes the newest
+  date the row carries.  Five verifier corrections landed with them — the
+  primer's §5.4 pointer separated into the 2.5 % of Report 3 Table 6 and the
+  25 % of Report 4 §2.1 (F052), the manual's two coherent draws agreeing to
+  2 % rather than 1.2 % (F147), Report 1's 1.5 × 10⁻⁵ attributed to the top
+  configuration (F079) and its Table 2 caption to the horizontal plane
+  (F077), and the front page's "seven clean |t| bins" made "populated",
+  propagated to plans/04 #20.  All five reports were rebuilt in both formats
+  afterwards.
+
+Tests: 121 fastsim + 323 evgen, 51 consistency checks (49 in the default
+sweep; the two that re-execute the producing scripts run with `--full`).
 
 ## Development run 16 (2026-08-29): the tensor sign to the literature convention, the exact finite-γ tensor kernel, the ⁶Li effective polarization from the cluster picture
 
@@ -150,7 +323,7 @@ script imports.
   clear it, both past 5 mrad), and the α + d separations become 17.3 /
   10.7 / 10.9 mm.
   The tagging optics is now a requirement list (Report 1 §6.1, plans/10):
-  β*_x raised ×46.5 / ×164 / ×89 (≈ 42 / 100 / 71 m), a horizontal
+  β*_x raised ×46.5 / ×164 / ×89 (≈ 42 / 150 / 230 m, the ratio referred to the high-acceptance β*_x of each configuration), a horizontal
   envelope of 0.36 / 0.19 / 0.12 mrad, the pots inserted to 7.0 / 4.1 /
   3.5 mm at station 1 (the vertical needs nothing: 17.3 / 6.0 / 2.7 mm
   against the current 29.6 / 7.1 / 2.7), the IP-to-pot transport kept at
@@ -162,7 +335,7 @@ script imports.
   the two lower configurations (0.33 → 0.36, 0.17 → 0.19 mrad): ε 0.423 /
   0.323 / 0.332 → 0.374 / 0.251 / 0.332, N_tag 2.59 / 3.01 / 6.15 × 10⁶ →
   2.37 / 2.42 / 6.15 × 10⁶ per year, the 5σ floors 1.74 / 2.34 / 1.62 %,
-  the years to 5σ on a 1 % term 3.0 / 5.5 / 2.6, the combined one-year
+  the years to 5σ on a 1 % term 3.0 / 5.5 / 2.6 (both on the best-super-bin counting floor), the combined one-year
   δa_e 0.00121 / 0.00111 / 0.00074; Report 2's Table 5 moves in its
   5 × 40.8 block and not at all at 18 × 137.5; the ⁶Li α tag at the
   tagging optics is 0.315 / 0.223 / 0.291 and the ⁷Li α tag 0.987 /
@@ -264,8 +437,15 @@ reproducibility) before the rebuild.
   one-year δa_e falls 0.00205 / 0.00169 / 0.00132 → 0.00119 / 0.00104 /
   0.00074 at the three configurations, the tagged sample inside the
   window rising from 27–34 % to 78–88 %; the 0.006–0.017 bin stays out
-  (8–12 of 24 β cells empty, condition number 10–21, −29 % on a_t for a
-  10⁻³ envelope split).  The 200-draw ensembles at 5 × 40.8 give ratio
+  (8–12 of 24 β cells empty, condition number 10–21, −27 / −76 / −56 % on a_t for a
+  10⁻³ envelope split) *(measured, like every number in this bullet, on
+  the single 18 × 275 tagging lever then in force; on run 15's
+  per-configuration transport the triples are 0.00207 / 0.00178 / 0.00132 →
+  0.00121 / 0.00111 / 0.00074, retention 82 / 96 / 85 % against 28 / 38 /
+  27 %, the excluded bin 16 / 8 / 12 of 24 β cells populated, cond 12.82 /
+  47.26 / 14.79 and −43 / −273 / −56 %, the 200-draw ratio pulls −0.6 … −47.2
+  with likelihood pulls within ±3.1, and the split sensitivity −9.1 / −3.2 /
+  −1.8 % against −1.1 … −0.5 %)*.  The 200-draw ensembles at 5 × 40.8 give ratio
   pulls +1.2 … −41.5 and likelihood pulls within ±1.6 over the seven
   bins; the cutout-split sensitivity is −5.5 / −2.2 / −1.4 % in the three
   added bins against −0.8 … −0.3 % in the published four; four of the

@@ -30,7 +30,10 @@ It checks five kinds of agreement:
 Exit status is 0 when everything agrees and 1 otherwise, so it can gate a
 commit.  `--verbose` lists the checks that passed as well.
 
-Usage:  python3 tools/consistency_check.py [--verbose]
+Usage:  python3 tools/consistency_check.py [--verbose] [--full]
+
+Checks added after 2026-09-02 live one module each under tools/checks/ and are
+loaded by name; see the loader at the end of this file.
 """
 
 import argparse
@@ -49,15 +52,28 @@ sys.path.insert(0, str(ROOT / "evgen"))
 
 ISSUES = []
 PASSED = []
+SKIPPED = []
+# a check returns SKIP when it cannot run in this mode -- the two that
+# re-execute the producing scripts run only under --full -- so that the
+# default sweep counts them as skipped rather than reporting them passed
+SKIP = object()
+# --full also runs the checks that re-derive expected numbers by executing
+# the producing scripts (minutes rather than seconds); the default sweep,
+# which the fastsim test suite runs, must stay under about a minute.
+FULL = "--full" in sys.argv
 
 
 def check(name):
     """Decorator: run a check, collect what it returns as issues."""
     def deco(fn):
         try:
-            bad = fn() or []
+            bad = fn()
         except Exception as exc:                      # a broken check is an issue
             bad = ["check raised %s: %s" % (type(exc).__name__, exc)]
+        if bad is SKIP:
+            SKIPPED.append(name)
+            return fn
+        bad = bad or []
         if bad:
             ISSUES.append((name, bad))
         else:
@@ -778,12 +794,45 @@ def _():
     return bad
 
 
+# --- extension checks: tools/checks/*.py ------------------------------------
+# Every module in tools/checks/ registers its checks with the same @check
+# decorator at import time (the decorator runs the check as it is defined), so
+# they run here, after the built-in checks above.  The loader injects the
+# decorator and this module's namespace (as `checker`) into each module before
+# executing it, so a module never re-imports this file; a module that fails to
+# import is itself reported as an issue.
+CHECKS_DIR = pathlib.Path(__file__).resolve().parent / "checks"
+
+
+def _load_extension_checks():
+    import importlib.util
+    for path in sorted(CHECKS_DIR.glob("*.py")):
+        if path.name.startswith("_"):
+            continue
+        try:
+            spec = importlib.util.spec_from_file_location("polli_check_" + path.stem, path)
+            mod = importlib.util.module_from_spec(spec)
+            mod.__dict__["check"] = check
+            mod.__dict__["checker"] = sys.modules[__name__]
+            sys.modules[spec.name] = mod
+            spec.loader.exec_module(mod)
+        except Exception as exc:                  # a broken module is an issue
+            ISSUES.append(("extension %s" % path.name,
+                           ["failed to import: %s: %s" % (type(exc).__name__, exc)]))
+
+
+_load_extension_checks()
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--verbose", action="store_true")
+    ap.add_argument("--full", action="store_true",
+                    help="also run the slow checks that re-execute the producing scripts")
     args = ap.parse_args()
 
-    print("Consistency check -- %d checks\n" % (len(PASSED) + len(ISSUES)))
+    print("Consistency check -- %d checks\n"
+          % (len(PASSED) + len(ISSUES) + len(SKIPPED)))
     if args.verbose:
         for name in PASSED:
             print("  ok    %s" % name)
@@ -794,7 +843,14 @@ def main():
             print("          - %s" % b)
         if len(bad) > 12:
             print("          ... and %d more" % (len(bad) - 12))
-    print("\n%d passed, %d failed" % (len(PASSED), len(ISSUES)))
+    if SKIPPED:
+        for name in SKIPPED:
+            print("  skip  %s -- runs with --full" % name)
+        print()
+    print("\n%d passed, %s%d failed"
+          % (len(PASSED),
+             ("%d skipped, " % len(SKIPPED)) if SKIPPED else "",
+             len(ISSUES)))
     return 1 if ISSUES else 0
 
 

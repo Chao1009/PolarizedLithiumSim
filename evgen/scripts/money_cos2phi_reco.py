@@ -652,10 +652,10 @@ def main():
     fig.suptitle(
         r"Reconstructed-level $\Delta(x,Q^2)$ extraction (7R), %s, "
         r"$P_{zz}=%.2f$: %s"
-        "\n%s; spin-state ratio estimator; dilution 1/3 incl.; "
+        "\n%s; spin-state ratio estimator; dilution 1/3 incl.\n"
         "%s; area = S–S moment $-0.012\\,\\alpha_s/3$"
         % (config.label(), plan.pzz_true, method, ymeth, errs), fontsize=9.5)
-    fig.tight_layout(rect=(0, 0, 1, 0.88))
+    fig.tight_layout(rect=(0, 0, 1, 0.84))
     out = outdir / ("money_delta_extracted_reco_6Li%s.png" % suffix)
     fig.savefig(out, dpi=140)
     print("wrote", out)

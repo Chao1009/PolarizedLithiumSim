@@ -117,7 +117,7 @@ simulations within the broader EIC program."*
   ratio has nothing to scale.  Inside the window the transferred
   nuclear-matter depletion tracks the baseline's own unpolarized
   0.021 / 0.027 / 0.041 at x = 0.40 / 0.45 / 0.65 to within 0.003 —
-  "polarized ≈ unpolarized", as TMT claim — against CBT's 0.041 / 0.044 /
+  "polarized ≈ unpolarized", as TMT claim — against CBT's 0.041 / 0.043 /
   0.050, so ΔR separates by 0.021 at x = 0.36 and only 0.006 at 0.65.  The
   discriminating region is therefore x ≈ 0.35–0.45: inside the valence
   region as before, at its lower edge, with a quarter of the separation the

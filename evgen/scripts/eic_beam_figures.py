@@ -10,7 +10,7 @@
     running up to its own rigidity limit.  For 6Li: "41, and 99-138 GeV/u",
     with nothing between (plans/10).
 
-(b) THE BEAM ANGULAR DIVERGENCE, which every far-forward acceptance in this
+(b) THE BEAM ANGULAR DIVERGENCE, which the coherent tagged fraction of this
     programme is an exponential in the square of.  Yellow Report Table 10.1
     per configuration and optics for protons, with the species step applied
     only where the rigidity cap binds -- so a gamma-matched 6Li carries the
@@ -58,7 +58,7 @@ def energy_menu(ax):
         ax.annotate("%.0f" % lo, (i, lo), xytext=(0, -14),
                     textcoords="offset points", fontsize=7.5, color=C[name],
                     ha="center")
-        ax.annotate("%.0f–%.0f" % (band_lo, top), (i, top),
+        ax.annotate("%.3g–%.0f" % (band_lo, top), (i, top),
                     xytext=(0, 6), textcoords="offset points", fontsize=7.5,
                     color=C[name], ha="center")
         # what rigidity-scaling would have given, for the two lower points
@@ -76,7 +76,7 @@ def energy_menu(ax):
     ax.set_ylabel("momentum per nucleon [GeV]")
     ax.set_yscale("log")
     ax.set_ylim(12, 480)
-    ax.set_title("(a) the ion energy menu: γ-matched, then rigidity-capped",
+    ax.set_title("the ion energy menu: γ-matched, then rigidity-capped",
                  fontsize=9.5)
     ax.grid(alpha=0.25, lw=0.5, axis="y")
     ax.plot([], [], "o", color="0.3", label="γ-matched to the 41 GeV proton")
@@ -123,7 +123,7 @@ def divergence(ax):
     ax.set_xlim(-0.55, len(labels) - 0.25)
     ax.set_ylim(0, 470)
     ax.set_ylabel(r"beam angular divergence $\sigma_\theta$, horizontal [μrad]")
-    ax.set_title("(b) the divergence every far-forward acceptance is "
+    ax.set_title("the divergence the coherent acceptance is "
                  "exp(−B(10σ·A·p)²) in", fontsize=9.5)
     ax.grid(alpha=0.25, lw=0.5, axis="y")
     ax.legend(fontsize=7, ncol=2, loc="upper center")

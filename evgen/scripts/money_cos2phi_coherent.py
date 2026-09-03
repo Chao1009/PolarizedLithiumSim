@@ -269,10 +269,11 @@ def main():
         r"Coherent $e\,^6$Li$\,\to\,e'X\,^6$Li(g.s.), transversely "
         r"tensor-polarized, %s, $P_{zz}=%.2f$"
         "\n(scenario rates; modulation anchored on the polarized-$d$ "
-        "CGC calculation, PLB 858:139053; statistical errors only, backgrounds, "
-        "purity and tensor radiative corrections not included)"
+        "CGC calculation, PLB 858:139053)\n"
+        "statistical errors only; backgrounds, purity and tensor "
+        "radiative corrections not included"
         % (config.label(), args.pzz), fontsize=10)
-    fig.tight_layout(rect=(0, 0, 1, 0.93))
+    fig.tight_layout(rect=(0, 0, 1, 0.91))
     outdir = pathlib.Path(args.outdir)
     outdir.mkdir(parents=True, exist_ok=True)
     out = outdir / "money_cos2phi_coherent_6Li.png"

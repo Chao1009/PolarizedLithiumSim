@@ -27,7 +27,7 @@ Two independent pieces, both used by the near-beam study and its report
       * r_s = 134 nm is the EXTRAPOLATED zero-crossing of a four-point
         fit, not a measurement.  The authors write "While the physical
         validity of this simple model is a question of future work".
-        Inverting their four Fig. 7 points individually gives 102-118 nm
+        Inverting their four Fig. 7 points individually gives 102-120 nm
         (mean 113) -- see tests/test_nearbeam.py.
       * The VOLUME in which Q is counted is unresolved by a factor 5000.
         The 2024 paper defines Q as "the energy that the proton has

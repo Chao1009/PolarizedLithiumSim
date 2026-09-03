@@ -56,7 +56,7 @@ external inputs, not work.**
 > Two readings of the ⁶Li α row, added 2026-08-28 with B2.  It is the
 > **pure spectator model** (`spectator.spectator_lab_kinematics`, one
 > partial wave per channel); the tagged generator behind money plot 4
-> carries the S + D expansion of the same channel and reads 2.5–2.9%
+> carries the S + D expansion of the same channel and reads 2.5–2.8%
 > instead of the 1.5% Roman-Pot slice of this row at the Yellow Report
 > optics — the two masks compared like for like — the D wave being the
 > entire difference and also the tensor observable itself (B2).  And an
@@ -66,7 +66,7 @@ external inputs, not work.**
 > tagging optics a third to a half of the accepted sample is there, for
 > a 19% cost in tagged events per year at 10 × 100 and a 1.2–1.8× gain at
 > the other two configurations (B2).  For ⁷Li the whole trade inverts and
-> the tagging optics is a factor 7.9–14.8 net loss (B3).
+> the tagging optics is a factor 7.7–14.5 net loss (B3).
 
 `evgen/scripts/nearbeam_aperture_scan.py` (analytic) and
 `nearbeam_reach_gain.py` (the full chain: Roman-Pot emulation, two
@@ -189,7 +189,7 @@ the area problem independently needs.
 **(1) The anchor is softer than it looks.** r_s = 134 nm is the
 *extrapolated* zero-crossing of a four-point fit, and the authors write
 *"While the physical validity of this simple model is a question of
-future work"*. Inverting their four points individually gives 102–118 nm
+future work"*. Inverting their four points individually gives 102–120 nm
 (mean 113). And the volume in which Q is counted differs by a **factor
 5000** between their own two papers: the 2024 paper says *"the energy
 that the proton has deposited into the thin film"* (≈20 eV), the 2026
@@ -358,7 +358,7 @@ with it.
 acceptance-table convention rather than a sensor. The MEASURED outer edge
 is 2.85 / 3.85 / 4.00 mrad — past it the primary track stops and the pots
 see debris from an ion that has struck the pipe — and at that edge the
-veto is 0.80 / 0.84 / 0.84, so the convention costs five points at 5 × 41
+veto is 0.79 / 0.82 / 0.84, so the convention costs five points at 5 × 41
 and nothing at the other two. Against an
 outer edge of 2.0 / 1.0 / 0.5 mrad — 38 / 19 / 10 mm at 5 × 41,
 42 / 21 / 11 mm at 10 × 100 and 60 / 30 / 15 mm at 18 × 275, the last of
@@ -376,13 +376,13 @@ None of it is a physics objection; all of it is load-bearing.
 | obstacle | the number | status |
 |---|---|---|
 | **cold-stage power** | NbN needs 2.8–3 K, WSi microwire 0.8 K; SNSPD cold-stage loads are 100s of µW to a few mW. A 4 K pulse tube gives 1.5 W at 4.2 K and **zero at its 2.8 K no-load floor**, on a 190 kg water-cooled compressor drawing 10.7 kW. | **hard** |
-| **beam-induced RF heating** | A ferrite-shielded TOTEM Roman Pot dissipates ≈ 40 W at the LHC; scaling Q²M/σ_z^{3/2} to EIC gives ≈ 16 / 8 / 0.8 W. Even 41 GeV exceeds a pulse tube's entire 4.2 K lift. | **hard** |
+| **beam-induced RF heating** | A ferrite-shielded TOTEM Roman Pot dissipates ≈ 40 W at the LHC; scaling Q²M/σ_z^{3/2} to EIC gives ≈ 16 / 8 / 0.8 W. The two upper configurations are 11× and 5× a pulse tube's entire 4.2 K lift; 41 GeV is half of it at 4.2 K, and still two to three orders above the SNSPD cold-stage budget of the row above. | **hard** |
 | **in-vacuum precedent** | None found for a biased superconducting detector inside an accelerator's *beam* vacuum. LHC CryoBLM (1.9 K) and the CERN AD SQUID CCC both sit outside it, and the AD beam is ~10⁷ antiprotons against the EIC's 8×10¹³. | open |
 | **vibration** | Cryocooler cold-head displacement is specified at 7–9 µm; decoupling brings it to 10 nm but is heavy and stiff — the opposite of a pot on motorised rails. | mitigable |
 | **radiation hardness** | Unmeasured. The FY22 proposal's central deliverable was *"an upper limit for the accumulated dose … This currently unknown limit"*; four years on nothing is published. The 2023 Quantum Sensors for HEP report: SNSPDs *"are expected to be radiation hard … Although published studies in this area are lacking"*. | **unmeasured** |
 | **area** | The largest SNSPD/SMSPD run in a GeV beam is 2 × 2 mm², 8 channels. A 3 mm-deep strip over 20 mm vertical, both sides, is 120 mm² — 30× the state of the art. As 30 × 30 µm² nanowires that is 133,000 channels; as 1 × 1 mm² microwire tiles, 960. | funded R&D |
 | **latching** | A hard failure, not a dead time. Argonne's ²⁴¹Am α run is the reassurance: a ≈ 1 µm hot spot did *not* latch a 100–200 nm wire. | addressed |
-| **rate** | **Not a blocker, and now sourced.** The ePIC Preliminary Design Report puts pot rates at a few Hz/channel normally and *"30–50 kHz at ~10σ"* from halo, on STAR experience — four orders below the ~10⁸ /s a nanowire's fall time allows. | **closed** |
+| **rate** | **Not a blocker, and now sourced.** The ePIC Preliminary Design Report puts pot rates at a few Hz/channel normally and *"30–50 kHz at ~10σ"* from halo, on STAR experience — over three orders below the ~10⁸ /s a nanowire's fall time allows. | **closed** |
 
 **Cryogenics inverts the packaging argument.** Windowless in-vacuum
 operation and a sub-µm dead edge are exactly what a near-beam sensor
@@ -415,7 +415,7 @@ directions. At 18 × 275 the 16 mm block **measures 0.53 mrad** against the
 ≈0.52 predicted from the files — *below* the 0.9169 mrad 10σ envelope, so
 the sensor package no longer binds and the beam does, by eight orders of
 magnitude (1.2×10⁻⁵ against 7.1×10⁻¹⁴). At 5 × 41 the per-energy insertion moves the other way, to a
-29.6 mm inner edge, because the pots now retract properly for the larger
+29.6 mm vertical insertion, which lifts the three inner bands off the beam plane so a y ≈ 0 track must clear 48 mm of x and not 16, because the pots now retract properly for the larger
 low-energy beam: the aperture there **measures 2.50 mrad**, worse, and now
 the binding constraint at 1.14× the 2.20 mrad envelope. That is precisely
 the configuration at which the coherent programme was said to survive.
@@ -470,11 +470,11 @@ wide wherever both axes are open**, by 1.4–1.7×, so `rp_measure`'s
 is unchanged.
 
 **The levers** (`farforward.POT_LEVERS`, station 1): R₁₂ = 19.24 / 21.25 /
-29.97 m, R₃₄ = — / 3.35 / 2.93 m, D = 0.311 / 0.287 / 0.292 m, plus the
+29.97 m, R₃₄ = 4.56 / 3.35 / 2.93 m, D = 0.311 / 0.287 / 0.292 m, plus the
 second-order dispersion D₂ = −0.190 / −0.206 / −0.215 m. The transport is
-6.3× stiffer in x than in y at 10 × 100 and 10.2× at 18 × 275, which is why the open aperture is a horizontal
-slot although the pots insert vertically, and R₃₄ is not measurable at
-5 × 41 — a result, not a gap. D confirms the repository's 0.30 m to 4% at
+4.2× stiffer in x than in y at 5 × 41, 6.3× at 10 × 100 and 10.2× at 18 × 275, which is why the open aperture is a horizontal
+slot although the pots insert vertically, and R₃₄ is not measurable through the real insertion at
+5 × 41 — a result, not a gap; the 4.56 m is the zero-insertion reading of 2026-08-29 (`tools/fullsim/README.md`). D confirms the repository's 0.30 m to 4% at
 every configuration.
 
 **The outer edge** (`farforward.THETA_RP_OUTER_MEASURED`): the debris-free
@@ -669,7 +669,7 @@ neutron; the ⟨P₂⟩ slopes did not (`docs/reproduction_manual.md` §4.1).
 
 **For ⁷Li the tagging optics is a strict net loss, and a near-beam layer
 is worth nothing.** ×1.02 in acceptance for ×1/7.9, ×1/14.8, ×1/10.1 in
-luminosity is a factor 7.9–14.8 net loss, which at equal running time
+luminosity is a factor 7.7–14.5 net loss, which at equal running time
 multiplies every ⁷Li error bar by 2.78 / 3.81 / 3.15. So the inversion of
 plans/00 strategic finding 2 is optics-independent **in both
 directions**: ⁶Li needs the de-squeeze and ⁷Li must not have it. **⁶Li and
@@ -878,7 +878,7 @@ carry the recomputed ⁷Li triton tag, 78 / 92 / 94%.
 fragments from one k; `farforward.separation_at_pots` and the new outer
 bound `THETA_RP_OUTER` price the pot plane; `evgen/scripts/
 nearbeam_two_hit.py` produces the table and the figure. Both fragments are
-in acceptance in 22–29% of breakups at the tagging optics and in ≤ 0.03% at
+in acceptance in 17–25% of breakups at the tagging optics (0.25 / 0.17 / 0.22 at 5 × 41 / 10 × 100 / 18 × 275 on the per-configuration transport of 2026-08-29; 22–29% on the single 18 × 275 lever this entry was written on) and in ≤ 0.03% at
 the Yellow Report optics; given an α that fakes a coherent tag the partner
 deuteron is recorded in **84%** of events at the tagging optics against
 0.02–0.25 at the published ones, where the fake rate is 10⁻³–10⁻⁴
@@ -886,8 +886,8 @@ anyway. A
 recorded pair merges into one 500 µm pixel in ≤ 4 × 10⁻³ of cases, through
 the dispersion rather than the angle. The number the veto really depends on
 is the pot's outer edge (B1), now measured at 2.85 / 3.85 / 4.00 mrad,
-where the veto is 0.80 / 0.84 / 0.84; at one 16 mm module it falls to
-0.00 / 0.31 / 0.56. The pass also corrected the §9.2 separation table,
+where the veto is 0.79 / 0.82 / 0.84; at one 16 mm module it falls to
+0.00 / 0.21 / 0.56. The pass also corrected the §9.2 separation table,
 which had carried the retired 20.5 / 50 GeV/u through a derived millimetre;
 the review of the same evening corrected it again, for the dispersive
 displacement the first correction had dropped, and re-measured the Yellow
@@ -912,7 +912,7 @@ repository's envelope implies 10σ_x ≈ 22 mm (0.73 mrad) while Jentsch's
 
 ### D3 — per-optics R₁₂ and R₃₄ ☑ (the lattice question remains) · **ePIC FF WG**
 R₁₂, R₃₄ and D are measured at all three configurations since 2026-08-28
-— 19.24 / 21.25 / 29.97 m, — / 3.35 / 2.93 m and 0.311 / 0.287 / 0.292 m
+— 19.24 / 21.25 / 29.97 m, 4.56 / 3.35 / 2.93 m and 0.311 / 0.287 / 0.292 m, the 5 × 41 R₃₄ since 2026-08-29 on a zero-insertion scratch geometry
 (`farforward.POT_LEVERS`, `tools/fullsim`) — so this plan quotes
 millimetres everywhere; R₁₁, R₂₁, R₂₂ and D′ are still unmeasured. The
 10σ offsets in `beamline_*.xml` exist only for proton optics and are
@@ -920,7 +920,7 @@ marked *"rough extrapolation"* at 5 × 41, and what that turns into is the
 **lattice question** this item now puts to the FF WG: `beamline_5x41.xml`
 (41 GeV proton) and `beamline_5x41_He4.xml` (Z/A = 0.5, 82 GV) are not a
 field scale of one another and give R₁₂ = 19.24 and 29.81 m at the same
-ring setting — a factor 1.55 in every 5 × 41 millimetre and 0.64 in the
+ring setting — a factor 1.55 in every horizontal 5 × 41 millimetre (the alternative supplies no R₃₄) and 0.64 in the
 5 × 41 aperture (`farforward.POT_LEVERS_LIGHT_ION_LATTICE`,
 `reco.RP_APERTURE_MEASURED_LIGHT_ION_LATTICE`). We publish on the
 baseline file at twice the field, as an educated guess; the ask is
@@ -946,7 +946,7 @@ study should not be what motivates it.
   is sharper than expected: the firing threshold, not dE/dx amplitude.
   It rests on one unmeasured curve (D1).
 * **plans/04 #20** (RP cutout geometry) — the measurement stands for the
-  geometry it was made in, and that geometry has moved (§9.4).
+  geometry it was made in; the September-2024 one had moved, and the aperture was re-measured in the current one on 2026-08-28 (§9.4, B1).
 * **The coherent programme's energy reach** — aperture-conditional, not
   physics-conditional (§9.0).
 * **The recommendation, corrected.** The first version of this plan
@@ -976,7 +976,7 @@ study should not be what motivates it.
   below k = 0.15 GeV/c at any published optics, a third to a half of the
   accepted sample there under the tagging one, at a 19% cost in tagged
   events per year at 10 × 100 and a 1.2–1.8× gain at the other two (B2) —
-  and buys ⁷Li a factor 7.9–14.8 net loss (B3), so item (1) is a per-isotope
+  and buys ⁷Li a factor 7.7–14.5 net loss (B3), so item (1) is a per-isotope
   recommendation, not a programme-wide one. Superconducting
   nanowires appear nowhere on it.
 * **Where the technology *would* belong.** The Argonne programme's own

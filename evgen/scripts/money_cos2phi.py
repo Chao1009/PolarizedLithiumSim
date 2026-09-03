@@ -141,7 +141,7 @@ def build_delta_model(args, config, scenario):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--config", type=int, default=1, choices=(0, 1, 2),
-                    help="beam-energy point (default mid, e10 x 6Li50)")
+                    help="beam-energy point (default mid, e10 x 6Li 99.5 GeV/u)")
     ap.add_argument("--delta-model", default="moment_A",
                     choices=dm.available())
     ap.add_argument("--variant", default="mid_x",

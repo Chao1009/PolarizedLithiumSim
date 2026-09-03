@@ -141,19 +141,19 @@ Handles, in order of power:
    fluctuation, and the veto is not rare at all where it is needed.
    Conditioned on the α landing in the near-beam tail — the only
    configuration in which this channel is a background — the partner
-   deuteron is on a pot in **84–85%** of events at the tagging optics of
-   Report 1 §6.1. At the published Yellow Report optics it is 4–29%, but
+   deuteron is on a pot in **82–84%** of events at the tagging optics of
+   Report 1 §6.1. At the published Yellow Report optics it is 2–25%, but
    there the α fakes a coherent tag in only 10⁻³–10⁻⁴ of breakups: the
    optics that creates the background supplies the veto with it, the
    same conditional structure as every other number in this study.
    Two limits: the 84% assumes pot acceptance out to θ = 5 mrad and
-   falls to 0.00 / 0.31 / 0.56 (5 × 41 / 10 × 100 / 18 × 275) against a
+   falls to 0.00 / 0.21 / 0.56 (5 × 41 / 10 × 100 / 18 × 275) against a
    single 16 mm module, so it is a station-layout question (plans/09 B1,
    D3) — the fractions are decided in angle and no lever enters them, but
    a 0.5 mrad edge is 10 / 11 / 15 mm at the per-configuration R₁₂ and not
    one number, and the MEASURED outer edge is 2.85 / 3.85 / 4.00 mrad
    rather than the 5 mrad convention, which puts the veto at
-   0.80 / 0.84 / 0.84; and it is a *veto*, so its inefficiency enters the coherent
+   0.79 / 0.82 / 0.84; and it is a *veto*, so its inefficiency enters the coherent
    normalisation and must be folded rather than assumed. Rank: below the
    |t|-shape fit only because of those two, and above everything after
    it.

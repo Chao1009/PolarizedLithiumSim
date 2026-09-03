@@ -138,7 +138,7 @@ def main():
         ax_a.plot(cen, rms, ":", color=C[k], lw=1.0)
     cen, hw, rms, mu = resolution_by_y(smp.y[slice_mask], y_e[slice_mask], y_edges)
     ax_a.plot(cen, hw, "s--", color="0.4", ms=3, lw=1.0, label="electron method (EMCal 2%/√E ⊕ 1%)")
-    ax_a.axhline(0.25, color="0.7", lw=0.9, ls="-.", label="25% Gaussian stand-in (5R/7R)")
+    ax_a.axhline(0.25, color="0.7", lw=0.9, ls="-.", label="25% Gaussian stand-in (earlier chain)")
     ax_a.set_xscale("log"); ax_a.set_yscale("log")
     ax_a.set_ylim(0.02, 3.0)
     ax_a.set_xlabel(r"$y$ (true)"); ax_a.set_ylabel(r"$\delta y/y$")

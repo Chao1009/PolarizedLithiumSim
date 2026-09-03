@@ -74,7 +74,7 @@ arithmetic is pinned by `tests/test_run_share.py`.
 
 - **Tagging acceptance at IP6** (cluster model, β=0.3 GeV central):
   ⁷Li α-tag ≈ **97% into the Roman Pots** at every configuration and
-  optics; ⁶Li α-tag **1.9 / 1.7 / 2.6%** at the Yellow Report optics of
+  optics — in angle: this fast simulation routes horizontally against the per-configuration blind block and knows no per-band vertical insertion, and the full simulation of the current geometry leaves 57%, station 2 only, on a module edge, at 5 × 41 (`tools/fullsim/README.md`, plans/00 run 14); ⁶Li α-tag **1.9 / 1.7 / 2.6%** at the Yellow Report optics of
   each configuration (the near-beam tail is inside the 10σ rectangle
   10(σ_h, σ_v) = 2.2×3.8 / 1.8×1.8 / 0.92×0.92 mrad, so what survives is
   the 1.5% off-rigidity slice below R = 0.95 plus 0.1–1.0 points of
@@ -122,8 +122,8 @@ arithmetic is pinned by `tests/test_run_share.py`.
   and those bins carry so little of σ² that L_5σ moves by at most
   3×10⁻⁹ relative anywhere on the plotted Δ/F₁ range: 16.719 / 16.332 /
   21.811 and 131.26 / 274.64 fb⁻¹/u are unchanged to every digit printed.
-- **Polarized EMC**: δΔR ≈ 4.2% per x-bin at x = 0.09 and 4.1% at 0.28 at
-  10 fb⁻¹/u (grid inputs, 3 energies combined; 6.0% at x = 0.45, 18.9% at
+- **Polarized EMC**: δΔR ≈ 4.2% per x-bin at x = 0.09 and 4.0% at 0.28 at
+  10 fb⁻¹/u (grid inputs, 3 energies combined; 6.0% at x = 0.45, 18.7% at
   0.71).  On the **digitized** curves (2026-08-28), transferred onto the
   **EPPS21 unpolarized baseline** (the default since 2026-08-29), the
   CBT–TMT separation
@@ -150,16 +150,16 @@ arithmetic is pinned by `tests/test_run_share.py`.
   papers: the two PUBLISHED polarized curves agree to better than 0.008
   over 0.028 < x < 0.30 (0.002 at x = 0.09, 0.0006 at 0.14).  Inside the
   window the comparison is real and fades across it: the transferred TMT
-  depletion tracks the unpolarized baseline's own 0.020 / 0.026 / 0.041 at
-  x = 0.40 / 0.45 / 0.65 to within 0.002 against CBT's 0.040 / 0.042 /
-  0.048, so ΔR separates by 0.020 at x = 0.36 and 0.006 at 0.65.
+  depletion tracks the unpolarized baseline's own 0.021 / 0.027 / 0.041 at
+  x = 0.40 / 0.45 / 0.65 to within 0.003 against CBT's 0.041 / 0.043 /
+  0.050, so ΔR separates by 0.021 at x = 0.36 and 0.006 at 0.65.
   `money_polemc.py`
   shades that window in both panels, draws TMT's published nuclear-matter
   curve untransferred beside the transferred one, and prints both
   separations and the window-restricted reach: best bin
-  x = 0.355 at 0.43 σ (10 fb⁻¹/u) and 1.37 σ (100), 0.37 / 1.17 σ on the
+  x = 0.355 at 0.45 σ (10 fb⁻¹/u) and 1.43 σ (100), 0.38 / 1.22 σ on the
   toy inputs the published PNG draws.  The unrestricted best bin
-  (x = 0.141, 0.59 / 1.87 σ, 0 of 23 bins above 1 σ) is the transfer's,
+  (x = 0.141, 0.62 / 1.95 σ, 0 of 23 bins above 1 σ) is the transfer's,
   not a prediction.  This retires the "≈ 5σ at x ≈ 0.5–0.7" headline all
   the same: with the constants 2 and 1 the two camps separated as
   |1 − R_EMC(x)|, which grows monotonically with x, while the published

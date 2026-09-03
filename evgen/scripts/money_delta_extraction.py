@@ -173,11 +173,11 @@ def main():
         r"Extracted double-helicity-flip $\Delta(x,Q^2)$ of $^6$Li, %s, "
         r"$P_{zz}=%.2f$""\n"
         r"$\hat\Delta = -\hat A\, y^2 D_\phi/(1-y)$ per bin "
-        "(model bin-centering; dilution 1/3 included; statistical errors only, "
-        "backgrounds and tensor radiative corrections not included); area = bag moment "
-        r"$-0.012\,\alpha_s/3$"
+        r"(model bin-centering; dilution 1/3 included); area = bag moment $-0.012\,\alpha_s/3$""\n"
+        "statistical errors only; backgrounds and tensor radiative "
+        "corrections not included"
         % (config.label(), plan.pzz_true), fontsize=10)
-    fig.tight_layout(rect=(0, 0, 1, 0.90))
+    fig.tight_layout(rect=(0, 0, 1, 0.86))
     outdir = pathlib.Path(args.outdir)
     outdir.mkdir(parents=True, exist_ok=True)
     out = outdir / "money_delta_extracted_6Li.png"

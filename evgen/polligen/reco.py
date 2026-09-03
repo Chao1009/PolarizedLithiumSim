@@ -457,7 +457,8 @@ def tracking_angular_resolution(eta):
     this table is the only stand-in for.  The defensible bracket is
     therefore between that floor (0.08-0.21 mrad) and the 3 mrad used
     here -- a factor <~ 3 on dQ2/Q2 at the sweet spots (5.2% -> ~2%,
-    purity 0.64 -> 0.70 at spot 1 with the table divided by three, code
+    purity 0.66 -> 0.70 at spot 1 with the table divided by three,
+    re-measured 2026-09-02 on the current chain; 0.64 -> 0.70 in code
     review 2026-08-25 F3), not a factor 30."""
     eta = np.asarray(eta, dtype=float)
     out = np.full_like(eta, 1.0e-3)

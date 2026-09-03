@@ -43,7 +43,7 @@ penalty at all, and only the rigidity-capped top configuration pays √2
 
 **Table 10.1** (e+p) and **10.2** (e+Au) of `refs/2103.05419_part2.pdf` give
 RMS divergence h/v and RMS Δp/p per configuration and per optics. The hadron
-rows, verbatim:
+rows, verbatim (Table 10.1 is captioned *with strong hadron cooling*; its 11/1 nm emittance is what the injection-cooling baseline of D2 reaches at the start of a store, so these are start-of-store values under that baseline):
 
 | protons | high divergence h/v | high acceptance h/v | Δp/p |
 |---|---|---|---|
@@ -104,7 +104,7 @@ and the shift is quoted as "up to" ±20 mm.
 against the 41 GeV proton's γ = 43.70 — equal to 0.7%, exactly the u vs m_p
 mass difference. Rigidity scaling would have put gold at 41 × 79/197 = 16.4
 GeV/u. It does not. The same rule reproduces the published ³He menu
-("41, and 100–183 GeV/nucleon") exactly.
+("41 GeV/nucleon, and from 100 to 183 GeV/nucleon", EIC Requirements G-HSR.06, eic.jlab.org/Requirements/HSR.html, read 2026-09-02) exactly.
 
 So the ⁶Li menu is **41, and 99–138 GeV/u**, with nothing in between, and
 `beams.default_configs("6Li")` now returns **40.8 / 99.5 / 137.5** where it
@@ -124,7 +124,7 @@ and there it does pick up √2.
 | **99.5 GeV/u** (10 × 100) | 597 GeV | **180 / 180** | 220 / 220 | 9.7×10⁻⁴ |
 | **137.5 GeV/u** (18 × 275) | 825 GeV | **92 / 92** | 212 / 212 | 6.8×10⁻⁴ |
 
-**Is equal ε_N defensible?** Gold is the published test. Scaling the 275 GeV
+**Is equal ε_N defensible?** Gold is the published test. Scaling the 290-bunch 275 GeV
 proton to Au at 110 GeV/u by 1/√(βγ) alone predicts 236 µrad against an
 observed 218 (h) and 379 (v) — ε_N(Au)/ε_N(p) = **0.85 horizontally, 2.6
 vertically**. Intrabeam scattering separates gold from lithium by far more
@@ -172,9 +172,9 @@ configuration** — an invariance that is itself the derivation:
 That table is the circular-isotropic derivation, and run 12 replaced it
 with the horizontal-only de-squeeze priced immediately below; the absolute
 ask that follows from the corrected optimum is **β*_x ≈ 42 m at 5 × 41**
-(0.90 m × 46.5), with ≈ 100 m and ≈ 71 m at the other two configurations
-(Report 0 §4.2). Forty-two metres is the smallest of the three and sits
-well inside the LHC's demonstrated forward-physics optics — TOTEM/ALFA ran
+(0.90 m × 46.5, where the two optics coincide), with ≈ 1.5 × 10² m and ≈ 2.3 × 10² m at the other two configurations, whose high-acceptance β*_x is several times the design value
+(Report 3 §4.2). Forty-two metres is the smallest of the three and is
+a gentler de-squeeze than either the LHC has demonstrated for forward physics — TOTEM/ALFA ran
 β\* = 90 m and 2500 m against a nominal 0.55 m. It does not, however, relax
 the IR aperture, as the superseded ×14.5 would have: that optimum shrank the
 beam in the final-focus quadrupoles (β ≈ β\* + L²/β\* ≈ 15 m at the first
@@ -188,7 +188,7 @@ the horizontal plane needs the de-squeeze, and the optimum of ε × L sits
 at β*_x/β*_x,HA = 46.5 / 164.1 / 89.3 with the vertical plane at high
 acceptance (L/L_HA = 1/6.8 / 1/12.8 / 1/9.5, ε = 0.37 / 0.25 / 0.33,
 `farforward.tagging_optics_point`) rather than at the
-circular-isotropic 14.5 / 57.7 / 28.6 above: 2.4×10⁶ / 2.4×10⁶ / 6.2×10⁶
+circular-isotropic 14.5 / 57.7 / 28.6 above: 2.4×10⁶ / 2.4×10⁶ / 6.1×10⁶
 tagged events per year at the 10 fb⁻¹/u placeholder — still 4–10× below
 what IR-8's secondary focus (≈ 20%, our interpolation) would give at the
 same luminosity.  Two assumptions stated there: the electron β* raised in

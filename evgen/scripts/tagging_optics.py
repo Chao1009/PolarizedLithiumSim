@@ -41,8 +41,8 @@ the electron beta* raised in step to keep the spots matched; (ii) a
 parallel-to-point far-forward transport for the de-squeezed lattice
 (R11 sigma* << R12 sigma_theta at the pot planes, as TOTEM's high-beta*
 optics), so that the 10 sigma envelope at the pots is 10 R12 sigma_theta --
-the present lattice satisfies this at the Yellow Report optics, and whether a
-de-squeezed one does is the first question for C-AD.  Dispersion at the pots
+assumed for the present lattice as well (R11 is unmeasured, plans/09 D3), and whether a
+de-squeezed one keeps it is the first question for C-AD.  Dispersion at the pots
 is added in quadrature to the horizontal envelope as 10 D dp/p / R12 with
 each configuration's own measured (R12, D) -- 19.24 / 0.311, 21.25 / 0.287
 and 29.97 / 0.292 m (farforward.POT_LEVERS) -- and the Yellow Report dp/p;

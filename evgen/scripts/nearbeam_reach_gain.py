@@ -20,7 +20,7 @@ Both run at the tagging optics' divergence and luminosity (1/6.8 - 1/12.8
 of the high-acceptance value).  With the Yellow Report optics and the
 measured aperture no recoil is tagged at any configuration (Report 2
 Figure 2c), and the de-squeeze alone does not change that: the envelope
-shrinks to 0.12-0.33 mrad but the silicon still starts at 1.0-2.0 mrad.
+shrinks to 0.12-0.36 mrad but the silicon still starts at 0.53-2.50 mrad.
 The near-beam layer and the optics are strictly multiplicative levers,
 and this script prices the layer GIVEN the optics.
 
@@ -297,11 +297,11 @@ def main():
     ax2.set_ylabel(r"recovered $a_t$")
     ax2.set_title("(b) recovery against the injected deformation term", fontsize=9.5)
     for ax in (ax1, ax2):
-        ax.set_xlabel(r"$|t|$ [GeV$^2$]")
+        ax.set_xlabel(r"$|t|$ [GeV$^2$] ($t_{\rm ref}$ = reco-bin mean of true $|t|$)")
         ax.grid(alpha=0.25, lw=0.5)
         ax.legend(fontsize=7.0)
-    fig.suptitle("Coherent intact-⁶Li chain at the tagging optics: pots fixed at the "
-                 "measured silicon aperture against pots following the 10σ envelope",
+    fig.suptitle("Coherent intact-⁶Li chain at the tagging optics: pots following the "
+                 "10σ envelope — at the measured silicon aperture no |t| bin survives",
                  fontsize=9.5)
     fig.tight_layout()
     out = outdir / ("%s.png" % output_stem(args))

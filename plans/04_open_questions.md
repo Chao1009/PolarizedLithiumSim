@@ -2,8 +2,11 @@
 
 Items that gate or shape the simulation program but are *not* solvable
 inside it. Each has an owner-to-engage and a default assumption we proceed
-with until answered. Updated 2026-08-25 (first version 2026-06-12) after the fetch-verified literature
-sweep — several items moved from "unknown" to "answered, needs adoption".
+with until answered. Updated 2026-09-02 (first version 2026-06-12): the consistency review of
+Reports 0–4 added items 22–24, the three passages it could not settle from
+the repository. The 2026-08-25 revision followed the fetch-verified
+literature sweep — several items moved from "unknown" to "answered, needs
+adoption".
 
 ## Answered by the literature sweep (adopt, then verify with owners)
 
@@ -118,7 +121,7 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
 5. **Li ring polarimetry.** EPIOS concept: Li–Li elastic CNI vs polarized
    Li jet (HJET analog) + Breit–Rabi absolute; analyzing-power theory
    flagged as needing work. R&D scale in EPIOS: ~26 FTE-yr/12 yr.
-   *Default:* δP/P = 3% systematic in FOMs.
+   *Default:* δP_z/P_z = 3% (vector) systematic in FOMs; the tensor scale is T1, δP_zz/P_zz ≤ 5% with 3% the optimistic case (run 10, plans/00).
 
 ## Still open — generator / theory
 
@@ -316,7 +319,7 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
     stays with the ePIC FF WG and is written down as plans/09 **D3**:
     R₁₂, R₃₄ and the pot dispersion D were measured at all three
     configurations on 2026-08-28 (`farforward.POT_LEVERS`: 19.24 / 21.25 /
-    29.97 m, — / 3.35 / 2.93 m and 0.311 / 0.287 / 0.292 m), so plans/09
+    29.97 m, 4.56 / 3.35 / 2.93 m and 0.311 / 0.287 / 0.292 m, the 5 × 41 vertical lever read off a zero-insertion scratch geometry on 2026-08-29), so plans/09
     quotes millimetres everywhere; R₁₁, R₂₁, R₂₂ and D′ remain unmeasured,
     the 10σ offsets in `beamline_*.xml` are still marked a *"rough
     extrapolation"* at 5 × 41, and what the FF WG is now asked is the
@@ -455,8 +458,8 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
     ratio**. The pot silicon does surround a horizontal slot, as the
     2026-08-25 entry says; but the far-forward optics image an IP angle
     onto the pot plane with R₁₂ = 19.24 / 21.25 / 29.97 m horizontally
-    against R₃₄ = — / 3.35 / 2.93 m vertically (re-measured 2026-08-28), a
-    factor 6.3 at 10 × 100 and 10.2 at 18 × 275, so what clears the slot is
+    against R₃₄ = 4.56 / 3.35 / 2.93 m vertically (re-measured 2026-08-28; the 5 × 41 entry on a zero-insertion scratch geometry, 2026-08-29), a
+    factor 4.2 at 5 × 41, 6.3 at 10 × 100 and 10.2 at 18 × 275, so what clears the slot is
     the HORIZONTAL angle: the boundary
     is |θ_x| ≳ 2.50 / 1.51 / 0.53 mrad in the 5×41 / 10×100 /
     18×275 optics (p_T = A p_u |θ_x| = 0.61 / 0.90 / 0.44 GeV for the ⁶Li
@@ -550,7 +553,7 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
     buys a factor 77 there and nothing at the other two; under the tagging
     optics of Report 1 §6.1 a layer
     that follows the 0.36 / 0.19 / 0.12 mrad envelope is the difference
-    between no tag and 0.36 / 0.25 / 0.32 with seven clean |t| bins each
+    between no tag and 0.36 / 0.25 / 0.32 with seven populated |t| bins each
     (`nearbeam_reach_gain.py`; the earlier ×26 / ×569 were artefacts of the
     73 μrad divergence).
 21. **Hadronic-method y resolution at y = 0.01–0.05 for e + light ions**
@@ -593,7 +596,7 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
     fraction, the analysis's own calibration) takes the 5R purities to
     0.52–0.76 at unchanged errors, and a residual 1% scale error moves Δ̂ by
     0.2–0.7%.  Not the resolution driver: the ePIC nominal reach of 4.0
-    recovers a quarter of the escape with δy/y unchanged.  What the ePIC
+    recovers a third of the escape with δy/y unchanged.  What the ePIC
     inclusive WG could settle: the forward calorimeter reach and thresholds
     at Σ_h ≈ 0.2–0.5 GeV, alongside the noise floor.
     *2026-08-28 (review):* the calibration is now keyed on the reconstructed
@@ -614,6 +617,93 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
     own value). Remaining gap: no published ePIC full-simulation
     number at Q² ≈ 1–3 GeV², y ≈ 0.01, for e + light ions specifically.
 
+## Still open — sourcing (raised by the consistency review of Reports 0–4)
+
+Three passages the review of 2026-09-02
+(`docs/consistency_review_2026-09-02.md` §2.5) could not settle from the
+repository: each states a number whose producer or citation exists
+nowhere in it, so only the authors can say what it is. The review left a
+placeholder edit for each, unapplied.
+
+22. **The source of ξ_p ≤ 0.015** (review finding F226). Report 3 Table 9
+    row 2 (`reports/eic_epic_reference.template.html`) asks C-AD whether
+    IR6 can be matched with the horizontal hadron β* raised 46–164× "and
+    the electron β* co-de-squeezed so ξ_p stays ≤ 0.015"; Report 4 §7
+    (`reports/nanowire_far_forward.template.html`) repeats the clause from
+    there. The bound lives in those two sentences and nowhere else — no
+    derivation in Report 3 §4.2, no entry in either reference list or in
+    `refs/refs_dict.json`, nothing in the four Yellow-Report parts (Tables
+    10.1/10.2 carry no beam-beam row), and, before this entry, no other
+    occurrence of "beam-beam" anywhere in the repository — while the
+    Report 3 dateline
+    promises that every Table 9 entry carries its source and its status.
+    *The question:* "Where does ξ_p ≤ 0.015 come from: a published EIC
+    beam-beam limit for the hadron beam (which document and table?), or is
+    it this programme's own assumed bound, to be labelled 'ours to
+    specify' in Table 9 as rows 11, 12 and 16 are?"
+    *Engage:* the authors; C-AD if it is a design limit to be cited.
+    *Default:* the text stands as written until the source is located.
+23. **The upper end of the ePIC momentum resolution, 0.45–0.6% at
+    1 GeV/c** (review finding F237). Report 3 Table 8's tracking σ_p/p row
+    reads "ePIC full simulation reaches 0.45–0.6% at 1 GeV/c, so realistic
+    to ≈ ±20%", uncited in a report whose masthead promises a source for
+    every entry, and the claim originated in the docstring of
+    `evgen/polligen/reco.py` (line 413), the only other live copy. The one
+    ePIC full-simulation momentum resolution held on disk is S. Maple,
+    Birmingham seminar 11 Dec 2024, slide 47
+    (`refs/EIC_Seminar_SMaple_2024.pdf` p. 47, indexed in
+    `refs/refs_dict.json`): PYTHIA 8 NC DIS, Craterlake 23.12.0,
+    Q² > 100 GeV², electron from tracking, 0 ≤ η ≤ 0.5, fit
+    Δp/p [%] = 0.055 p ⊕ 0.45, i.e. 0.453% at p = 1 GeV/c against the
+    barrel model's 0.503% — a ≈ 10% comparison, in one η slice. Nothing in
+    the repository gives 0.6%.
+    *The question:* "Which ePIC document gives the upper end of 'ePIC full
+    simulation reaches 0.45–0.6% at 1 GeV/c depending on η slice'? Maple's
+    Dec-2024 seminar slide 47 — the only ePIC full-simulation momentum
+    resolution in refs/ — fits Δp/p = 0.055 p ⊕ 0.45% for the single slice
+    0 ≤ η ≤ 0.5, i.e. 0.45% at 1 GeV/c and nothing at 0.6%. If a second,
+    η-resolved source exists it should be added to refs/ and cited in
+    Table 8; if not, Table 8 and reco.py must narrow the claim to 0.45% in
+    0 ≤ η ≤ 0.5, which turns the row's ±20% into ≈ 10% there."
+    *Engage:* the authors; the ePIC tracking/inclusive WG if a second,
+    η-resolved source exists.
+    *Default:* the text stands as written until the source is located.
+24. **Report 4 §7's ×1.75 relocation lever and its 30–60× dispersive
+    shortfall** (review finding F254). The lever list of §7
+    (`reports/nanowire_far_forward.template.html`) states that "detector
+    relocation along the far-forward line is worth ≤ ×1.75" and that
+    "dispersive tagging at IP6 is 30–60× short of the 0.1 rigidity
+    threshold of Gamage et al. [12]". Neither has a producer anywhere in
+    the repository. The neighbouring ×230 does re-derive
+    (`farforward.hole_acceptance` at 5 × 41, p_ion = 244.8 GeV, B = 50:
+    acc(1.76 mrad)/acc(2.20 mrad) = 227.7); the ×1.75 reproduces in no
+    unit — read as a tagged-fraction factor it corresponds to a 1.9%
+    relocation and contradicts §2's ×77 for the same move at 5 × 41, and
+    read as a transport lever `farforward.POT_LEVERS` (19.24 / 21.25 /
+    29.97 m) gives 1.56 over the whole instrumentable stretch. For the
+    band, the report's own §1 rigidity for the α, R = 0.99813, fixes
+    0.1/(1 − 0.99813) = 53×, the middle of it; the intact ⁶Li sits at
+    R = 1 exactly and the ⁷Li α at R = 0.856 is 0.144 off rigidity, so the
+    band is not a spread over the fragments, and arXiv:2105.13564 is not
+    in `refs/`, so its Table 1 cannot be checked here. Appendix A dates
+    the 30–60× to the 2026-08-27 lever table; the ×1.75 has no
+    revision-history trace at all.
+    *The question:* "Two: (1) What quantity is '≤ ×1.75' a factor in, and
+    what produces it? As a tagged-fraction factor it corresponds to a
+    1.5–1.9% relocation and contradicts §2's ×77 for the same move at
+    5 × 41; as a transport-lever factor the measured R₁₂ (19.24 / 21.25 /
+    29.97 m) give 1.56 for the whole instrumentable stretch, not 1.75 —
+    and R₁₂ is a matrix element, not a distance, so a relocation lever
+    needs the twiss rather than a ratio of z. Give it a producer (a manual
+    row under §4.6 with the command, or a plans/09 derivation) or drop it.
+    (2) Which entries of Gamage et al. (arXiv:2105.13564, not in refs/)
+    Table 1 set the 30 and the 60? The report's own §1 rigidity,
+    R = 0.99813 for the α, fixes 0.1/(1 − 0.99813) = 53×, and neither
+    endpoint of the band appears anywhere in the repository."
+    *Engage:* the authors; the ePIC FF WG if the ×1.75 is a transport
+    bound somebody measured.
+    *Default:* the text stands as written until the source is located.
+
 ## Tracking
 
 | # | item | status | next action |
@@ -630,5 +720,8 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
 | 17 | HepMC3 ion-spin convention | scheduled | plans/05 step 5.D → ePIC MC group |
 | 18 | coherent-⁶Li diffractive model (plans/06) | open | small-x theory engagement; scenario bands until then |
 | 19 | RP Z-ID for A/Z = 2 (plans/06) | **redirected** | ask the incumbent: EICROC's 8-bit charge over 4 AC-LGAD planes, where one bit costs only ×1.4 in α fake rate (3.1 vs 2.3 × 10⁻⁵ at 95% ⁶Li efficiency) and the nanowire loses on fill factor instead (plans/09 D1, §9.2); and α + d is two hits 30–77 pixels apart whose second fragment vetoes 84% of the α fakes at the tagging optics (plans/09 B4) |
-| 20 | RP cutout geometry + Li divergence (reco note) | **re-measure**; optics half → plans/10 | the ePIC pot geometry moved after the Sep-2024 snapshot (plans/09 §9.4, B1); then ePIC FF WG / C-AD for the light-ion optics |
+| 20 | RP cutout geometry + Li divergence (reco note) | **measured** (2026-08-28, plans/09 B1, `epic-main` 9aaa2969); optics half → plans/10 | re-run `tools/fullsim` if the pot geometry moves again; ePIC FF WG / C-AD for the light-ion optics |
 | 21 | hadronic-method δy/y at y ≈ 0.01–0.05 (reco note) | open | ePIC inclusive WG; e+Li sample through eic-smear |
+| 22 | ξ_p ≤ 0.015: published beam-beam limit or our own bound? (2026-09-02 review, F226) | **author decision** | locate the document and table, or relabel the ask as ours to assume; the text stands as written until then |
+| 23 | the 0.6% end of the ePIC σ_p/p at 1 GeV/c (2026-09-02 review, F237) | **author decision** | name the ePIC document the upper end comes from, or mark the range as our reading of one slide; the text stands as written until then |
+| 24 | the ×1.75 relocation lever and the 30–60× band (2026-09-02 review, F254) | **author decision** | name the quantity each factor multiplies and what produced it, or withdraw them; the text stands as written until then |

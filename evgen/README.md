@@ -39,7 +39,7 @@ python3 scripts/nearbeam_sensor_budget.py # plans/09: hot-spot Z-ID, sizing, cha
 python3 scripts/nearbeam_zid_power.py     # plans/09: how much charge information Z-ID needs
 python3 scripts/nearbeam_two_hit.py       # plans/09 B4: two-hit topology of 6Li -> alpha + d, and the partner-fragment veto
 python3 ../reports/build_report.py --pdf  # assemble reports/ pages
-python3 ../tools/consistency_check.py     # 25 checks: does everything still agree?
+python3 ../tools/consistency_check.py     # 49 checks (51 with --full): does everything still agree?
 #   reports are numbered in reading order:
 #   -> 0 polarized_li_primer.html/pdf (educational physics primer)
 #   -> 1 cos2phi_money_plots_report.html/pdf (the projected measurements)
@@ -125,7 +125,7 @@ window, so it never has to clear the near-beam envelope, and the folded
 ⟨P₂⟩ slope moves from −0.193 (legacy 73 μrad) to −0.194 (Yellow Report) to
 −0.196 (tagging) against the analytic −0.200.  The consequence is a
 programme statement: for ⁷Li the tagging optics buys ×1.02 in acceptance
-for ×1/7.9–1/14.8 in luminosity, a factor 7.9–14.8 net loss and the exact
+for ×1/7.9–1/14.8 in luminosity, a factor 7.7–14.5 net loss and the exact
 inverse of ⁶Li, so the two isotopes want different machine optics and are
 different runs (plans/09 B3).
 
@@ -159,8 +159,8 @@ audits each step against the code. `scripts/reco_chain_figures.py`
 (→ `reco_chain_inclusive_6Li.png`, `reco_chain_coherent_6Li.png`)
 quantifies the findings with `polligen/reco.py`:
 
-- three of the four sweet spots of money plot 5 sit at y = 0.010–0.025,
-  where e′ alone gives δy/y = 50–120%: x needs the hadronic (Σ/JB) y;
+- all four sweet spots of money plot 5 sit at y = 0.010–0.025,
+  where e′ alone gives δy/y = 46–118%: x needs the hadronic (Σ/JB) y;
   with a 15–20% hadronic resolution the super-bins keep 73–85% purity
   and the reco-bin amplitude is within 4% of the true-bin value
   (0.60–0.69 and within 9% at the 30% row of the same scan);
@@ -175,7 +175,9 @@ quantifies the findings with `polligen/reco.py`:
 - the crossing angle changes only odd harmonics of the e′ azimuth
   (≈ 10⁻³ cos φ, cos 2φ untouched) because the ePIC axis is the electron
   beam; the covariant φ_S equals φ_e − φ_S exactly (massless target),
-  O(γ²) < 5 mrad for the nucleus;
+  O(γ²) = γ²/4 rad for the nucleus — at most 1.4 / 1.2 / 5.9 mrad
+  at the sweet spots of 10 × 99.5 / 18 × 137.5 / 5 × 40.8 GeV/u
+  (`scripts/target_mass_bound.py`, 2026-08-29);
 - coherent: the anchored deformation term modulates the recoil azimuth
   φ_t − φ_S (not the electron azimuth of money plot 6); an anisotropic RP
   cutout fakes ⟨cos 2φ_t⟩ = 0.49 (0.71) at aspect ratio 1.25 (1.5)
@@ -211,7 +213,7 @@ mixed method 25%, ε(φ′) harmonic + 10⁻³ rel-lumi offset on):
 
 - 5R (25% hadronic y — the ePIC kinematic-fit study's smearing and the
   ATHENA Fig. 22 value at y ≈ 0.01, `refs/README.md`): sweet spots 1–4 in
-  reco bins (x = 0.028 / 0.011 / 0.071 / 0.141): purity 0.63–0.69, efficiency 0.38–0.66, D = 0.90–0.99; Â within ≈ 2σ of the reco-bin truth; δÂ = 1.2 / 0.9 / 1.6 / 2.9 ×10⁻⁴ (1 yr) — 0.59–0.69 of money plot 5's single-fill errors (the m = 0-rich
+  reco bins (x = 0.028 / 0.011 / 0.071 / 0.141): purity 0.63–0.69, efficiency 0.38–0.66, D = 0.90–0.99; Â within ≈ 2σ of the reco-bin truth; δÂ = 1.2 / 0.9 / 1.6 / 2.9 ×10⁻⁴ (1 yr) — 0.60–0.67 of money plot 5's single-fill errors (the m = 0-rich
   fill gain beats the efficiency loss);
 - 7R: best bins δΔ = 2.4×10⁻³ (Q² = 1.14) and 1.2×10⁻³ (3.13 GeV²) in year 1, purities 0.54–0.57;
 - 6R (re-derived 2026-08-28 at the lithium tagging optics of Report 1 §6.1,
@@ -244,10 +246,11 @@ mixed method 25%, ε(φ′) harmonic + 10⁻³ rel-lumi offset on):
   reproducible without overwriting a published figure.
   **`--u-in-situ`** measures (u₁, u₂) from the data
   (`reco.unpolarized_insitu_fit_2d`, plans/08 A3) instead of assuming the
-  ZEUS values: δu₂ = 0.0016–0.0136 per |t| bin in one year, 1.8–15× inside
+  ZEUS values: δu₂ = 0.0028–0.0138 per |t| bin in one year at 5 × 40.8
+  (0.0016–0.0111 at 18 × 137.5), 1.7–15× inside
   the ZEUS 1σ of 0.024, which takes the u₂ systematic on a_e from 3–9% to
   negligible in quadrature.  18 × 137.5 gives 6.0×10⁶ tagged per year and
-  seven bins, six of them unbiased.  u₁ = 0.05, u₂ = 0.02 sit at the ZEUS LPS 1σ bounds
+  seven bins, six of them unbiased.  u₁ = 0.05 is the central ZEUS LPS A_LT at 0.01 < x_P < 0.1 and u₂ = 0.02 lies within one ZEUS error of zero
   (NPB 816:1); see `refs/README.md` for the sources.
   **Convention (verified in the paper's Eq. 9):** arXiv:2408.13213 expands
   1 + 2Σ a_n cos nΦ with Φ the vector-meson (recoil) azimuth relative to

@@ -206,10 +206,10 @@ answers and they differ by an order of magnitude.  Read as *5σ on the
 deformation (shape) term within the year* — the null test the deuteron
 cannot offer, and the thing the sign flip is a prediction about — the
 channel needs *f*<sub>coh</sub> = 0.283 / 0.363 / 0.218 and Plan A is
-affordable.  Read as *5σ on a 1% exotic-glue term* it needs 3.0 / 5.5 /
+affordable.  Read as *5σ on a 1% exotic-glue term in the best (x, Q²) super-bin alone* — the x-resolved requirement, priced on `tagging_optics.py`'s counting floor over the 19 / 10 / 9% of the tagged sample in that bin — it needs 3.0 / 5.5 /
 2.6 **full** years at the full year and 10.6 / 15.2 / 11.9 programme years
 at *f*<sub>coh</sub>, so no share of one year buys it and the question
-becomes how many years the programme runs, not how one is divided.  The
+becomes how many years the programme runs, not how one is divided (read instead as the x-integrated flat term of the seven-|t|-bin fit, the δa_e column of the table above, 0.00227 / 0.00184 / 0.00158 at *f*<sub>coh</sub>, gives 4.4 / 5.4 / 6.3σ on 1% per programme year, 5σ within 1.3 / 0.85 / 0.62 programme years).  The
 tables here are built on the first reading; the second is the ten-year
 column of the reports and is unaffected by any of this arithmetic except
 through the count of years.
@@ -288,7 +288,7 @@ scenario band of §4 and the a₂ deformation band of §6.3.
   ☑ *2026-08-28: met — `recopseudo.RecoResponse.bin_summary` gives purity,
   efficiency and D per super-bin, published in Report 1 Table 1 and Report 2
   Table 4 for both the Gaussian stand-in and the PYTHIA final state; the
-  retention statement survives as the reco-over-truth error ratio, 0.59–0.69,
+  retention statement survives as the reco-over-truth error ratio, 0.60–0.72,
   quoted in both reports and in the WP3-results block below. The literal
   "Case-3-style retention X%" phrasing was never restated, and no fully
   integrated (rate-weighted, all-bins) observable exists — the chain closes per
@@ -379,7 +379,7 @@ exist and close:
   ± 0.002 at 10 yr) and the flat a_e = 0.010 ± 0.0013 (1 yr; ± 0.0004 at
   10 yr). The slot geometry costs ~3× in the deformation-term error vs a
   square cutout (a_e untouched) — a pot-design lever for WP5. u₁/u₂ at
-  the ZEUS LPS 1σ bounds (A_LT, A_TT consistent with zero, NPB 816:1). **Convention verified in
+  the ZEUS LPS values (u₁ its central A_LT at 0.01 < x_P < 0.1, u₂ within one error of zero; A_LT, A_TT consistent with zero, NPB 816:1). **Convention verified in
   arXiv:2408.13213 Eq. (9): 1 + 2Σ a_n e^{inΦ} → the deformation
   modulation is 2a₂ = 0.072 at P_zz = 0.6, ⟨|t|⟩ = 0.06 (money plot 6
   injects a₂: conservative ×2).** Update §7.1 / plans/06 / the projection
@@ -535,7 +535,7 @@ efficiency explicitly.
     (1.102, 1.351, 0.740), Σ (1.000, 1.000, 0.908), Jacquet–Blondel
     (0.976, 0.908, 0.976), double angle (1.214, 1.000, 1.102),
     **mixed (1.102, 1.000, 1.000)**. At the four sweet spots themselves
-    (y = 0.0102, 0.0256, 0.0111, 0.0255) the electron method is far worse —
+    (y = 0.0101, 0.0254, 0.0111, 0.0254) the electron method is far worse —
     y is off by 9.2, 4.2, 8.5, 4.2 and x by 0.109, 0.239, 0.118, 0.238 — while
     every other row is unchanged except Jacquet–Blondel's Q² (0.998). That
     factor 3–7 between the two y is why the chain uses the mixed method.

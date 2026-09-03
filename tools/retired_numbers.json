@@ -1,0 +1,322 @@
+[
+  {
+    "retired": "53\\.6, 31\\.1 and 26\\.7 mm",
+    "current": "48, 32 and 16 mm (the measured horizontal inner edge of the pot silicon)",
+    "since": "2026-08-28",
+    "note": "F001: the 2.4 cm vertical insertion constant read as a horizontal edge; farforward.POT_BLIND_HALF_WIDTH gives 48 / 32 / 16 mm"
+  },
+  {
+    "retired": "7\\.6\\s*[–-]\\s*7\\.7",
+    "current": "6.9, 7.9 and 4.5 (env_x x R12 against the blind block, per configuration)",
+    "since": "2026-08-28",
+    "note": "F001: the pot-approach factor is per configuration, not one number at all three"
+  },
+  {
+    "retired": "tritons need IR-8",
+    "current": "the over-rigid 7Li triton is tagged at IP6 in 78 / 92 / 94% at either optics",
+    "since": "2026-08-28",
+    "note": "F118: run 14 put the R = 1.286 triton on the Roman-Pot inner side at every configuration"
+  },
+  {
+    "retired": "97%\\s*(?:in)?to the Roman Pots\\**,?\\s*at every configuration and optics",
+    "current": "97% ... in angle; the measured per-band insertion leaves 57%, station 2 only, at 5 x 41",
+    "since": "2026-08-28",
+    "note": "F009 / F121: 97% is the angle-only fast-simulation routing",
+    "allow": [
+      "in angle"
+    ]
+  },
+  {
+    "retired": "machine\\s+binds\\s+everywhere",
+    "current": "the machine binds at 10 x 100 and 18 x 275 and the re-measured silicon at 5 x 41",
+    "since": "2026-08-28",
+    "note": "F138: run 14's aperture measurement made 5 x 41 silicon-bound"
+  },
+  {
+    "retired": "fifteen assumptions",
+    "current": "sixteen assumptions",
+    "since": "2026-08-28",
+    "note": "F214: Report 3 Table 9 gained item 16 in run 14"
+  },
+  {
+    "retired": "a quarter of the (?:forward loss|escape)",
+    "current": "a third of the forward loss (0.170 -> 0.115 at the first spot)",
+    "since": "2026-08-28",
+    "note": "F199: the quarter is the lab-frame run-11 figure; hfs_acceptance gives 31-42%"
+  },
+  {
+    "retired": "0\\.10\\s*[–-]\\s*1\\.00%",
+    "current": "0.13-1.03% (median 0.25%) per plotted 7R bin",
+    "since": "2026-08-28",
+    "note": "F128: the run-8 value of the response-MC term on the published _hfscal bar"
+  },
+  {
+    "retired": "0\\.13\\s*[–-]\\s*0\\.21%",
+    "current": "0.06-0.28% (0.28 / 0.28 / 0.08 / 0.06% at spots 1-4)",
+    "since": "2026-08-28",
+    "note": "F068 / F189: the run-7 Monte-Carlo floor, superseded by the run-11 chain",
+    "allow": [
+      "predates",
+      "of run 7"
+    ]
+  },
+  {
+    "retired": "requires Roman-Pot charge discrimination",
+    "current": "controlled by the two-component |t| fit and the partner-deuteron veto; pot charge identification is a redirected question (plans/09 D1)",
+    "since": "2026-08-28",
+    "note": "F139: run 13 ranked the alpha + d veto the strongest handle after the |t| shape"
+  },
+  {
+    "retired": "three of the four sweet spots",
+    "current": "all four sweet spots",
+    "since": "2026-08-27",
+    "note": "F062 / F089: 'three' was true of the retired e10 x 6Li50 configuration"
+  },
+  {
+    "retired": "e10 x 6Li50",
+    "current": "e10 x 6Li 99.5 GeV/u",
+    "since": "2026-08-27",
+    "note": "F173: the rigidity-scaled configuration retired with the gamma-matched menu"
+  },
+  {
+    "retired": "≈ 3% scale",
+    "current": "<= 5% scale, the working value of specification T1 (3% the optimistic case)",
+    "since": "2026-08-27",
+    "note": "F004: the tensor-polarimetry scale is T1 since run 10"
+  },
+  {
+    "retired": "δPzz/Pzz ≈ 3%",
+    "current": "delta Pzz/Pzz <= 5% (3% the optimistic case)",
+    "since": "2026-08-27",
+    "note": "F004: the pre-run-10 3% carried as the programme's own scale"
+  },
+  {
+    "retired": "22\\s*[–-]\\s*29%",
+    "current": "17-25% (0.25 / 0.17 / 0.22 at 5 x 41 / 10 x 100 / 18 x 275)",
+    "since": "2026-08-29",
+    "note": "F014: joint alpha + d recording at the tagging optics, on the per-configuration transport",
+    "allow": [
+      "this entry was written on"
+    ]
+  },
+  {
+    "retired": "3\\s*[–-]\\s*53 mm",
+    "current": "3-41 mm",
+    "since": "2026-08-29",
+    "note": "F015: the alpha + d two-hit separation on the per-configuration transport"
+  },
+  {
+    "retired": "0\\.80 / 0\\.84 / 0\\.84",
+    "current": "0.79 / 0.82 / 0.84",
+    "since": "2026-08-29",
+    "note": "F143: the partner-deuteron veto at the measured edges"
+  },
+  {
+    "retired": "0\\.80, 0\\.84 and 0\\.84",
+    "current": "0.79, 0.82 and 0.84",
+    "since": "2026-08-29",
+    "note": "F143: the partner-deuteron veto at the measured edges"
+  },
+  {
+    "retired": "0\\.00 / 0\\.31 / 0\\.56",
+    "current": "0.00 / 0.21 / 0.56",
+    "since": "2026-08-29",
+    "note": "F115: plans/06's veto row on the per-configuration transport"
+  },
+  {
+    "retired": "84\\s*[–-]\\s*85%",
+    "current": "82-84%",
+    "since": "2026-08-29",
+    "note": "F115: the alpha + d partner in the pots at the tagging optics"
+  },
+  {
+    "retired": "11\\s*[–-]\\s*26 mm",
+    "current": "11-17 mm",
+    "since": "2026-08-29",
+    "note": "F015: the alpha + d hit separation quoted in README's tagging bullet"
+  },
+  {
+    "retired": "19\\.24 / — /",
+    "current": "19.24 / 4.56 / 0.311 (R34 at 5 x 41 measured 2026-08-29 on a zero-insertion geometry)",
+    "since": "2026-08-29",
+    "note": "F215 / F011: the missing 5 x 41 vertical lever"
+  },
+  {
+    "retired": "27\\s*[–-]\\s*35%",
+    "current": "22-31%",
+    "since": "2026-08-29",
+    "note": "F133: the 6Li alpha tag at the lithium tagging optics"
+  },
+  {
+    "retired": "0\\.12\\s*[–-]\\s*0\\.33 mrad",
+    "current": "0.12-0.36 mrad",
+    "since": "2026-08-29",
+    "note": "F238: the tagging-optics envelope on the per-configuration transport"
+  },
+  {
+    "retired": "32\\s*[–-]\\s*42% tag",
+    "current": "25-37% tag",
+    "since": "2026-08-29",
+    "note": "F138: the coherent tag a following near-beam layer buys"
+  },
+  {
+    "retired": "6\\.2\\s*(?:×|x)\\s*10⁶",
+    "current": "6.1x10^6 tagged recoils per year at the 18 x 137.5 optimum",
+    "since": "2026-08-29",
+    "note": "F179: tagging_optics.py prints N_tag = 6.1476 x 10^6 / yr"
+  },
+  {
+    "retired": "tagged script's 0\\.9620",
+    "current": "the tagged script's 0.9617",
+    "since": "2026-08-29",
+    "note": "F102 / F217: the 7Li alpha Roman-Pot tag after money plot 4's b1-free kernel"
+  },
+  {
+    "retired": "2\\.5\\s*[–-]\\s*2\\.9%",
+    "current": "2.5-2.8%",
+    "since": "2026-08-29",
+    "note": "F108: the Roman-Pot slice of the tagged sampler"
+  },
+  {
+    "retired": "0\\.9218",
+    "current": "0.9217",
+    "since": "2026-08-29",
+    "note": "F236: the 7Li triton tag at 10 x 99.5 at the tagging optics"
+  },
+  {
+    "retired": "0\\.43\\s*σ",
+    "current": "0.45 sigma",
+    "since": "2026-08-29",
+    "note": "F120: the polarized-EMC reach at 10 fb^-1/u on the EPPS21/CT18ANLO baseline"
+  },
+  {
+    "retired": "1\\.37\\s*σ",
+    "current": "1.43 sigma",
+    "since": "2026-08-29",
+    "note": "F120: the polarized-EMC reach at 100 fb^-1/u on the EPPS21/CT18ANLO baseline"
+  },
+  {
+    "retired": "18\\.9% at 0\\.71",
+    "current": "18.7% at 0.71",
+    "since": "2026-08-29",
+    "note": "F120: the 7Li bound-proton depletion on the EPPS21 baseline"
+  },
+  {
+    "retired": "within 5 mrad of it for ⁶Li",
+    "current": "differing from it by gamma^2/4 radians - 1.4 mrad at the four bins, 5.9 at the low configuration",
+    "since": "2026-08-29",
+    "note": "F060: target_mass_bound.py gives 1.38 / 1.20 / 5.93 mrad; the bound is not isotope-scoped"
+  },
+  {
+    "retired": "< 5 mrad for the nucleus",
+    "current": "gamma^2/4 rad for the nucleus - at most 1.4 / 1.2 / 5.9 mrad at the sweet spots",
+    "since": "2026-08-29",
+    "note": "F193: evgen/README's covariant-azimuth bound"
+  },
+  {
+    "retired": "η = −2\\.9 to −1\\.6",
+    "current": "eta = -3.4 to -0.9 over the twelve spots of the three configurations",
+    "since": "2026-08-29",
+    "note": "F134: -2.9 to -1.6 is the mid configuration's four spots alone",
+    "allow": [
+      "−3\\.4 to −0\\.9",
+      "mid configuration"
+    ]
+  },
+  {
+    "retired": "21\\s*[–-]\\s*44σ",
+    "current": "21-43 sigma",
+    "since": "2026-08-29",
+    "note": "F163: the exact quotient is 42.9 sigma, not the 44 the printed digits give"
+  },
+  {
+    "retired": "5\\.4</td><td class=\\\"mono\\\">2\\.8<",
+    "current": "5.4 | 2.7 (Report 2 Table 4 row 3, delta A from Report 1)",
+    "since": "2026-08-29",
+    "note": "F064: run 16's rounding crossing moved the third mid spot's one-year error 2.8 -> 2.7 x 10^-4"
+  },
+  {
+    "retired": "0\\.15\\s*[–-]\\s*1\\.5%",
+    "current": "0.1-1.0% per plotted bin",
+    "since": "2026-09-02",
+    "note": "F010: the 25%-stand-in --unfold-scan fold, never a published bar"
+  },
+  {
+    "retired": "20\\s*[–-]\\s*24%",
+    "current": "20-29%",
+    "since": "2026-09-02",
+    "note": "F069: the worst Q2 slice was dropped from the bin-centering envelope"
+  },
+  {
+    "retired": "0\\.59\\s*[–-]\\s*0\\.69",
+    "current": "0.60-0.67 (stand-in column) / 0.60-0.72 (both hadronic-y models)",
+    "since": "2026-09-02",
+    "note": "F213: the ratio was computed with the stale 2.8 x 10^-4"
+  },
+  {
+    "retired": "\\(−4\\.1, \\+8\\.0, −5\\.5",
+    "current": "(-4.2, +8.0, -5.6, +4.9)%",
+    "since": "2026-09-02",
+    "note": "F132: the pre-fit bin-centering quadruple, mis-rounded"
+  },
+  {
+    "retired": "3 mrad at the sweet spots",
+    "current": "3 mrad at spots 1-2, 2 mrad at spots 3-4",
+    "since": "2026-09-02",
+    "note": "F201: reco.tracking_angular_resolution gives 3, 3, 2, 2 mrad"
+  },
+  {
+    "retired": "whole gap 1000×",
+    "current": "the 496 mm^2 whole gap 124x",
+    "since": "2026-09-02",
+    "note": "F117: 496 / 4 = 124"
+  },
+  {
+    "retired": "four orders below",
+    "current": "over three orders below",
+    "since": "2026-09-02",
+    "note": "F243: 10^8 / (3-5) x 10^4 is 3.3-3.5 orders"
+  },
+  {
+    "retired": "y = 0\\.010, 0\\.026",
+    "current": "y = 0.010, 0.025, 0.011 and 0.025",
+    "since": "2026-09-02",
+    "note": "F033: the exact bin centres give 0.010119 / 0.025418 / 0.011099 / 0.025438"
+  },
+  {
+    "retired": "y ≈ 0\\.026",
+    "current": "y ~ 0.025",
+    "since": "2026-09-02",
+    "note": "F033: 0.026 comes from re-deriving y from a two-figure x"
+  },
+  {
+    "retired": "0\\.0102, 0\\.0256",
+    "current": "0.0101, 0.0254, 0.0111 and 0.0254",
+    "since": "2026-09-02",
+    "note": "F033: the four-digit sweet-spot y list"
+  },
+  {
+    "retired": "102\\s*[–-]\\s*118 nm",
+    "current": "102-120 nm",
+    "since": "2026-09-02",
+    "note": "F250: the w = 800 nm point gives 120.0 nm"
+  },
+  {
+    "retired": "7\\.9\\s*[–-]\\s*14\\.8 (?:<i>)?net loss",
+    "current": "7.7-14.5 net loss",
+    "since": "2026-09-02",
+    "note": "F216: 7.9-14.8 is the luminosity factor before the x1.02 tag gain"
+  },
+  {
+    "retired": "x-moment equals the bag value",
+    "current": "a per-nucleon Delta whose x-moment is one third of the bag value",
+    "since": "2026-09-02",
+    "note": "F003: delta_models.py solves the constraint undiluted, then applies 1/3"
+  },
+  {
+    "retired": "≈ 100 m and ≈ 71 m",
+    "current": "~ 1.5 x 10^2 m and ~ 2.3 x 10^2 m",
+    "since": "2026-09-02",
+    "note": "F100: the companion beta* asks referred to each configuration's high-acceptance beta*_x"
+  }
+]

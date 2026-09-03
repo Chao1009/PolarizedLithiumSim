@@ -34,7 +34,7 @@ level (plans/07 WP3 -> WP5) -- money plot 6 re-derived with
     the gluon-transversity term cos 2alpha; the unpolarized lepton-plane
     /recoil-plane harmonics u_1 cos(alpha-beta), u_2 cos 2(alpha-beta)
     (the L-T and T-T' interference of diffractive DIS, Nikolaev-
-    Pronyaev-Zakharov hep-ph/9812212) are set at the 1-sigma edge of the
+    Pronyaev-Zakharov hep-ph/9812212) are set to the size allowed by the
     ZEUS LPS measurement (A_LT, A_TT consistent with zero within
     +-0.03-0.05; NPB 816 (2009) 1, Sec. 10.2);
   * the anchor convention (arXiv:2408.13213 Eq. 9: 1 + 2 sum a_n cos n Phi):
@@ -157,11 +157,11 @@ def main():
                          "interference).  ZEUS LPS, NPB 816 (2009) 1 "
                          "[refs/0812.2003]: A_LT = -0.036 +- 0.036 (x_P < "
                          "0.01), +0.051 +- 0.024 (0.01-0.1); default at the "
-                         "1-sigma edge")
+                         "central value of the 0.01-0.1 range")
     ap.add_argument("--u2", type=float, default=0.02,
                     help="unpolarized cos 2(alpha-beta) coefficient (T-T' "
                          "interference).  ZEUS LPS: A_TT = -0.030 +- 0.037, "
-                         "-0.010 +- 0.024; default inside the 1-sigma band")
+                         "-0.010 +- 0.024; default within one error of zero, 1.2-1.4 sigma above either central value")
     ap.add_argument("--optics", default="legacy",
                     choices=("legacy", "tagging", "high-acceptance"),
                     help="beam optics.  'tagging': the lithium tagging "
@@ -650,7 +650,7 @@ def main():
         r"%s cutout $|p_x|<%.2f$, $|p_y|<%.2f$ GeV [%s]"
         "\n" r"$N_{\rm tag}$ = %.2g (1 yr) vs %.2g with the constant 0.20 GeV cut at $L_{HA}$; "
         r"deformation $c_2=2a_2$ (Eq. 9 convention), $a_e=%.3f$"
-        "\n" r"$u_1=%.2f$, $u_2=%.2f$ (ZEUS LPS $1\sigma$ bounds); "
+        "\n" r"$u_1=%.2f$, $u_2=%.2f$ (ZEUS LPS: $u_1$ its central $A_{LT}$, $u_2$ within one error of zero); "
         r"two-fill %s fit with the MC template basis; statistical errors only"
         % (config.label(), args.pzz, 1e6 * args.sigma_theta,
            1e6 * args.sigma_theta * args.aspect,

@@ -185,7 +185,7 @@ matrix selection (Report 3 item 13). B0 and ZDC were never examined, and
 with no override in `RPOTS.cc`/`FOFFMTRK.cc` — every far-forward particle is
 reconstructed as a proton. The "derive" half is ours, not the FF group's, and
 the repo holds R12, R34 and D per configuration (`farforward.POT_LEVERS`:
-19.24 / — / 0.311, 21.25 / 3.35 / 0.287 and 29.97 / 2.93 / 0.292 m) plus the
+19.24 / 4.56 / 0.311, 21.25 / 3.35 / 0.287 and 29.97 / 2.93 / 0.292 m, the 5 × 41 vertical lever read off a zero-insertion scratch geometry on 2026-08-29) plus the
 second-order dispersion D2 = −0.190 / −0.206 / −0.215 m, which is what makes
 the over-rigid arithmetic reproduce the measurement to a tenth of a
 millimetre; R11, R21, R22 and D′ are still unmeasured.*
