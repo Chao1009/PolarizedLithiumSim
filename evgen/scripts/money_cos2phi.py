@@ -44,7 +44,8 @@ from polligen import bookkeeping as bk  # noqa: E402
 from polligen.estimators import (cos2phi_fit_binned,  # noqa: E402
                                  cos2phi_fit_err)
 from polligen.sample import InclusiveSampler, phi_histogram_pseudo  # noqa: E402
-from polligen.xsec import InclusiveKernel  # noqa: E402
+from polligen.xsec import (InclusiveKernel,  # noqa: E402
+                           tensor_leakage_amplitude)
 
 from polli_fastsim import beams, delta_models as dm, fom  # noqa: E402
 PRETTY = {"moment_A": "moment-constrained $\\Delta$", "moment_B": "no-$F_1$ variant", "toy": "flat toy"}  # figure labels
@@ -56,6 +57,157 @@ from polli_fastsim.structure import NuclearF2  # noqa: E402
 # Okabe-Ito (colorblind-safe): blue = injected, vermillion = fit/1-yr,
 # green = alternative interpretation
 C_TRUTH, C_FIT, C_ALT = "#0072B2", "#D55E00", "#009E73"
+
+# --- the O(gamma^2) tensor-leakage switches, shared by the three money
+# scripts (plans/08 D2).  EVERY DEFAULT IS OFF: with none of these flags
+# given, the kernel is the massless Hoodbhoy-Jaffe-Manohar one and every
+# published number is bit for bit what it has always been.
+
+# What the subtraction cannot reach.  The correction removes the
+# b3 = b4 = 0 leakage; at b3 = b4 = 0.1 b2 the true leakage is 1.60-1.65x
+# that (xsec.tensor_leakage_ratio, measured at all twelve sweet spots), so
+# ~0.6 of the subtracted value survives as an irreducible model band.  It
+# is the reason the subtraction shrinks the systematic by 1.6 and not by
+# an order of magnitude.
+#
+# It is a PRIOR width on the unmeasured b3, b4 and not the residual
+# against the b3, b4 a given run assumes, so it is a fixed constant: with
+# --b3-frac 0.1 --b4-frac 0.1 the generator and the subtraction share the
+# same higher twist and `tensor_gamma_leakage.py` prints a zero residual
+# against the reference, while this band stays open, because an
+# experiment does not know that it guessed right.  The in-situ route
+# carries a second, MEASURED width on top of it (the residual mis-scaling
+# of its rate sector); money_cos2phi_reco.py adds the two in quadrature.
+LEAKAGE_B34_BAND = 0.6
+
+
+def add_tensor_leakage_args(ap, with_scan=False):
+    """The four (or five) tensor-leakage flags, identical in all three
+    money scripts."""
+    ap.add_argument("--tensor-gamma", action="store_true",
+                    dest="tensor_gamma",
+                    help="generate with the EXACT finite-gamma tensor "
+                         "b-sector (Cosyn Eqs. 9/10/14/16/17/24, "
+                         "xsec.InclusiveKernel(tensor_gamma=True)) instead "
+                         "of the massless Hoodbhoy-Jaffe-Manohar one.  OFF "
+                         "by default: every published number is on the "
+                         "massless path, and switching this on re-draws "
+                         "every pseudo-measurement (the leakage moves the "
+                         "phi-independent harmonic too, hence the expected "
+                         "counts).  A run with it on writes its own PNG")
+    ap.add_argument("--subtract-tensor-leakage", default="none",
+                    choices=("none", "kappa", "model"),
+                    dest="subtract_tensor_leakage",
+                    help="subtract the O(gamma^2) b1-b4 leakage from the "
+                         "extracted cos 2phi amplitude (and so from "
+                         "Delta-hat).  'none' (default) carries it as a "
+                         "systematic, which is what every published number "
+                         "does.  'kappa' takes the rate sector from the "
+                         "data -- the constant term of the same ratio fit, "
+                         "with the bin-independent pedestal a "
+                         "relative-luminosity error leaves on it measured "
+                         "across bins and removed -- and only the kinematic "
+                         "ratio L from the model; 'model' takes the whole "
+                         "leakage from the "
+                         "b1 model, which is a closure test and not a "
+                         "publishable route.  Requires --tensor-gamma: "
+                         "subtracting a leakage the pseudo-data do not "
+                         "carry would bias them")
+    ap.add_argument("--b3-frac", type=float, default=0.0, dest="b3_frac",
+                    help="b3 as a fraction of b2 (default 0).  The "
+                         "unmeasured higher-twist slot that breaks the "
+                         "3 : -3 : 1 cancellation the small leakage rests "
+                         "on; --tensor-gamma only")
+    ap.add_argument("--b4-frac", type=float, default=0.0, dest="b4_frac",
+                    help="b4 as a fraction of b2 (default 0); "
+                         "--tensor-gamma only")
+    if with_scan:
+        ap.add_argument("--leakage-scan", action="store_true",
+                        dest="leakage_scan",
+                        help="print the leakage budget per sweet spot -- "
+                             "A_leak, L = A_leak/kappa, the fitted kappa, "
+                             "the shift of Delta-hat the subtraction makes "
+                             "and the b3/b4 band it leaves.  A pure "
+                             "addition to the output: no figure changes")
+
+
+def check_tensor_leakage_args(ap, args):
+    """Refuse the combinations that would silently bias a number."""
+    if args.subtract_tensor_leakage != "none" and not args.tensor_gamma:
+        ap.error("--subtract-tensor-leakage needs --tensor-gamma: on the "
+                 "massless path the pseudo-data carry no leakage, so "
+                 "subtracting one would bias the extraction by its full "
+                 "size")
+    if (args.b3_frac or args.b4_frac) and not args.tensor_gamma:
+        ap.error("--b3-frac/--b4-frac need --tensor-gamma: only the exact "
+                 "finite-gamma b-sector reads b3 and b4")
+
+
+def b34_funcs(args):
+    """(b3_func, b4_func) as fractions of b2 = 2 x b1 on the toy b1 --
+    the convention of `scripts/tensor_gamma_leakage.py`."""
+    def frac(f):
+        return ((lambda xx, qq, f1: f * 2.0 * xx * toy_b1(xx, qq, f1))
+                if f else None)
+    return frac(args.b3_frac), frac(args.b4_frac)
+
+
+def tensor_leakage_tag(args):
+    """Filename key for a non-default tensor-leakage setting ('' at the
+    published defaults).
+
+    The published PNGs belong to the massless path with no subtraction; a
+    run with any of these switches appends its key so that it cannot
+    overwrite them -- the same guard as `fom.run_share_tag` and
+    `money_tagged_azz.output_stem`."""
+    keys = []
+    if getattr(args, "tensor_gamma", False):
+        keys.append("tgamma")
+    sub = getattr(args, "subtract_tensor_leakage", "none")
+    if sub != "none":
+        keys.append("sub" + sub)
+    for name, val in (("b3f", getattr(args, "b3_frac", 0.0)),
+                      ("b4f", getattr(args, "b4_frac", 0.0))):
+        if val:
+            keys.append(("%s%g" % (name, val)).replace(".", "p"))
+    return "_".join(keys)
+
+
+def truth_leakage_route(args):
+    """How the TRUTH-LEVEL scripts should name the route they ran.
+
+    There is no fitted constant at truth level, so 'kappa' and 'model'
+    perform the same subtraction here -- the model's own folded rate
+    sector.  The distinction is a reconstructed-level one
+    (money_cos2phi_reco.py, where kappa_hat is a measured quantity), and
+    a run record that said 'kappa' unqualified would claim an in-situ
+    route this script cannot take."""
+    route = args.subtract_tensor_leakage
+    if route == "kappa":
+        return ("kappa (identical to model at truth level: there is no "
+                "fitted constant here)")
+    return route
+
+
+def leakage_amplitude(sampler, cat, mask, sigma_pb):
+    """The cos 2phi' tensor leakage of a truth-level super-bin, per unit
+    P_zz, on the SAME rate weights `measure` averages the amplitude over.
+
+    `sampler.effective_modulation` returns a2_eff = sum_m p_m sum_cells
+    xsec a_2 divided by the total sigma; the b-sector part of that
+    numerator is P_zz sum_cells xsec h2 because every harmonic is linear
+    in the rank-2 moment, so this is a2_eff's leakage half divided by
+    P_zz.  It is what `--subtract-tensor-leakage` removes from both the
+    fitted amplitude and the truth reference."""
+    sel = np.asarray(mask, dtype=bool)
+    y = sampler.q2_cells / (sampler.s * sampler.x_cells)
+    _h0, h2 = tensor_leakage_amplitude(sampler.tables, sampler.x_cells,
+                                       sampler.q2_cells, y,
+                                       theta_s=cat.theta_s, j=cat.j)
+    if sigma_pb <= 0.0:
+        return 0.0
+    return float((sampler.xsec_flat[sel] * np.asarray(h2)[sel]).sum()
+                 / sigma_pb)
 
 
 def pick_sweet_spots(proj, sig, n=4, min_dx=0.35):
@@ -157,9 +309,11 @@ def main():
                     help="10-year EIC program [fb^-1/nucleon]")
     ap.add_argument("--pzz", type=float, default=0.60)
     ap.add_argument("--nspots", type=int, default=4)
+    add_tensor_leakage_args(ap)
     ap.add_argument("--seed", type=int, default=20260810)
     ap.add_argument("--outdir", default=".")
     args = ap.parse_args()
+    check_tensor_leakage_args(ap, args)
 
     config = beams.default_configs("6Li")[args.config]
     lumi1_pb = args.lumi_1yr * 1e3
@@ -173,7 +327,10 @@ def main():
 
     # --- sweet spots from the analytic significance map -------------------
     proj = fom.project_rates(config, scenario)
-    kern = InclusiveKernel(beams.LI6, b1_func=toy_b1, delta_func=delta_func)
+    b3_func, b4_func = b34_funcs(args)
+    kern = InclusiveKernel(beams.LI6, b1_func=toy_b1, delta_func=delta_func,
+                           b3_func=b3_func, b4_func=b4_func,
+                           tensor_gamma=args.tensor_gamma)
     obs = fom.project_observables(config, scenario, proj,
                                   kern.g1_model, toy_b1, delta_func)
     spots = pick_sweet_spots_banded(proj, obs["sig_a_cos2phi"])[:args.nspots]
@@ -182,6 +339,18 @@ def main():
     sampler = InclusiveSampler(kern, config, scenario, nx=60, nq2=45)
     plan = bk.transverse_tensor_plan(args.pzz)
     cat = plan.categories[0]
+    subtract = args.subtract_tensor_leakage != "none"
+
+    def leak_of(mask, m):
+        """The leakage to remove from one super-bin's amplitude and truth,
+        per unit P_zz.  At the truth level the 'kappa' and 'model' routes
+        coincide -- there is no fitted kappa here, only the model's own
+        rate sector -- so both take the folded leakage itself; the
+        distinction is a reconstructed-level one (money_cos2phi_reco.py).
+        """
+        if not subtract:
+            return 0.0
+        return leakage_amplitude(sampler, cat, mask, m["sigma_pb"])
 
     fig = plt.figure(figsize=(12.5, 6.8))
     gs = GridSpec(2, 3, figure=fig, width_ratios=(1, 1, 1.35),
@@ -193,6 +362,14 @@ def main():
         xlo, xhi, q2lo, q2hi = superbin_edges(proj, i, j)
         mask = superbin_mask(sampler, xlo, xhi, q2lo, q2hi)
         m = measure(sampler, cat, mask, lumi1_pb, plan.pzz_true, rng)
+        leak = leak_of(mask, m)
+        if leak:
+            # additive on the amplitude; the truth reference and the drawn
+            # curve lose the same leakage, so what is plotted and what is
+            # fitted stay the same quantity (plans/08 D2 risk R3)
+            m["amp"] -= leak
+            m["truth"] -= leak
+            m["a2_eff"] = m["a2_eff"] - leak * plan.pzz_true
         err10 = cos2phi_fit_err(lumi10_pb * m["sigma_pb"],
                                 plan.pzz_true)
         centers = 0.5 * (m["edges"][:-1] + m["edges"][1:])
@@ -254,6 +431,11 @@ def main():
         # independent 10-yr pseudo-measurement (2026-08-11 audit: reusing
         # the 1-yr draw with 10-yr bars scattered points ~sqrt(10) sigma)
         m10 = measure(sampler, cat, mask, lumi10_pb, plan.pzz_true, rng)
+        leak = leak_of(mask, m)
+        if leak:
+            m["amp"] -= leak
+            m["truth"] -= leak
+            m10["amp"] -= leak
         m["amp10"] = m10["amp"]
         m["err10"] = m10["err"]
         pts.append((xc, m))
@@ -308,11 +490,18 @@ def main():
     fig.subplots_adjust(top=0.86, bottom=0.09, left=0.06, right=0.985)
     outdir = pathlib.Path(args.outdir)
     outdir.mkdir(parents=True, exist_ok=True)
-    out = outdir / "money_cos2phi_6Li.png"
+    # a non-default tensor-leakage setting writes its own stem, so it
+    # cannot overwrite the published massless-path figure
+    tag = tensor_leakage_tag(args)
+    out = outdir / ("money_cos2phi_6Li%s.png" % ("_" + tag if tag else ""))
     fig.savefig(out, dpi=140)
     print("wrote", out)
     print("delta model:", model.info(),
           "" if q2_ref is None else "(<Q2> = %.3g GeV^2)" % q2_ref)
+    if args.tensor_gamma:
+        print("tensor sector: EXACT finite-gamma kernel, b3 = %.3g b2, "
+              "b4 = %.3g b2; leakage subtraction: %s"
+              % (args.b3_frac, args.b4_frac, truth_leakage_route(args)))
     for line in summary:
         print(line)
 

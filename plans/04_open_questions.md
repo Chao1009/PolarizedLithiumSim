@@ -2,7 +2,7 @@
 
 Items that gate or shape the simulation program but are *not* solvable
 inside it. Each has an owner-to-engage and a default assumption we proceed
-with until answered. Updated 2026-09-02 (first version 2026-06-12): the consistency review of
+with until answered. Updated 2026-09-06 (first version 2026-06-12): the consistency review of
 Reports 0–4 added items 22–24, the three passages it could not settle from
 the repository. The 2026-08-25 revision followed the fetch-verified
 literature sweep — several items moved from "unknown" to "answered, needs
@@ -623,51 +623,57 @@ Three passages the review of 2026-09-02
 (`docs/consistency_review_2026-09-02.md` §2.5) could not settle from the
 repository: each states a number whose producer or citation exists
 nowhere in it, so only the authors can say what it is. The review left a
-placeholder edit for each, unapplied.
+placeholder edit for each, unapplied. Two of them were settled on
+2026-09-06 by locating the sources (items 22 and 23); item 24 remains an
+author decision.
 
-22. **The source of ξ_p ≤ 0.015** (review finding F226). Report 3 Table 9
-    row 2 (`reports/eic_epic_reference.template.html`) asks C-AD whether
-    IR6 can be matched with the horizontal hadron β* raised 46–164× "and
-    the electron β* co-de-squeezed so ξ_p stays ≤ 0.015"; Report 4 §7
-    (`reports/nanowire_far_forward.template.html`) repeats the clause from
-    there. The bound lives in those two sentences and nowhere else — no
-    derivation in Report 3 §4.2, no entry in either reference list or in
-    `refs/refs_dict.json`, nothing in the four Yellow-Report parts (Tables
-    10.1/10.2 carry no beam-beam row), and, before this entry, no other
-    occurrence of "beam-beam" anywhere in the repository — while the
-    Report 3 dateline
-    promises that every Table 9 entry carries its source and its status.
-    *The question:* "Where does ξ_p ≤ 0.015 come from: a published EIC
+22. **The source of ξ_p ≤ 0.015** (review finding F226) — ☑ **closed
+    2026-09-06.** The bound is the EIC Conceptual Design Report's hadron
+    beam-beam design limit and not this programme's own: §1.2 p. 5 lists it
+    among the design parameters ("hadrons: ξ_p ≤ 0.015; electrons:
+    ξ_e ≤ 0.1"), §1.4 p. 11 calls the value "suggested by previous
+    performance and confirmed by extensive beam-beam simulations", §3.1.1
+    p. 95 adopts RHIC's achieved ξ_p = 0.015 in proton-proton collisions as
+    the EIC design value, and §4.6.1 pp. 392 and 395 carry it into the
+    interaction-region design; Tables 3.3 and 3.4 run the proton at 3/3,
+    12/12, 12/12, 14/14 and 15/9 × 10⁻³ (h/v) at 18 × 275, 10 × 275,
+    10 × 100, 5 × 100 and 5 × 41 GeV, at or under it. For ions the CDR does
+    not restate the number and does not leave it open either: §1.4 p. 14
+    scales the hadron tune shift with Z and inversely with A, Table 3.5
+    runs the Au beam at 1–5 × 10⁻³, and Appendix A §A.2.2 caps the two
+    interaction regions together at 0.03, i.e. 0.015 apiece — so applying
+    the proton limit to a lithium beam (Z/A = ½) is conservative. Cited as
+    Report 3 [11] and Report 4 [15] on 2026-09-06; the Yellow Report
+    carries no beam-beam row (confirmed).
+    *The question was:* "Where does ξ_p ≤ 0.015 come from: a published EIC
     beam-beam limit for the hadron beam (which document and table?), or is
     it this programme's own assumed bound, to be labelled 'ours to
     specify' in Table 9 as rows 11, 12 and 16 are?"
-    *Engage:* the authors; C-AD if it is a design limit to be cited.
-    *Default:* the text stands as written until the source is located.
-23. **The upper end of the ePIC momentum resolution, 0.45–0.6% at
-    1 GeV/c** (review finding F237). Report 3 Table 8's tracking σ_p/p row
-    reads "ePIC full simulation reaches 0.45–0.6% at 1 GeV/c, so realistic
-    to ≈ ±20%", uncited in a report whose masthead promises a source for
-    every entry, and the claim originated in the docstring of
-    `evgen/polligen/reco.py` (line 413), the only other live copy. The one
-    ePIC full-simulation momentum resolution held on disk is S. Maple,
-    Birmingham seminar 11 Dec 2024, slide 47
-    (`refs/EIC_Seminar_SMaple_2024.pdf` p. 47, indexed in
-    `refs/refs_dict.json`): PYTHIA 8 NC DIS, Craterlake 23.12.0,
-    Q² > 100 GeV², electron from tracking, 0 ≤ η ≤ 0.5, fit
-    Δp/p [%] = 0.055 p ⊕ 0.45, i.e. 0.453% at p = 1 GeV/c against the
-    barrel model's 0.503% — a ≈ 10% comparison, in one η slice. Nothing in
-    the repository gives 0.6%.
-    *The question:* "Which ePIC document gives the upper end of 'ePIC full
-    simulation reaches 0.45–0.6% at 1 GeV/c depending on η slice'? Maple's
-    Dec-2024 seminar slide 47 — the only ePIC full-simulation momentum
-    resolution in refs/ — fits Δp/p = 0.055 p ⊕ 0.45% for the single slice
-    0 ≤ η ≤ 0.5, i.e. 0.45% at 1 GeV/c and nothing at 0.6%. If a second,
-    η-resolved source exists it should be added to refs/ and cited in
-    Table 8; if not, Table 8 and reco.py must narrow the claim to 0.45% in
-    0 ≤ η ≤ 0.5, which turns the row's ±20% into ≈ 10% there."
-    *Engage:* the authors; the ePIC tracking/inclusive WG if a second,
-    η-resolved source exists.
-    *Default:* the text stands as written until the source is located.
+    *Engage:* none needed.
+23. **The upper end of the ePIC momentum resolution at 1 GeV/c**
+    (review finding F237) — ☑ **closed 2026-09-06.** The η-resolved ePIC
+    full simulation is in the document Report 3 [7] already named: the
+    Preliminary Design Report of September 2024, Figure 8.9 ("ePIC 24.08",
+    single pions, five η ranges) — public snapshot
+    doi:10.5281/zenodo.13866213, the same figure standing as Fig. 3.56 of
+    the Preliminary Technical Design Report v3.1,
+    doi:10.5281/zenodo.18271601. Digitised 2026-09-06 by two independent
+    agents, it reads 3.00 / 1.08 / 0.38 / 1.13 / 2.55% at p = 1 GeV/c in
+    −3.5 < η < −2.5, −2.5 < η < −1, −1 < η < 1, 1 < η < 2.5 and
+    2.5 < η < 3.5. No slice gives 0.6%: the 0.6% end came from the 1.4 T
+    BaBar-magnet reference design of arXiv:2305.15593 (X. Li, 2023), not
+    from ePIC. Report 3 Table 8 and the `reco.py` docstring are restated on
+    the figure — the barrel model's 0.50% is ≈ 30% pessimistic against
+    0.38%, while the two backward slices, which hold eleven of the twelve
+    sweet spots, are right to ≈ 8% — and Maple's 0.45% in 0 ≤ η ≤ 0.5 is
+    Report 3 [10].
+    *The question was:* which ePIC document gives the upper end of the
+    resolution band Table 8 quoted, Maple's seminar slide 47 being the only
+    ePIC full-simulation momentum resolution then held in `refs/` and
+    giving 0.45% at 1 GeV/c in the single slice 0 ≤ η ≤ 0.5. The answer is
+    the Preliminary Design Report's own figure, and Table 8 now carries it
+    η by η.
+    *Engage:* none needed.
 24. **Report 4 §7's ×1.75 relocation lever and its 30–60× dispersive
     shortfall** (review finding F254). The lever list of §7
     (`reports/nanowire_far_forward.template.html`) states that "detector
@@ -703,6 +709,20 @@ placeholder edit for each, unapplied.
     *Engage:* the authors; the ePIC FF WG if the ×1.75 is a transport
     bound somebody measured.
     *Default:* the text stands as written until the source is located.
+    *2026-09-06:* arXiv:2105.13564 read in the arXiv v2 and the JACoW
+    version of record (IPAC'21 TUPAB040, pp. 1435–1438): its title is
+    "Design Concept for the Second Interaction Region for Electron-Ion
+    Collider" (Report 4 [12] corrected), and its Table 1 row "Minimum
+    Δ(Bρ)/(Bρ) allowing for detection of p_T = 0 fragments" reads 0.1 at
+    IR 1 (IP6) and 0.003–0.01 at IR 2, which supports a 10–33× band, not
+    30–60×; the paper carries no per-species efficiency. Of the
+    repository's fragments, 0.1/|1 − R| is 53.6 (⁶Li α), 22.1 (⁶Li d), ∞
+    (intact ⁶Li), 0.69 (⁷Li α), 0.35 (⁷Li t) — no pair spans 30–60. The
+    ×1.75 remains without a producer (candidates computed: R₁₂
+    29.97/19.24 = 1.56, R₃₄ 4.56/2.93 = 1.56, station z 1.05, RP/OMD z
+    1.28, 10σ envelope over silicon at 18 × 275 0.92/0.53 = 1.74; the ×230
+    and ×77 neighbours reproduce). Both numbers stand as written until the
+    authors decide.
 
 ## Tracking
 
@@ -722,6 +742,6 @@ placeholder edit for each, unapplied.
 | 19 | RP Z-ID for A/Z = 2 (plans/06) | **redirected** | ask the incumbent: EICROC's 8-bit charge over 4 AC-LGAD planes, where one bit costs only ×1.4 in α fake rate (3.1 vs 2.3 × 10⁻⁵ at 95% ⁶Li efficiency) and the nanowire loses on fill factor instead (plans/09 D1, §9.2); and α + d is two hits 30–77 pixels apart whose second fragment vetoes 84% of the α fakes at the tagging optics (plans/09 B4) |
 | 20 | RP cutout geometry + Li divergence (reco note) | **measured** (2026-08-28, plans/09 B1, `epic-main` 9aaa2969); optics half → plans/10 | re-run `tools/fullsim` if the pot geometry moves again; ePIC FF WG / C-AD for the light-ion optics |
 | 21 | hadronic-method δy/y at y ≈ 0.01–0.05 (reco note) | open | ePIC inclusive WG; e+Li sample through eic-smear |
-| 22 | ξ_p ≤ 0.015: published beam-beam limit or our own bound? (2026-09-02 review, F226) | **author decision** | locate the document and table, or relabel the ask as ours to assume; the text stands as written until then |
-| 23 | the 0.6% end of the ePIC σ_p/p at 1 GeV/c (2026-09-02 review, F237) | **author decision** | name the ePIC document the upper end comes from, or mark the range as our reading of one slide; the text stands as written until then |
-| 24 | the ×1.75 relocation lever and the 30–60× band (2026-09-02 review, F254) | **author decision** | name the quantity each factor multiplies and what produced it, or withdraw them; the text stands as written until then |
+| 22 | ξ_p ≤ 0.015: published beam-beam limit or our own bound? (2026-09-02 review, F226) | ☑ **closed 2026-09-06** | cited (Report 3 [11], Report 4 [15]) — the EIC CDR's hadron beam-beam design limit, conservative for Z/A = ½ |
+| 23 | the 0.6% end of the ePIC σ_p/p at 1 GeV/c (2026-09-02 review, F237) | ☑ **closed 2026-09-06** | restated (Report 3 Table 8, reco.py) on the ePIC Preliminary Design Report Fig. 8.9; the 0.6% was a 2023 non-ePIC design |
+| 24 | the ×1.75 relocation lever and the 30–60× band (2026-09-02 review, F254) | **author decision** | name the quantity each factor multiplies and what produced it, or withdraw them; the text stands as written until then; 2026-09-06: Table 1 of the source supports 10–33×, the ×1.75 has no producer — see the item |

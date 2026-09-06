@@ -834,6 +834,257 @@ def test_delta_from_amplitude_keeps_the_published_path(response):
     assert with_k["err"] == pytest.approx(
         np.hypot(old["err"], 0.03 * abs(with_k["delta"])), rel=1e-12)
     assert with_k["err"] > old["err"]
+    # the tensor-leakage hook: None returns the SAME OBJECT, key for key
+    assert rp.delta_from_amplitude(exact, summ, -0.05,
+                                   tensor_leakage=None) == old
+    # and it is additive on the amplitude, never a rescaling of K
+    leak = 0.01 * exact["amp"]
+    corr = rp.delta_from_amplitude(exact, summ, -0.05, tensor_leakage=leak,
+                                   leakage_rel_err=0.6)
+    assert corr["k"] == old["k"]
+    assert corr["delta"] == pytest.approx(0.99 * old["delta"], rel=1e-12)
+    assert corr["err_stat"] == old["err_stat"]
+    assert corr["err"] == pytest.approx(
+        np.hypot(old["err"], 0.6 * abs(leak * old["k"])), rel=1e-12)
+    assert corr["delta_leakage"] == pytest.approx(0.01 * old["delta"],
+                                                  rel=1e-12)
+    # a zero band leaves the error exactly where it was
+    flat = rp.delta_from_amplitude(exact, summ, -0.05, tensor_leakage=leak)
+    assert flat["err"] == old["err"]
+
+
+# The reco-bin amplitude of the standard fixture, pinned NUMERICALLY.
+# `bin_summary["a_reco_bin"]` is both the 5R truth overlay and the
+# denominator of the bin-centering K, and until now nothing pinned its
+# value -- only the formula K = Delta_c/a_reco_bin was tested.  A silent
+# flip of the `tensor_gamma` default, or of `include_leakage`, would move
+# every published Delta-hat and no test would notice.  Measured
+# 2026-09-06 on the massless path (the default, and every published
+# number).
+A_RECO_BIN_PINNED = -4.137084851753969e-03
+
+
+def test_bin_summary_amplitude_is_pinned_and_leakage_free_by_default(response):
+    sampler, resp = response
+    cat = bk.tensor_flip_plan(0.6).categories[0]
+    summ = resp.bin_summary(0.03, 0.1, 2.0, 10.0, cat)
+    assert summ["a_reco_bin"] == pytest.approx(A_RECO_BIN_PINNED, rel=1e-12)
+    assert summ["a_true_bin"] == pytest.approx(-4.224781894959229e-03,
+                                               rel=1e-12)
+    assert not resp.sampler.kernel.tensor_gamma
+    # on the massless path there is no leakage to tell apart, so the flag
+    # is inert -- both settings return the same numbers bit for bit
+    full = resp.bin_summary(0.03, 0.1, 2.0, 10.0, cat, include_leakage=True)
+    assert all(full[k] == summ[k] for k in summ)
+
+
+def test_delta_response_is_a_true_derivative(response):
+    """plans/08 D2 risk R1.  On the massless path the response operator is
+    bit for bit the single Delta = 1 kernel call it was built from; with
+    the exact finite-gamma b-sector it is the DIFFERENCE, so the leakage
+    h2 -- which does not depend on Delta -- cannot ride into it."""
+    sampler, resp = response
+    cat = bk.tensor_flip_plan(0.6).categories[0]
+    smp = resp.sampler
+
+    def single_call(sampler_, category):
+        """What `delta_response` did until 2026-09-06."""
+        tab = dict(sampler_.tables)
+        tab["delta"] = np.ones_like(sampler_.x_cells)
+        out = np.zeros_like(sampler_.x_cells)
+        for p_m, mm in zip(np.asarray(category.populations, dtype=float),
+                           [1.0, 0.0, -1.0]):
+            if p_m <= 0.0:
+                continue
+            out = out + p_m * sampler_.kernel.amplitudes(
+                tab, sampler_.x_cells, sampler_.q2_cells, sampler_.s,
+                sampler_._state(category, mm))[2]
+        return out / float(category.moments()[1])
+
+    assert np.array_equal(resp.delta_response(cat), single_call(smp, cat))
+
+    # the same sampler with the exact tensor sector, and with a b sector
+    # five times larger: the derivative must not move at all
+    def gamma_sampler(b1_scale=1.0, b34=0.0):
+        kern = InclusiveKernel(
+            beams.LI6,
+            b1_func=lambda x, q2, f1: b1_scale * toy_b1(x, q2, f1),
+            b3_func=(lambda x, q2, f1: b34 * f1) if b34 else None,
+            b4_func=(lambda x, q2, f1: -b34 * f1) if b34 else None,
+            tensor_gamma=True,
+            delta_func=lambda x, q2, f1: toy_delta_gluon(x, q2, f1,
+                                                         scale=3e-2))
+        return InclusiveSampler(kern, CONFIG, smp.scenario, nx=20, nq2=15,
+                                x_range=(3e-3, 0.5), q2_range=(0.7, 100.0))
+
+    base = gamma_sampler()
+    r_base = rp.RecoResponse(base, rp.RecoModel(), n_mc_per_cell=50,
+                             rng=np.random.default_rng(1))
+    big = gamma_sampler(b1_scale=5.0, b34=0.02)
+    r_big = rp.RecoResponse(big, rp.RecoModel(), n_mc_per_cell=50,
+                            rng=np.random.default_rng(1))
+    d_base, d_big = r_base.delta_response(cat), r_big.delta_response(cat)
+    assert np.allclose(d_base, d_big, rtol=1e-12)
+    # the exact and the massless kernels share the Delta sector exactly
+    assert np.allclose(d_base, resp.delta_response(cat), rtol=1e-12)
+    # and the OLD single-call form does not: it carries the leakage
+    stale = single_call(base, cat)
+    assert not np.allclose(stale, d_base, rtol=1e-6)
+    frac = np.abs(stale / d_base - 1.0)
+    assert 1e-6 < frac.max() < 1e-3
+
+
+def test_the_leakage_subtraction_recovers_the_massless_extraction():
+    """plans/08 D2 §4 test 1, the closure of the whole chain.
+
+    The same response seed is run twice per beam configuration -- once on
+    the massless path, once with the exact finite-gamma b-sector -- and
+    the noise-free pseudo-measurement is converted to Delta on each.  The
+    exact-kernel data carry the leakage, which moves Delta-hat by up to
+    1.5e-3 of itself here; both subtraction routes remove it and leave a
+    residual four to five orders below that.  The response is deliberately
+    small (18 x 12 cells, 200 MC/cell): the closure is a statement about
+    the arithmetic, not about the response statistics, and this keeps the
+    suite fast.
+    """
+    plan = bk.tensor_flip_plan(0.6)          # NO relative-luminosity
+    cat = plan.categories[0]                 # offset: kappa_hat is clean
+    bins = [(0.01, 0.03, 1.0, 4.0), (0.03, 0.1, 1.0, 4.0),
+            (0.03, 0.1, 4.0, 20.0), (0.1, 0.3, 4.0, 20.0)]
+
+    def build(ci, tensor_gamma):
+        cfg = beams.default_configs("6Li")[ci]
+        kern = InclusiveKernel(
+            beams.LI6, b1_func=toy_b1, tensor_gamma=tensor_gamma,
+            delta_func=lambda x, q2, f1: toy_delta_gluon(x, q2, f1,
+                                                         scale=3e-2))
+        an = fom.Scenario(lumi_fb_per_nucleon=10.0, pol_ion_tensor=0.6)
+        smp = InclusiveSampler(kern, cfg, rp.generator_scenario(an),
+                               nx=18, nq2=12, x_range=(3e-3, 0.5),
+                               q2_range=(0.7, 100.0))
+        return rp.RecoResponse(smp, rp.RecoModel(), n_mc_per_cell=200,
+                               rng=np.random.default_rng(7))
+
+    raw_max = 0.0
+    for ci in range(3):
+        r0, r1 = build(ci, False), build(ci, True)
+        for b in bins:
+            m0, m1 = r0.mask_reco(*b), r1.mask_reco(*b)
+            assert m0.sum() > 50 and m1.sum() > 50
+            s0 = r0.bin_summary(*b, cat)
+            s1 = r1.bin_summary(*b, cat)          # leakage-free (risk R8)
+            f0 = rp.measure_inclusive(r0, plan, 1.0e4, m0, poisson=False)
+            f1 = rp.measure_inclusive(r1, plan, 1.0e4, m1, poisson=False)
+            a_leak = r1.fold_leakage(m1, cat)
+            k_mod = r1.fold_leakage(m1, cat, constant=True)
+            # the in-situ route: only L comes from the model
+            a_kap = a_leak / k_mod * f1["const"]
+            assert f1["const"] == pytest.approx(k_mod, rel=1e-3)
+            ref = rp.delta_from_amplitude(f0, s0, -0.05)["delta"]
+            raw = rp.delta_from_amplitude(f1, s1, -0.05)["delta"]
+            mod = rp.delta_from_amplitude(f1, s1, -0.05,
+                                          tensor_leakage=a_leak)["delta"]
+            kap = rp.delta_from_amplitude(f1, s1, -0.05,
+                                          tensor_leakage=a_kap)["delta"]
+            raw_max = max(raw_max, abs(raw / ref - 1.0))
+            assert abs(mod / ref - 1.0) < 1e-6
+            assert abs(kap / ref - 1.0) < 1e-6
+            # the shift is exactly -A_leak K, and A_leak is NEGATIVE at
+            # every kinematics with b1 > 0 and TENSOR_LL_SIGN = -1: with
+            # the published models (Delta < 0, A > 0) that makes Delta-hat
+            # more negative (plans/08 D2 §1.4).  Here the fixture's Delta
+            # has the other sign, so only the identity is asserted.
+            assert a_leak < 0.0 and k_mod > 0.0
+            assert mod - raw == pytest.approx(
+                -a_leak * (-0.05 / s1["a_reco_bin"]), rel=1e-12)
+    # ... and there was something to remove: 1.5e-3 of Delta at the low
+    # configuration, three orders above the residual left behind
+    assert raw_max > 1e-3
+
+
+def test_the_in_situ_route_needs_the_relative_luminosity_pedestal():
+    """The regime the closure above deliberately avoids, and the one the
+    published scripts actually run in: `--rel-lumi-offset 1e-3` with the
+    analysis assuming the nominal [0.5, 0.5].
+
+    `reco.spin_state_ratio` cancels an acceptance common to the fills but
+    not an error in the luminosity ratio, which enters as a
+    bin-independent offset of the CONSTANT term alone.  The RAW constant
+    is then 1.5-2.2x the model kappa here, and a leakage correction built
+    on it over-subtracts by that factor -- at the lowest-x bin it leaves
+    MORE bias than doing nothing, with the opposite sign.  The offset is
+    the same in every bin while kappa is not, so `leakage_pedestal`
+    measures it across bins; with it removed the in-situ route closes
+    again (run-18 review of plans/08 D2).
+    """
+    plan = bk.tensor_flip_plan(0.6, rel_lumi_offset=1e-3)
+    cat = plan.categories[0]
+    lum = [0.5, 0.5]                     # what the ANALYSIS believes
+    bins = [(0.01, 0.03, 1.0, 4.0), (0.03, 0.1, 1.0, 4.0),
+            (0.03, 0.1, 4.0, 20.0), (0.1, 0.3, 4.0, 20.0)]
+
+    def build(tensor_gamma):
+        kern = InclusiveKernel(
+            beams.LI6, b1_func=toy_b1, tensor_gamma=tensor_gamma,
+            delta_func=lambda x, q2, f1: toy_delta_gluon(x, q2, f1,
+                                                         scale=3e-2))
+        an = fom.Scenario(lumi_fb_per_nucleon=10.0, pol_ion_tensor=0.6)
+        smp = InclusiveSampler(kern, beams.default_configs("6Li")[1],
+                               rp.generator_scenario(an), nx=18, nq2=12,
+                               x_range=(3e-3, 0.5), q2_range=(0.7, 100.0))
+        return rp.RecoResponse(smp, rp.RecoModel(), n_mc_per_cell=200,
+                               rng=np.random.default_rng(7))
+
+    r0, r1 = build(False), build(True)
+    rows = []
+    for b in bins:
+        m0, m1 = r0.mask_reco(*b), r1.mask_reco(*b)
+        assert m0.sum() > 50 and m1.sum() > 50
+        f0 = rp.measure_inclusive(r0, plan, 1.0e4, m0, poisson=False,
+                                  lumi_assumed=lum)
+        f1 = rp.measure_inclusive(r1, plan, 1.0e4, m1, poisson=False,
+                                  lumi_assumed=lum)
+        rows.append((b, m1, f1,
+                     r0.bin_summary(*b, cat), r1.bin_summary(*b, cat),
+                     f0, r1.fold_leakage(m1, cat),
+                     r1.fold_leakage(m1, cat, constant=True)))
+
+    # (a) the offset is a bin-independent PEDESTAL: the same additive
+    # number in every bin, against a model kappa that spans a factor two
+    offs = [f1["const"] - k_mod for _b, _m, f1, _s0, _s1, _f0, _a, k_mod
+            in rows]
+    kmods = [r[7] for r in rows]
+    assert max(kmods) / min(kmods) > 1.8
+    assert max(offs) / min(offs) - 1.0 < 1e-3
+    ped = rp.leakage_pedestal([r[2]["const"] for r in rows], kmods)
+    assert ped == pytest.approx(float(np.mean(offs)), rel=1e-12)
+
+    worst_raw_ratio = 0.0
+    for (_b, _m1, f1, s0, s1, f0, a_leak, k_mod) in rows:
+        ratio = f1["const"] / k_mod
+        assert ratio > 1.5                       # the defect, not a fluke
+        worst_raw_ratio = max(worst_raw_ratio, ratio)
+        ref = rp.delta_from_amplitude(f0, s0, -0.05)["delta"]
+        raw = rp.delta_from_amplitude(f1, s1, -0.05)["delta"]
+
+        def dhat(a_kappa):
+            return rp.delta_from_amplitude(f1, s1, -0.05,
+                                           tensor_leakage=a_kappa)["delta"]
+
+        # (b) the model route is untouched by the offset and still closes
+        assert abs(dhat(a_leak) / ref - 1.0) < 1e-6
+        # (c) the UNCALIBRATED in-situ route leaves at least half the bias
+        # it was meant to remove, with the opposite sign, and at the
+        # lowest-x bin it leaves more than all of it
+        bad = dhat(a_leak / k_mod * f1["const"]) / ref - 1.0
+        assert bad * (raw / ref - 1.0) < 0.0
+        assert abs(bad) > 0.5 * abs(raw / ref - 1.0)
+        # (d) with the pedestal removed it closes again
+        good = dhat(a_leak / k_mod * (f1["const"] - ped)) / ref - 1.0
+        assert abs(good) < 1e-6
+        assert abs(good) < 0.01 * abs(bad)
+    # the worst mis-scaling at these four bins, for the record
+    assert worst_raw_ratio > 2.0
 
 
 def test_shape_fit_error_is_the_delta_chi2_band(response):

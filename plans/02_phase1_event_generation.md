@@ -318,7 +318,7 @@ need analogous care.
 3. **Validation for A=6,7 — mandatory, not optional.**
    - e+d control: reproduce the published BeAGLE e+d tagging distributions
      (Tu et al. 2005.14706) with our setup before touching Li.
-     ◐ *2026-06-12 first pass on the official BeAGLE eH2 'en' 10×130
+     ☑ *2026-06-12 first pass on the official BeAGLE eH2 'en' 10×130
      sample (50k events streamed via xrootd; `tools/analysis/`):
      spectator-proton routing confirmed — 96.6% OMD (cluster model:
      98.1%), x_L and pT bulk agree with the Hulthén model, but BeAGLE's
@@ -342,6 +342,11 @@ need analogous care.
      its model uncertainty is one-sided upward.  Still owed: the Tu et al.
      comparison the step actually asks for, and BeAGLE's A = 6 treatment
      is not its deuteron one.*
+
+     ☑ *2026-09-06: the 2026-06-12 marker above is set to ☑ — it records a
+     completed first pass, superseded by the 2026-08-26 second pass on BeAGLE
+     1.03.02-3.1 (`ed_control_analysis.py --beta-scan`, commit f49f45e). What the
+     e+d control still owes is recorded in that second-pass note, not in this one.*
    - Fragment yields (α, t, d, ³He, p, n, residues with E*) vs
      photo-/electro-disintegration data and cluster-model expectations
      (⁷Li → α+t dominance at low E*); event-by-event momentum conservation.
@@ -406,7 +411,7 @@ need analogous care.
    written by `tools/fullsim/ion_gun_hepmc.py`; eic-smear appears nowhere in
    the tree.*
 
-## Step 1.6 ◐ Parameterized detector smearing (2 weeks)
+## Step 1.6 ☑ Parameterized detector smearing (2 weeks)
 
 Tool status (verified 2026-06): **eic-smear is alive** (v1.1.17, 05/2026;
 reads BeAGLE natively) with YR-era cards including **"Matrix 0.1 +
@@ -439,13 +444,31 @@ the project changed the unfolding instead (`recopseudo.fold_shape_fit`,
 plans/08 A6). The gate needs retiring or re-deciding — plans/03 §2.3 still
 carries it as a live Phase-2 requirement.*
 
-## Step 1.7 ☐ Synthesis & write-up (2 weeks)
+☑ *2026-09-06: the step header is set to ☑. The smearing tier is delivered —
+`polligen/reco.py` on the electron side, `polligen/hfs.py` on the hadron side and
+the migration measured by `recopseudo.RecoResponse.bin_summary` — the eic-smear
+tool choice is superseded above, and the far-forward parameterization stayed
+swappable (`farforward.Optics`). The one live residue is the purity gate
+immediately above, which is an author decision (retire or re-decide the ≳ 0.8
+gate that plans/03 §2.3 also carries); that ☐ stays open.*
+
+## Step 1.7 ☑ Synthesis & write-up (2 weeks)
 
 - Note (10–15 pages): phase space, rates, FOM money plots, tagging purity
   tables, RC band, energy-scan recommendation, source-polarization
   requirement flow-down (what P_z/P_zz/lumi the physics actually needs).
 - Feed figures back into: ECRP renewal material, EPIOS white-paper
   follow-ups, and an EIC user-group / DNP talk.
+
+☑ *2026-09-06: the step header is set to ☑. The note the step asks for was
+delivered five times over — `reports/polarized_li_primer` (Report 0),
+`cos2phi_money_plots_report` (1), `reconstruction_chain_report` (2),
+`eic_epic_reference` (3) and `nanowire_far_forward` (4) — and between them they
+carry the phase space, the rates, the FOM money plots, the tagging purity
+tables, the RC band (run 13, §1.4 above), the energy-scan recommendation and the
+P_z/P_zz/lumi flow-down. The second bullet (ECRP renewal material, EPIOS
+white-paper follow-ups, a DNP talk) is author-facing dissemination outside this
+repository and is not tracked as a box here.*
 
 ---
 

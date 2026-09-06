@@ -318,5 +318,38 @@
     "current": "~ 1.5 x 10^2 m and ~ 2.3 x 10^2 m",
     "since": "2026-09-02",
     "note": "F100: the companion beta* asks referred to each configuration's high-acceptance beta*_x"
+  },
+  {
+    "retired": "ePIC full simulation reaches 0\\.45",
+    "current": "0.38 / 1.08 / 3.0% at 1 GeV/c in the barrel and the two backward slices (ePIC Preliminary Design Report Fig. 8.9)",
+    "since": "2026-09-06",
+    "note": "F237 / plans/04 #23: the 0.6% end was the 1.4 T reference design of 2023 (arXiv:2305.15593), not ePIC"
+  },
+  {
+    "retired": "f ≈ 0\\.35\\s*[–-]\\s*0\\.45",
+    "current": "f ≈ 0.35 with the helium counted (COMPASS NIM A 577 (2007) 455)",
+    "since": "2026-09-06",
+    "note": "run 18 sourcing pass: 0.45 has no source"
+  },
+  {
+    "retired": "Simulation of light ion fragment detection",
+    "current": "Design Concept for the Second Interaction Region for Electron-Ion Collider (Gamage et al., IPAC'21 TUPAB040, arXiv:2105.13564)",
+    "since": "2026-09-06",
+    "note": "run 18 sourcing pass: the title Report 4 [12] carried does not exist"
+  },
+  {
+    "retired": "whence 51 ± 3% for",
+    "current": "at its highest polarizations, 51 ± 3% (Koivuniemi et al., SPIN2004 — equal-spin-temperature estimates)",
+    "since": "2026-09-06",
+    "note": "run 18 sourcing pass: not derived from the +54.2/−47.1% maxima; the pattern carries the following 'for ⁶Li' so that plans/00's run-18 log, which quotes the retired form bare in its list of what the run retired, is not itself flagged"
+  },
+  {
+    "retired": "subtractable\\s+(?:with|against)\\s+(?:the\\s+)?A_zz|proportional to b[₁1][^.…]{0,60}(?:subtractable|longitudinal fill)",
+    "current": "99.96% of the leakage is the b₂ term, subtractable in situ with the fitted κ̂ after the luminosity pedestal (run 18)",
+    "since": "2026-09-06",
+    "note": "run 18 T1: the leakage is b₂/κ̂, not b₁/A_zz",
+    "allow": [
+      "sharpened"
+    ]
   }
 ]

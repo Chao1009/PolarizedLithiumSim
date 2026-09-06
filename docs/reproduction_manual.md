@@ -175,12 +175,12 @@ automatically.
 ## 2 · The five-minute check: the test suites
 
 ```bash
-cd evgen   && python3 -m pytest tests/ -q     # 323 passed, ~60 s
+cd evgen   && python3 -m pytest tests/ -q     # 334 passed, ~60 s
 cd fastsim && python3 -m pytest tests/ -q     # 121 passed, ~19 s
-python3 tools/consistency_check.py --verbose  # 49 checks (51 with --full), whole repository
+python3 tools/consistency_check.py --verbose  # 50 checks (52 with --full), whole repository
 ```
 
-444 tests, all of which run without the PDF grids except four of the five
+455 tests, all of which run without the PDF grids except four of the five
 in `fastsim/tests/test_grids.py`, which skip.  These are not smoke tests:
 they pin physics identities against independent constructions — the
 spin-1 cross section against an explicit density-matrix trace, the
@@ -190,15 +190,15 @@ nuclear masses against CODATA, the tensor sign against Cosyn Eq. (27).
 If these pass, the machinery is sound and the rest of this manual is
 about numbers, not correctness.
 
-The consistency sweep is the other half of those five minutes: 51 checks
-in eleven groups, 49 of them in the default run (the two that re-execute
+The consistency sweep is the other half of those five minutes: 52 checks
+in eleven groups, 50 of them in the default run (the two that re-execute
 the producing scripts are reported as skipped and run under `--full`).  Five groups are the original ones — PHYSICS invariants
 the simulation must satisfy, SOURCES against the Yellow Report tables,
 DRIFT (superseded values a correction should have removed, statements a
 rewrite must not drop), ARTEFACTS (figures, report numbering, the built
 pages against their templates, and the test counts quoted just above) and
-REFERENCES.  Twenty-six of the checks, and six of the groups, arrived
-with the ten modules under `tools/checks/` that the consistency review of
+REFERENCES.  Twenty-seven of the checks, and six of the groups, live in
+the ten modules under `tools/checks/` that the consistency review of
 2026-09-02 specified and `consistency_check.py` loads: APPENDIX (the
 newest Appendix A revision row names every table whose cells moved with
 it), CITATIONS (every marker, Report N pointer and plans item resolves),
@@ -208,11 +208,14 @@ than re-read), FIGURES (captions against the scripts that draw them),
 FRONT PAGE (`index.html` and the README map against the report datelines)
 and SPECIFICATIONS (Report 2 §6 against Report 3 Table 9); two of the ten
 land in the older groups, the retired-strings list in DRIFT and the
-sign-convention guards in PHYSICS.  Two of the twenty-six run only under
-`--full`: the re-derivation of the manual's own expected numbers, which
-executes fifteen scripts into a scratch directory outside the repository
-and costs about two minutes, and the title-extent measurement in FIGURES,
-which reads the published PNGs back with PIL.
+sign-convention guards in PHYSICS — the third of those, that the O(γ²)
+tensor-leakage correction reverses with `TENSOR_LL_SIGN`, is run 18's and
+the only one of the twenty-seven that did not arrive with the review.
+Two of the twenty-seven run only under `--full`: the re-derivation of the
+manual's own expected numbers, which executes seventeen runs into a
+scratch directory outside the repository and costs about two minutes, and
+the title-extent measurement in FIGURES, which reads the published PNGs
+back with PIL.
 
 Three of the ARTEFACTS checks guard the figures, and since
 2026-08-29 the last of them is dependency-aware: the first asks that every
@@ -797,6 +800,19 @@ and cancel.  `--b3-frac` and
 `--b4-frac` fill the two higher-twist slots as a fraction of b₂; they are
 zero by default because nothing measures them, and because they break
 that cancellation they, and not γ², set the width of the systematic.
+Two columns were added on 2026-09-06: `L = h2/h0`, the ratio of the
+leakage to the fitted constant κ, and `resid(b34)/a2(Delta)`, what a
+κ-based subtraction leaves against the b₃ = b₄ = 0.1 b₂ reference.  They
+are there because the leakage is 99.96% the b₂ term rather than the b₁
+one, in the same combination as κ itself, so L is a pure kinematic
+function of (x, Q², y) and the correction Â − L·D_φ·κ̂ is built from
+measured quantities alone.  `money_cos2phi_reco.py`, `money_cos2phi.py`
+and `money_delta_extraction.py` carry it as `--tensor-gamma`
+`--subtract-tensor-leakage {none,kappa,model}` `--b3-frac` `--b4-frac`,
+with `--leakage-scan` on the reconstructed one printing the per-spot
+budget; every one of them is off by default, a run with any of them
+writes its own PNG stem (`…_tgamma`, `…_tgamma_submodel`,
+`…_tgamma_subkappa`), and whether to flip the default is plans/08 D10.
 
 The two tagged scripts take `--config {0,1,2}` and `--optics
 {menu,legacy,high-acceptance,high-divergence,tagging}` since 2026-08-28
@@ -994,6 +1010,7 @@ moves with the window (A_hat = 0.0589 ± 0.0018 against a truth of 0.0600,
 ```bash
 python3 scripts/reco_chain_figures.py       --outdir .   # chain schematics + acceptance curves
 python3 scripts/money_cos2phi_reco.py       --outdir .   # 5R and 7R
+python3 scripts/money_cos2phi_reco.py --leakage-scan     # the O(γ²) tensor leakage of §2 at the reconstructed level, and what subtracting it would cost (add --tensor-gamma --subtract-tensor-leakage {kappa,model} to apply it; all off by default, own PNG stems)
 python3 scripts/money_cos2phi_coherent_reco.py --config 0 --optics tagging --n-mc 6000000 --outdir .  # 6R
 ```
 
@@ -1812,8 +1829,9 @@ trust anything downstream of it.
 | … low config | `--config 0` | 0.39 / 0.23 / 0.24 / 0.11 |
 | … top config | `--config 2` | 0.23 / 0.19 / 0.21 / 0.18 |
 | unfolding model dependence (moment_B prior) | `scripts/money_cos2phi_reco.py --unfold-scan` | bin-by-bin (−4.2, +8.0, −5.6, +4.9)% → folded (−1.5, −1.8, −0.3, +0.5)% |
+| the same O(γ²) leakage at the reconstructed level, and the κ̂ subtraction of it | `scripts/money_cos2phi_reco.py --leakage-scan` (4 s; then `… --tensor-gamma --leakage-scan` and `… --tensor-gamma --subtract-tensor-leakage {model,kappa} --leakage-scan`) | The scan alone runs the published massless generator, so its table is what the exact kernel *would* leak at the four 10 × 99.5 sweet spots, read off the noise-free one-year fit: Â = 6.9971 / 4.1949 / 9.0695 / 9.2224 ×10⁻³ with κ̂ = 1.2168 / 1.0123 / 1.6128 / 1.6482 ×10⁻³ against a model κ of 6.5928 / 4.5578 / 10.541 / 10.894 ×10⁻⁴, A_leak(mod) = −6.9345×10⁻⁷ / −9.8847×10⁻⁸ / −2.5876×10⁻⁶ / −2.8022×10⁻⁶, L = −1.0518 / −0.21687 / −2.4548 / −2.5724 ×10⁻³ and dΔ̂/Δ̂ = +0.0099 / 0.0023 / 0.0286 / 0.0304% (Δ̂ −0.114975 → −0.114986, −0.173691 → −0.173696, −0.054514 → −0.054530, −0.022085 → −0.022092, at K = −16.432 / −41.405 / −6.0107 / −2.3947), with a b₃/b₄ band of 0.0059 / 0.0014 / 0.0171 / 0.0182% — 0.60 of the correction.  With `--tensor-gamma` the pseudo-data carry the leakage and both routes take them back: Â = 6.8772 / 4.2983 / 8.7081 / 9.0704 ×10⁻³ unsubtracted, 6.8778 / 4.2984 / 8.7107 / 9.0732 with `model` and 6.8778 / 4.2984 / 8.7106 / 9.0734 with `kappa`, against the published massless 6.8778 / 4.2984 / 8.7106 / 9.0733 — closure at the fifth digit, the 7R rows (−0.1352 ± 0.0024, −0.0696 ± 0.0012, −0.0047 ± 0.0003) unmoved.  The in-situ route first measures across the four bins, and removes, the bin-independent pedestal the published `--rel-lumi-offset 1e-3` leaves on the fitted constant (c = +5.5790×10⁻⁴ on the noise-free fits, +6.0019×10⁻⁴ = 0.74 of the mean model κ on the Poisson ones), which takes κ̂/κ_model from 1.85 / 2.22 / 1.53 / 1.51 raw to 0.9995 / 0.9969 / 1.0008 / 1.0008 (1.84 / 2.32 / 1.53 / 1.63 → 0.925 / 1.003 / 0.965 / 1.078 on the Poisson draw); without it the subtraction over-corrects by that factor.  Where the model κ sits below the fit's own resolution, 3·δÂ/√2 — the b-sector constant crosses zero near x ≈ 0.3 at 14.3 GeV² — the correction falls back to the model and the run prints how many extractions did so (35 in the published one).  All four switches are off by default and each run writes its own PNG stem, so no published figure or number moves |
 | the γ² (target-mass) bound on A_∥ | `scripts/target_mass_bound.py` | cap 0.0965; grid maxima 0.0854 / 0.0577 / 0.0258 (⁶Li) and 0.0854 / 0.0577 / 0.0332 (⁷Li); sweet spots max γ² 0.00564 and max A_∥ shift 0.56% at 10 × 99.5 (0.49% at 18 × 137.5, 2.46% at 5 × 40.8), where the lab-angle azimuth shortcut errs by at most 1.38 / 1.20 / 5.93 mrad; polarized-EMC ΔR carries a target-mass term of 0.120 / 0.456 / 0.731 / 1.084% at x = 0.089 / 0.282 / 0.447 / 0.708 — computed since 2026-08-29, not a bias — against the same weights' δΔR = 0.0477 / 0.0509 / 0.0615 / 0.1224 (the toy inputs the block prints; the grid-input δΔR of Report 0's Table 3 is 0.042 / 0.040 / 0.060 / 0.187), the rate-weighted ⟨γ²⟩ over the same window running 0.001291 / 0.004525 / 0.007067 / 0.010190, i.e. 0.0102 in the top bin and below 0.010 in the other three; the twist-3 residual at g₂ = 0 is 1.55×10⁻⁵ / 3.43×10⁻⁴ / 7.76×10⁻⁴ / 1.59×10⁻³ and half that, with the opposite sign, at 1.5 g₂^WW; tagged-triton overlay ≤ 2.09% at the published configuration and 5.04% at 5 × 40.8 |
-| the O(γ²) b₁–b₄ leakage into cos 2φ | `scripts/tensor_gamma_leakage.py` | on the same twelve sweet spots, with the exact tensor kernel (`tensor_gamma=True`, b₃ = b₄ = 0, toy b₁): equivalent Δ_fake = (0.14–0.16) γ²b₁ — the coefficient that replaces the bound 1.15 — and a leakage of −0.109 / −0.016 / −0.093 / −0.022% of the published Δ amplitude at the four spots of 5 × 40.8, −0.011 / −0.002 / −0.033 / −0.026% at 10 × 99.5 and −0.003 / −0.0004 / −0.005 / −0.027% at 18 × 137.5 (each in the order the script prints them), i.e. NEGATIVE everywhere: it cancels part of the amplitude of the moment-constrained (Δ < 0) models rather than faking one, and being ∝ b₁ it is subtractable with the A_zz of the same fills.  The full combination is 0.84–1.01× the Eq. (17e) term alone (exactly 1 as γ² and y → 0, where the three channels stand as T_LL : T_LT : T_TT = 3 : −3 : 1), so the ratio 6.9 anticipated in plans/08 D2 was wrong in sign as well as size: the twist-3 Eq. (17d) channel cancels the leading-twist one instead of adding to it, which the two finite-γ rows of Cosyn's own Table 1 fix (both reproduced to 1e-10 in `tests/test_tensor_gamma.py`).  `--b3-frac 0.1 --b4-frac 0.1` breaks that cancellation and moves the coefficient to 0.23–0.26 and the worst leakage to −0.175%, which is what the unmeasured higher-twist slots are worth |
+| the O(γ²) b₁–b₄ leakage into cos 2φ | `scripts/tensor_gamma_leakage.py` | on the same twelve sweet spots, with the exact tensor kernel (`tensor_gamma=True`, b₃ = b₄ = 0, toy b₁): equivalent Δ_fake = (0.14–0.16) γ²b₁ — the coefficient that replaces the bound 1.15 — and a leakage of −0.109 / −0.016 / −0.093 / −0.022% of the published Δ amplitude at the four spots of 5 × 40.8, −0.011 / −0.002 / −0.033 / −0.026% at 10 × 99.5 and −0.003 / −0.0004 / −0.005 / −0.027% at 18 × 137.5 (each in the order the script prints them), i.e. NEGATIVE everywhere: it cancels part of the amplitude of the moment-constrained (Δ < 0) models rather than faking one, and it is subtractable in situ rather than against the A_zz of the same fills: 99.96% of it is the b₂ term, in the same combination as the fitted constant κ, so L = A_leak/κ is a pure kinematic function and the correction is Â − L·D_φ·κ̂ in measured quantities alone.  The full combination is 0.84–1.01× the Eq. (17e) term alone (exactly 1 as γ² and y → 0, where the three channels stand as T_LL : T_LT : T_TT = 3 : −3 : 1), so the ratio 6.9 anticipated in plans/08 D2 was wrong in sign as well as size: the twist-3 Eq. (17d) channel cancels the leading-twist one instead of adding to it, which the two finite-γ rows of Cosyn's own Table 1 fix (both reproduced to 1e-10 in `tests/test_tensor_gamma.py`).  `--b3-frac 0.1 --b4-frac 0.1` breaks that cancellation and moves the coefficient to 0.23–0.26 and the worst leakage to −0.175%, which is what the unmeasured higher-twist slots are worth.  Since 2026-09-06 the table carries two more columns: `L = h2/h0`, the kinematic ratio of the leakage to the fitted constant κ — −0.0121 / −0.00184 / −0.0108 / −0.00204 at 5 × 40.8, −0.00121 / −0.000188 / −0.00278 / −0.00237 at 10 × 99.5 and −0.000237 / −3.66×10⁻⁵ / −0.000440 / −0.00242 at 18 × 137.5, which is what a κ̂-based subtraction takes from the model — and `resid(b34)/a2(Delta)`, what that subtraction leaves against the b₃ = b₄ = 0.1 b₂ reference: worst 6.595×10⁻⁴, i.e. **0.066%** against the 0.109% uncorrected, a factor 1.6 and no more, which is the whole case against flipping the default (plans/08 D10).  `--b3-frac 0.1 --b4-frac 0.1` prints that residual as 0 because there the assumption *is* the reference, not because the subtraction is exact, and the closing line says so |
 | collinear-ISR migration bound (plans/07 WP4) | `scripts/money_cos2phi_reco.py --isr --n-mc-per-cell 1600` | one draw at the default seed 20260824: Δ̂ biased by +0.616 / +0.501 / +0.804 / +1.240% at the four sweet spots; ⟨z⟩ = 0.0245, 26.6% of the rate radiates above z = 10⁻⁴, ⟨z\|z>10⁻⁴⟩ = 0.0923, ⟨t⟩ = 0.0700 and ⟨Q²⟩ = 4.37 GeV², averaged separately over the selected rate (the radiator at 4.37 GeV² is 0.0726); the covariant azimuth's residual under k → (1−z)k is 2.6×10⁻² rad and fakes cos 2φ′ at 9×10⁻⁸ |
 | … the PUBLISHED bound, averaged over eight response seeds (`$S` below is that list) | `… --isr --isr-seeds $S --n-mc-per-cell 1600`, `S=20260824,20260925,20261026,20261127,20261228,20270129,20270302,20270403` | +0.62 ± 0.03 / +0.50 ± 0.02 / +0.94 ± 0.03 / +1.22 ± 0.02%; purity 0.653 → 0.638, 0.633 → 0.613, 0.679 → 0.659, 0.684 → 0.640; efficiency 0.414 → 0.404, 0.590 → 0.572, 0.374 → 0.369, 0.653 → 0.634 |
 | … with the low-Q² feed-in opened up | `… --isr --isr-seeds $S --isr-gen-q2min 0.05` | +2.26 ± 0.03 / +2.24 ± 0.10 / +1.88 ± 0.07 / +1.88 ± 0.05%.  Worst spot over the window sequence 0.7 → 0.35 → 0.15 → 0.05 → 0.02 GeV²: 1.22 → 1.87 → 2.81 → 2.26 → 2.34%, so the bound saturates in a 1.8–2.8% band and **≤ 2.9%** is what the ≤5% gate is read against |
@@ -1835,7 +1853,7 @@ trust anything downstream of it.
 | tagging optics, priced | `scripts/tagging_optics.py` | the dispersive envelope term is built from each configuration's own measured (R₁₂, D) since 2026-08-29 (`farforward.tagging_optics_point`, `levers="per-config"`): D/R₁₂ = 1.62×10⁻² / 1.35×10⁻² / 9.74×10⁻³ m/m, the two lower rows 66% and 39% larger than the single 18 × 275 ratio the record used before.  Horizontal-only optimum β*_x/β*_x,HA = 46.5 / 164.1 / 89.3, ε = 0.374 / 0.251 / 0.332, L/L_HA = 1/6.8 / 1/12.8 / 1/9.5, N_tag/yr = 2.4×10⁶ / 2.4×10⁶ / 6.1×10⁶, 5σ floor/yr = 1.7 / 2.3 / 1.6% per unit P_zz, shape term 9.4 / 8.3 / 10.7σ/yr at ⟨\|t\|⟩ = 0.0328 / 0.0389 / 0.0345 GeV², 3.0 / 5.5 / 2.6 years to 5σ on a 1% exotic-glue term (both on the best-super-bin floor; the banner prints that bin's fraction of the tagged sample, 0.193 / 0.105 / 0.086), IR-8 at L_HA worth 4× / 10× / 6×.  18 × 275 is identical under either lever, since the lever the record used was its own.  The banner's aperture line reads 2.50/6.49 (the vertical plane shut), 1.51/2.12 and 0.53/0.92 mrad, and with it the "pots FIXED at the aperture" ε, 9.36×10⁻¹⁰ / 1.97×10⁻¹⁹ / 1.23×10⁻⁵ |
 | … on the single 18 × 275 lever, the behaviour published before 2026-08-29 | `… --levers 18x275` (guarded stem `tagging_optics_6Li_18x275.png`) | β*_x/β*_x,HA = 49.7 / 175.6 / 89.3, ε = 0.423 / 0.323 / 0.332, L/L_HA = 1/7.1 / 1/13.3 / 1/9.5, N_tag/yr = 2.6×10⁶ / 3.0×10⁶ / 6.1×10⁶, 5σ floor/yr = 1.7 / 2.1 / 1.6% per unit P_zz, shape term 9.3 / 8.3 / 10.7σ/yr, 2.8 / 4.4 / 2.6 years to 5σ.  Every tagging number the record carried before 2026-08-29 is reproduced by it, and `--levers 5x41` / `10x100` force the other two rows |
 | 6R at the tagging optics, 5 × 40.8 | `scripts/money_cos2phi_coherent_reco.py --config 0 --optics tagging --n-mc 6000000 [--ensemble 20]` | σ_θ = 36/380 μrad, cutout 0.36 × 3.8 mrad, acc 0.3647, N_tag 2.31×10⁶/yr at L/L_HA = 1/6.8, ⟨cos 2β⟩ = −0.309; a_t 0.0418 ± 0.0063 / 0.0593 ± 0.0052 / 0.0714 ± 0.0052 / 0.0973 ± 0.0037 / 0.1209 ± 0.0050 / 0.1535 ± 0.0089 / 0.1166 ± 0.0186 (1 yr; inj. 0.046 / 0.060 / 0.073 / 0.092 / 0.121 / 0.150 / 0.183), 0.0441 / 0.0589 / 0.0738 / 0.0922 / 0.1207 / 0.1510 / 0.1799 at 10 yr; ensemble means 0.0453 / 0.0591 / 0.0709 / 0.0913 / 0.1203 / 0.1460 / 0.1211; combined one-year δa_e **0.00121**.  `--fit likelihood` on the same single draw returns the sparsest bin as **0.1796 ± 0.0192** against 0.1833 injected (−0.2σ) where the ratio estimator gives 0.1166 ± 0.0186 (−3.6σ), the combined δa_e being unchanged at 0.00121 (Report 1 §6.3).  The `design:` lines read 1900 / 1422 / 1005 / 1431 / 607 / 184 / 45 counts per (α, β) cell, 16 / 20 / 20 / 20 / 24 / 24 / 24 of 24 β bins populated, cond 4.98 / 3.65 / 3.02 / 2.50 / 2.04 / 1.85 / 1.97, rank 7/7 throughout |
-| … the same with the likelihood estimator | `… --ensemble 20 --fit likelihood` | ensemble means 0.0451 / 0.0586 / 0.0709 / 0.0916 / 0.1215 / 0.1514 / 0.1814 (σ 0.0054 / 0.0043 / 0.0061 / 0.0039 / 0.0042 / 0.0066 / 0.0233) on the same twenty draws.  With `--ensemble 200` (~14 min on the seven-bin window): likelihood 0.0458 / 0.0603 / 0.0731 / 0.0916 / 0.1199 / 0.1522 / 0.1822, pulls of the mean −1.0 / +1.0 / +1.1 / −0.1 / −1.8 / +3.1 / −0.9, spreads 0.0060 / 0.0051 / 0.0053 / 0.0035 / 0.0047 / 0.0089 / 0.0186 against quoted errors 0.0063 / 0.0052 / 0.0052 / 0.0037 / 0.0050 / 0.0089 / 0.0191; ratio 0.0459 / 0.0607 / 0.0731 / 0.0913 / 0.1187 / 0.1465 / 0.1202, pulls −0.6 / +2.1 / +1.2 / −1.2 / −5.4 / −5.8 / −47.2 |
+| … the same with the likelihood estimator | `… --ensemble 20 --fit likelihood` | ensemble means 0.0451 / 0.0586 / 0.0709 / 0.0916 / 0.1215 / 0.1514 / 0.1814 (σ 0.0054 / 0.0043 / 0.0061 / 0.0039 / 0.0042 / 0.0066 / 0.0233) on the same twenty draws.  With `--ensemble 200` (21–22 min solo on the reference machine, re-timed 2026-09-06; the ratio ensemble of the same size takes 20 min): likelihood 0.0458 / 0.0603 / 0.0731 / 0.0916 / 0.1199 / 0.1522 / 0.1822, pulls of the mean −1.0 / +1.0 / +1.1 / −0.1 / −1.8 / +3.1 / −0.9, spreads 0.0060 / 0.0051 / 0.0053 / 0.0035 / 0.0047 / 0.0089 / 0.0186 against quoted errors 0.0063 / 0.0052 / 0.0052 / 0.0037 / 0.0050 / 0.0089 / 0.0191; ratio 0.0459 / 0.0607 / 0.0731 / 0.0913 / 0.1187 / 0.1465 / 0.1202, pulls −0.6 / +2.1 / +1.2 / −1.2 / −5.4 / −5.8 / −47.2 |
 | … coarser (α, β) bins, same 200 draws | `… --ensemble 200 --n-alpha 8 --n-beta 16` (and `--n-alpha 6 --n-beta 12`) | the sparsest bin's ratio mean rises 0.1202 → 0.1599 → 0.1706 against 0.1833 injected, i.e. −34.4% → −12.8% → −6.9%, at δa_e 0.0141 → 0.0150 → 0.0162 in that bin and 0.00121 → 0.00129 → 0.00140 combined (+7%, +16%).  Coarser binning attenuates the bias, it does not remove it |
 | 6R at the tagging optics, 18 × 137.5 | `… --config 2 --optics tagging --n-mc 6000000` | acc 0.3247, N_tag 6.00×10⁶/yr at L/L_HA = 1/9.5; a_t 0.0434 ± 0.0039 / 0.0637 ± 0.0031 / 0.0742 ± 0.0032 / 0.0985 ± 0.0023 / 0.1403 ± 0.0033 / 0.1666 ± 0.0063 / 0.1902 ± 0.0148 (inj. 0.047 / 0.062 / 0.077 / 0.100 / 0.137 / 0.179 / 0.228); ensemble means 0.0463 / 0.0610 / 0.0771 / 0.1001 / 0.1368 / 0.1776 / 0.2060 (ratio) and 0.0461 / 0.0606 / 0.0770 / 0.1002 / 0.1372 / 0.1787 / 0.2289 (`--fit likelihood`, same draws); combined δa_e **0.00074** |
 | 6R at the tagging optics, 10 × 99.5 | `… --config 1 --optics tagging --n-mc 6000000 --ensemble 20 --fit likelihood` | acc 0.2469, N_tag 2.38×10⁶/yr at L/L_HA = 1/12.8; ensemble means 0.0477 / 0.0638 / 0.0739 / 0.0939 / 0.1186 / 0.1448 / 0.1683 against inj. 0.0506 / 0.0639 / 0.0761 / 0.0938 / 0.1188 / 0.1423 / 0.1656; combined δa_e **0.00111** |

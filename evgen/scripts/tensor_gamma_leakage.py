@@ -50,9 +50,24 @@ Sign: with the literature tensor convention adopted 2026-08-29
 NEGATIVE at every spot, i.e. OPPOSITE in sign to the cos 2phi amplitude
 of the moment-constrained (negative-Delta) models, so it cancels part of
 the measured amplitude instead of faking one.  Flipping the constant back
-flips it, which is why D2 was gated on D1.  It is subtractable in the
-same data: it is proportional to b1, which the A_zz of the longitudinal
-fills measures at the same (x, Q^2).
+flips it, which is why D2 was gated on D1.
+
+It is subtractable in the same data, and more directly than the earlier
+wording said.  The leakage is 99.96% the b2 term and not the b1 one --
+the weight (1-y)/(x y^2) ~ 4.5e4 at these y multiplies b2 -- and the SAME
+combination is what the phi-independent harmonic carries, so the ratio
+L = h2/h0 in the last-but-one column is a pure kinematic function
+(`xsec.tensor_leakage_ratio`): tripling b1 leaves it unchanged to six
+digits.  h0 per unit P_zz is exactly the constant term kappa that the
+reconstructed-level ratio fit reports next to the amplitude, so the
+subtraction A_corrected = A_hat - L kappa_hat needs no separate A_zz run
+plan.  `scripts/money_cos2phi_reco.py --leakage-scan` is that statement
+at the reconstructed level.  The LAST column is what the subtraction
+cannot reach: the change in the leakage between the b3, b4 assumed here
+and the b3 = b4 = 0.1 b2 reference, as a fraction of the Delta amplitude
+-- with the defaults, the whole b3/b4 band (0.109% -> 0.066% at the worst
+spot), and zero when --b3-frac 0.1 --b4-frac 0.1 makes the assumption
+true.
 
 b3 and b4 are the unmeasured higher-twist tensor structure functions;
 they default to zero, and `--b3-frac`/`--b4-frac` set them to a fraction
@@ -79,7 +94,8 @@ sys.path.insert(0, str(_SCRIPTS))
 
 from polligen.xsec import (EventSpinState, InclusiveKernel,  # noqa: E402
                            cosyn_tensor_sfs, cosyn_unpolarized_sfs,
-                           gamma_squared, theta_q_cos_sin)
+                           gamma_squared, tensor_leakage_ratio,
+                           theta_q_cos_sin)
 
 from polli_fastsim import beams, fom  # noqa: E402
 from polli_fastsim.asymmetries import epsilon_gamma  # noqa: E402
@@ -130,13 +146,23 @@ def main():
           " sweet spots")
     print("  kernel: InclusiveKernel(tensor_gamma=True), toy b1, b3 = %.3g b2,"
           " b4 = %.3g b2" % (args.b3_frac, args.b4_frac))
-    print("  %-8s %-8s %-9s %-10s %-9s %-11s %-11s %-9s %-9s %s"
+    print("  %-8s %-8s %-9s %-10s %-9s %-11s %-11s %-9s %-9s %-9s"
+          "  %-11s %s"
           % ("x", "Q2", "y", "gamma^2", "b1/F1", "a2(tensor)", "Dfake/F1",
-             "Dfake/", "a2tens/", "full/"))
-    print("  %-8s %-8s %-9s %-10s %-9s %-11s %-11s %-9s %-9s %s"
+             "Dfake/", "a2tens/", "full/", "L =", "resid(b34)/"))
+    print("  %-8s %-8s %-9s %-10s %-9s %-11s %-11s %-9s %-9s %-9s"
+          "  %-11s %s"
           % ("", "", "", "", "", "(m=+1)", "", "(g^2 b1)", "a2(Delta)",
-             "17e"))
-    worst_frac = worst_coef = 0.0
+             "17e", "h2/h0", "a2(Delta)"))
+    worst_frac = worst_coef = worst_resid = 0.0
+
+    def b34_ref(xx, qq, f1):
+        """b3 = b4 = 0.1 b2 on the toy b1 -- the reference the residual of
+        a subtraction is measured against."""
+        return 0.1 * 2.0 * xx * toy_b1(xx, qq, f1)
+
+    kern_ref = InclusiveKernel(beams.LI6, b1_func=toy_b1, b3_func=b34_ref,
+                               b4_func=b34_ref, tensor_gamma=True)
     for ci in range(3):
         cfg = beams.default_configs("6Li")[ci]
         s = cfg.sqrt_s_per_nucleon ** 2
@@ -162,22 +188,33 @@ def main():
         a2_tensor = kern_nod.amplitudes(kern_nod.tables(x, q2), x, q2, s,
                                         state)[2]
         a2_delta = kern0.amplitudes(kern0.tables(x, q2), x, q2, s, state)[2]
+        # what a subtraction assuming THESE b3, b4 leaves if the truth is
+        # the 0.1 b2 reference: the honest width of the residual.  The
+        # reference kernel is built once, outside the loop: it depends on
+        # neither the beam configuration nor the b3/b4 flags
+        a2_ref = kern_ref.amplitudes(kern_ref.tables(x, q2), x, q2, s,
+                                     state)[2]
+        resid = (a2_ref - a2_tensor) / a2_delta
+        ell = tensor_leakage_ratio(x, q2, y, b3_frac=args.b3_frac,
+                                   b4_frac=args.b4_frac)
         g2v = gamma_squared(x, q2)
         dphi = t["f1"] + (1.0 - y) / (x * y * y) * t["f2"]
         d_fake = -a2_tensor * y * y * dphi / (1.0 - y)
         ll, lt, tt = contributions(t, x, q2, y, args.b3_frac, args.b4_frac)
         print("  %s" % cfg.label())
         for i in range(x.size):
-            print("  %-8.4g %-8.4g %-9.4g %-10.5g %-9.4g %-11.4g %-11.4g"
-                  " %-9.4g %-9.4g %.4g"
-                  % (x[i], q2[i], y[i], g2v[i], t["b1"][i] / t["f1"][i],
-                     a2_tensor[i], d_fake[i] / t["f1"][i],
-                     d_fake[i] / (g2v[i] * t["b1"][i]),
-                     a2_tensor[i] / a2_delta[i],
-                     (ll[i] + lt[i] + tt[i]) / tt[i]))
+            print(("  %-8.4g %-8.4g %-9.4g %-10.5g %-9.4g %-11.4g %-11.4g"
+                   " %-9.4g %-9.4g %.4g"
+                   % (x[i], q2[i], y[i], g2v[i], t["b1"][i] / t["f1"][i],
+                      a2_tensor[i], d_fake[i] / t["f1"][i],
+                      d_fake[i] / (g2v[i] * t["b1"][i]),
+                      a2_tensor[i] / a2_delta[i],
+                      (ll[i] + lt[i] + tt[i]) / tt[i]))
+                  + ("  %-11.4g %.4g" % (ell[i], resid[i])))
             worst_frac = max(worst_frac, abs(a2_tensor[i] / a2_delta[i]))
             worst_coef = max(worst_coef, abs(d_fake[i]
                                              / (g2v[i] * t["b1"][i])))
+            worst_resid = max(worst_resid, abs(resid[i]))
         print("    channels (T_LL : T_LT : T_TT) of the cos 2phi harmonic: "
               + ", ".join("%.3f:%.3f:%.3f"
                           % (ll[i] / tt[i], lt[i] / tt[i], 1.0)
@@ -185,6 +222,15 @@ def main():
     print("\n  worst |a2(tensor)/a2(Delta)| = %.4g (%.3g%%);"
           " worst Delta_fake/(gamma^2 b1) = %.4g"
           % (worst_frac, 100.0 * worst_frac, worst_coef))
+    print("  after a kappa-based subtraction assuming b3 = %.3g b2, b4 ="
+          " %.3g b2, the worst residual\n  against the b3 = b4 = 0.1 b2"
+          " reference is %.4g (%.3g%%) of the Delta amplitude%s"
+          % (args.b3_frac, args.b4_frac, worst_resid, 100.0 * worst_resid,
+             ("\n  -- zero because the assumption IS the reference here, "
+              "not because the subtraction is exact:\n  b3 and b4 are "
+              "unmeasured, and the analysis carries the full 0.6 band of "
+              "money_cos2phi.py"
+              if worst_resid == 0.0 else "")))
 
 
 if __name__ == "__main__":

@@ -23,19 +23,20 @@ flag is reported missing only after `--help` has confirmed it.  No script
 needs the fallback today, so the check costs about 0.2 s.
 
 `derived: the manual's expected numbers are what the scripts print today`
-runs only under `--full`.  It executes the fifteen runs listed below into
-a scratch directory outside the repository (`$POLLI_REDERIVE_DIR`, else
-`<tmp>/polli_rederive`; every script that has one is given `--outdir`
-there, so no published figure is touched), and compares each of the 55
-CLAIMS -- a span of the manual anchored on its own wording -- with the
-stdout of the command that span is about: 448 numbers in all.  A manual
+runs only under `--full`.  It executes the seventeen runs listed below
+into a scratch directory outside the repository (`$POLLI_REDERIVE_DIR`,
+else `<tmp>/polli_rederive`; every script that has one is given
+`--outdir` there, so no published figure is touched), and compares each
+of the 62 CLAIMS -- a span of the manual anchored on its own wording --
+with the stdout of the command that span is about: 485 numbers in all.  A manual
 number fails when nothing the run printed agrees with it at the manual's
 own precision, allowing +-1 in its last digit (equivalently: when nothing
 printed rounds to the manual's figure or to either neighbour of it).  A
 number is also read against a hundredth of itself, but only where the
-manual writes it as a per cent -- last in its slash list before a literal
-`%` -- since several scripts print as a fraction what the manual quotes
-as per cent.  Runtime is about two minutes, of which 49 s is
+manual writes it as a per cent -- in a slash list that reaches a literal
+`%`, signed or not, as the tensor-leakage row's negative per-cents are --
+since several scripts print as a fraction what the manual quotes as per
+cent.  Runtime is about two minutes, of which 49 s is
 `money_polemc --pdf grid`.
 
 Sensitivity, measured on this repository: of 896 single-token mutations
@@ -55,7 +56,11 @@ out of the manual's own fenced block rather than copied here;
 `money_cos2phi_reco.py --syst-scan` and `--unfold-scan`;
 `target_mass_bound.py`; `nearbeam_reach_gain.py --n-mc 2000000`;
 `tagged_polarimetry_7li.py --config 0/1/2`; `money_tagged_azz.py --events
-400000`.
+400000`; `tensor_gamma_leakage.py` twice, at its defaults and at
+`--b3-frac 0.1 --b4-frac 0.1` (1 s each), because the section 7 row that
+carries the O(gamma^2) leakage budget quotes both runs -- the leakage
+itself from the first and the higher-twist width from the second -- and
+the claims that straddle them read against the union of the two pools.
 
 Excluded, with the reason:
 
@@ -169,6 +174,11 @@ COMMANDS = {
         ("evgen", ["scripts/tagged_polarimetry_7li.py", "--config", "2"], True),
     "money_tagged_azz":
         ("evgen", ["scripts/money_tagged_azz.py", "--events", "400000"], True),
+    "tensor_gamma_leakage":
+        ("evgen", ["scripts/tensor_gamma_leakage.py"], False),
+    "tensor_gamma_leakage_b34":
+        ("evgen", ["scripts/tensor_gamma_leakage.py",
+                   "--b3-frac", "0.1", "--b4-frac", "0.1"], False),
 }
 
 
@@ -230,7 +240,11 @@ def _normalise(span):
     return span
 
 
-PCT_AHEAD = re.compile(r"[\s/,\d.]*%")
+# a number is a per-cent form when only the rest of its slash list stands
+# between it and a literal "%".  The list may be SIGNED: the tensor-leakage
+# row of section 7 quotes "-0.109 / -0.016 / -0.093 / -0.022%", where every
+# member is a per cent of the same quantity (run 18).
+PCT_AHEAD = re.compile(r"[\s/,\d.+-]*%")
 
 
 def _manual_numbers(span):
@@ -410,6 +424,33 @@ CLAIMS = [
      r" / 1\.59×10⁻³"),
     (["target_mass_bound"],
      r"tagged-triton overlay ≤ 2\n?\.09% at the published configuration and 5\.04% at"),
+
+    # --- tensor_gamma_leakage.py, at its defaults and at 0.1 b2 ---
+    # The section 7 row quotes both runs, so the b3/b4 one is a second
+    # command and the claims that straddle them take the union pool.  The
+    # third L triple is split off because "-0.000237 / -3.66x10^-5" is a
+    # slash list with the exponent on its SECOND member, which the
+    # shared-exponent rule of `_normalise` would spread over the first.
+    (["tensor_gamma_leakage"],
+     r"equivalent Δ_fake = \(0\.14–0\.16\) γ²b₁"),
+    (["tensor_gamma_leakage"],
+     r"a leakage of −0\.109 / −0\.016 / −0\.093 / −0\.022% of the published Δ"
+     r" amplitude at the four spots of 5 × 40\.8, −0\.011 / −0\.002 / −0\.033 /"
+     r" −0\.026% at 10 × 99\.5 and −0\.003 / −0\.0004 / −0\.005 / −0\.027% at"
+     r" 18 × 137\.5"),
+    (["tensor_gamma_leakage"],
+     r"The full combination is 0\.84–1\.01×"),
+    (["tensor_gamma_leakage_b34"],
+     r"`--b3-frac 0\.1 --b4-frac 0\.1` breaks that cancellation and moves the"
+     r" coefficient to 0\.23–0\.26 and the worst leakage to −0\.175%"),
+    (["tensor_gamma_leakage"],
+     r"κ — −0\.0121 / −0\.00184 / −0\.0108 / −0\.00204 at 5 × 40\.8, −0\.00121"
+     r" / −0\.000188 / −0\.00278 / −0\.00237 at 10 × 99\.5 and −0\.000237"),
+    (["tensor_gamma_leakage"],
+     r"−3\.66×10⁻⁵ / −0\.000440 / −0\.00242 at 18 × 137\.5"),
+    (["tensor_gamma_leakage", "tensor_gamma_leakage_b34"],
+     r"what that subtraction leaves against the b₃ = b₄ = 0\.1 b₂ reference:"
+     r" worst 6\.595×10⁻⁴, i\.e\. \*\*0\.066%\*\* against the 0\.109% uncorrected"),
 
     # --- nearbeam_reach_gain.py --n-mc 2000000 ---
     (["nearbeam_reach_gain"],

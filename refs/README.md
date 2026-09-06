@@ -115,3 +115,42 @@ handle each curve was identified by, and the exact command.
 | `1702.05337.pdf` | W. Cosyn, Yu-Bing Dong, S. Kumano, M. Sargsian, *Deuteron tensor structure function b1*, PRD 95 (2017) 074036 | **The convolution camp for b₁.** Page 9 FIG. 4 (x·b₁ at Q² = 2.5 GeV², SD / DD / sum for two convolution formalisms) into `b1_cdks_q2p5.csv` and page 10 FIG. 5 (the same sums at Q² = 1.0 / 2.5 / 5.0) into `b1_cdks_q2set.csv`. The extraction validates itself twice: the solid curves equal the sum of their own dashed and dotted ones to 2×10⁻⁷, and Fig. 5's Q² = 2.5 curve reproduces Fig. 4's to 2×10⁻⁶ from a different page with a different calibration. \|b₁\| < 10⁻³ at x ≳ 0.2 confirmed; the sum changes sign at x ≈ 0.06 and again at 0.42, which the `0.1 × toy_b1` stand-in it replaces never did. ∫b₁ dx over the digitized range is 4.6×10⁻⁴ — consistent with the Close–Kumano sum rule over the range the figure covers, which is the sharpest statement the table supports: it stops at x = 1.59 while the deuteron's x runs to 2, so `close_kumano_integral` reports the number and does not enforce it. |
 | `1311.4561.pdf` | G. A. Miller, *Pionic and hidden-color, six-quark contributions to the deuteron b1 structure function*, PRC 89 (2014) 045203 | **The HERMES-like camp for b₁.** Page 10 FIG. 5, the total b₁ = b₁^π + b₁^{6q} that a hidden-colour probability of 0.15% suffices to reproduce the data with, into `b1_miller.csv` (x = 0.010–0.900); page 11 FIG. 6, 100 b₁ at Q² = 1.17 / 1.76 / 2.12 / 3.25 GeV², into `b1_miller_q2set.csv`. At x = 0.012 the digitized total is 0.114 per deuteron against HERMES's measured 0.112 ± 0.055 ± 0.028 and his own TABLE I. Both are Mathematica plots with no closed frame, so the axis box came from the axis lines and their major ticks; FIG. 6 has no legend either and the curve → Q² map is read from the caption's ordering rule, the only assignment in `data/` not taken off a legend handle. ∫b₁ dx = 5.9×10⁻³ — his Sec. V shows the pionic contribution violates Close–Kumano, and it does. |
 | `2109.03591.pdf` | X. G. Wang, W. Bentz, I. C. Cloët, A. W. Thomas, *Polarized gluon EMC effect*, J. Phys. G 49 (2022) 03LT01 | The gluon-spin arm of `plans/02` step 1.2.2: page 8 Figure 3 carries g₁A/g₁p and Δg_A/Δg_p, with ⁷Li named the most promising case and the polarized gluon EMC effect larger than the unpolarized one. **Not digitized** — the dg₁/dlnQ² observable has no money plot yet; the entry records where the curves are. |
+
+## Downloaded 2026-09-06 (run 18): the sources of the sourcing pass
+
+Run 18 re-read, against the primary sources, the numbers Reports 0–4 take
+from the ⁶Li/⁷Li structure calculation, the polarized-target literature,
+the JLab proposals, the EIC machine limits and the ePIC tracking
+performance. Four of those sources are small enough to commit:
+
+| file | reference | used for / verified |
+|---|---|---|
+| `1309.3794.pdf` | R. B. Wiringa, R. Schiavilla, S. C. Pieper, J. Carlson, *Nucleon and nucleon-pair momentum distributions in A ≤ 12 nuclei*, PRC 89 (2014) 024305 | **The source of every spin-projected nucleon number in the programme.** Table I (p. 3, caption "Total number of spin-up/down and proton/neutron nucleons in J > 0 nuclei with M_J = J") verified: ⁶Li(1⁺) 1.924 / 1.076 for both protons and neutrons, whence the 0.848 the reports round to 0.85; ⁷Li(3/2⁻) 1.934 / 1.066 and 1.981 / 2.019, whence +0.868 and −0.038. The Hamiltonian is AV18 + **Urbana X**, not IL7. §II carries the cluster normalisations verbatim: "The integrated N_αd = 0.86 is a sum of S- and D-wave parts of 0.846 and 0.017, respectively" (relative 1s, node at k ≈ 0.7 fm⁻¹) and "with N_αt = 1.00" (relative 1p). The paper's own online tables at `phy.anl.gov/theory/research/momenta/` are later runs and give 0.820 and 1.0084 — the reports quote the paper, and `.../overlaps/`, cited until this run, is single-nucleon pickup/stripping and holds no α–d or α–t entry at all. Note that the +0.866 / −0.037 in `beams.py` are JLab PR12-14-001's numbers, not Table I's. |
+| `hep-ex_9904002.pdf` | P. L. Anthony et al. (E155), *Measurement of the deuteron spin structure function g₁ᵈ(x)*, PLB 463 (1999) 339 | The ⁶LiD target paragraph behind Report 0 §§2.2 and 3.2: "The ⁶Li polarization was measured to be 97% of the free deuteron polarization"; "we conclude that the effective deuteron in ⁶Li has a net polarization of 87% of the Li polarization" — *effective deuteron* is E155's own phrase, while the companion target paper calls the same number a nucleon polarization P_n = 0.866 ± 0.012. Dilution: f = 0.18–0.20 for the free deuterons, and "C₁ f then gives an effective dilution factor of ∼ 0.36, as compared with ∼ 0.22 for ¹⁵ND₃" — both are *effective* factors, and the 0.22 the reports quote is exactly this one. Target composition 18% free D, 53% ⁶Li, 14% ⁴He, 11% Al, 3% O, 1% N by weight. |
+| `hep-ex_0703049.pdf` | P. Abbon et al. (COMPASS), *The COMPASS experiment at CERN*, NIM A 577 (2007) 455 | §4.1: "the fraction of polarisable material f is of the order of 0.35, taking into account also the He content in the target region", against "(f ≈ 0.15)" for irradiated NH₃ — the two dilution numbers Report 0 §3.2 cites to [31], verified verbatim. Also the 4.2% ⁷Li isotopic admixture of the COMPASS ⁶LiD. What is **not** in this paper: the +54%/−47% deuteron polarizations (Ball, NIM A 498), the 51 ± 3% / 92 ± 4% Li polarizations (Koivuniemi, SPIN2004), and any ⁶LiD f above 0.35. |
+| `2105.13564.pdf` | B. R. Gamage et al., *Design Concept for the Second Interaction Region for Electron-Ion Collider*, Proc. IPAC'21 TUPAB040, pp. 1435–1438 | Table 1, row "Minimum Δ(Bρ)/(Bρ) allowing for detection of p_T = 0 fragments": **0.1 for EIC IR 1, 0.003–0.01 for EIC IR 2** — the 0.1 that Report 4 §7 uses as the IP6 dispersive-tagging threshold, verified here and against the version of record. It is a detection threshold, not a resolution. The paper publishes **no** per-species efficiencies, and its two entries support a 10–33× ratio, not the 30–60× the report states. The title Report 4 [12] gave this arXiv id belongs to no paper on INSPIRE; the title above is the one on the arXiv, JACoW and INSPIRE records. |
+
+Added to `refs_dict.json` in the same pass, with `"file": null` and a URL
+or DOI, because they are paywalled, too large to commit, or not documents
+at all: the **EIC Conceptual Design Report** (BNL-221006-2021-FORE,
+doi:10.2172/1765663, 972 pp. — the ξ_p ≤ 0.015 hadron beam-beam limit at
+§1.2 p. 5, §1.4 p. 11, §3.1.1 p. 95 and §4.6.1 pp. 392/395, Tables
+3.3/3.4/3.5, the Z/A scaling at §1.4 p. 14 and the two-IR ion cap at
+Appendix A §A.2.2 p. A-12); the **ePIC Preliminary Design Report** of
+September 2024 (Zenodo 13866213 — Fig. 8.9 p. 36, Table 8.1 p. 30,
+Roman-Pot rates p. 203) and the **Preliminary TDR v3.1** (concept
+doi:10.5281/zenodo.18271601, record 18271602 — Fig. 3.56 p. 64, Table 3.22
+p. 63, p. 270), whose full-simulation δp/p is 0.38% in the barrel at
+1 GeV/c and has no η slice at 0.6%; the COMPASS and Saclay target papers
+**J. Ball et al.**, NIM A 498 (2003) 101 (+54.2%/−47.1%), **J. Koivuniemi
+et al.**, SPIN2004 p. 796 (51 ± 3% for ⁶Li, 92 ± 4% for ⁷Li) and **P.
+Chaumette et al.**, AIP Conf. Proc. 187 (1989) 1275 (47%/56% in ⁷LiH),
+together with **S. Bültmann et al.**, NIM A 425 (1999) 23 (SLAC-PUB-7904),
+the E155 target paper; the JLab proposals **PR12-14-001** (65–80% for ⁷Li
+at 5 T, P_z = 0.8, 15 nA) and **PR12-13-011** with its 2023 jeopardy
+update (0.16 < x < 0.49, P_zz = 20% in the proposal and 26% in the update,
+the 30% condition lifted in August 2022); **N. J. Stone**, INDC(NDS)-0833
+(2021) and INDC(NDS)-0794 (2019), the quadrupole and dipole moment tables;
+and **X. Li**, arXiv:2305.15593 — recorded, and flagged, as the 1.4 T
+BaBar reference design measured with the ECCE MC, **not** ePIC, so that
+its ≈ 0.59% at 1 GeV/c is never re-imported as an ePIC number.

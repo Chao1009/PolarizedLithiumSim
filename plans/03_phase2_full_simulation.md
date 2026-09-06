@@ -15,7 +15,7 @@ eic/* GitHub repos, and the cited arXiv papers on 2026-06-12.*
 
 ---
 
-## Step 2.0 ◐ Local environment refresh (days)
+## Step 2.0 ☑ Local environment refresh (days)
 
 Current local state (checked 2026-06-12): eic-shell at `~/Projects/eic`
 with `jug_xl-nightly.sif` (4 GB, ~Sep 2024); `npsim`/`eicrecon` confirmed
@@ -52,6 +52,15 @@ Local `epic` @ 24.08.0 and `EICrecon` @ v1.6.0 checkouts are ~2 years stale.
    eicrecon -Ppodio:output_file=reco.edm4eic.root sim.edm4hep.root
    ```
    Record exact commands + versions in `fullsim/README.md` as the runbook.
+
+☑ *2026-09-06: the step header is set to ☑. Item 1 is done — the current
+`eic_xl-nightly` container (`epic-main` 9aaa2969, 2026-08-22) is installed at
+`~/Projects/eic-2026/` (run 14); item 2 carries its own ☑ above; item 3's runbook
+is written, in `tools/fullsim/README.md` and `docs/reproduction_manual.md` §5.3,
+and npsim is exercised against the container geometry by
+`tools/fullsim/ff_gun_scan.sh`. The one clause never exercised is the literal
+`eicrecon` reconstruction command — no EICrecon output exists anywhere in the
+tree — and it closes with the first reconstructed run under step 2.3, not here.*
 
 ## Step 2.1 ☐ Beam configuration for Li species (2–3 weeks, w/ FF group)
 

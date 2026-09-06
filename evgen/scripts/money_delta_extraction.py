@@ -40,8 +40,11 @@ import matplotlib  # noqa: E402
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 
-from money_cos2phi import (build_delta_model, measure,  # noqa: E402
-                           pick_sweet_spots_banded, superbin_mask)
+from money_cos2phi import (add_tensor_leakage_args, b34_funcs,  # noqa: E402
+                           build_delta_model,
+                           check_tensor_leakage_args, leakage_amplitude,
+                           measure, pick_sweet_spots_banded, superbin_mask,
+                           tensor_leakage_tag, truth_leakage_route)
 
 from polligen import bookkeeping as bk  # noqa: E402
 from polligen.sample import InclusiveSampler  # noqa: E402
@@ -68,9 +71,11 @@ def main():
     ap.add_argument("--lumi-1yr", type=float, default=10.0)
     ap.add_argument("--lumi-10yr", type=float, default=100.0)
     ap.add_argument("--pzz", type=float, default=0.60)
+    add_tensor_leakage_args(ap)
     ap.add_argument("--seed", type=int, default=20260811)
     ap.add_argument("--outdir", default=".")
     args = ap.parse_args()
+    check_tensor_leakage_args(ap, args)
 
     config = beams.default_configs("6Li")[args.config]
     lumi1_pb = args.lumi_1yr * 1e3
@@ -80,7 +85,10 @@ def main():
     scenario = fom.Scenario(lumi_fb_per_nucleon=args.lumi_1yr,
                             pol_ion_tensor=args.pzz)
     model, _q2_ref = build_delta_model(args, config, scenario)
-    kern = InclusiveKernel(beams.LI6, b1_func=toy_b1, delta_func=model)
+    b3_func, b4_func = b34_funcs(args)
+    kern = InclusiveKernel(beams.LI6, b1_func=toy_b1, delta_func=model,
+                           b3_func=b3_func, b4_func=b4_func,
+                           tensor_gamma=args.tensor_gamma)
 
     proj = fom.project_rates(config, scenario)
     obs = fom.project_observables(config, scenario, proj,
@@ -91,6 +99,7 @@ def main():
     sampler = InclusiveSampler(kern, config, scenario, nx=60, nq2=45)
     plan = bk.transverse_tensor_plan(args.pzz)
     cat = plan.categories[0]
+    subtract = args.subtract_tensor_leakage != "none"
 
     alt = (dm.make("moment_B", variant=args.variant,
                    dilution=args.dilution)
@@ -116,10 +125,19 @@ def main():
             m1 = measure(sampler, cat, mask, lumi1_pb, plan.pzz_true, rng)
             if m1["n"] < 1e3 or m1["err"] > 8e-3:
                 continue
+            if subtract:
+                # additive on the amplitude, and on the truth K divides
+                # by, so that K stays the pure Delta bin-centering and the
+                # correction is applied once (plans/08 D2 risks R3, R8)
+                leak = leakage_amplitude(sampler, cat, mask, m1["sigma_pb"])
+                m1["amp"] -= leak
+                m1["truth"] -= leak
             if abs(m1["truth"]) < 1e-5:
                 continue
             m10 = measure(sampler, cat, mask, lumi10_pb, plan.pzz_true,
                           rng)
+            if subtract:
+                m10["amp"] -= leak
             # model bin-centering: K converts the bin-averaged amplitude
             # to Delta at the bin center (pure kinematic inversion +
             # in-bin-shape correction from the fitted model itself)
@@ -180,10 +198,17 @@ def main():
     fig.tight_layout(rect=(0, 0, 1, 0.86))
     outdir = pathlib.Path(args.outdir)
     outdir.mkdir(parents=True, exist_ok=True)
-    out = outdir / "money_delta_extracted_6Li.png"
+    # a non-default tensor-leakage setting writes its own stem
+    tag = tensor_leakage_tag(args)
+    out = outdir / ("money_delta_extracted_6Li%s.png"
+                    % ("_" + tag if tag else ""))
     fig.savefig(out, dpi=140)
     print("wrote", out)
     print("delta model:", model.info())
+    if args.tensor_gamma:
+        print("tensor sector: EXACT finite-gamma kernel, b3 = %.3g b2, "
+              "b4 = %.3g b2; leakage subtraction: %s"
+              % (args.b3_frac, args.b4_frac, truth_leakage_route(args)))
     for line in summary:
         print(line)
 

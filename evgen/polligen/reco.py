@@ -400,19 +400,29 @@ def tracking_resolution(e_prime, eta, a=None, b=None):
     """dp/p = sqrt((a p)^2 + b^2), eta-piecewise.
 
     CORRECTED 2026-08-27: this table is NOT a placeholder.  It is the Yellow
-    Report tracking REQUIREMENT -- Fig. 8.3 / Table 11.2 (arXiv:2103.05419
-    pp. 261, 437) -- which ATHENA Table 4 also quotes as "Requirements".  The
-    barrel row (a, b) = (0.0005, 0.005) and the 1.0 < eta < 2.5 row
-    (0.0005, 0.010) match it exactly; the endcap constant terms are padded
+    Report tracking REQUIREMENT -- Table 11.2 (arXiv:2103.05419 p. 437), and
+    Fig. 8.3 / Table 8.20 (p. 261), which differ backward -- which ATHENA
+    Table 4 also quotes as "Requirements".  The barrel row
+    (a, b) = (0.0005, 0.005) and the 1.0 < eta < 2.5 row (0.0005, 0.010)
+    match it exactly; the -2.5 < eta < -1 constant 0.010 is Fig. 8.3's
+    1.0%, twice Table 11.2's 0.5%; the endcap constant terms are padded
     (0.030 against 0.020 backward, 0.025 against 0.020 forward), i.e.
     conservative.  An earlier docstring called the whole table unsourced.
 
     Three cautions, none of which change the headline numbers:
       * it is a REQUIREMENT, not an achievement, so agreement with it is not
         validation -- comparing this table to the requirement compares a
-        number to itself.  ePIC full simulation reaches 0.45-0.6% at
-        p = 1 GeV/c depending on eta slice, so the barrel smearing is
-        realistic to about +-20%.
+        number to itself.  The ePIC full simulation -- Preliminary Design
+        Report, September 2024, Fig. 8.9 ("ePIC 24.08", single pions, five
+        eta ranges; doi:10.5281/zenodo.13866213), digitised 2026-09-06 --
+        gives 0.38% at p = 1 GeV/c in -1 < eta < 1, 1.08% in -2.5 < eta < -1
+        and 3.0% in -3.5 < eta < -2.5, against this table's 0.50, 1.00 and
+        3.00.  So the barrel smearing is about 30% pessimistic, while the
+        two backward slices, where eleven of the twelve sweet spots sit, are
+        right to about 8%.  S. Maple's Craterlake 23.12.0 electrons give
+        0.45% in 0 <= eta <= 0.5, i.e. the barrel value is 11% high there.
+        No public ePIC number reaches 0.6% at 1 GeV/c; the 0.6% quoted here
+        before 2026-09-06 was the 1.4 T reference design of 2023.
       * the parameterisation is in TOTAL momentum p, not pT.  The consuming
         code passes p (money_delta_20260729.py sets p_true = e_prime_true),
         which is right; quoting the same numbers "at pT = 1 GeV/c" is not.

@@ -55,8 +55,11 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 from matplotlib.gridspec import GridSpec  # noqa: E402
 
-from money_cos2phi import (build_delta_model, pick_sweet_spots_banded,  # noqa: E402
-                           superbin_edges)
+from money_cos2phi import (LEAKAGE_B34_BAND,  # noqa: E402
+                           add_tensor_leakage_args, b34_funcs,
+                           build_delta_model, check_tensor_leakage_args,
+                           pick_sweet_spots_banded, superbin_edges,
+                           tensor_leakage_tag)
 
 from polligen import bookkeeping as bk  # noqa: E402
 from polligen import hfs, radiative as rad, reco, recopseudo as rp  # noqa: E402
@@ -229,12 +232,14 @@ def main():
                          "this list; without it the single --seed run is "
                          "printed")
     ap.add_argument("--isr-seed", type=int, default=20260828)
+    add_tensor_leakage_args(ap, with_scan=True)
     ap.add_argument("--seed", type=int, default=20260824)
     ap.add_argument("--outdir", default=".")
     args = ap.parse_args()
 
     if not args.lumi_fraction > 0:
         ap.error("--lumi-fraction must be positive")
+    check_tensor_leakage_args(ap, args)
     config = beams.default_configs("6Li")[args.config]
     # programme luminosity x this observable's share of the run plan; the
     # spin-state share of `plan` divides what is left, and is a different
@@ -252,7 +257,10 @@ def main():
              args.lumi_1yr * args.lumi_fraction,
              args.lumi_10yr * args.lumi_fraction))
     model, q2_ref = build_delta_model(args, config, analysis)
-    kern = InclusiveKernel(beams.LI6, b1_func=toy_b1, delta_func=model)
+    b3_func, b4_func = b34_funcs(args)
+    kern = InclusiveKernel(beams.LI6, b1_func=toy_b1, delta_func=model,
+                           b3_func=b3_func, b4_func=b4_func,
+                           tensor_gamma=args.tensor_gamma)
     # the shape the bin-centering starts from: the injected model unless
     # asked otherwise (a different prior is the F5 model dependence)
     prior_name = args.unfold_prior or args.delta_model
@@ -309,12 +317,21 @@ def main():
                            rng=rng, hfs=hfs_resp)
     suffix = (args.tag if args.tag is not None
               else ("_hfs" if args.y_source == "hfs" else ""))
-    # published PNGs are the --lumi-fraction 1 ones: a non-default share
-    # appends its key rather than overwriting them (the same guard as
-    # money_tagged_azz.output_stem)
+    # published PNGs are the --lumi-fraction 1 ones on the massless path
+    # with no subtraction: a non-default run share, and any of the
+    # tensor-leakage switches, append their key rather than overwriting
+    # them (the same guard as money_tagged_azz.output_stem).  The keys ride
+    # on a USER --tag too: the switches change the physics of the figure,
+    # not its provenance label, and the manual's own published PYTHIA
+    # command passes --tag _hfscal, so a tag that swallowed them would put
+    # exact-kernel, leakage-subtracted content under a published stem
+    # (code review 2026-09-06).
     share_key = fom.run_share_tag(args.lumi_fraction)
-    if share_key and args.tag is None:
+    if share_key:
         suffix = "%s_%s" % (suffix, share_key)
+    leak_key = tensor_leakage_tag(args)
+    if leak_key:
+        suffix = "%s_%s" % (suffix, leak_key)
     plan = bk.tensor_flip_plan(args.pzz, rel_lumi_offset=args.rel_lumi_offset)
     lumi_assumed = [0.5, 0.5]
     cat_plus = plan.categories[0]
@@ -335,6 +352,127 @@ def main():
     else:
         phi_eff = _eff(args.eff_cos2)
 
+    # --- the O(gamma^2) tensor leakage (plans/08 D2) ----------------------
+    subtract = args.subtract_tensor_leakage != "none"
+    if args.tensor_gamma:
+        print("tensor sector: EXACT finite-gamma kernel (Cosyn), b3 = %.3g "
+              "b2, b4 = %.3g b2; leakage subtraction: %s%s"
+              % (args.b3_frac, args.b4_frac, args.subtract_tensor_leakage,
+                 "" if not subtract else
+                 " (b3/b4 band %.2f of the correction)" % LEAKAGE_B34_BAND))
+        if args.subtract_tensor_leakage == "kappa" and args.rel_lumi_offset:
+            print("  in-situ route at --rel-lumi-offset %g: the fitted "
+                  "constant carries a bin-independent pedestal from that "
+                  "offset (the\n  spin-state ratio cancels a common "
+                  "acceptance, not a luminosity-ratio error), and the RAW "
+                  "kappa_hat would\n  over-subtract by 1.5-3.4x.  The "
+                  "pedestal is measured across the sweet-spot bins and "
+                  "removed; what it\n  measured is printed below."
+                  % args.rel_lumi_offset)
+
+    def summarize(edges4):
+        """(K denominator, what the data carry): the first has the
+        O(gamma^2) leakage removed, because K = Delta_c/a_reco_bin would
+        otherwise absorb part of the correction and apply it a second time
+        (plans/08 D2 risk R8); the second is the amplitude the
+        pseudo-measurement actually sees, and is the same OBJECT on the
+        massless path, where there is no leakage to tell apart."""
+        free = resp.bin_summary(*edges4, cat_plus)
+        if not args.tensor_gamma:
+            return free, free
+        return free, resp.bin_summary(*edges4, cat_plus,
+                                      include_leakage=True)
+
+    route = args.subtract_tensor_leakage
+    fallback_bins = []
+
+    def kappa_in_situ(mask, fit):
+        """(the kappa the in-situ route uses, the model's kappa) for one
+        bin, or (nan, nan) where the model kappa is unusable.
+
+        The fitted constant is the physical kappa plus the pedestal
+        `leak_pedestal` below; what the route may use is the difference.
+
+        The route DIVIDES by kappa, so it is refused where the model says
+        kappa is smaller than the fit can resolve.  The b-sector constant
+        changes sign with b1 -- around x ~ 0.3 at Q2 = 14 GeV^2 on the toy
+        model, where the folded kappa falls to 8e-06 -- and there
+        L = A_leak/kappa is O(1) and the in-situ kappa is a difference of
+        two numbers a hundred times larger than itself.  `harmonic_ratio_fit`
+        does not return the constant's error; for its design it is
+        err(A)/sqrt(2) to within the weighting, and three of those is the
+        cut.  Such bins take the model correction, which is well
+        conditioned there, and are counted and reported.
+        """
+        k_model = resp.fold_leakage(mask, cat_plus, constant=True)
+        if not np.isfinite(k_model) or k_model == 0.0:
+            return np.nan, np.nan
+        if abs(k_model) < 3.0 * fit["err"] / np.sqrt(2.0):
+            return np.nan, np.nan
+        return fit["const"] - leak_pedestal, k_model
+
+    def leak_of(mask, fit):
+        """The leakage amplitude to subtract from one bin's A_hat, per
+        unit P_zz, or None when the subtraction is off.
+
+        'model' folds the b1 model's own leakage through the response;
+        'kappa' keeps only the kinematic ratio L = A_leak/kappa from the
+        model and takes the rate sector from the fit's own constant term,
+        with the relative-luminosity pedestal removed (plans/08 D2 §2 and
+        the run-18 review of it)."""
+        if not subtract:
+            return None
+        a_leak = resp.fold_leakage(mask, cat_plus)
+        if route == "model":
+            return a_leak
+        k_used, k_model = kappa_in_situ(mask, fit)
+        if not np.isfinite(k_model):
+            # kappa is not measurable in this bin: fall back to the model
+            # correction, and SAY SO rather than let the run record claim
+            # an in-situ route it did not take
+            fallback_bins.append(int(mask.sum()))
+            return a_leak
+        return a_leak / k_model * k_used
+
+    def leak_band_of(mask, fit):
+        """The relative width of what the subtraction cannot reach: the
+        b3/b4 ignorance band always, and for the in-situ route the residual
+        mis-scaling of its own rate sector, |kappa_used/kappa_model - 1|,
+        in quadrature with it.  Without that second term the bar would not
+        cover a route whose kappa is still off by a factor (which is what
+        the uncalibrated route was)."""
+        if not subtract:
+            return 0.0
+        if route != "kappa":
+            return LEAKAGE_B34_BAND
+        k_used, k_model = kappa_in_situ(mask, fit)
+        if not np.isfinite(k_model):
+            return LEAKAGE_B34_BAND
+        return float(np.hypot(LEAKAGE_B34_BAND, k_used / k_model - 1.0))
+
+    # The four sweet-spot pseudo-measurements are drawn HERE, in the order
+    # the panels below consume them, so that the in-situ pedestal is
+    # measured on exactly the fits the analysis has and not on a second
+    # draw of the same expected counts.  Moving the draws out of the panel
+    # loop leaves the random stream untouched (nothing between them
+    # consumes it), which the bit-for-bit check of the published command
+    # confirms.
+    spot_masks = [resp.mask_reco(*superbin_edges(proj, i, j))
+                  for _x, _q, i, j in spots]
+    spot_fits = [measure_bin(resp, plan, mk, lumi1_pb, rng, phi_eff,
+                             lumi_assumed) for mk in spot_masks]
+    # ONE pedestal for every luminosity: it is a property of the fill plan
+    # and of the luminosity RATIO the analysis assumes, not of how much
+    # data were taken, so the 1-year measurement of it serves the 10-year
+    # extraction too (with the 1-year error, which is the conservative
+    # way round and is carried by leak_band_of).
+    leak_pedestal = 0.0
+    spot_kappa_models = [resp.fold_leakage(mk, cat_plus, constant=True)
+                         for mk in spot_masks] if route == "kappa" else []
+    if route == "kappa":
+        leak_pedestal = rp.leakage_pedestal(
+            [f["const"] for f in spot_fits], spot_kappa_models)
+
     # --- money plot 5R -----------------------------------------------------
     fig = plt.figure(figsize=(12.5, 6.8))
     gs = GridSpec(2, 3, figure=fig, width_ratios=(1, 1, 1.35), hspace=0.42,
@@ -343,9 +481,14 @@ def main():
     for k, (xs, qs, i, j) in enumerate(spots):
         ax = fig.add_subplot(gs[k // 2, k % 2])
         xlo, xhi, q2lo, q2hi = superbin_edges(proj, i, j)
-        mask = resp.mask_reco(xlo, xhi, q2lo, q2hi)
-        summ = resp.bin_summary(xlo, xhi, q2lo, q2hi, cat_plus)
-        fit = measure_bin(resp, plan, mask, lumi1_pb, rng, phi_eff, lumi_assumed)
+        mask = spot_masks[k]
+        summ_free, summ_data = summarize((xlo, xhi, q2lo, q2hi))
+        fit = spot_fits[k]
+        # the correction is additive on the amplitude, and the truth it is
+        # read against loses the same leakage (plans/08 D2 risk R3)
+        leak = leak_of(mask, fit)
+        amp = fit["amp"] - (0.0 if leak is None else leak)
+        summ = summ_free if subtract else summ_data
         err10 = reco.err_harmonic_ratio(fit["n"] * lumi10_pb / lumi1_pb,
                                         pzz_list)
         pts, perr = modulation_points(fit)
@@ -355,7 +498,7 @@ def main():
         phi = np.linspace(0, 2 * np.pi, 200)
         ax.plot(phi, 1e3 * summ["a_reco_bin"] * np.cos(2 * phi), "-",
                 color=C_TRUTH, lw=1.6)
-        ax.plot(phi, 1e3 * fit["amp"] * np.cos(2 * phi), "--", color=C_FIT,
+        ax.plot(phi, 1e3 * amp * np.cos(2 * phi), "--", color=C_FIT,
                 lw=1.4)
         ax.set_xlim(0, 2 * np.pi)
         ax.set_xticks([0, np.pi, 2 * np.pi])
@@ -373,7 +516,7 @@ def main():
              r"$\hat A=(%.2f\pm%.2f)\times10^{-3}$ [1 yr]; $\pm%.2f$ [10 yr]")
             % (xs, qs, summ["purity"],
                summ["a_reco_bin"] / summ["a_true_bin"],
-               1e3 * fit["amp"], 1e3 * fit["err"], 1e3 * err10),
+               1e3 * amp, 1e3 * fit["err"], 1e3 * err10),
             xy=(0.5, 1.02), xycoords="axes fraction", ha="center",
             fontsize=7.2)
         if k == 0:
@@ -385,11 +528,19 @@ def main():
         summary.append(
             "spot %d: x=%.3g Q2=%.3g N_1yr=%.3g purity=%.2f eff=%.2f "
             "D=%.3f  A_true(bin)=%+.4e A_true(reco)=%+.4e  "
-            "A_hat=%+.4e +- %.2e (1yr) +- %.2e (10yr)  sin-term=%+.1e"
+            "A_hat=%+.4e +- %.2e (1yr) +- %.2e (10yr)  sin-term=%+.1e%s"
             % (k + 1, xs, qs, fit["n"], summ["purity"], summ["efficiency"],
                summ["a_reco_bin"] / summ["a_true_bin"], summ["a_true_bin"],
-               summ["a_reco_bin"], fit["amp"], fit["err"], err10,
-               fit.get("amp_sin", 0.0)))
+               summ["a_reco_bin"], amp, fit["err"], err10,
+               fit.get("amp_sin", 0.0),
+               # with the exact kernel and NO subtraction the panel shows
+               # the amplitude the data carry, leakage included, while the
+               # 7R bin-centering K always divides by the leakage-free one
+               # (risk R8); print both so the two are never confused
+               "" if summ is summ_free else
+               "  [A_true(reco) here CARRIES the leakage; the K of money "
+               "plot 7R divides by the leakage-free %+.4e]"
+               % summ_free["a_reco_bin"]))
 
     # right: amplitude vs x in reco bins along the spot-1 Q2 slice
     ax = fig.add_subplot(gs[:, 2])
@@ -404,7 +555,7 @@ def main():
         mask = resp.mask_reco(xe[i0], xe[i0 + 2], q2lo, q2hi)
         if mask.sum() < 50:
             continue
-        summ = resp.bin_summary(xe[i0], xe[i0 + 2], q2lo, q2hi, cat_plus)
+        summ_free, summ_data = summarize((xe[i0], xe[i0 + 2], q2lo, q2hi))
         m1 = measure_bin(resp, plan, mask, lumi1_pb, rng, phi_eff, lumi_assumed)
         # the bins shown are chosen on MEASURABLE quantities only: the
         # expected count and the statistical error (an earlier version also
@@ -415,7 +566,12 @@ def main():
             continue
         m10 = measure_bin(resp, plan, mask, lumi10_pb, rng, phi_eff,
                           lumi_assumed)
-        pts.append((xc, m1, m10, summ))
+        lk1, lk10 = leak_of(mask, m1), leak_of(mask, m10)
+        pts.append((xc, dict(m1, amp=m1["amp"]
+                             - (0.0 if lk1 is None else lk1)),
+                    dict(m10, amp=m10["amp"]
+                         - (0.0 if lk10 is None else lk10)),
+                    summ_free if subtract else summ_data))
     xoff = 1.045
     ax.errorbar([p[0] for p in pts], [1e3 * p[1]["amp"] for p in pts],
                 yerr=[1e3 * p[1]["err"] for p in pts], fmt="s", mfc="none",
@@ -518,6 +674,7 @@ def main():
             mask = resp.mask_reco(xe[i0], xe[i0 + 2], q2s / 1.6, q2s * 1.6)
             if mask.sum() < 50:
                 continue
+            # the K denominator is the LEAKAGE-FREE amplitude (risk R8)
             summ = resp.bin_summary(xe[i0], xe[i0 + 2], q2s / 1.6, q2s * 1.6,
                                     cat_plus)
             m1 = measure_bin(resp, plan, mask, lumi1_pb, rng, phi_eff,
@@ -528,7 +685,11 @@ def main():
             m10 = measure_bin(resp, plan, mask, lumi10_pb, rng, phi_eff,
                               lumi_assumed)
             cand.append({"x": xc, "mask": mask, "summ": summ, "m1": m1,
-                         "m10": m10, "good": good})
+                         "m10": m10, "good": good,
+                         "leak_m1": leak_of(mask, m1),
+                         "leak_m10": leak_of(mask, m10),
+                         "band_m1": leak_band_of(mask, m1),
+                         "band_m10": leak_band_of(mask, m10)})
         shape_fit = {}
         if folded:
             # the fit is repeated from every OTHER shape the repository
@@ -538,10 +699,14 @@ def main():
             alt_names = [nm for nm in dm.available() if nm != prior_name]
             alts = tuple(make_prior(nm) for nm in alt_names)
             for key in ("m1", "m10"):
+                # the shape is fitted to the CORRECTED amplitudes, or
+                # its tilt would absorb the leakage (risk R8)
                 shape_fit[key] = rp.fold_shape_fit(
                     resp, cat_plus,
                     [{"mask": c["mask"], "x": c["x"], "q2": q2s,
-                      "amp": c[key]["amp"], "err": c[key]["err"]}
+                      "amp": c[key]["amp"] - (0.0 if c["leak_" + key] is None
+                                              else c["leak_" + key]),
+                      "err": c[key]["err"]}
                      for c in cand], prior, alt_bases=alts)
         pts = []
         for b, c in enumerate(cand):
@@ -559,6 +724,11 @@ def main():
             elif prior is not model:
                 kw1 = kw10 = {"k_conv": delta_c / resp.fold(prior, mask,
                                                             cat_plus)}
+            if subtract:
+                kw1 = dict(kw1, tensor_leakage=c["leak_m1"],
+                           leakage_rel_err=c["band_m1"])
+                kw10 = dict(kw10, tensor_leakage=c["leak_m10"],
+                            leakage_rel_err=c["band_m10"])
             d1 = rp.delta_from_amplitude(c["m1"], summ, delta_c, **kw1)
             d10 = rp.delta_from_amplitude(c["m10"], summ, delta_c, **kw10)
             pts.append({"x": xc, "delta_c": delta_c, "d1": d1["delta"],
@@ -661,6 +831,119 @@ def main():
     print("wrote", out)
     for line in summary7:
         print(line)
+
+    # --- provenance of the in-situ leakage correction ---------------------
+    if route == "kappa":
+        kref = float(np.mean(spot_kappa_models))
+        print("\nin-situ kappa calibration: the relative-luminosity "
+              "pedestal measured on the four sweet-spot fits above and "
+              "removed\nfrom every fitted constant before it is used as "
+              "the leakage's rate sector.  Pedestal %+.4e = %.2f of the "
+              "mean\nmodel kappa there (%.4e); per-spot kappa_hat/"
+              "kappa_model %s raw -> %s after."
+              % (leak_pedestal, leak_pedestal / kref, kref,
+                 ", ".join("%.2f" % (f["const"] / k) for f, k
+                           in zip(spot_fits, spot_kappa_models)),
+                 ", ".join("%.3f" % ((f["const"] - leak_pedestal) / k)
+                           for f, k in zip(spot_fits, spot_kappa_models))))
+    if fallback_bins:
+        print("WARNING: %d bin extraction(s) sat where the model kappa is "
+              "below the fit's resolution (3 err(A)/sqrt(2)) and took the "
+              "MODEL\n  correction instead of the in-situ one -- the "
+              "b-sector constant crosses zero there and L = A_leak/kappa "
+              "is O(1)" % len(fallback_bins))
+
+    # --- the O(gamma^2) tensor-leakage budget (plans/08 D2) ----------------
+    if args.leakage_scan:
+        # the table's own noise-free fits, and the pedestal measured on
+        # exactly those (the in-situ calibration of the kappa route, done
+        # here on the scan's own data so that the columns close among
+        # themselves rather than against the plotted, Poisson-drawn run)
+        scan_rows = []
+        for _k, (xs, qs, i, j) in enumerate(spots):
+            e4 = superbin_edges(proj, i, j)
+            mask = resp.mask_reco(*e4)
+            scan_rows.append((
+                xs, qs,
+                rp.measure_inclusive(resp, plan, lumi1_pb, mask,
+                                     poisson=False, phi_eff=phi_eff,
+                                     lumi_assumed=lumi_assumed),
+                resp.bin_summary(*e4, cat_plus),
+                resp.fold_leakage(mask, cat_plus),
+                resp.fold_leakage(mask, cat_plus, constant=True)))
+        scan_pedestal = rp.leakage_pedestal([r[2]["const"] for r in scan_rows],
+                                            [r[5] for r in scan_rows])
+        print("\nO(gamma^2) tensor leakage at the four sweet spots: the "
+              "b1-b4 rate sector seen\nthrough the tilted photon axis "
+              "(Cosyn Eq. 24), folded through the SAME response as the "
+              "amplitude.\nA_hat and kappa_hat are the noise-free "
+              "(poisson=False) 1-year pseudo-measurement, so the table is "
+              "the\nleakage and not a seed.  A_leak(mod) is the b1 model's "
+              "own folded leakage; L = A_leak/kappa_model is the\n"
+              "kinematic ratio, which is what the correction takes from the "
+              "model, and A_leak(kap) = L (kappa_hat - c) is\nwhat "
+              "--subtract-tensor-leakage kappa removes -- the rate sector "
+              "from the data, on the same P_zz\nnormalisation, so the "
+              "polarimetry scale cancels.  dDelta/Delta = -A_leak/A_hat is "
+              "the shift of the\nextracted structure function, positive "
+              "here because the leakage is negative and the subtraction "
+              "makes\nDelta-hat MORE negative (a positive entry is a "
+              "growth of |Delta-hat|).  The band column is the width the\n"
+              "subtraction cannot reach.  Generator kernel: %s.\n"
+              "\nTHE PEDESTAL c.  The ratio estimator cancels a common "
+              "acceptance but NOT a relative-luminosity error,\nwhich "
+              "enters it as a bin-independent offset of the CONSTANT term "
+              "alone (reco.spin_state_ratio).  At the\npublished "
+              "--rel-lumi-offset %g the RAW kappa_hat is 1.5-3.4x the "
+              "model kappa (the ratio is printed per\nspot below), and a "
+              "correction built on it would over-subtract by that factor "
+              "-- at the low-x spots by\nmore than the leakage itself.  "
+              "The offset is the same in every bin and kappa is not, so it "
+              "is measured\nacross the bins (rp.leakage_pedestal, c = "
+              "%+.4e here) and removed; the ratio after that is the\n"
+              "'cal' column.  --subtract-tensor-leakage model never sees "
+              "the offset, at the price of not being in situ.\n"
+              "\nTHE BAND is the b3, b4 IGNORANCE: %.2f of the correction, "
+              "because at the b3 = b4 = 0.1 b2 reference\nthe true leakage "
+              "is 1.60-1.65x the subtracted one.  It is a prior width on "
+              "the unmeasured slots and NOT\nthe residual against the b3, "
+              "b4 THIS run assumes -- with --b3-frac 0.1 --b4-frac 0.1 the "
+              "assumption equals\nthe reference and tensor_gamma_leakage.py"
+              " prints a zero residual, while this band stays open.  For "
+              "the\nin-situ route the residual mis-scaling |kappa_used/"
+              "kappa_mod - 1| is added to it in quadrature."
+              % ("EXACT finite-gamma (the data carry the leakage)"
+                 if args.tensor_gamma else
+                 "MASSLESS -- the data carry NO leakage, so this is what "
+                 "the exact kernel WOULD leak",
+                 args.rel_lumi_offset, scan_pedestal, LEAKAGE_B34_BAND))
+        print("  %-9s %-9s %-11s %-11s %-11s %-11s %-11s %-11s %-10s %s"
+              % ("x", "Q2", "A_hat", "kappa_hat", "kappa_mod", "A_leak(mod)",
+                 "L", "A_leak(kap)", "dD/D [%]", "band [%]"))
+        for xs, qs, exact, free, a_leak, k_model in scan_rows:
+            ell = a_leak / k_model if k_model else np.nan
+            k_used = exact["const"] - scan_pedestal
+            a_kap = ell * k_used
+            f1c = kern.nf2.f1a(xs, qs) / kern.ion.A
+            delta_c = float(prior(xs, qs, f1c))
+            k_conv = delta_c / free["a_reco_bin"]
+            band = (np.hypot(LEAKAGE_B34_BAND, k_used / k_model - 1.0)
+                    if k_model else np.nan)
+            # the table is what the subtraction WOULD do, whether or
+            # not this run applies it, so the shift is always shown
+            amp_c = exact["amp"] - a_kap
+            print("  %-9.4g %-9.4g %-11.4e %-11.4e %-11.4e %-11.4e %-11.4e"
+                  " %-11.4e %-10.4f %.4f"
+                  % (xs, qs, exact["amp"], exact["const"], k_model, a_leak,
+                     ell, a_kap, -100.0 * a_kap / exact["amp"],
+                     100.0 * band * abs(a_kap / exact["amp"])))
+            print("      Delta_hat %+.6f -> %+.6f (shift %+.3e = %+.4f%% of "
+                  "itself), K = %.5g, kappa_hat/kappa_mod = %.4f raw, "
+                  "%.4f cal"
+                  % (exact["amp"] * k_conv, amp_c * k_conv,
+                     -a_kap * k_conv, -100.0 * a_kap / exact["amp"], k_conv,
+                     exact["const"] / k_model if k_model else np.nan,
+                     k_used / k_model if k_model else np.nan))
 
     # --- bin-centering closure scan (plans/08 A6) --------------------------
     if args.unfold_scan:

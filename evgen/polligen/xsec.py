@@ -73,6 +73,45 @@ number by O(gamma^2) without a subtraction on the analysis side to meet
 it.  `evgen/scripts/tensor_gamma_leakage.py` measures the systematic
 (plans/08 D2).
 
+The subtraction that WOULD meet it now exists, also off by default:
+`tensor_leakage_amplitude` returns the leaked (h0, h2) per unit P_zz and
+`tensor_leakage_ratio` their ratio L = h2/h0.  Two facts make L the whole
+correction.  First, the leakage is the b2 term and not the b1 one: at
+y ~ 0.016 the weight (1-y)/(x y^2) ~ 4.5e4 multiplies b2, so the b1-only
+piece of h2 is 5.98e-9 against 1.598e-5 for the b2-only piece at the worst
+sweet spot -- 99.96% b2.  Second, the SAME combination is what the
+phi-independent harmonic h0 carries (masslessly
+h0 = -TENSOR_LL_SIGN/6 [b1 + (1-y)/(x y^2) b2]/D_phi at theta_S = 90 deg),
+so L is a pure kinematic function: tripling b1 leaves it unchanged to six
+digits, and taking b2 = 1.3 x b1 instead of the tensor Callan-Gross
+2 x b1 moves it by <= 1e-4 relative at eleven of the twelve sweet spots.
+h0 per unit P_zz is exactly what the same ratio fit reports next to the
+amplitude as its constant term (`reco.harmonic_ratio_fit`, key "const"),
+so the leakage is subtractable IN SITU as A_corrected = A_hat - L kappa,
+with no separate A_zz run plan -- the reports' "proportional to b1,
+subtractable with the A_zz the same fills measure" sharpened to what the
+code measures.  With ONE caveat that the run plan makes real: the fitted
+constant is h0 only up to a bin-independent pedestal, because the
+spin-state ratio cancels a phi-dependent acceptance common to the fills
+but not an error in the luminosity ratio the analysis assumes, and that
+error lands entirely on the constant.  At the `--rel-lumi-offset 1e-3`
+the published money plots carry, the raw kappa_hat is 1.5-3.4x h0 over
+the twelve sweet spots, and a correction built on it over-subtracts by
+that factor -- worse than no correction where the factor exceeds 2.  The
+pedestal is bin-independent and h0 is not, so it is measured across bins
+and removed (`recopseudo.leakage_pedestal`, and
+`money_cos2phi_reco.py --subtract-tensor-leakage kappa`, which prints
+what it removed); it is the calibrated constant, not the raw one, that
+is kappa.  What the subtraction does NOT remove at all is b3 and b4: at
+b3 = b4 = 0.1 b2 the leakage is 1.60-1.65x the b3 = b4 = 0 value that is
+subtracted, so ~0.6 of it survives as an irreducible model band, and
+the correction shrinks the systematic by 1.6 rather than by an order of
+magnitude.  The Delta sector
+is NOT redefined by any of this: the correction is ADDITIVE on the
+cos 2phi amplitude and Delta keeps the massless kinematic factor of
+`asymmetries.a_cos2phi` in both paths (`_tensor_harmonics_gamma`,
+caveat ii).
+
 Consistency gates (tested bin-wise in evgen/tests/test_xsec_identity.py):
 with vector-only polarization reproduce `asymmetries.a_parallel`; with
 tensor-only reproduce `asymmetries.azz` and `asymmetries.a_cos2phi`.
@@ -103,7 +142,9 @@ depolarization_gamma = depolarization_d_gamma
 __all__ = ["EventSpinState", "InclusiveKernel", "M_NUCLEON",
            "cosyn_tensor_sfs", "cosyn_unpolarized_sfs",
            "depolarization_gamma", "epsilon_gamma", "eta_gamma",
-           "g2_ww", "gamma_squared", "theta_q_cos_sin"]
+           "g2_ww", "gamma_squared", "tensor_gamma_harmonics",
+           "tensor_leakage_amplitude", "tensor_leakage_ratio",
+           "theta_q_cos_sin"]
 
 
 # --- the exact finite-gamma tensor sector (Cosyn et al., plans/08 D2) -----
@@ -201,6 +242,126 @@ def cosyn_unpolarized_sfs(f1, f2, x, gamma2):
     """
     x = np.asarray(x, dtype=float)
     return 2.0 * f1, (1.0 + np.asarray(gamma2, dtype=float)) * f2 / x - 2.0 * f1
+
+
+def tensor_gamma_harmonics(b1, b2, b3, b4, f1, f2, x, q2, y, theta_s, q_nn):
+    """(h0, h1, h2) of the exact finite-gamma b-sector, on bare arrays.
+
+    The arithmetic of `InclusiveKernel._tensor_harmonics_gamma`, which
+    documents the frame and the geometry; it lives here so that the
+    leakage can be evaluated without a kernel and a response -- from a
+    tables dict, from hand-made structure functions, or (with F1, F2 and
+    b1 set to any convenient scale) as the pure kinematic ratio
+    `tensor_leakage_ratio` returns.  `q_nn` is the rank-2 scalar
+    Q_NN = [3m^2 - J(J+1)]/3 of `InclusiveKernel._tensor_moments`, so the
+    three harmonics are LINEAR in it and hence in the fill's P_zz.
+    """
+    pref = 1.5 * q_nn
+    g2v = gamma_squared(x, q2)
+    eps = epsilon_gamma(y, g2v)
+    c, sn = theta_q_cos_sin(y, g2v)
+    ct, st = np.cos(theta_s), np.sin(theta_s)
+    f_t, f_l, f_lt, f_tt = cosyn_tensor_sfs(b1, b2, b3, b4, x, g2v)
+    fu_t, fu_l = cosyn_unpolarized_sfs(f1, f2, x, g2v)
+    den = fu_t + eps * fu_l
+    # the structure-function combination each alignment channel meets
+    lam_ll = f_t + eps * f_l
+    lam_lt = np.sqrt(2.0 * eps * (1.0 + eps)) * f_lt
+    lam_tt = eps * f_tt
+    # harmonics of t_zz, t_xz, t_xx - t_yy in cos(n phi')
+    zz = (pref * (0.5 * sn * sn * st * st + c * c * ct * ct - 1.0 / 3.0),
+          -pref * 2.0 * sn * c * st * ct,
+          pref * 0.5 * sn * sn * st * st)
+    xz = (pref * c * sn * (ct * ct - 0.5 * st * st),
+          pref * (c * c - sn * sn) * st * ct,
+          -pref * 0.5 * c * sn * st * st)
+    tt = (pref * sn * sn * (ct * ct - 0.5 * st * st),
+          pref * 2.0 * c * sn * st * ct,
+          pref * 0.5 * st * st * (c * c + 1.0))
+    scale = -TENSOR_LL_SIGN / np.maximum(den, 1e-30)
+    return tuple(scale * (zz[n] * lam_ll + xz[n] * lam_lt
+                          + tt[n] * lam_tt) for n in range(3))
+
+
+def _rank2_per_unit_pzz(j):
+    """Q_NN of a pure state divided by that state's tensor moment.
+
+    `spin.moments_along_axis` normalizes the two spins differently --
+    P_zz = <3 m^2 - 2> = 3 Q_NN for J = 1, T = <3 m^2 - J(J+1)>/3 = Q_NN
+    for J = 3/2 -- and every harmonic here is linear in Q_NN, so this one
+    factor turns them into per-unit-tensor-moment quantities.  It is the
+    factor 3 of plans/08 risk R9: the same b-sector leaks three times as
+    hard per unit tensor moment at spin 3/2 as at spin 1.
+    """
+    if abs(j - 1.0) < 1e-9:
+        return 1.0 / 3.0
+    if abs(j - 1.5) < 1e-9:
+        return 1.0
+    raise ValueError("the rank-2 leakage is defined for j = 1 or 3/2")
+
+
+def tensor_leakage_amplitude(t, x, q2, y, theta_s=0.5 * np.pi, j=1.0):
+    """(h0, h2) of the exact finite-gamma b-sector, PER UNIT P_zz.
+
+    h2 is the cos 2phi' amplitude the b1-b4 rate sector leaks into the
+    gluonometry observable at O(gamma^2) and h0 the phi-independent rate
+    shift that the same ratio fit reports as its constant kappa; both are
+    linear in the rank-2 moment, so dividing by it makes them independent
+    of the fill's m-state mixture (`spin1_populations(0, +0.6)` and
+    (0, -1.2) of `bookkeeping.tensor_flip_plan` give the same value to
+    every printed digit).  `t` is a tables dict -- b1, b2, b3, b4, f1, f2
+    -- on the same (x, Q2) arrays; `theta_s` the spin axis's polar angle,
+    at whose published value pi/2 the cos phi' harmonic vanishes
+    identically and only these two survive.
+
+    The measured cos 2phi' amplitude of a bin is A_Delta + h2 and the
+    correction is ADDITIVE on it: Delta keeps its massless kinematic
+    factor on both paths (`_tensor_harmonics_gamma`, caveat ii), so the
+    equivalent fake structure function is the same inversion
+    `asymmetries.a_cos2phi` defines, Delta_fake = -h2 y^2 D_phi/(1 - y).
+    """
+    q_nn = _rank2_per_unit_pzz(j)
+    h0, _h1, h2 = tensor_gamma_harmonics(t["b1"], t["b2"], t["b3"], t["b4"],
+                                         t["f1"], t["f2"], x, q2, y,
+                                         theta_s, q_nn)
+    return h0, h2
+
+
+def tensor_leakage_ratio(x, q2, y, b3_frac=0.0, b4_frac=0.0, b2_frac=2.0,
+                         theta_s=0.5 * np.pi, j=1.0):
+    """L = h2/h0: the leaked cos 2phi' amplitude per unit of the fit's own
+    constant kappa.
+
+    Both harmonics carry the same 1/(F_UU_T + eps F_UU_L), so F1 and F2
+    cancel exactly and L depends on the structure functions only through
+    the RATIOS b2/(x b1) (`b2_frac`, 2 at the tensor Callan-Gross point),
+    b3/b2 and b4/b2.  With the defaults it is therefore a pure function of
+    (x, Q2, y, theta_S): tripling b1 leaves it unchanged to six digits.
+    That is what makes the leakage subtractable in situ --
+    A_corrected = A_hat - L kappa uses only measured quantities, the two
+    outputs of one `reco.harmonic_ratio_fit`, and the polarimetry scale
+    cancels between them because both are per unit P_zz.  The fit's raw
+    constant is kappa only up to the bin-independent pedestal a
+    relative-luminosity error leaves on it (1.5-3.4x at the published run
+    conditions); `recopseudo.leakage_pedestal` measures that pedestal
+    across bins and the in-situ route removes it before multiplying by L.
+
+    `b3_frac`/`b4_frac` are the unmeasured higher-twist slots as
+    fractions of b2 (the convention of
+    `evgen/scripts/tensor_gamma_leakage.py`).  They are what the
+    subtraction cannot reach: at 0.1 b2 this ratio grows by a factor
+    1.60-1.65 at every published sweet spot.
+    """
+    x = np.asarray(x, dtype=float)
+    q2 = np.asarray(q2, dtype=float)
+    y = np.asarray(y, dtype=float)
+    one = np.ones(np.broadcast(x, q2, y).shape)
+    b1 = one
+    b2 = b2_frac * x * b1
+    t = {"b1": b1, "b2": b2, "b3": b3_frac * b2, "b4": b4_frac * b2,
+         "f1": one, "f2": 2.0 * x * one}
+    h0, h2 = tensor_leakage_amplitude(t, x, q2, y, theta_s=theta_s, j=j)
+    return h2 / np.where(h0 == 0.0, np.nan, h0)
 
 
 @dataclass(frozen=True)
@@ -502,32 +663,9 @@ class InclusiveKernel:
         structure function the whole programme extracts.
         """
         q_nn, _ = self._tensor_moments(state.m)
-        pref = 1.5 * q_nn
-        g2v = gamma_squared(x, q2)
-        eps = epsilon_gamma(y, g2v)
-        c, sn = theta_q_cos_sin(y, g2v)
-        ct, st = np.cos(state.theta_s), np.sin(state.theta_s)
-        f_t, f_l, f_lt, f_tt = cosyn_tensor_sfs(
-            t["b1"], t["b2"], t["b3"], t["b4"], x, g2v)
-        fu_t, fu_l = cosyn_unpolarized_sfs(t["f1"], t["f2"], x, g2v)
-        den = fu_t + eps * fu_l
-        # the structure-function combination each alignment channel meets
-        lam_ll = f_t + eps * f_l
-        lam_lt = np.sqrt(2.0 * eps * (1.0 + eps)) * f_lt
-        lam_tt = eps * f_tt
-        # harmonics of t_zz, t_xz, t_xx - t_yy in cos(n phi')
-        zz = (pref * (0.5 * sn * sn * st * st + c * c * ct * ct - 1.0 / 3.0),
-              -pref * 2.0 * sn * c * st * ct,
-              pref * 0.5 * sn * sn * st * st)
-        xz = (pref * c * sn * (ct * ct - 0.5 * st * st),
-              pref * (c * c - sn * sn) * st * ct,
-              -pref * 0.5 * c * sn * st * st)
-        tt = (pref * sn * sn * (ct * ct - 0.5 * st * st),
-              pref * 2.0 * c * sn * st * ct,
-              pref * 0.5 * st * st * (c * c + 1.0))
-        scale = -TENSOR_LL_SIGN / np.maximum(den, 1e-30)
-        return tuple(scale * (zz[n] * lam_ll + xz[n] * lam_lt
-                              + tt[n] * lam_tt) for n in range(3))
+        return tensor_gamma_harmonics(t["b1"], t["b2"], t["b3"], t["b4"],
+                                      t["f1"], t["f2"], x, q2, y,
+                                      state.theta_s, q_nn)
 
     # --- modulation amplitudes -------------------------------------------
 
@@ -578,6 +716,31 @@ class InclusiveKernel:
         if with_perp and helicity != 0.0 and v != 0.0 and abs(st) > 1e-12:
             a_1 = a_1 + helicity * v * st * self.a_perp(t, x, q2, y)
         return w_avg, a_1, a_2
+
+    def delta_derivative(self, t, x, q2, s, state, with_perp=False):
+        """d(w_avg, a_1, a_2)/dDelta as a DIFFERENCE of two `amplitudes`
+        calls -- the clean response operator of the Delta sector.
+
+        Delta enters W exactly once and linearly, so the difference
+        amplitudes(Delta = 1) - amplitudes(Delta = 0) is the exact
+        derivative and the first two entries are identically zero.  On the
+        massless path this is bit for bit what evaluating the kernel at
+        Delta = 1 alone returns, which is how `recopseudo.RecoResponse.
+        delta_response` used to build it; with `tensor_gamma` on it is NOT
+        -- that call also returns the b-sector leakage h2, which does not
+        depend on Delta, so the single call carries an additive constant
+        (+0.0062% at the worst sweet spot) into `fold`, `fold_kernel`,
+        `fold_mc_error`, `fold_shape_fit` and every bin-centering K they
+        produce.  Taking the difference is what makes the two switches
+        independent (plans/08 D2 risk R1).
+        """
+        zeros = np.zeros_like(np.asarray(t["delta"], dtype=float))
+        hi, lo = dict(t), dict(t)
+        hi["delta"] = zeros + 1.0
+        lo["delta"] = zeros
+        a_hi = self.amplitudes(hi, x, q2, s, state, with_perp=with_perp)
+        a_lo = self.amplitudes(lo, x, q2, s, state, with_perp=with_perp)
+        return tuple(u - v for u, v in zip(a_hi, a_lo))
 
     # --- differential cross sections --------------------------------------
 

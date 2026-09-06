@@ -16,7 +16,7 @@ brings to the EIC, in support of the ANL polarized ⁶,⁷Li ion-source program
 | [06_cos2phi_coherent_backgrounds.md](06_cos2phi_coherent_backgrounds.md) | cos 2φ money plots as projected data points (sweet-spot bins); the coherent intact-⁶Li channel (RP tag, 13.5% HA acceptance) and its full background budget (α+d beam-blindness, T=1 veto pattern, Z-ID question #19) |
 | [07_plb_letter_gluonometry.md](07_plb_letter_gluonometry.md) | The PLB-class simulation letter: scope decision (gluonometry, inclusive + coherent), gap analysis vs referees, work packages WP1–WP7 (grid SFs, reco closure, RC bound, coherent curves, paper production), skeleton, risk register, timeline to the INT program (submit Jan 2027) |
 | [../docs/reproduction_manual.md](../docs/reproduction_manual.md) | **How to reproduce any of it**: environment (Python, PDF grids, PYTHIA 8, eic-shell, a headless browser), every command with its measured runtime and expected output, the third-party generators (PYTHIA 8, BeAGLE over xrootd, ePIC/npsim), the numbers to check against, and what cannot be reproduced here and why |
-| [../docs/consistency_review_2026-09-02.md](../docs/consistency_review_2026-09-02.md) | **The consistency review of Reports 0–4** (2026-09-02, on the run-16 state): the five reports read against each other and against the code, the scripts, the manual and the plans — 260 findings, the 193 contradictions and defects fixed in run 17 along with the 53 wording suggestions of §3b, and the ten mechanical checks of §5.2 built as modules under `tools/checks/` (the sweep is 51 checks with them); its three author decisions are registered as plans/04 #22–24 |
+| [../docs/consistency_review_2026-09-02.md](../docs/consistency_review_2026-09-02.md) | **The consistency review of Reports 0–4** (2026-09-02, on the run-16 state): the five reports read against each other and against the code, the scripts, the manual and the plans — 260 findings, the 193 contradictions and defects fixed in run 17 along with the 53 wording suggestions of §3b, and the ten mechanical checks of §5.2 built as modules under `tools/checks/` (the sweep is 51 checks with them); its three author decisions are registered as plans/04 #22–24, of which #22 and #23 were answered by their sources in run 18 and #24 remains |
 | [08_simulation_chain_completion.md](08_simulation_chain_completion.md) | Completing the simulation chain (2026-08-25): the 23 gaps that survived an adversarial audit of the reconstruction chain, the kernel, the hadronic final state and the fast simulation — ordered, with the convention items reserved for the author (D1, D7, D9) and the externally blocked tail (D2–D8) separated out |
 | [09_nearbeam_nanowire_far_forward.md](09_nearbeam_nanowire_far_forward.md) | A near-beam layer for the far-forward lithium tags (2026-08-26; §9.0 re-derived 2026-08-28 on the Yellow Report divergences and restated 2026-08-29 on the per-configuration transport — at the published optics the machine binds at 10 × 100 and 18 × 275, where a closer approach buys nothing, and the silicon re-measured on 2026-08-28 binds at 5 × 41, where it is worth a factor 77; at the tagging optics a layer that follows the 0.12–0.36 mrad envelope is the difference between no tag and a 25–37% tag), whether a superconducting nanowire can deliver it, the hot-spot firing-threshold answer to open question #19, the obstacle table, and the correction that the ePIC pot geometry has moved since the snapshot `tools/fullsim` measured — report in `reports/nanowire_far_forward.html` |
 | [10_beam_divergence_light_ions.md](10_beam_divergence_light_ions.md) | **The beam energies and the divergence the whole far-forward programme rests on** (2026-08-27): every far-forward acceptance is exp(−B(10σ_θ·A·p_u)²). Two corrections. **The energies**: EIC ions are γ-matched, not rigidity-scaled — the rings must share a revolution period, so ⁶Li sits at **40.8 / 99.5 / 137.5 GeV/u**, not 20.5 / 50 / 137.5. **The divergence**: σ_θ was one energy-independent, isotropic, proton-derived 72.7 µrad; YR Tables 10.1/10.2 give it per configuration and optics, and the species step applies *only* where rigidity binds — so ⁶Li carries the proton's **220/380 and 180/180 µrad** at the two lower configurations and pays √2 only at the top (**92/92**). Together these cost the coherent tag six to twenty-four orders of magnitude, and the recovery needs a two-ring β* de-squeeze the machine may not have |
@@ -56,6 +56,177 @@ brings to the EIC, in support of the ANL polarized ⁶,⁷Li ion-source program
    with partial snakes; ~138/~117 GeV/u top energies.
 5. **Calendar anchor**: INT program on polarized ion beams at EIC,
    March 22 – April 2, 2027 — target for Phase-1 money plots.
+
+## Development run 18 (2026-09-06): the open items — the sourcing pass, two author questions answered, the tensor-leakage subtraction, the open-box audit
+
+The items the last two runs left open were taken up together: the four
+lenses the consistency review of run 17 declared unchecked (its §5.3),
+its three author decisions, run 16's one in-repository "Left" item — a
+subtraction of the O(γ²) tensor leakage on the analysis side — and a
+re-audit of every open box in plans/02–09.  Two workflows, 29 agents
+(Opus workers, a Fable design review and synthesis): six research lenses
+and two verification passes, each followed by an independent skeptic
+briefed to refute it; an audit; a design study; then the edits applied
+from a single specification, the implementation reviewed through a physics
+lens and a code lens and repaired, and the whole tree verified.  Working
+record under the session scratchpad `run18/` (RESULTS.md per agent).
+
+- ☑ **Every externally quoted number in Reports 0 and 1 was read in its
+  source, and every one stands.**  Wiringa et al. Table I (1.924 / 1.076
+  spin-up / spin-down protons in ⁶Li, 1.934 / 1.066 and 1.981 / 2.019 in
+  ⁷Li, AV18+UX) and its §II (N<sub>αd</sub> = 0.86 = 0.846 + 0.017,
+  N<sub>αt</sub> = 1.00); E155 ("97% of the free deuteron polarization";
+  the effective deuteron at "87% of the Li polarization"; dilution ∼ 0.36
+  against ∼ 0.22 for ¹⁵ND₃); COMPASS (f ≈ 0.35 with the helium counted;
+  0.15 for NH₃); Ball et al. (+54.2 / −47.1%); Koivuniemi et al. (51 ± 3%
+  and 92 ± 4%); Chaumette et al. (47% / 56%); Stone's IAEA tables
+  (−0.0806(6), −4.00(3) and +0.28578 fm²; 0.822043 and 3.256407 μ<sub>N</sub>);
+  PR12-14-001 (65–80% for ⁷Li at 5 T; 0.06 < x < 0.8, 1 < Q² < 15 GeV²;
+  P<sub>p</sub> = 0.866, P<sub>n</sub> = −0.037); PR12-13-011 (0.16 < x <
+  0.49) and its 2023 jeopardy update.  Five wordings were wrong around
+  right numbers and are corrected in Report 0: the ⁶LiD dilution is
+  f ≈ 0.35, not 0.35–0.45 (nothing gives 0.45); COMPASS's 51 ± 3% and
+  92 ± 4% are equal-spin-temperature estimates at its highest
+  polarizations, not derived from the ±54/47% maxima; E155's 87% is a
+  fraction of the ⁶Li polarization; the JLab b₁ experiment's conditional
+  approval was lifted in August 2022 and its P<sub>zz</sub> footing is
+  0.2 in the proposal, 0.3 in the condition, 0.26 in the 2023 plan; and
+  reference [13] pointed at a web page whose current tables carry other
+  values (0.820, 1.008) — it now cites the paper's own §II.  A refuter
+  caught one false correction before it landed: "CLAS12 at 10–15 nA" is
+  right, the 10 nA being Keith's PSTP2017 summary inside the same
+  reference.  The four small arXiv PDFs are in `refs/`
+  (1309.3794, hep-ex/9904002, hep-ex/0703049, 2105.13564) and
+  `refs/refs_dict.json` grew from 38 to 54 entries, the twelve without a
+  free copy carrying their DOI or URL and the page/table pointers.
+- ☑ **Two of the three author decisions of run 17 are answered by their
+  sources.**  **#22** — ξ<sub>p</sub> ≤ 0.015 is the EIC Conceptual Design
+  Report's hadron beam-beam design limit, stated four times (§1.2 p. 5,
+  §1.4 p. 11, §3.1.1 p. 95 — RHIC's achieved value adopted — and §4.6.1
+  pp. 392/395), with the proton at 3/3, 12/12, 12/12, 14/14 and 15/9 ×
+  10⁻³ (h/v) across the five configurations of Tables 3.3/3.4; for ions
+  §1.4 p. 14 scales the tune shift with Z/A, Table 3.5 runs Au at 1–5 ×
+  10⁻³ and Appendix A §A.2.2 caps the two IRs together at 0.03, so the
+  proton limit is conservative for Z/A = ½.  Now Report 3 [11] and
+  Report 4 [15]; the Yellow Report has no beam-beam row (confirmed over
+  all four parts).  **#23** — the η-resolved ePIC full simulation exists
+  in the document Report 3 [7] already named: the September-2024
+  Preliminary Design Report's Figure 8.9 (public snapshot
+  doi:10.5281/zenodo.13866213; the same figure is Fig. 3.56 of the
+  Preliminary TDR v3.1), digitised independently by two agents to
+  3.00 / 1.08 / 0.38 / 1.13 / 2.55% at 1 GeV/c over −3.5..−2.5, −2.5..−1,
+  −1..1, 1..2.5, 2.5..3.5.  No slice gives 0.6%: that end was the 1.4 T
+  BaBar-magnet reference design of 2023 (X. Li, arXiv:2305.15593), not
+  ePIC.  Report 3 Table 8 and `reco.py` now quote the figure — the barrel
+  model 0.50% is ≈ 30% pessimistic, the two backward slices that hold
+  eleven of the twelve sweet spots are right to ≈ 8% — with Maple's 0.45%
+  as [10].  **#24** stays the author's: Gamage et al.'s Table 1 (its
+  title corrected in Report 4 [12] — the paper is IPAC'21 TUPAB040) gives
+  0.1 at IP6 and 0.003–0.01 at IR-8, which supports a 10–33× band, not
+  30–60×, and the ×1.75 reproduces from nothing (the neighbouring ×230 and
+  ×77 do).
+- ☑ **The other unchecked lenses are closed.**  Yellow Report Fig. 8.3
+  was read as an image for the first time: it carries no constant term,
+  so Report 3 Table 8's "2%/√E ⊕ 1%" is Table 8.20's optimistic corner,
+  and Fig. 8.3 / Table 8.20 differ from Table 11.2 backward (⊕ 2.0 / 1.0%
+  against ⊕ 0.5%), which ATHENA Table 4 reproduces — three source cells
+  restated (Report 3 Table 8, Report 2 Table 2, `reco.py`).  The 200-draw
+  6R ensembles behind Report 2 §5.2/§7 were re-run — the script is
+  seeded, so the 34 quoted values must reproduce digit for digit, and 30
+  do, three round, and the one that differs is a wall time (plans/08's
+  "8 min" is 20 min solo, and the manual's "~14 min" for the likelihood
+  ensemble is 21–22 min).  The 2026-08-10 coherent note is banner-dated
+  as the state of run 5 with its projections superseded by Report 1 §6–7,
+  and carries an errata list (a sign in its Δ̂ inversion, a HERMES bound it
+  invented, a "brackets" that is "sits below").
+- ☑ **The tensor leakage is subtractable, and the machinery is in the
+  chain — default off.**  The design study found that 99.96% of the
+  O(γ²) leakage of the exact kernel into cos 2φ′ is the b₂ term (b₂ =
+  2xb₁ at leading twist), the same combination the ratio fit's own
+  φ′-independent constant κ measures, so L = A<sub>leak</sub>/κ is a pure
+  kinematic ratio (−0.0121 … −3.7 × 10⁻⁵ over the twelve spots,
+  unchanged to six digits under 3 × b₁) and the correction −L D<sub>φ</sub> κ̂
+  is in situ, from the same fills, with no A<sub>zz</sub> run.  What it
+  leaves is the b₃, b₄ band, 0.6 of the leakage: 0.109% → 0.066% of Δ at
+  5 × 40.8, 0.033% → 0.020% at the published configuration (truth level;
+  0.0014–0.018% at the four reconstructed bins).  Built:
+  `xsec.tensor_leakage_amplitude`, `tensor_leakage_ratio`,
+  `InclusiveKernel.delta_derivative`; `recopseudo.leakage_response`,
+  `fold_leakage`, `bin_summary(include_leakage=)`,
+  `delta_from_amplitude(tensor_leakage=)`, `leakage_pedestal`; the flags
+  `--tensor-gamma`, `--subtract-tensor-leakage {none,kappa,model}`,
+  `--b3-frac`, `--b4-frac` on the three money scripts and `--leakage-scan`
+  on `money_cos2phi_reco.py`, every non-default setting on its own PNG
+  stem; eleven tests.  Closure at the published configuration: the
+  exact-kernel pseudo-data return to the massless Â at the fifth digit by
+  either route (6.8778 / 4.2984 / 8.7106 / 9.0733 × 10⁻³), the 7R rows
+  unmoved.  The reviews found what the design had not: (i)
+  `RecoResponse.delta_response` built dA/dΔ as `amplitudes(delta=1)`,
+  which with `tensor_gamma=True` carries the Δ-independent leakage — a
+  +0.0062% double count, now a true difference and bit-for-bit on the
+  massless path; (ii) the published `--rel-lumi-offset 1e-3` lands
+  entirely on the fit's constant as a bin-independent pedestal (c ≈ +5.6 ×
+  10⁻⁴, κ̂/κ<sub>model</sub> = 1.46–3.36 across the twelve spots), so the
+  raw in-situ route over-subtracted — it now measures c across the four
+  bins of a slice and removes it (0.996–1.002 after), takes the model
+  correction where the b-sector constant sits inside the fit's own
+  resolution (it crosses zero near x ≈ 0.3 at 14.3 GeV²), and a test
+  pins the defect and the cure at the offset the published runs use;
+  (iii) `--tag` bypassed the stem guard, so one flag could have
+  overwritten the published `_hfscal` figures — closed.  Every published
+  number, figure and printed line is bit-for-bit what HEAD 3665da1 gives,
+  verified from a pristine worktree three times.  Whether to flip the
+  default is registered as the author's, plans/08 **D10**: the case for is
+  the one that carried the target-mass term; the case against is that
+  b₃/b₄ leave 0.6 of a correction three orders below the bars, and that
+  the flip re-draws every pseudo-measurement rather than shifting it.
+  Reports 1 §2 / Table 4 and 2 §4.1, the manual, plans/07 and plans/08 now
+  say b₂ and κ̂ where they said b₁ and A<sub>zz</sub>; run 16's bullet
+  above is left as the record of what was believed then.
+- ☑ **The open boxes are re-audited** (the last audit was run 13):
+  61 boxes in plans/02, 03, 05, 07, 08, 09 and the six "Left" bullets of
+  this log — 15 external, 31 closable here, 10 done but unticked, 2
+  superseded, 3 the author's (plans/02 §1.6's purity gate, plans/07 D2,
+  the `tensor_gamma` default).  The ten done ones are ticked with their
+  evidence (six boxes in plans/02, 03 and 07; the four "Left" bullets of
+  runs 2, 7, 9 and 14 are dispositioned here: every item of theirs is
+  closed by runs 11–16 or superseded — plans/04 #6, D1, D7, D9, the EMC
+  baseline, `target_mass`, the lattice decision, the tagging optics
+  lever).  The 31 closable items, ≈ 145 h without the letter itself, are
+  the ledger of what comes next, cheapest high-value first: promote
+  `NuclearF2FromGrid` into `structure.py` and add `--pdf {toy,grid}` to
+  the four evgen scripts, then re-derive the letter's §7.1 numbers on grids
+  (plans/07 WP1, 16 h); fold exp(−B t<sub>min</sub>) and the ×0.73 weighting
+  into `coherent.py` with tests (WP5, 6 h); the fastsim flow-back of the
+  measured dilution and the β band into `fom.Scenario` (plans/05, 6 h); the
+  P<sub>zz</sub> half of the WP2 scaling table (3 h); list the reconstructed
+  campaign subtree and retract or confirm plans/03's three unchecked
+  claims (3 h); then the β = 0.20/0.30/0.40 band on the tagged numbers
+  (10 h), the two-fill path in the three truth-level drivers (10 h), the
+  neutron half of the ⁷Li forward-limit gate (4 h), the reweighter and the
+  HepMC3 writer of plans/05 (20 + 20 h), the B0/ZDC and R₁₁/R₂₁/R₂₂/D′
+  measurement (10 h), an (x, Q²) e-ID and Fermi smearing (8 h), reco-level
+  A<sub>∥</sub>/A<sub>zz</sub> (15 h); and the letter block — `paper/`,
+  the figure style, the text, the BibTeX pass (≈ 60 h).  External and
+  unchanged: the ⁷Li theory asks, the light-ion lattice and the
+  de-squeezed R₁₂ (C-AD), BeAGLE A = 6, 7 (FLUKA), the ePIC numbers of
+  plans/08 D6.
+- ☑ **Checks.**  `tools/retired_numbers.json` gains five forms (the 0.45–0.6%
+  resolution, the 0.35–0.45 dilution, the false Gamage title, "whence
+  51 ± 3%", "proportional to b₁ … subtractable"); `sign_convention.py`
+  gains a third check, that the leakage correction reverses with
+  `TENSOR_LL_SIGN` (52 checks, 50 in the default sweep); the `--full`
+  re-derivation covers `tensor_gamma_leakage.py` (seven claims, the
+  residual 6.595 × 10⁻⁴ = 0.066% among them).
+  Eighteen registered figures were regenerated after the module edits and
+  are byte-identical.
+- ☐ **Left**: the author's D10 (flip the `tensor_gamma` default with the
+  κ̂ subtraction, or keep carrying 0.6 of the leakage) and plans/04 #24
+  (the ×1.75 and the 30–60×); the closable ledger above; the ⁷Li theory
+  asks, the lattice confirmation and the de-squeezed R₁₂, still external.
+
+Tests: 121 fastsim + 334 evgen, 52 consistency checks (50 in the default
+sweep; the two that re-execute the producing scripts run with `--full`).
 
 ## Development run 17 (2026-09-02): the consistency review of Reports 0–4 and its fixes
 

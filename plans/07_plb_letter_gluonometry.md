@@ -297,7 +297,7 @@ scenario band of §4 and the a₂ deformation band of §6.3.
 **WP3 addendum (2026-08-24, `reports/reconstruction_chain_report`).** The
 reconstructed-level closure is now specified end to end and seeded in
 `polligen/reco.py`; the note changes three inputs of this WP:
-- ☐ **Binning must be reconstructed (x, Q²) with the mixed (eΣ) method**:
+- ☑ **Binning must be reconstructed (x, Q²) with the mixed (eΣ) method**:
   spots 1–3 of money plot 5 sit at y = 0.010–0.025 where the electron
   alone gives δy/y = 50–120% (Table 1 of the note). Use
   `reco.hadronic_y` with a 15–30% band (purity 0.75–0.83, reco-bin
@@ -311,7 +311,13 @@ reconstructed-level closure is now specified end to end and seeded in
   not reconstructible), and the x ≈ 0.1 case is argued from a δy/y comparison
   rather than run as a low-configuration projection — every 5R/7R number is
   mid-config.*
-- ☐ **Estimator: spin-state-sorted ratio** (`reco.harmonic_ratio_fit`) of
+  ☑ *2026-09-06: the bullet is set to ☑ — the mixed (eΣ) reconstructed binning is
+  the default of the reco chain (`reco.mixed_method`/`hadronic_y`,
+  `recopseudo.RecoModel`, `money_cos2phi_reco.py --y-method mixed --y-source hfs`).
+  The residue stays where it is: the ☐ note above keeps the two trailing clauses
+  open — the e′-only variant at y ≥ 0.05 and the x ≈ 0.1 low-configuration
+  projection.*
+- ☑ **Estimator: spin-state-sorted ratio** (`reco.harmonic_ratio_fit`) of
   m = ±1-rich (P_zz = +0.6) and m = 0-rich (−1.2) fills, with a sin 2φ′
   term; the single-fill fit is biased by the detector's cos 2φ′ acceptance
   harmonic ÷ P_zz. δA becomes 2√(2/N)/(P₊ − P₀) = 0.67× the current
@@ -323,6 +329,13 @@ reconstructed-level closure is now specified end to end and seeded in
   quotes single-state values, and the three scripts that produce them
   (`money_cos2phi.py`, `money_cos2phi_coherent.py`, `money_delta_extraction.py`)
   have no two-fill path at all.*
+  ☑ *2026-09-06: the bullet is set to ☑ — the spin-state-sorted ratio estimator
+  is implemented and drives the reconstructed-level analysis
+  (`reco.harmonic_ratio_fit` with the sin 2φ′ term, `err_harmonic_ratio`), and the
+  0.67 factor is derived and published (commits 8a98f91, bb636b5). The residue
+  stays where it is: the ☐ note above keeps the second clause open — §7.1 is still
+  quoted from single-state fits and the three generator-level drivers have no
+  two-fill path.*
 - ☑ **Angles from four-vectors**: `reco.azimuth_wrt_lepton_plane` (covariant
   φ_S, = φ_e − φ_S to O(γ²)); head-on transformation applied (e′ odd
   harmonics only). The 2-D φ-hole closure of the original bullet becomes
@@ -629,7 +642,7 @@ cutout geometry as the assumption it is (#20).
 | 3 | Simulation framework: beams (EPIOS), polligen validation (one paragraph), grid SFs, acceptance, statistics method | 500 | Fig. 1 |
 | 4 | Inclusive projections: φ′ pseudo-data, amplitude vs x, xΔ extraction, A-vs-B discrimination | 700 | Figs. 2–3, Table 1 |
 | 5 | Coherent channel: detection at IP6/IR-8, rate model bands, anchored a₂, sign flip, null test, two-component fit | 700 | Fig. 4 |
-| 6 | Systematics and assumptions: reco dilution, RC bound (collinear-ISR migration ≤ 2.9% of Δ̂, ≤ 0.25% behind an E − p_z window (a documented contingency, not applied); tensor-sector RC still uncalculated), polarimetry, purity via |t| fit, acceptance stability between the spin-state samples (bunch-by-bunch requirement: a 10⁻³ difference of the cos 2φ′ efficiency harmonic fakes half the signal), K model dependence (3–11% between Δ shapes with the bin-by-bin factor, ≤ 1.2% with the folded shape fit), O(γ²) b₁ leakage, measured since 2026-08-29 rather than bounded (`evgen/scripts/tensor_gamma_leakage.py` on the exact finite-γ tensor kernel, plans/08 D2): Δ_fake = (0.14–0.16) γ²b₁ — the full Cosyn combination, whose leading-twist and twist-3 channels stand as T_LL : T_LT : T_TT = 3 : −3 : 1 and cancel, leaving the twist-4 Eq. (17e) term almost alone — worth **0.109%** of the cos 2φ amplitude at the worst of the twelve sweet spots (5 × 41, x = 0.089, Q² = 1.14), ≤ 0.033% at 10 × 99.5 and ≤ 0.027% at 18 × 137.5; negative at every spot in the adopted tensor convention, so it cancels part of the amplitude of the moment-constrained models rather than faking one, and subtractable with the A_zz of the same data because it is proportional to b₁ (b₃ = b₄ = 0.1 b₂, which breaks the cancellation, would move it to 0.175%) — R model in Δ/F₁ = −2(1+R)Â, now the published R1998 and worth +16.6 / +18.0 / +4.7 / −4.4% at the sweet spots — code review 2026-08-25 — condensed assumptions | 450 | — |
+| 6 | Systematics and assumptions: reco dilution, RC bound (collinear-ISR migration ≤ 2.9% of Δ̂, ≤ 0.25% behind an E − p_z window (a documented contingency, not applied); tensor-sector RC still uncalculated), polarimetry, purity via |t| fit, acceptance stability between the spin-state samples (bunch-by-bunch requirement: a 10⁻³ difference of the cos 2φ′ efficiency harmonic fakes half the signal), K model dependence (3–11% between Δ shapes with the bin-by-bin factor, ≤ 1.2% with the folded shape fit), O(γ²) b₁ leakage, measured since 2026-08-29 rather than bounded (`evgen/scripts/tensor_gamma_leakage.py` on the exact finite-γ tensor kernel, plans/08 D2): Δ_fake = (0.14–0.16) γ²b₁ — the full Cosyn combination, whose leading-twist and twist-3 channels stand as T_LL : T_LT : T_TT = 3 : −3 : 1 and cancel, leaving the twist-4 Eq. (17e) term almost alone — worth **0.109%** of the cos 2φ amplitude at the worst of the twelve sweet spots (5 × 41, x = 0.089, Q² = 1.14), ≤ 0.033% at 10 × 99.5 and ≤ 0.027% at 18 × 137.5; negative at every spot in the adopted tensor convention, so it cancels part of the amplitude of the moment-constrained models rather than faking one, and subtractable in situ from the same transverse fills because 99.96% of it is proportional to b₂ = 2x b₁ at leading twist — the combination the fit's own constant κ̂ measures, once the bin-independent luminosity pedestal on κ̂ is calibrated out — with no longitudinal fill required (b₃ = b₄ = 0.1 b₂, which breaks the cancellation, would move it to 0.175% and is the 0.6 of the leakage the subtraction cannot reach) — R model in Δ/F₁ = −2(1+R)Â, now the published R1998 and worth +16.6 / +18.0 / +4.7 / −4.4% at the sweet spots — code review 2026-08-25 — condensed assumptions | 450 | — |
 | 7 | Summary and outlook (theory and machine asks) | 250 | — |
 
 Title candidates (D5): (a) "Nuclear gluonometry with a tensor-polarized ⁶Li
@@ -643,7 +656,7 @@ double-helicity-flip structure function of ⁶Li at the EIC"; (c) variant of
 |---|---|---|
 | "The Δ model is arbitrary" | moment-constrained (Δ⁺⁺ bag provenance stated); A/B interpretations bracket; the measurement discriminates them — that is the point | §2, §4 |
 | "Bag moment ported to a nucleus" | labeled scenario; literature brackets both directions (NPLQCD suppression vs binding enhancement); x-shape ours by necessity (S–S give none) | §2, §6 |
-| "The b₁ sector contaminates the cos 2φ amplitude at finite γ" | measured, not bounded: the exact Cosyn kernel (b₃/b₄ slots, Eqs. 9/10/14/17/24), anchored on both finite-γ rows of that paper's own Table 1, puts it at 0.109% of the amplitude at the worst of the twelve sweet spots and ≤ 0.033% at the published configuration, with the sign that cancels rather than fakes, and it is proportional to b₁ — which the same experiment measures in its longitudinal fills | §6, plans/08 D2 |
+| "The b₁ sector contaminates the cos 2φ amplitude at finite γ" | measured, not bounded: the exact Cosyn kernel (b₃/b₄ slots, Eqs. 9/10/14/17/24), anchored on both finite-γ rows of that paper's own Table 1, puts it at 0.109% of the amplitude at the worst of the twelve sweet spots and ≤ 0.033% at the published configuration, with the sign that cancels rather than fakes, and 99.96% of it is proportional to b₂ = 2x b₁ at leading twist — the combination the fit's own constant κ̂ measures, so it is subtracted in situ from the same transverse fills, with no longitudinal fill required, once the bin-independent luminosity pedestal on κ̂ is calibrated out; the b₃/b₄ band leaves 0.6 of it | §6, plans/08 D2 |
 | "No tensor radiative corrections" | quantified migration bound (≤ 2.9% of Δ̂ with the low-Q² feed-in opened up, ≤ 0.25% with an E − p_z window (a documented contingency, not applied); Report 2 §7); collinear ISR fakes no cos 2φ′ at all and cancels in the spin-state ratio; open-theory statement with citation trail | §6 (WP4) |
 | "Li beams do not exist; no luminosity" | EPIOS PRC 113:060501 feasibility; stated 10 fb⁻¹/u with linear scaling; P_zz band quoted | §3, Table 1 |
 | "Coherent fraction is invented" | explicit f₀ band bracketing HERA ep and heavy-A saturation; first-of-kind labeled; IP-Glasma ask on record | §5 |

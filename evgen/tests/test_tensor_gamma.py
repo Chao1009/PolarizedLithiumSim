@@ -32,7 +32,8 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 
 from polligen.xsec import (EventSpinState, InclusiveKernel,  # noqa: E402
                            cosyn_tensor_sfs, cosyn_unpolarized_sfs,
-                           gamma_squared, theta_q_cos_sin)
+                           gamma_squared, tensor_leakage_amplitude,
+                           tensor_leakage_ratio, theta_q_cos_sin)
 
 from polli_fastsim import asymmetries as asym  # noqa: E402
 from polli_fastsim import beams  # noqa: E402
@@ -46,6 +47,18 @@ S = CONFIG.sqrt_s_per_nucleon ** 2
 # a deliberately large-gamma^2 point at the edge of the W^2 >= 10 cut
 POINTS = [(0.08913, 1.135, 0.01561), (0.1413, 3.127, 0.02713),
           (0.2, 1.0, 0.05)]
+
+
+def _scalar(v):
+    """The single value of a size-1 array as a float.
+
+    `float()` on an array with ndim > 0 is deprecated since NumPy 1.25 and
+    errors on NumPy 2.x; `.item()` is the supported spelling and refuses a
+    size > 1 array instead of silently taking its first element (the
+    hygiene of commit a684a89).  The kernels take array arguments, so the
+    one-point fixtures below come back as size-1 arrays.
+    """
+    return float(np.asarray(v).item())
 
 
 def _tables(x, b1=0.02, b3=0.0, b4=0.0, r=0.3):
@@ -327,3 +340,221 @@ def test_b3_b4_default_to_zero_and_reach_the_kernel():
     a2 = kern.amplitudes(t, x, q2, S, state)[2]
     a2_0 = base.amplitudes(base.tables(x, q2), x, q2, S, state)[2]
     assert float(a2) != float(a2_0)
+
+
+# --- the subtraction: the leakage as a measurable, per unit P_zz ----------
+#
+# plans/08 D2 §4 tests 2, 3, 6 and 7.  These pin the FREE functions the
+# extraction subtracts with -- `tensor_leakage_amplitude` and
+# `tensor_leakage_ratio` -- against three independent references: the
+# kernel itself, the twelve-spot table `scripts/tensor_gamma_leakage.py`
+# prints (which `docs/reproduction_manual.md` quotes), and the sign
+# convention the whole b-sector hangs on.
+
+def _published_spots_and_kernels():
+    """The twelve money-plot-5 sweet spots with the toy b1 and the
+    published Delta model -- exactly what tensor_gamma_leakage.py runs on,
+    reached through the script so that no kinematics is re-typed here."""
+    sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]
+                           / "scripts"))
+    from target_mass_bound import published_spots
+    from tensor_gamma_leakage import delta_model_of
+    out = []
+    for ci in range(3):
+        cfg = beams.default_configs("6Li")[ci]
+        s = cfg.sqrt_s_per_nucleon ** 2
+        spots = published_spots(cfg)
+        x = np.array([sp[0] for sp in spots])
+        q2 = np.array([sp[1] for sp in spots])
+        out.append((cfg, s, x, q2, q2 / (s * x), delta_model_of(cfg)))
+    return out
+
+
+# Delta_fake/(gamma^2 b1) at the twelve spots, in the order the script
+# prints them (plans/08 D2 §4 test 2; the "0.14-0.16" of the docstrings).
+DFAKE_COEF = [0.1628, 0.1572, 0.1601, 0.1395,
+              0.1642, 0.1605, 0.1639, 0.1605,
+              0.1641, 0.1603, 0.1639, 0.1641]
+# a2(tensor)/a2(Delta) in per cent, the row of docs/reproduction_manual.md
+# l.1816
+LEAK_PERCENT = [-0.109, -0.016, -0.093, -0.022,
+                -0.011, -0.002, -0.033, -0.026,
+                -0.003, -0.0004, -0.005, -0.027]
+
+
+def test_leakage_amplitude_reproduces_the_published_twelve_spots():
+    """`tensor_leakage_amplitude` IS what the leakage script prints: the
+    equivalent Delta_fake = -h2 y^2 D_phi/(1-y) over gamma^2 b1, and the
+    leakage as a fraction of the published Delta amplitude."""
+    coefs, fracs = [], []
+    for cfg, s, x, q2, y, delta in _published_spots_and_kernels():
+        leak = InclusiveKernel(beams.LI6, b1_func=toy_b1, tensor_gamma=True)
+        full = InclusiveKernel(beams.LI6, b1_func=toy_b1, delta_func=delta)
+        t = leak.tables(x, q2)
+        _h0, h2 = tensor_leakage_amplitude(t, x, q2, y)
+        # the same quantity through the kernel, for the m = +1 pure state
+        state = EventSpinState(0, 0.0, 1.0, 1.0, theta_s=0.5 * np.pi)
+        a2 = leak.amplitudes(t, x, q2, s, state)[2]
+        assert np.allclose(h2, a2, rtol=0, atol=0)      # bit for bit
+        dphi = t["f1"] + (1.0 - y) / (x * y * y) * t["f2"]
+        d_fake = -h2 * y * y * dphi / (1.0 - y)
+        coefs += list(d_fake / (gamma_squared(x, q2) * t["b1"]))
+        a2_delta = full.amplitudes(full.tables(x, q2), x, q2, s, state)[2]
+        fracs += list(100.0 * h2 / a2_delta)
+    assert coefs == pytest.approx(DFAKE_COEF, abs=5e-5)
+    assert fracs == pytest.approx(LEAK_PERCENT, abs=5e-4)
+    # the docstrings' "0.14-0.16"; the exact span is 0.1395-0.1642
+    assert 0.139 <= min(coefs) and max(coefs) <= 0.165
+
+
+def test_the_leakage_ratio_is_kinematic_and_equals_h2_over_h0():
+    """L = h2/h0 (`tensor_leakage_ratio`) drops F1, F2 and the b1 scale
+    entirely, which is what lets the extraction take only L from the model
+    and kappa from the data."""
+    for cfg, s, x, q2, y, _delta in _published_spots_and_kernels():
+        ell = tensor_leakage_ratio(x, q2, y)
+        base = InclusiveKernel(beams.LI6, b1_func=toy_b1, tensor_gamma=True)
+        t = base.tables(x, q2)
+        h0, h2 = tensor_leakage_amplitude(t, x, q2, y)
+        assert np.allclose(ell, h2 / h0, rtol=1e-12)
+        # three times the b1 model, and a different R: L must not move
+        triple = InclusiveKernel(
+            beams.LI6, b1_func=lambda xx, qq, f1: 3.0 * toy_b1(xx, qq, f1),
+            tensor_gamma=True)
+        t3 = triple.tables(x, q2)
+        h0_3, h2_3 = tensor_leakage_amplitude(t3, x, q2, y)
+        assert np.allclose(h2_3 / h0_3, ell, rtol=1e-6)
+        t_r = dict(t, f1=2.7 * t["f1"], f2=0.4 * t["f2"])
+        h0_r, h2_r = tensor_leakage_amplitude(t_r, x, q2, y)
+        assert np.allclose(h2_r / h0_r, ell, rtol=1e-12)
+
+
+def test_the_b3_b4_band_is_what_the_subtraction_leaves():
+    """plans/08 D2 §4 test 3: the correction removes the b3 = b4 = 0
+    value, and at the 0.1 b2 reference the truth is 1.60-1.66x it, so ~0.6
+    survives.  The Delta_fake coefficient there is the manual's
+    '0.23-0.26' row."""
+    ratios, coefs = [], []
+    for cfg, s, x, q2, y, _delta in _published_spots_and_kernels():
+        r = (tensor_leakage_ratio(x, q2, y, b3_frac=0.1, b4_frac=0.1)
+             / tensor_leakage_ratio(x, q2, y))
+        ratios += list(r)
+        b34 = lambda xx, qq, f1: 0.1 * 2.0 * xx * toy_b1(xx, qq, f1)
+        kern = InclusiveKernel(beams.LI6, b1_func=toy_b1, b3_func=b34,
+                               b4_func=b34, tensor_gamma=True)
+        t = kern.tables(x, q2)
+        _h0, h2 = tensor_leakage_amplitude(t, x, q2, y)
+        dphi = t["f1"] + (1.0 - y) / (x * y * y) * t["f2"]
+        d_fake = -h2 * y * y * dphi / (1.0 - y)
+        coefs += list(d_fake / (gamma_squared(x, q2) * t["b1"]))
+    assert 1.60 <= min(ratios) and max(ratios) <= 1.66
+    # the manual's "0.23-0.26" row (l.1816), which the script prints as
+    # 0.2302-0.2634 -- NOT the 0.2583 low end the design study reported
+    assert min(coefs) == pytest.approx(0.2302, abs=5e-4)
+    assert max(coefs) == pytest.approx(0.2634, abs=5e-4)
+
+
+def test_the_leakage_is_linear_in_pzz_over_the_fill_plan():
+    """plans/08 D2 §4 test 6: both harmonics are linear in the rank-2
+    moment, so the +0.6 and -1.2 fills of `bookkeeping.tensor_flip_plan`
+    give the SAME per-unit-P_zz leakage, and it is the m = +1 value.  The
+    m-state mixture reaches the correction nowhere."""
+    from polligen import bookkeeping as bk
+    from polligen.spin import m_values
+    x, q2 = np.array([0.08913]), np.array([1.135])
+    s = beams.default_configs("6Li")[0].sqrt_s_per_nucleon ** 2
+    y = q2 / (s * x)
+    kern = InclusiveKernel(beams.LI6, b1_func=toy_b1, tensor_gamma=True)
+    t = kern.tables(x, q2)
+    _h0, h2 = tensor_leakage_amplitude(t, x, q2, y)
+    for cat in bk.tensor_flip_plan(0.60).categories:
+        pzz = float(cat.moments()[1])
+        tot = np.zeros_like(x)
+        for p_m, mm in zip(cat.populations, m_values(cat.j)):
+            st = EventSpinState(0, 0.0, 1.0, mm, theta_s=cat.theta_s,
+                                phi_s=cat.phi_s)
+            tot = tot + p_m * kern.amplitudes(t, x, q2, s, st)[2]
+        assert _scalar(tot / pzz) == pytest.approx(_scalar(h2), rel=1e-12)
+    assert (0.6, -1.2) == tuple(round(float(c.moments()[1]), 12)
+                                for c in bk.tensor_flip_plan(0.60).categories)
+
+
+def test_the_correction_reverses_with_the_tensor_sign_constant():
+    """plans/08 D2 §4 test 7 (the gate of `tests/test_tensor_convention.py`
+    extended to the subtraction): both harmonics carry -TENSOR_LL_SIGN, so
+    flipping the constant flips the correction and leaves L alone."""
+    from polligen import xsec as xs
+    x, q2, y = np.array([0.08913]), np.array([1.135]), np.array([0.01561])
+    t = _tables(0.08913)
+    ref = tensor_leakage_amplitude(t, x, q2, y)
+    ell = tensor_leakage_ratio(x, q2, y)
+    old = xs.TENSOR_LL_SIGN
+    try:
+        xs.TENSOR_LL_SIGN = -old
+        flip = tensor_leakage_amplitude(t, x, q2, y)
+        ell_flip = tensor_leakage_ratio(x, q2, y)
+    finally:
+        xs.TENSOR_LL_SIGN = old
+    for a, b in zip(ref, flip):
+        assert _scalar(a) == pytest.approx(-_scalar(b), rel=1e-14)
+    assert _scalar(ell_flip) == pytest.approx(_scalar(ell), rel=1e-14)
+    assert _scalar(ref[1]) < 0.0      # the published sign, TENSOR_LL_SIGN = -1
+
+
+def test_rank2_per_unit_pzz_matches_the_spin_module():
+    """The one factor that turns Q_NN into a per-unit-tensor-moment
+    normalisation, against `spin.moments_along_axis` itself (plans/08 D2
+    risk R9: it is 3x larger at spin 3/2)."""
+    from polligen import spin
+    from polligen.xsec import _rank2_per_unit_pzz
+    for j, pops in ((1.0, (1.0, 0.0, 0.0)),
+                    (1.5, (1.0, 0.0, 0.0, 0.0))):
+        pzz = spin.moments_along_axis(j, pops)[1]
+        q_nn = (3.0 * j * j - j * (j + 1.0)) / 3.0
+        assert _rank2_per_unit_pzz(j) == pytest.approx(q_nn / pzz, rel=1e-14)
+
+
+def test_delta_derivative_is_a_difference_and_is_free_of_the_b_sector():
+    """plans/08 D2 §4 test 5, kernel half: the Delta response operator is
+    amplitudes(1) - amplitudes(0), independent of b1..b4, and on the
+    massless path bit for bit the single Delta = 1 call it replaced."""
+    x, q2 = np.array([0.08913]), np.array([1.135])
+    s = beams.default_configs("6Li")[0].sqrt_s_per_nucleon ** 2
+    state = EventSpinState(0, 0.0, 1.0, 1.0, theta_s=0.5 * np.pi)
+    for tg in (False, True):
+        kern = InclusiveKernel(beams.LI6, b1_func=toy_b1, tensor_gamma=tg,
+                               delta_func=lambda xx, qq, f1: -1e-3 * f1)
+        t = kern.tables(x, q2)
+        hi, lo = dict(t), dict(t)
+        hi["delta"], lo["delta"] = np.ones_like(x), np.zeros_like(x)
+        want = [_scalar(a - b) for a, b in
+                zip(kern.amplitudes(hi, x, q2, s, state),
+                    kern.amplitudes(lo, x, q2, s, state))]
+        got = [_scalar(v) for v in kern.delta_derivative(t, x, q2, s, state)]
+        assert got == want                                  # bit for bit
+        assert got[0] == 0.0 and got[1] == 0.0
+        # and it does not depend on the b sector at all
+        b34 = lambda xx, qq, f1: 0.07 * f1
+        big_b1 = lambda xx, qq, f1: 5.0 * toy_b1(xx, qq, f1)
+        other = InclusiveKernel(beams.LI6, b1_func=big_b1,
+                                b3_func=b34, b4_func=b34, tensor_gamma=tg,
+                                delta_func=lambda xx, qq, f1: -1e-3 * f1)
+        other_got = _scalar(other.delta_derivative(
+            other.tables(x, q2), x, q2, s, state)[2])
+        assert other_got == pytest.approx(got[2], rel=1e-12)
+    # on the massless path the OLD single-call form is the same bits
+    kern = InclusiveKernel(beams.LI6, b1_func=toy_b1)
+    t = kern.tables(x, q2)
+    one = dict(t)
+    one["delta"] = np.ones_like(x)
+    assert _scalar(kern.delta_derivative(t, x, q2, s, state)[2]) == _scalar(
+        kern.amplitudes(one, x, q2, s, state)[2])
+    # with the exact b sector it is NOT: the single call carries h2
+    kern_g = InclusiveKernel(beams.LI6, b1_func=toy_b1, tensor_gamma=True)
+    t_g = kern_g.tables(x, q2)
+    one_g = dict(t_g)
+    one_g["delta"] = np.ones_like(x)
+    single = _scalar(kern_g.amplitudes(one_g, x, q2, s, state)[2])
+    diff = _scalar(kern_g.delta_derivative(t_g, x, q2, s, state)[2])
+    assert single != diff
+    assert abs(single / diff - 1.0) == pytest.approx(6.2e-5, rel=0.1)

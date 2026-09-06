@@ -1,6 +1,6 @@
 {
  "_about": "Reference dictionary of the PolarizedLithiumSim program: the paper copies committed in refs/ (PDFs tracked in git since 2026-08-25; the EIC Yellow Report as four parts) and the few references without a free copy. Each entry: identifiers, title, where the local file is (';'-separated list for multi-part files; null = no free copy), the important content with equation/figure/page pointers, and where the reference is used in the repository. Search it with `python refs/find_ref.py <keyword>`; `--check` lists the local-copy status, `--fetch` re-downloads missing arXiv PDFs. Facts marked (repo-verified) were checked against the primary source during the dated fact-check passes recorded in plans/01 section 6, plans/06 section 6.5 and the reconstruction-chain report.",
- "_updated": "2026-08-28",
+ "_updated": "2026-09-06",
  "entries": {
   "cosyn2025-tensor-polarization-options": {
    "file": "refs/2410.12764v1.pdf",
@@ -1296,6 +1296,567 @@
     "plans/01_findings_physics_case.md Sec. 2.3 (gluon sector)",
     "plans/02_phase1_event_generation.md step 1.2.2",
     "reports/polarized_li_primer.template.html Sec. 5.3 ref [22]"
+   ]
+  },
+  "wiringa2014-momentum-distributions": {
+   "file": "refs/1309.3794.pdf",
+   "arxiv": "1309.3794",
+   "journal": "Phys. Rev. C 89 (2014) 024305",
+   "title": "Nucleon and nucleon-pair momentum distributions in A <= 12 nuclei",
+   "authors": [
+    "R. B. Wiringa",
+    "R. Schiavilla",
+    "S. C. Pieper",
+    "J. Carlson"
+   ],
+   "year": 2014,
+   "keywords": [
+    "VMC",
+    "AV18+UX",
+    "spin-projected nucleon numbers",
+    "Table I",
+    "6Li",
+    "7Li",
+    "alpha-d cluster",
+    "alpha-t cluster",
+    "effective polarization",
+    "0.848",
+    "N_ad",
+    "N_at"
+   ],
+   "key_content": [
+    "TABLE I, p. 3, caption verbatim: 'Total number of spin-up/down and proton/neutron nucleons in J > 0 nuclei with M_J = J.'  6Li(1+): N_up_p 1.924, N_down_p 1.076, N_up_n 1.924, N_down_n 1.076.  7Li(3/2-): 1.934, 1.066 (protons) and 1.981, 2.019 (neutrons).  Differences: 0.848 for 6Li (both species, the report's 'effective polarization ~ 0.85'), +0.868 and -0.038 for the 7Li protons and neutrons (repo-verified 2026-09-06).",
+    "The Hamiltonian is AV18 + Urbana X, not IL7: abstract, 'a Hamiltonian containing the Argonne v18 two-nucleon and Urbana X three-nucleon potentials'; body, 'Because AV18+UX produces energies and radii that are closer to experiment for all A >= 3 nuclei, this is the primary model we use for this paper.'",
+    "Sec. II, text beside FIG. 6, verbatim: 'The rho_ad(k) cluster distribution in the 1+ ground state has a node at k ~ 0.7 fm-1 because the alpha and d are in a relative 1s spatial state due to antisymmetry [16]. The integrated N_ad = 0.86 is a sum of S- and D-wave parts of 0.846 and 0.017, respectively.'  The 3+ state has N_ad = 0.94.",
+    "Sec. II, text beside FIG. 7, verbatim: '... indicative of the alpha and t clusters being in a relative 1p spatial state, with N_at = 1.00' (7Li 3/2- ground state; the alpha-t relative motion is P-wave).",
+    "The paper's own online pointer (its ref [4]) is https://www.phy.anl.gov/theory/research/momenta/, whose CURRENT AV18+UX tables give N_ad = 0.81971 (S 0.80362, D 0.015861, run 22-Mar-14) and N_at = 1.0084 (run 12-Apr-24) -- 4% away from the printed 0.86 for alpha-d.  The older https://www.phy.anl.gov/theory/research/overlap_old/ files li6.ad and li7.at are AV18+Urbana IX (2004) and give 0.856 and 1.061.  https://www.phy.anl.gov/theory/research/overlaps/ is SINGLE-NUCLEON pickup/stripping overlaps and contains no alpha-d or alpha-t entry at all (repo-verified 2026-09-06 through a Wayback snapshot; the site 403s a direct fetch)."
+   ],
+   "repo_usage_note": "The reports quote the PAPER's printed values, in the paper's own convention and precision; do not re-source them to the online tables.  P_p = +0.866 and P_n = -0.037 in fastsim/polli_fastsim/beams.py are JLab PR12-14-001's numbers (its Eq. 29), not Table I's, which give +0.868 and -0.038.",
+   "used_in": [
+    "reports/polarized_li_primer section 2.2 ref [13] (1.924/1.076, 0.85 per cluster nucleon, N_ad = 0.86 = 0.846 + 0.017, N_at = 1.00, 7Li 1.934/1.066 and 1.981/2.019)",
+    "plans/01, plans/02, plans/04 #6, plans/08 D7",
+    "fastsim/polli_fastsim/beams.py (the 0.848 comment block)"
+   ]
+  },
+  "e155-1999-deuteron-g1-and-lid-target": {
+   "file": "refs/hep-ex_9904002.pdf",
+   "arxiv": "hep-ex/9904002",
+   "journal": "Phys. Lett. B 463 (1999) 339",
+   "title": "Measurement of the deuteron spin structure function g1d(x) for 1 (GeV/c)^2 < Q^2 < 40 (GeV/c)^2",
+   "authors": [
+    "P. L. Anthony et al. (E155 Collaboration)"
+   ],
+   "year": 1999,
+   "keywords": [
+    "E155",
+    "6LiD",
+    "polarized target",
+    "effective deuteron polarization",
+    "87%",
+    "97%",
+    "dilution factor",
+    "0.22",
+    "ND3",
+    "0.36",
+    "SLAC"
+   ],
+   "key_content": [
+    "Target paragraph, p. 2, verbatim: 'The 6Li polarization was measured to be 97% of the free deuteron polarization, consistent with predictions based on equal spin temperatures and the ratio of magnetic moments.'  Also 'At 1 K in a 5.004 T field, an average in-beam free deuteron polarization <Pt> of 22% was achieved using 140 GHz microwaves' and the isotopic analysis, molar fractions 0.046 of 7Li and 0.024 of 1H.",
+    "Verbatim, the 87%: 'Calculations based on isospin conservation, shell model, solutions of Fadeev equations and a Green's function Monte Carlo provide consistent values for the valence nucleon polarization [13]. From these analyses, we conclude that the effective deuteron in 6Li has a net polarization of 87% of the Li polarization.'  'Effective deuteron' is E155's own phrase (repo-verified 2026-09-06); the companion target paper (Bultmann) calls the same number a NUCLEON polarization, P_n = 0.866 +- 0.012.",
+    "Dilution paragraph, p. 3, verbatim: 'The dilution factor f is the fraction of events originating in the free deuterons ... which contained 18% free deuterium, 53% 6Li, 14% 4He, 11% Al, 3% O, and 1% N by weight. The x dependence of the cross sections for these nuclei caused f to vary from 0.18 at low x to 0.20 at high x.'  Then 'C1 includes the contributions from the free deuterons and 6Li, and ranges from 1.77 to 1.85 ... C1 f then gives an effective dilution factor of ~ 0.36, as compared with ~ 0.22 for 15ND3.'  So 0.36 and 0.22 are EFFECTIVE dilution factors (C1 f), not fractions of polarizable nucleons.",
+    "Also verbatim: '6Li can, to first order, be treated as a polarized deuteron plus an unpolarized alpha particle, and therefore half of the nucleons in 6LiD are the desired polarizable species [13]' -- the naive f = 0.50, helium not counted.  On 7Li: 'The spin-3/2 7Li nucleus is described well in terms of two clusters: an alpha particle and a triton. The neutrons in the triton are predominantly anti-aligned, so the only significant polarized contribution comes from the proton.'"
+   ],
+   "used_in": [
+    "reports/polarized_li_primer section 2.2 and section 3.2 ref [17] (87% effective deuteron polarization, 97% of the deuteron's, 0.22 for ND3)"
+   ]
+  },
+  "compass2007-spectrometer-and-6lid-target": {
+   "file": "refs/hep-ex_0703049.pdf",
+   "arxiv": "hep-ex/0703049",
+   "journal": "Nucl. Instrum. Meth. A 577 (2007) 455",
+   "title": "The COMPASS experiment at CERN",
+   "authors": [
+    "P. Abbon et al. (COMPASS Collaboration)"
+   ],
+   "year": 2007,
+   "keywords": [
+    "COMPASS",
+    "6LiD",
+    "polarized target",
+    "dilution factor",
+    "0.35",
+    "NH3",
+    "0.15",
+    "7Li admixture",
+    "4.2%",
+    "spectrometer"
+   ],
+   "key_content": [
+    "Sec. 4.1 'Polarised target', p. 17, verbatim: 'Deuterated lithium (6LiD) has been chosen as isoscalar target. This material allows to reach a high degree of deuteron polarisation (> 40%) and has a very favourable composition [14,15,16]. Indeed, since 6Li can be considered to a good approximation as a spin-0 4He nucleus and a deuteron, the fraction of polarisable material f is of the order of 0.35, taking into account also the He content in the target region. The irradiated ammonia (NH3), which will be used as polarised proton target, has a less favourable composition (f ~ 0.15) but can be polarised to a higher degree (> 80%).'",
+    "Same section: 'A deuteron polarisation |P| > 40% is reached within 24 hours in a 2.5 T field'; 'The isotopic dilution of deuterons with 0.5% of protons and 6Li with 4.2% of 7Li was determined by NMR measurements' -- the source of the word 'admixture' for the 7Li in COMPASS 6LiD.",
+    "NOT in this paper (repo-verified 2026-09-06 by grep): the +54%/-47% deuteron polarizations (they are Ball, NIM A 498), the 51 +- 3% / 92 +- 4% Li polarizations (Koivuniemi, SPIN2004), any ND3 dilution factor, and any f above 0.35 for 6LiD."
+   ],
+   "used_in": [
+    "reports/polarized_li_primer section 3.2 ref [31] (f ~ 0.35 with the helium counted, 0.15 for NH3)"
+   ]
+  },
+  "gamage2021-second-interaction-region": {
+   "file": "refs/2105.13564.pdf",
+   "arxiv": "2105.13564",
+   "journal": "Proc. IPAC'21, TUPAB040, pp. 1435-1438, doi:10.18429/JACoW-IPAC2021-TUPAB040",
+   "title": "Design Concept for the Second Interaction Region for Electron-Ion Collider",
+   "authors": [
+    "B. R. Gamage",
+    "V. Burkert",
+    "R. Ent",
+    "Y. Furletova",
+    "D. Higinbotham",
+    "A. Hutton",
+    "F. Lin",
+    "T. Michalski",
+    "V. S. Morozov",
+    "R. Rajput-Ghoshal",
+    "D. Romanov",
+    "T. Satogata",
+    "A. Seryi",
+    "A. Sy",
+    "C. Weiss",
+    "M. Wiseman",
+    "W. Wittmer",
+    "Y. Zhang",
+    "E.-C. Aschenauer",
+    "J. S. Berg",
+    "A. Jentsch",
+    "A. Kiselev",
+    "C. Montag",
+    "R. Palmer",
+    "B. Parker",
+    "V. Ptitsyn",
+    "F. Willeke",
+    "H. Witte",
+    "C. Hyde",
+    "P. Nadel-Turonski"
+   ],
+   "year": 2021,
+   "keywords": [
+    "IR-2",
+    "second interaction region",
+    "secondary focus",
+    "rigidity",
+    "Brho",
+    "0.1",
+    "0.003-0.01",
+    "Roman pots",
+    "IP8",
+    "dispersion"
+   ],
+   "key_content": [
+    "Table 1, 'Summary of 2nd IR Design Requirements and Their Comparison to the 1st IR', row verbatim: 'Minimum Delta(Brho)/(Brho) allowing for detection of p_T = 0 fragments' -- EIC IR 1: 0.1; EIC IR 2: 0.003-0.01; Impact: 'Beam focus with dispersion, reach in x_L and p_T resolution, reach in x_B for exclusive process.'  So 0.1 is the IR-1 (IP6) minimum detectable rigidity offset -- a detection threshold, not a resolution (repo-verified 2026-09-06 against the arXiv v2 and against the version of record, accelconf.web.cern.ch/ipac2021/papers/tupab040.pdf).",
+    "Text: 'The 2nd IR includes a forward spectrometer with a secondary focus in x and y at a location with a large, flat dispersion, making it possible to detect particles with very small changes in rigidity'; 'The area of the secondary focus is designed with ~0.5 m zero-slope dispersion'; 'The dipoles are followed by a 15 m long machine-element-free straight section instrumented with several stages of Roman pots and off-momentum detectors.'",
+    "The paper carries NO per-species detection efficiencies (no d, 3He, 4He or 7Li numbers) and Table 1 supports only the ratio 0.1/0.01 to 0.1/0.003 = 10-33x, not the '30-60x' the report's section 7 states (repo-verified 2026-09-06).",
+    "The title under which reports/nanowire_far_forward ref [12] cited this arXiv id ('... light ion fragment detection ...') is not the title of this or of any paper found on INSPIRE; the title above is what the arXiv, JACoW and INSPIRE records carry."
+   ],
+   "used_in": [
+    "reports/nanowire_far_forward section 7 ref [12] (the 0.1 rigidity threshold at IP6)"
+   ]
+  },
+  "eic-conceptual-design-report2021": {
+   "file": null,
+   "arxiv": null,
+   "url": "https://www.bnl.gov/ec/files/eic_cdr_final.pdf",
+   "journal": "BNL-221006-2021-FORE (2021), doi:10.2172/1765663; 972 pp., not committed to refs/ (178 MB)",
+   "title": "Electron-Ion Collider Conceptual Design Report",
+   "authors": [
+    "F. Willeke et al.",
+    "J. Beebe-Wang (ed.)"
+   ],
+   "year": 2021,
+   "keywords": [
+    "EIC CDR",
+    "beam-beam",
+    "tune shift",
+    "xi_p",
+    "0.015",
+    "0.1",
+    "space charge",
+    "Z/A",
+    "second IR",
+    "10 sigma aperture",
+    "Tables 3.3 3.4 3.5"
+   ],
+   "key_content": [
+    "Sec. 1.2, printed p. 5, verbatim: 'the design parameters remain within the limits for maximum beam-beam tune shift parameters (hadrons: xi_p <= 0.015; electrons: xi_e <= 0.1) and space charge parameter (<= 0.06)'.",
+    "Sec. 1.4, printed p. 11: 'The maximum values, xi_p <= 0.015 for hadrons and xi_e <= 0.10, are suggested by previous performance and confirmed by extensive beam-beam simulations.'  (Section 1.4, 'Beam Parameters and Luminosity' -- NOT 1.2.)",
+    "Sec. 3.1.1, printed p. 95: 'RHIC has achieved a beam-beam parameter of xi_p = 0.015 in proton-proton collisions; we therefore base the EIC design on the same value.'",
+    "Sec. 4.6.1, printed p. 392: 'For the EIC design, we set the maximum beam-beam parameter xi to be 0.1 for the electron beam and 0.015 for the proton beam ... based on the successful operational experience during the RHIC polarized proton runs'; printed p. 395, constraint list: 'The proton and electron beam-beam tune shifts must not exceed 0.015 and 0.1, respectively.'",
+    "Tables 3.3 and 3.4 (printed pp. 102-103, with strong hadron cooling, high-divergence and high-acceptance configurations), row 'BB parameter, h/v [10-3]': proton 3/3, 12/12, 12/12, 14/14, 15/9 at 18x275, 10x275, 10x100, 5x100, 5x41 GeV; electron 93/100 (92/100 in Table 3.4), 72/100, 72/100, 100/100, 53/42.  Table 3.5 (p. 104, e-Au): Au 1/1, 3/3, 3/2, 5/4.  Table 1.1 (p. 7) and Table 4.15 (p. 396) both give the luminosity-optimum hadron pair (0.012, 0.012).",
+    "The CDR DOES constrain ions.  Sec. 1.4, printed p. 14: 'The beam-beam tune shift for the hadrons is also proportional to Z but is inversely proportional to A. Thus the ion beam-beam tune shift is reduced approximately by a factor of 2.5 for a constant number of electrons.'  Sec. 1.5, p. 14: 'Each beam is assumed to reach the same beam-beam tune shift values as in collisions with a beam of the same species.'  Appendix A, Sec. A.2.2 'Machine Requirements', printed p. A-12: 'The total combined beam-beam tune shift of the two IRs does not exceed 0.03 for ions and 0.1 for electrons' -- i.e. 0.015 per interaction region.  The same list carries 'The beam aperture is greater than 10 sigma of the beam size for protons.'",
+    "Editorship: the document's own front matter names 'Editor: J. Beebe-Wang' followed by a ~250-name contributor list in which F. Willeke is one name; OSTI tags Beebe-Wang 'ed.' and Willeke 'et al.'.  reports/polarized_li_primer ref [1] currently writes 'F. Willeke, J. Beebe-Wang (eds.)' (repo-verified 2026-09-06)."
+   ],
+   "repo_usage_note": "For a 6Li fill, Z/A = 0.5, so the CDR's own Z/A rule puts a lithium beam at half the proton xi at equal electron intensity: using the proton 0.015 is a conservative ceiling, not an unsupported transfer.  Never write that 'the CDR states no ion beam-beam limit' -- Sec. 1.4 p. 14 and Appendix A Sec. A.2.2 p. A-12 both contradict it.",
+   "used_in": [
+    "reports/polarized_li_primer ref [1]",
+    "reports/eic_epic_reference (the xi_p <= 0.015 machine input of Table 9) and reports/nanowire_far_forward (the same clause)",
+    "plans/04 #22"
+   ]
+  },
+  "epic-preliminary-design-report2024": {
+   "file": null,
+   "arxiv": null,
+   "url": "https://zenodo.org/records/13866213",
+   "journal": "Zenodo record 13866213, doi:10.5281/zenodo.13866213, published 2024-10-01 (114 MB, 282 pp.), 'EIC preTDR - Chapters 2 and 8, DRAFT, Version0'; not committed to refs/",
+   "title": "The ePIC Detector Preliminary Design Report (September 2024 draft, chapters 2 and 8)",
+   "authors": [
+    "ePIC Collaboration"
+   ],
+   "year": 2024,
+   "keywords": [
+    "ePIC",
+    "PDR",
+    "preTDR",
+    "momentum resolution",
+    "dp/p",
+    "Figure 8.9",
+    "Table 8.1",
+    "Roman pots",
+    "beam halo",
+    "30-50 kHz",
+    "ePIC 24.08"
+   ],
+   "key_content": [
+    "Figure 8.9, printed p. 36: 'Relative momentum resolution versus total momentum for charged pions (points) together with physics requirements (curves) ... full GEANT simulations using the ePIC software stack and ACTS-based track finding and reconstruction using optimized parameters'; legend 'PWG Requirements' and 'ePIC 24.08'; five panels -3.5<eta<-2.5, -2.5<eta<-1, -1<eta<1, 1<eta<2.5, 2.5<eta<3.5.  Digitised at p = 1 GeV/c (600 dpi, 2026-09-06): 3.00 / 1.086 / 0.381 / 1.136 / 2.547 % -- numerically the same as v3.1's Figure 3.56 (ePIC 24.10).",
+    "Table 8.1, printed p. 30, the ePIC tracking requirement dp/p [%] as A x p (+) B: (-3.5,-2.5) 0.10 p (+) 2.0; (-2.5,-1.0) 0.05 p (+) 1.0; (-1.0,1.0) 0.05 p (+) 0.5; (1.0,2.5) 0.05 p (+) 1.0; (2.5,3.5) 0.10 p (+) 2.0.  These are the EIC Yellow Report's FIG. 8.3 constants, not YR Table 11.2's.",
+    "Roman pots, printed p. 203, verbatim: 'Rates during normal operations, with expected vacuum of 10-9 mbar, are a few Hz/channel. However, the beam halo could potentially provide rates of 30-50 kHz at ~ 10 sigma from experience of Roman pots at STAR.'",
+    "The Zenodo snapshot is described as 'the initial DRAFT, namely Version0, of the EIC preTDR, chapters 2 and 8, downloaded form the overleaf project ... on October 1st, 2024'; reports date the same document 'September 2024' and '29 September 2024'.  Do not assert the Zenodo file and the report's copy are byte-identical (repo-verified 2026-09-06)."
+   ],
+   "used_in": [
+    "reports/eic_epic_reference ref [7] (Roman-Pot rates; Table 8 tracking row)",
+    "reports/nanowire_far_forward ref [6] (Roman-Pot rates)"
+   ]
+  },
+  "epic-preliminary-tdr-v31-2026": {
+   "file": null,
+   "arxiv": null,
+   "url": "https://zenodo.org/records/18271602",
+   "journal": "Zenodo, concept doi:10.5281/zenodo.18271601; record 18271602 (2026-01-16, 260 MB, 553 pp.) and record 19496158 (2026-04-10, the line-numbered build); CC-BY-4.0; not committed to refs/",
+   "title": "The ePIC Detector Preliminary Technical Design Report, Version 3.1",
+   "authors": [
+    "ePIC Collaboration"
+   ],
+   "year": 2026,
+   "keywords": [
+    "ePIC",
+    "preTDR",
+    "v3.1",
+    "Figure 3.56",
+    "Table 3.22",
+    "dp/p",
+    "ePIC 24.10",
+    "1.7 T solenoid",
+    "Roman pots",
+    "beam halo"
+   ],
+   "key_content": [
+    "Figure 3.56, printed p. 64 (record 18271602): 'Relative momentum resolution versus total momentum for charged pions (points) together with physics requirements (curves) in different pseudorapidity ranges ... full GEANT simulations of the central tracking system (SVT+MPGD+AC-LGAD) using the ePIC software stack and ACTS-based track finding and reconstruction'; legend 'PWG Requirements' and 'ePIC 24.10'.  Digitised independently twice (2026-09-06) at p = 1 GeV/c: 3.00 % in -3.5<eta<-2.5, 1.08-1.09 % in -2.5<eta<-1, 0.38 % in -1<eta<1, 1.13-1.14 % in 1<eta<2.5, 2.55 % in 2.5<eta<3.5.  NO eta slice sits at 0.6 %.",
+    "Table 3.22, printed p. 63, the same requirement rows as the 2024 PDR's Table 8.1: 0.10 p (+) 2.0 / 0.05 p (+) 1.0 / 0.05 p (+) 0.5 / 0.05 p (+) 1.0 / 0.10 p (+) 2.0 in dp/p [%].",
+    "Roman pots, printed p. 270, verbatim and unchanged from the 2024 draft: 'Rates during normal operations, with expected vacuum of 10-9 mbar, are a few Hz/channel. However, the beam halo could potentially provide rates of 30-50 kHz at ~ 10 sigma from experience of Roman pots at STAR.'",
+    "The solenoid: the body states 'A superconducting 1.7 T solenoid magnet in the central detector' as the baseline and that 2.5<eta<3.5 'can be met for the ultimate solenoidal field strength of 2 T'.  Figure 3.56 itself does NOT state its field, so 'ePIC 24.10 at 1.7 T' is an inference, not a quoted attribute."
+   ],
+   "repo_usage_note": "plans/03 names the LATER record, 10.5281/zenodo.19496158; the page numbers above (63, 64, 270) were verified in record 18271602 only.  Cite the concept DOI 10.5281/zenodo.18271601 when the record must not be pinned.",
+   "used_in": [
+    "plans/03 phase-2 full simulation",
+    "reports/eic_epic_reference (the ePIC full-simulation dp/p against the Table 8 tracking row)",
+    "evgen/polligen/reco.py (tracking_resolution)"
+   ]
+  },
+  "ball2003-compass-6lid-target": {
+   "file": null,
+   "arxiv": null,
+   "url": "http://wwwcompass.cern.ch/compass/publications/technical/ball_NIMA437_2003_101.pdf",
+   "journal": "Nucl. Instrum. Meth. A 498 (2003) 101",
+   "title": "First results of the large COMPASS 6LiD polarized target",
+   "authors": [
+    "J. Ball et al."
+   ],
+   "year": 2003,
+   "keywords": [
+    "COMPASS",
+    "6LiD",
+    "+54.2%",
+    "-47.1%",
+    "equal spin temperature",
+    "EST",
+    "dilution factor",
+    "effective polarization",
+    "0.224",
+    "figure of merit"
+   ],
+   "key_content": [
+    "Abstract, p. 101, verbatim: 'Deuteron polarizations of +54.2% and -47.1% were achieved in a 3He/4He dilution refrigerator at a magnetic field of 2.5 T. The equal spin temperature (EST) concept was found to hold among the deuteron, the 6Li and the 7Li nuclei during the dynamic nuclear polarization (DNP) process.'  Sec. 6: 'The average polarization is +54.2% in the upstream cell and -47.1% in the downstream cell.'",
+    "Sec. 3, p. 105: the deuteron S/D probabilities 95.1% / 4.9% give x_D = 0.926 +- 0.016; 'The value of x6Li has been calculated by Schellingerhout et al. for nine different models of the three body (alpha,p,n) forces, eight of them giving rather similar results between 0.85 and 0.89 with an average of 0.866 +- 0.012.'",
+    "Table 2, p. 105 (fractional dilution factor f and effective polarization P_eff): NH3 f = 0.176, P_eff = 0.158; butanol 0.135 / 0.122; d-butanol 0.238 / 0.110; 6LiD f = 0.25 (D) + 0.25 (6Li) = 0.50, P_eff = 0.224; figure of merit 12.7 for ammonia against 23.2 for 6LiD.  FALSE FRIEND: Ball's 0.22 is 6LiD's EFFECTIVE POLARIZATION at P_N = 50%, not a dilution factor -- do not confuse it with E155's 0.22 for 15ND3.",
+    "Sec. 6, Fig. 6 plots the 6Li and 7Li polarizations against the deuteron's; no numerical 51 +- 3 / 92 +- 4 appears anywhere in this paper (those are Koivuniemi, SPIN2004)."
+   ],
+   "used_in": [
+    "reports/polarized_li_primer section 3.2 ref [31] (the +54%/-47% COMPASS deuteron polarizations)"
+   ]
+  },
+  "koivuniemi2004-compass-polarization-buildup": {
+   "file": null,
+   "arxiv": null,
+   "url": "http://wwwcompass.cern.ch/compass/publications/technical/koivuniemi_spin2004.pdf",
+   "journal": "Proc. SPIN 2004 (Trieste), p. 796",
+   "title": "Polarization build up in COMPASS 6LiD target",
+   "authors": [
+    "J. Koivuniemi et al."
+   ],
+   "year": 2004,
+   "keywords": [
+    "COMPASS",
+    "6LiD",
+    "51 +- 3",
+    "92 +- 4",
+    "spin temperature",
+    "0.87 mK",
+    "tensor polarization",
+    "11%",
+    "7Li admixture",
+    "4.2%"
+   ],
+   "key_content": [
+    "p. 1: 'In the 6LiD target material, the 6Li is diluted with 4.2 % of 7Li.'",
+    "Fig. 1 caption, verbatim: 'The tensor polarization can be estimated to be <T> = 1 - 3p0 = 11 % at the maximum. The highest polarizations correspond to a spin temperature TS of 0.87 mK or -0.87 mK for negative polarization. From Eq. 2 the polarization of 6Li can be estimated to be 51 +- 3 % and the polarization of 7Li 92 +- 4 %.'",
+    "Convention caveat (repo-verified 2026-09-06): these are equal-spin-temperature ESTIMATES from the measured spin temperature at the highest polarizations of the 2004 build-up, NOT values derived from Ball's +54.2%/-47.1% of the 2002 run.  A 'whence' joining the two misstates the provenance; 'in the same material, at its highest polarizations' is exact."
+   ],
+   "used_in": [
+    "reports/polarized_li_primer section 3.2 ref [31] (51 +- 3% for 6Li, 92 +- 4% for the 7Li admixture)"
+   ]
+  },
+  "chaumette1989-6lid-7lih-saclay": {
+   "file": null,
+   "arxiv": null,
+   "url": "https://inis.iaea.org/records/5c8fv-a8c21",
+   "journal": "AIP Conf. Proc. 187 (1989) 1275, doi:10.1063/1.38301 (body paywalled; the publisher abstract was read through the IAEA INIS record and OSTI)",
+   "title": "Progress report on polarization of irradiated 6LiD and 7LiH",
+   "authors": [
+    "P. Chaumette",
+    "J. Deregel",
+    "G. Durand",
+    "J. Fabre",
+    "L. van Rossum"
+   ],
+   "year": 1989,
+   "keywords": [
+    "Saclay",
+    "7LiH",
+    "6LiD",
+    "47%",
+    "56%",
+    "37%",
+    "43%",
+    "2.5 T",
+    "irradiated",
+    "dynamic nuclear polarization"
+   ],
+   "key_content": [
+    "Abstract verbatim: '6Li and deuteron polarizations of 37% and 43%, respectively, and 7Li and proton polarizations of 47% and 56%, respectively, have been obtained at 2.5 Tesla magnetic field in samples of ~2 cm3 irradiated at 180 K with total electron flux of several 1017 electrons/cm2. For 6LiD as polarized neutron target it is expected (and for LiH as polarized proton target it is conjectured) that polarization of the Li nuclei results in average neutron (proton) polarizations substantially larger than in other target materials.'  The 47/56 pair is the 7LiH pair; 37/43 is the 6LiD pair.",
+    "Earlier report of the same programme, P. Chaumette et al., eConf C8806132 (1988) 257 (read in full through INSPIRE): '6LiD: Deuteron polarization Pd = 0.36 at 2.5 T in 1 cm3 ... 7LiH: Proton polarization Pp = 0.40 at 2.5 T in 70 cm3 (5 hrs), Pp = 0.80 at 5.0 T in 0.02 cm3 (36 hrs)' -- a lower, earlier set; the 1989 paper is the one to cite for 47/56.",
+    "Read from the publisher-supplied abstract, not from the article body (pubs.aip.org and ADS both block automated fetches); the body may add error bars (repo-verified 2026-09-06)."
+   ],
+   "used_in": [
+    "reports/polarized_li_primer section 3.2 ref [30] (7LiH polarized at Saclay, 47% for 7Li and 56% for the protons)"
+   ]
+  },
+  "bultmann1999-lid-target-slac": {
+   "file": null,
+   "arxiv": null,
+   "url": "https://inspirehep.net/files/103dd07a885ece110618eb67e3874542",
+   "journal": "Nucl. Instrum. Meth. A 425 (1999) 23 (SLAC-PUB-7904)",
+   "title": "The SLAC high density polarized 6LiD target",
+   "authors": [
+    "S. Bultmann et al."
+   ],
+   "year": 1999,
+   "keywords": [
+    "E155",
+    "6LiD",
+    "P_n = 0.866",
+    "0.85",
+    "92.5%",
+    "dilution factor",
+    "Table 1",
+    "naive f",
+    "0.50",
+    "62.7%",
+    "7Li",
+    "magnetic moments"
+   ],
+   "key_content": [
+    "'Spin Structure of Nuclei', pp. 2-3, verbatim: 'the values of the nucleon polarization in 2H and 6Li are estimated to be 94% and 85% of the nuclear polarization, respectively'; 'Combining this with a 5% occupation probability of the D-state, the nucleon polarization in 2H is 92.5% of the deuteron polarization'; and, from the three-body (alpha,p,n) cluster model, P_n = 1 - P/2 - P' - 3D/2 with 'Pn = 0.866 +- 0.012' as the average of seven models.  So the SAME number E155's PLB calls 'the effective deuteron in 6Li ... 87%' is labelled a NUCLEON polarization here.",
+    "7Li, verbatim: 'the polarization of the proton in 3H is 94% of the tritium polarization. The tritium and alpha clusters form an I = 3/2 system where the spin of the tritium cluster is aligned parallel to the lithium spin 2/3 of the time. Thus the net proton spin polarization in 7Li is (62.7 +- 1.4)%.'",
+    "'Effect of High Energy Electron Beam Exposure', p. 7: 'During E155 a maximum deuteron polarization of P2 = 0.32 +- 0.01 and a 6Li polarization of P6 = 0.31 +- 0.01 was achieved' -- the ratio 0.31/0.32 = 0.969 behind E155's '97%'; the EST ratio of the magnetic moments (0.822/0.857 = 0.959) is the mechanism.",
+    "Table 1, 'Naive dilution factor, f, and polarizations of 2H and 6Li obtained at different magnetic fields': 14ND3 f = 0.30, P2 = 0.49 (2.5 T); 15ND3 f = 0.29, P2 = 0.42 (5.0 T); C4D10O f = 0.24, P2 = 0.50; 6LiD f = 0.50 with P6 = 0.71 / 0.64 / 0.40 at 6.5 / 4.9 / 2.5 T.  NO NH3 row, NO 0.22 for ND3, NO 0.35-0.45 for 6LiD (repo-verified 2026-09-06): the f = 0.50 is naive, helium and the EMC effect excluded by the paper's own caveat.",
+    "Also: an isotopic analysis giving 4.6% molar 7Li and 2.4% molar hydrogen, and the magnetic moments mu = 0.857 mu_N (deuteron) and 0.822 mu_N (6Li)."
+   ],
+   "used_in": [
+    "reports/polarized_li_primer section 3.2 ref [17], second entry (the SLAC 6LiD target of E155)"
+   ]
+  },
+  "jlab-pr12-14-001-polarized-emc": {
+   "file": null,
+   "arxiv": null,
+   "url": "https://www.jlab.org/exp_prog/proposals/14/PR12-14-001.pdf",
+   "journal": "JLab proposal PR12-14-001 / E12-14-001 to PAC 42 (22 May 2014)",
+   "title": "The EMC effect in spin structure functions",
+   "authors": [
+    "W. K. Brooks",
+    "S. E. Kuhn",
+    "et al."
+   ],
+   "year": 2014,
+   "keywords": [
+    "CLAS12",
+    "7LiD",
+    "65-80%",
+    "Pz = 0.8",
+    "5 Tesla",
+    "15 nA",
+    "0.06 < x < 0.8",
+    "1 < Q2 < 15",
+    "P_p = 0.866",
+    "P_n = -0.037"
+   ],
+   "key_content": [
+    "Abstract: 'We will cover a kinematic range of 1 < Q2 < 15 GeV2 and 0.06 < x < 0.8'; 'Our target of choice is 7Li (in the form of dynamically polarized 7LiD)'.",
+    "'Expected Operational Parameters', PDF p. 22, verbatim: 'We assume a longitudinal magnetic field of 5 Tesla (provided by the CLAS12 central solenoid) and a microwave system at 140 GHz ... Using Equal Spin Temperature (EST) to predict the polarization of 7Li, we find that the somewhat lower \"effective magnetic moment\" translates the proton values to 65% - 80%.'  Same page: 'For the purpose of this proposal, we assume a polarization of Pz = 0.8, which is at the upper end of the expected range.'",
+    "Beam current: every current in the proposal is 15 nA and nothing else -- 'we can run with relatively low beam currents (of order 15 nA)', 'together with about 15 nA of polarized beam, for a total luminosity of 2 x 10^35 e-/s x nucleons/cm2 (or 1 x 10^35 e-/s x protons/cm2, which is the nominal luminosity that CLAS12 is expected to operate under)', and the request 'with 15 nA highly polarized (> 0.85), 11 GeV'.  No 10 nA anywhere (repo-verified 2026-09-06 by exhaustive regex).",
+    "Naive nuclear model section, verbatim: 'A standard shell model calculation finds ... a proton polarization ... of Pp = 13/15 ~ 0.867 and for the neutrons, Pn = 2/15 ~ 0.133. More recent, state-of-the art microscopic calculations [41] yield a nearly identical result for the proton polarization, Pp = 0.866, but a much smaller (and slightly negative) expectation value for the neutron spin, Pn = -0.037.'  Eq. (29): R_pol^NNM = 0.866 - 0.037 g1n/g1p.  Its [41] is Wiringa et al., arXiv:1309.3794 -- so 0.866/-0.037 are the PROPOSAL's numbers, against Table I's 0.868/-0.038.",
+    "The companion halves of the same reference: C. D. Keith, PoS(PSTP2017)008, 'A Dynamically Polarized Solid Target for CLAS12'; C. D. Keith et al., PoS(PSTP2022)009, 'First Use of a Longitudinally Polarized Target with CLAS12', which reports the realized RG-C currents as 4 nA (FT-In) and 8 nA on NH3/ND3."
+   ],
+   "used_in": [
+    "reports/polarized_li_primer section 3.2 and its target table, ref [20] (65-80% for 7Li in 7LiD at 5 T; Pz ~ 0.8; 0.06 < x < 0.8, 1 < Q2 < 15 GeV2; the CLAS12 beam current)",
+    "fastsim/polli_fastsim/beams.py (P_p = +0.866, P_n = -0.037)"
+   ]
+  },
+  "jlab-pr12-13-011-b1-and-2023-jeopardy": {
+   "file": null,
+   "arxiv": null,
+   "url": "https://www.jlab.org/exp_prog/proposals/13/PR12-13-011.pdf ; https://misportal.jlab.org/pacProposals/proposals/1880/attachments/174121/2023_b1_Jeopardy.pdf",
+   "journal": "JLab proposal PR12-13-011 / E12-13-011 to PAC 40 (2013), and its jeopardy update to PAC 51 (2023)",
+   "title": "The deuteron tensor structure function b1",
+   "authors": [
+    "K. Slifer et al."
+   ],
+   "year": 2013,
+   "keywords": [
+    "E12-13-011",
+    "b1",
+    "Azz",
+    "ND3",
+    "0.16 < x < 0.49",
+    "Pzz",
+    "20%",
+    "26%",
+    "30%",
+    "115 nA",
+    "conditional approval",
+    "August 2022"
+   ],
+   "key_content": [
+    "Proposal abstract: 'We will perform an inclusive measurement of the deuteron tensor asymmetry in the region 0.16 < x < 0.49, for 0.8 < Q2 < 5.0 GeV2. With 30 days of 11 GeV incident beam ... The UVa solid polarized ND3 target will be used, along with the Hall C spectrometers, and an unpolarized 115 nA beam.'  Sec. 2 adds W >= 1.85 GeV and 'The tensor polarization, packing fraction and dilution factor used in the rates estimate are 20%, 0.65 and 0.285 respectively. With an incident electron beam current of 115 nA, the expected deuteron luminosity is 1.57 x 10^35 /cm2.s.'",
+    "So the PROPOSAL assumes Pzz = 20% ('a tensor polarized (Pzz = 20%) deuteron target'), not 30%.",
+    "2023 jeopardy update, 'Technical Progress', p. 2, verbatim: 'In August 2022, Jefferson Lab charged a review panel with the following questions for E12-13-011 and E12-15-005: 1. What technique(s) will be used to produce \"a tensor polarization of 30% under standard experimental conditions\" ... The collaboration presented our response to this charge and in consequence, the C1 conditional status was removed and full approval granted by Jefferson Lab in August 2022 to both E12-13-011 and E12-15-005.'  So 30% is the (now lifted) review condition's own phrase; the experiment is no longer conditionally approved (repo-verified 2026-09-06).",
+    "The 2023 plan is neither 20% nor 30%: 'If we assume more conservative values of Pzz = 26% and I = 85 nA ... we can still match the proposal statistical uncertainty if we add an additional 6.5 PAC days', and the request is '35.7 days of beam with 11.7 days of overhead (47.4 days total) assuming a more conservative tensor polarization of 26% at 85nA'.  Its Fig. 4 caption reads 'Projected uncertainties from the PAC40 approved Pzz = 30% with a 115 nA beam'."
+   ],
+   "used_in": [
+    "reports/polarized_li_primer section 3.2 and its target table, ref [32] (0.16 < x < 0.49, the ND3 target, the Hall C 115 nA current, the 30% tensor-polarization condition)"
+   ]
+  },
+  "stone2021-quadrupole-moments": {
+   "file": null,
+   "arxiv": null,
+   "url": "https://nds.iaea.org/records/xk3d8-tw250/files/indc-nds-0833.pdf",
+   "journal": "IAEA INDC(NDS)-0833 (October 2021), doi:10.61092/iaea.a6te-dg7q; also At. Data Nucl. Data Tables 111-112 (2016) 1",
+   "title": "Table of nuclear electric quadrupole moments",
+   "authors": [
+    "N. J. Stone"
+   ],
+   "year": 2021,
+   "keywords": [
+    "quadrupole moment",
+    "6Li",
+    "7Li",
+    "deuteron",
+    "-0.000806",
+    "-0.0400",
+    "+0.0028578",
+    "barn",
+    "Q(7Li)/Q(6Li)"
+   ],
+   "key_content": [
+    "Lithium block, columns 'Element Isotope E(level) T1/2 I^pi Q(b) Ref. Std. Method NSR Keynumber Journal reference' -- the unit is the BARN: '3 Li 6  0  stable  1+  -0.000806(6)  [Li7]  MB  2005Bo45  PR C72 044309 (2005)'; 'Reference isotope  3 Li 7  0  stable  3/2-  -0.0400(3)  MB  2008Py02  Mol Phys 106 1965 (2008)'; 'Reference isotope  1H2  0  stable  1+  +0.0028578(3)  MB,R  1958Qu02  PR 112 1929'.",
+    "In fm^2: Q(6Li) = -0.0806(6), Q(7Li) = -4.00(3), Q(d) = +0.28578; |Q(7Li)/Q(6Li)| = 49.6, the reports' 'Q(7Li)/50' (repo-verified 2026-09-06, both by the first reader and by an independent re-fetch)."
+   ],
+   "used_in": [
+    "reports/polarized_li_primer section 2.2 ref [8] (Q = -0.0806 fm^2, +0.286 fm^2 for the free deuteron, -4.00 fm^2 for 7Li)",
+    "reports/cos2phi_money_plots_report ref [39] (Q = -0.0806(6) fm^2 ~ Q(7Li)/50)"
+   ]
+  },
+  "stone2019-magnetic-dipole-moments": {
+   "file": null,
+   "arxiv": null,
+   "url": "https://nds.iaea.org/records/x2773-kj397/files/indc-nds-0794.pdf",
+   "journal": "IAEA INDC(NDS)-0794 (November 2019)",
+   "title": "Table of recommended nuclear magnetic dipole moments: Part I, long-lived states",
+   "authors": [
+    "N. J. Stone"
+   ],
+   "year": 2019,
+   "keywords": [
+    "magnetic dipole moment",
+    "6Li",
+    "7Li",
+    "0.822043",
+    "3.256407",
+    "nuclear magneton",
+    "NMR"
+   ],
+   "key_content": [
+    "Lithium lines, columns 'Nucleus Ex T1/2 Jpi m(nm) Method NSR Keynumber Journal Reference', the unit being the nuclear magneton: '3 Li 6  0  stable  1+  +0.822043(3)  NMR  2012Ja19  PNMRS 67 49 (2012)' and '3 Li 7  0  stable  3/2-  +3.256407(12)  NMR  2012Ja19  PNMRS 67 49 (2012)'.",
+    "These are the experimental halves of the report's '0.835 vs 0.822 mu_N; 3.24 vs 3.256 mu_N' comparison against the GFMC values (repo-verified 2026-09-06)."
+   ],
+   "used_in": [
+    "reports/polarized_li_primer section 2.2 ref [8] (the measured 6Li and 7Li magnetic moments)"
+   ]
+  },
+  "li2023-eic-tracking-reference-design": {
+   "file": null,
+   "arxiv": null,
+   "url": "https://arxiv.org/abs/2305.15593",
+   "journal": "arXiv:2305.15593 [physics.ins-det] (24 May 2023); JPS Conf. Proc. 42 (2024) 011032",
+   "title": "Latest vertex and tracking detector developments for the future Electron-Ion Collider",
+   "authors": [
+    "Xuan Li"
+   ],
+   "year": 2023,
+   "keywords": [
+    "EIC project detector reference design",
+    "1.4 T BaBar magnet",
+    "ECCE MC",
+    "momentum resolution",
+    "0.59%",
+    "not ePIC",
+    "Fig. 2"
+   ],
+   "key_content": [
+    "Fig. 2 caption verbatim: 'Track momentum dependent momentum resolution of the EIC project detector reference design in the pseudorapidity regions of 0 <= |eta| < 1, 1 <= |eta| < 2.5 and 2.5 <= |eta| < 3.5. The tracking performance is evaluated with the 1.4T Babar magnet. The EIC yellow report tracking requirements in the respective pseudorapidity regions are highlighted in brown dashed lines.'  Panel legends 'ECCE MC: Single pi-', curves '0 <= eta < 0.5' and '0.5 <= eta < 1'; the y axis 'Track Delta p/p' is a FRACTION, not a percent.",
+    "Read off the figure at p = 1 GeV/c (two independent readings, 2026-09-06): ~0.0059 (0.59 %) in 0 <= eta < 0.5 and ~0.0068-0.0070 (0.68-0.70 %) in 0.5 <= eta < 1; the Yellow-Report dashed requirement sits at 0.0050.  No fit parameters are tabulated.",
+    "THIS IS NOT ePIC.  The object is 'the EIC project detector reference design' simulated with the 1.4 T BaBar solenoid and the ECCE MC, against ePIC's 1.7 T baseline.  It is the nearest public thing to a '0.6% at 1 GeV/c' momentum resolution, and what separates its 0.59 % from S. Maple's 0.45 % is the SOLENOID FIELD, not the eta slice -- both quote 0 <= eta < 0.5.  The authoritative ePIC full simulation (preTDR Fig. 3.56 / PDR Fig. 8.9) gives 0.38 % in the barrel and no slice at 0.6 %.",
+    "Frequently misattributed: this is Xuan Li (LANL), NOT S. Kumar; the closed-access S. Kumar, NIM A 1069 (2024) 169922 is a different paper with no readable copy (Unpaywall 'closed', no repository copy)."
+   ],
+   "repo_usage_note": "Recorded so that nobody re-imports the 0.6 % at 1 GeV/c as an ePIC number.  Not cited by any report.",
+   "used_in": [
+    "refs/README.md and plans/04 #23 (the search record behind withdrawing '0.45-0.6% at 1 GeV/c' as an ePIC full-simulation claim)"
    ]
   }
  }

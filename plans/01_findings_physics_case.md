@@ -271,15 +271,15 @@ corrections to entries above:
   10³³ cm⁻² s⁻¹ with 60% efficiency (1.5 fb⁻¹/month) — "one year" is our
   rounding.
 - **Fixed-target polarized Li** (new, §1.4 of the primer): COMPASS ⁶LiD
-  D-polarization +54.2/−47.1% (Ball et al. NIM A 498:101), EST → ⁶Li 51 ± 3%,
-  ⁷Li admixture 92 ± 4% (Koivuniemi SPIN2004), dilution f ≈ 0.35–0.45
-  (NIM A 577:455; PLB 612:154); E155 ⁶LiD: P(⁶Li) = 97% of P(d), f ≈ 0.36 vs
+  D-polarization +54.2/−47.1% (Ball et al. NIM A 498:101); EST at the 2004 maxima (±53%) → ⁶Li 51 ± 3%,
+  ⁷Li admixture 92 ± 4% (Koivuniemi SPIN2004); dilution f ≈ 0.35 with the He counted
+  (NIM A 577:455; "about 40%" in PLB 633:25); E155 ⁶LiD: P(⁶Li) = 97% of P(d), f ≈ 0.36 vs
   0.22 for ND₃ (PLB 463:339); ⁷LiH at Saclay: ⁷Li 47%, H 56% (Chaumette
   AIP Conf. Proc. 187:1275); PR12-14-001 expects ⁷Li 65–80% in ⁷LiD at 5 T,
   assumes P_z = 0.8 (P_zz = 0.55, P_zzz = 0.11 by EST). Tensor polarization
   in solids: EST P_zz = 2 − √(4 − 3P_z²) (0.20 at P_z = 0.5); RF enhancement
   to 29–37% in d-butanol (Keller–Crabb–Day NIM A 981:164504); E12-13-011
-  C1-approved on demonstrating 30%. HERMES ABS target: P_zz = +0.89/−1.65
+  C1-approved on demonstrating 30%, fully approved August 2022 (PAC 51 jeopardy update, 2023). HERMES ABS target: P_zz = +0.89/−1.65
   pure-tensor states (effective 0.83). LOI12-16-006: ¹⁴N in NH₃, x < 0.3,
   2–12% alignment; "cos 2φ … difficult with a fixed target at JLab". No
   polarized-Li gas/jet target in lepton scattering exists (only Wittchow et

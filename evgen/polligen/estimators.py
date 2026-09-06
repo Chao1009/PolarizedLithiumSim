@@ -61,7 +61,12 @@ def cos2phi_fit_binned(counts, edges, pzz, acceptance=None, nsub=9):
     a residual cos phi' modulation is orthogonal only at full coverage
     and would leak into A through acceptance holes.  The gluonometry
     fills satisfy this by design (m-symmetric tensor populations give
-    a1_eff = 0 identically; see sample.effective_modulation).
+    a1_eff = 0 identically; see sample.effective_modulation).  On the
+    exact finite-gamma path (`xsec.InclusiveKernel(tensor_gamma=True)`,
+    off by default), where the tensor sector does reach cos phi', the
+    same holds at the transverse working point for a second reason:
+    every cos phi' coefficient there carries sin(theta_S) cos(theta_S),
+    which vanishes at theta_S = 90 deg (design risk R10).
     """
     counts = np.asarray(counts, dtype=float)
     edges = np.asarray(edges, dtype=float)

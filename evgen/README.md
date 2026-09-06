@@ -15,23 +15,23 @@ next. Imports `../fastsim/polli_fastsim` — nothing there is duplicated.
 
 ```bash
 cd evgen
-python3 -m pytest tests/ -q            # 323 tests
+python3 -m pytest tests/ -q            # 334 tests
 python3 scripts/closure_fom.py --ion 6Li --events 200000 --trials 200
 python3 scripts/closure_fom.py --ion 7Li --events 200000 --trials 200
 python3 scripts/money_tagged_azz.py --events 400000       # money plot 4 (--config, --optics, --lumi-fraction)
 python3 scripts/tagged_polarimetry_7li.py --events 300000 # 7Li polarimetry + tagged EMC (--config, --optics)
-python3 scripts/money_cos2phi.py                          # money plot 5
+python3 scripts/money_cos2phi.py                          # money plot 5 (--tensor-gamma, --subtract-tensor-leakage {none,kappa,model}, --b3-frac, --b4-frac: all off by default)
 python3 scripts/money_cos2phi_coherent.py                 # money plot 6
-python3 scripts/money_delta_extraction.py                 # money plot 7
+python3 scripts/money_delta_extraction.py                 # money plot 7 (the same four tensor-leakage flags)
 python3 scripts/phase_space_bins.py       # (x,Q2) rate maps + binning
 python3 scripts/reco_chain_figures.py     # reconstruction-chain figures
-python3 scripts/money_cos2phi_reco.py          # money plots 5R + 7R (reco level; --lumi-fraction)
+python3 scripts/money_cos2phi_reco.py          # money plots 5R + 7R (reco level; --lumi-fraction; the four tensor-leakage flags and --leakage-scan)
 python3 scripts/money_cos2phi_coherent_reco.py --config 0 --optics tagging --n-mc 6000000 # money plot 6R (reco level, tagging optics; --lumi-fraction)
 python3 scripts/coherent_optics_scan.py   # WP5: the coherent tag vs the near-beam envelope
 python3 scripts/tagging_optics.py         # report 1 §6.1: a lithium tagging optics at IP6, priced in luminosity
 python3 scripts/hfs_acceptance.py --config 1 --sample samples/pythia8_e10_p99.5_dis.npz samples/pythia8_e10_n99.5_dis.npz  # report 2 §3: where the hadronic E - p_z sum goes
 python3 scripts/target_mass_bound.py       # how big is the γ² term A∥ now carries, and what g₂ leaves open (prints, no figure)
-python3 scripts/tensor_gamma_leakage.py   # the OTHER γ² term: how much of the b₁–b₄ sector reaches cos 2φ (prints, no figure)
+python3 scripts/tensor_gamma_leakage.py   # the OTHER γ² term: how much of the b₁–b₄ sector reaches cos 2φ, and what a κ̂ subtraction of it leaves (--b3-frac, --b4-frac; prints, no figure)
 python3 scripts/eic_beam_figures.py       # report 3: the ion energy menu and the divergence
 python3 scripts/nearbeam_aperture_scan.py # plans/09: what every near-beam aperture is worth (--isotope 7Li for the 7Li alpha panel)
 python3 scripts/nearbeam_reach_gain.py    # plans/09: the coherent chain at both apertures (--lumi-fraction)
@@ -39,7 +39,7 @@ python3 scripts/nearbeam_sensor_budget.py # plans/09: hot-spot Z-ID, sizing, cha
 python3 scripts/nearbeam_zid_power.py     # plans/09: how much charge information Z-ID needs
 python3 scripts/nearbeam_two_hit.py       # plans/09 B4: two-hit topology of 6Li -> alpha + d, and the partner-fragment veto
 python3 ../reports/build_report.py --pdf  # assemble reports/ pages
-python3 ../tools/consistency_check.py     # 49 checks (51 with --full): does everything still agree?
+python3 ../tools/consistency_check.py     # 50 checks (52 with --full): does everything still agree?
 #   reports are numbered in reading order:
 #   -> 0 polarized_li_primer.html/pdf (educational physics primer)
 #   -> 1 cos2phi_money_plots_report.html/pdf (the projected measurements)
@@ -64,7 +64,7 @@ plans/07 WP2 and the arithmetic is pinned by `tests/test_run_share.py`.
 |---|---|
 | `polligen/nearbeam.py` | plans/09: thin-film energy deposit; the hot-spot firing threshold I_th/I_c = 1 − 2r_s/w with r_s ∝ z (anchored on Argonne's *extrapolated* 134 nm, arXiv:2312.13405); and a sampled Landau with `zid_fake_rate`, which says how much charge information the ⁶Li/α separation actually needs — one bit per plane costs a factor 1.4 against the Neyman-Pearson optimum, and the nanowire loses on fill factor instead |
 | `polligen/spin.py` | ρ(m,m′) for J = 1, 3/2: Wigner-d/CG, populations ↔ normalized (vector, tensor, octupole) moments, arbitrary quantization axis, spin-temperature (max-entropy) fills |
-| `polligen/xsec.py` | doubly polarized inclusive master formula: HJM spin-1 tensor sector (b₁/b₂, Δ cos 2φ), vector sector A∥ = D·g1/F1 (+ γ-suppressed g_T term, g₂ = g₂^WW), spin-3/2 rank-0/1 exact + rank-2 scenario slots; the exact finite-γ A∥ = D_γ(A₁ + ηA₂) behind `target_mass=True` (**default on** since 2026-08-29; the term is ≤ 0.6% at the published sweet spots and the twist-3 residual it leaves is an order of magnitude smaller — `scripts/target_mass_bound.py`); the exact finite-γ TENSOR sector (Cosyn et al. Eqs. 9/10/14/16/17/24, b₃/b₄ slots) behind `tensor_gamma=True`, **default off** — its O(γ²) leakage into cos 2φ is carried as a systematic and measured by `scripts/tensor_gamma_leakage.py` (≤ 0.109% of the amplitude, sign cancelling) rather than corrected for |
+| `polligen/xsec.py` | doubly polarized inclusive master formula: HJM spin-1 tensor sector (b₁/b₂, Δ cos 2φ), vector sector A∥ = D·g1/F1 (+ γ-suppressed g_T term, g₂ = g₂^WW), spin-3/2 rank-0/1 exact + rank-2 scenario slots; the exact finite-γ A∥ = D_γ(A₁ + ηA₂) behind `target_mass=True` (**default on** since 2026-08-29; the term is ≤ 0.6% at the published sweet spots and the twist-3 residual it leaves is an order of magnitude smaller — `scripts/target_mass_bound.py`); the exact finite-γ TENSOR sector (Cosyn et al. Eqs. 9/10/14/16/17/24, b₃/b₄ slots) behind `tensor_gamma=True`, **default off** — its O(γ²) leakage into cos 2φ is carried as a systematic and measured by `scripts/tensor_gamma_leakage.py` (≤ 0.109% of the amplitude, sign cancelling) rather than corrected for.  Since 2026-09-06 the correction nonetheless exists and is tested — `tensor_leakage_amplitude`, `tensor_leakage_ratio`, `recopseudo.leakage_response`/`fold_leakage`/`delta_from_amplitude(…, tensor_leakage=…)` and `--subtract-tensor-leakage {kappa,model}` on the three money scripts: 99.96% of the leakage is the b₂ term, in the same combination as the fitted constant κ, so it is subtractable in situ with κ̂, and both routes close at the fifth digit.  It stays default off because the unmeasured b₃, b₄ leave 0.6 of it (0.109% → 0.066%); plans/08 D10 |
 | `polligen/bookkeeping.py` | run plans (helicity flips, tensor thirds, transverse fills), relative-luminosity offsets + first-order bias formulas, polarimetry smearing, per-(run,bunch) rng streams |
 | `polligen/sample.py` | grid inverse-CDF sampler: per-spin-state Poisson rates (φ-averaged modulation shifts counting rates), φ accept-reject, Mode-W weight matrices |
 | `polligen/estimators.py` | analysis-side estimators: helicity-flip, tensor thirds, cos 2φ moment + binned LSQ fit (holey-φ robust), luminosity-corrected yields |

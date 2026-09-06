@@ -1,6 +1,6 @@
 # The cos 2φ Modulation on Tensor-Polarized ⁶Li at the EIC: Projections, the Coherent Intact-Recoil Channel, and Anchored Amplitudes
 
-*Working note, 2026-08-10 — polarized ⁶,⁷Li @ EIC simulation program
+**Historical — the state of 2026-08-10 (development run 5); the projections of sections 2–3 are superseded by Report 1 §6–7: the beam energy (50 → 99.5 GeV/u), the Δ-model normalization and sweet-spot bins, the coherent rates and the IP6 tagging conclusion; errata at the end.** *Working note, 2026-08-10 — polarized ⁶,⁷Li @ EIC simulation program
 (companions: `plans/06` for the running background budget,
 `evgen/README.md` for the code). Prepared for circulation ahead of the
 INT program "Towards Realizing the Program with Polarized Ion Beams at
@@ -503,3 +503,12 @@ arXiv:2208.14575.
 [50] EPIOS white paper: G. Atoian et al., *Realizing the scientific
 program with polarized ion beams at EIC*, Phys. Rev. C 113 (2026)
 060501, arXiv:2510.10794.
+
+## Errata (2026-09-06)
+
+Found in the sourcing pass of 2026-09-06 (development run 18). The lines above are left as written so that the line numbers cited in `docs/consistency_review_2026-09-02.md` stay valid.
+
+- l.107: the inversion is written Δ̂ = Â·y²D_φ/(1−y); the sign is Δ̂ = −Â·y²D_φ/(1−y) (Report 1 §2).
+- l.125–129: the 0.20 GeV / 13.5% tag was the high-acceptance reference of the time; no published IP6 optics provides it, and the coherent channel exists at IP6 only with a tagging optics (Report 1 §6.1).
+- l.218–220: HERMES (Nucl. Phys. B 842 (2011) 265, §7.3) reports A_Lzz^{sin φ} = −0.130 ± 0.121 ± 0.051 over the full range and 0.074 ± 0.196 ± 0.022 at −t < 0.06 GeV², where the coherent share is about 40%; "< 0.2" is not in the source, and the asymmetry is not coherent-exclusive.
+- l.329: the f₀ band 0.02–0.08 sits below, not brackets, HERA's 10–15% and the heavy-nucleus 20–25% (Report 1 §6.2).

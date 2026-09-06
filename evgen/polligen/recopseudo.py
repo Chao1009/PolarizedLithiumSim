@@ -24,7 +24,14 @@ INCLUSIVE (RecoResponse + measure_inclusive)
      the bin-by-bin K of an assumed model (delta_from_amplitude) or, since
      the amplitude is exactly LINEAR in Delta, the shape fitted through
      the forward-folded response itself (RecoResponse.fold,
-     fold_shape_fit; plans/08 A6).
+     fold_shape_fit; plans/08 A6).  When the generator kernel runs the
+     exact finite-gamma tensor sector (xsec.InclusiveKernel(
+     tensor_gamma=True), off by default), the b1-b4 rate sector also
+     leaks into the same cos 2phi' channel at O(gamma^2), and
+     leakage_response / fold_leakage / delta_from_amplitude(
+     tensor_leakage=...) subtract it -- additively on the amplitude, with
+     the bin-centering K built from a leakage-free a_reco_bin so that it
+     is subtracted once and not one and a half times (plans/08 D2).
 
 COHERENT (CoherentResponse + measure_coherent)
   recoil (t, phi_t, x_P) -> exact four-vector -> Roman-Pot emulation
@@ -48,6 +55,7 @@ from polli_fastsim.kinematics import w2
 
 from . import reco
 from .spin import m_values
+from .xsec import tensor_leakage_amplitude
 
 
 # --- inclusive ---------------------------------------------------------------
@@ -313,6 +321,7 @@ class RecoResponse:
         self.phi_true = np.mod(phip_true, 2 * np.pi)
         self._cellamp = {}
         self._cellder = {}
+        self._cellleak = {}
 
     # --- per-cell fill amplitudes ---------------------------------------
 
@@ -357,6 +366,118 @@ class RecoResponse:
             return self.dil
         return self.dil * self._amp_isr
 
+    # --- the O(gamma^2) tensor leakage (plans/08 D2) ----------------------
+
+    def leakage_response(self, category, constant=False):
+        """Per-cell cos 2phi' TENSOR LEAKAGE per unit P_zz -- the analogue
+        of `delta_response`, and the other half of what
+        `amplitude_per_event` returns when the kernel runs the exact
+        finite-gamma b-sector.
+
+        `constant=True` returns the phi-INDEPENDENT harmonic h0 of the
+        same sector instead, which is the model's prediction of the
+        constant term `reco.harmonic_ratio_fit` reports as "const"; the
+        ratio of the two folded over a bin is the L of
+        `xsec.tensor_leakage_ratio`, i.e. how much leaked amplitude one
+        unit of the fit's own kappa_hat is worth there.
+
+        Both are computed from the sampler's structure-function tables
+        whatever the kernel's `tensor_gamma` switch says, because they are
+        a property of the b-sector and not of the switch.  They are
+        PRESENT in the pseudo-data only when the kernel has
+        `tensor_gamma=True`; subtracting them from a massless-path
+        measurement would remove an amplitude that is not there, which is
+        why `bin_summary` gates the subtraction on the kernel's own flag
+        and the scripts refuse the combination outright.
+        """
+        key = (category.name, category.theta_s, category.j, bool(constant))
+        if key not in self._cellleak:
+            smp = self.sampler
+            y = smp.q2_cells / (smp.s * smp.x_cells)
+            h0, h2 = tensor_leakage_amplitude(smp.tables, smp.x_cells,
+                                              smp.q2_cells, y,
+                                              theta_s=category.theta_s,
+                                              j=category.j)
+            self._cellleak[key] = np.asarray(h0 if constant else h2,
+                                             dtype=float)
+        return self._cellleak[key]
+
+    def leakage_per_event(self, category):
+        """The leakage part of `amplitude_per_event`, event by event.
+
+        With ISR off this is the cell value at the event's cell, exactly
+        as `amplitude_per_event` reads it.  With ISR on it carries the
+        SAME radiative.amplitude_scale factor the Delta amplitude does
+        (plans/08 D2 risk R5): that scale is derived from the massless
+        Delta y-dependence and not from the leakage's own, which runs
+        through theta_q and eps, so it is an approximation -- but it is
+        the approximation `amplitude_per_event` itself already makes on
+        the leakage half of its numerator, so subtracting with it removes
+        exactly what the folded amplitude contains.  Both y-scalings are
+        1 to sub-per-mille at the sweet spots (radiative.amplitude_scale),
+        on a correction that is itself at most 0.11% of the amplitude.
+        """
+        leak = self.leakage_response(category)[self.cell]
+        if self._amp_isr is None:
+            return leak
+        return leak * self._amp_isr
+
+    def fold_leakage(self, mask, category, constant=False):
+        """Response-folded tensor leakage of one reco bin, per unit P_zz.
+
+        The cos 2phi' harmonic with exactly the weights `fold_kernel`
+        uses (sigma * eps_eID * selection, times the per-event dilution
+        and, under ISR, the amplitude scale of `leakage_per_event`), so
+        it is the leakage contained in `bin_summary`'s `a_reco_bin` and
+        the quantity to subtract from a measured amplitude.
+
+        `constant=True` folds the phi-independent harmonic h0 with the
+        rate weights ALONE -- kappa is azimuth-independent and suffers no
+        cos 2 dphi' dilution -- giving the model's prediction of the fit's
+        kappa_hat.  The subtraction then has two forms:
+
+            model:  A_corr = A_hat - fold_leakage(bin)
+            kappa:  A_corr = A_hat - fold_leakage(bin)
+                                     / fold_leakage(bin, constant=True)
+                                     * kappa_hat
+
+        the second replacing the model's rate sector by the one the same
+        data measure, so that only the kinematic ratio L is taken from
+        the model (xsec.tensor_leakage_ratio).
+
+        CAVEAT on the kappa route, and what removes it.
+        `reco.spin_state_ratio` cancels a phi'-dependent acceptance common
+        to the fills, but NOT a relative-luminosity error: that enters the
+        ratio as a bin-independent offset, i.e. entirely on the CONSTANT
+        term, which is the one this route leans on.  Measured on the
+        standard response with `rel_lumi_offset = 0`, kappa_hat reproduces
+        `fold_leakage(..., constant=True)` to 5e-4 relative; with the 1e-3
+        offset the published money plots switch on, kappa_hat is 1.6x it,
+        and 1.5-3.4x it over the twelve published sweet spots.  The
+        amplitude does not move (4.137131e-03 to 4.135749e-03), which is
+        the estimator working as designed -- but a correction built on the
+        RAW kappa_hat inherits that mis-scaling in full, and at the low-x
+        spots, where the ratio exceeds 2, it over-subtracts by more than
+        the leakage itself and is worse than no correction at all.
+        `kappa_hat` must therefore be used only after the pedestal is
+        taken out with `leakage_pedestal`, which measures it across bins
+        (the offset is bin-independent to 3e-4 relative, the physical
+        kappa is not); `money_cos2phi_reco.py --subtract-tensor-leakage
+        kappa` does exactly that and prints the pedestal it removed.
+        `model` never sees the offset, at the price of not being in situ.
+        """
+        cells = self.cell[mask]
+        we = (self.w * self.eff)[mask]
+        norm = float(we.sum())
+        if norm <= 0.0:
+            return np.nan
+        wgt = we if constant else we * self._dil_amp()[mask]
+        v = np.bincount(cells, weights=wgt,
+                        minlength=self.sampler.xsec_flat.size)
+        return float((v * self.leakage_response(category,
+                                                constant=constant)).sum()
+                     / norm)
+
     # --- masks and bin bookkeeping ---------------------------------------
 
     def mask_reco(self, xlo, xhi, q2lo, q2hi):
@@ -369,12 +490,31 @@ class RecoResponse:
         return ((self.x >= xlo) & (self.x < xhi) & (self.q2 >= q2lo)
                 & (self.q2 < q2hi))
 
-    def bin_summary(self, xlo, xhi, q2lo, q2hi, category):
+    def bin_summary(self, xlo, xhi, q2lo, q2hi, category,
+                    include_leakage=False):
         """Purity, efficiency, rate ratio and the true-bin / reco-bin
-        amplitudes (reco-bin one includes the phi' dilution) for a bin."""
+        amplitudes (reco-bin one includes the phi' dilution) for a bin.
+
+        `include_leakage` says whether the two amplitudes carry the
+        O(gamma^2) tensor leakage that the exact finite-gamma kernel puts
+        in the cos 2phi' channel next to the Delta term.  The default
+        False makes `a_reco_bin` the DELTA amplitude alone, which is what
+        the bin-centering factor K = Delta_c/a_reco_bin must be built
+        from: with the leakage in the denominator, K would absorb part of
+        the correction and a subtraction applied to the amplitude would
+        then be applied a second time through K (plans/08 D2 risk R8).
+        True gives the amplitude the pseudo-data actually carry, which is
+        what an uncorrected measurement must be overlaid against.
+
+        On the massless path (`tensor_gamma=False`, the default, and every
+        published number) there is no leakage to remove and the flag is
+        inert: both settings return today's arrays bit for bit.
+        """
         mr = self.mask_reco(xlo, xhi, q2lo, q2hi)
         mt = self.mask_true(xlo, xhi, q2lo, q2hi)
         a = self.amplitude_per_event(category)
+        if not include_leakage and self.sampler.kernel.tensor_gamma:
+            a = a - self.leakage_per_event(category)
         we = self.w * self.eff
         n_reco = float(we[mr].sum())
         n_true = float(self.w[mt].sum())
@@ -402,24 +542,30 @@ class RecoResponse:
         Delta in exactly one place, a_2 = -[(1-y)/y^2] c_eff(m) sin^2
         theta_S Delta / D_phi (Hoodbhoy-Jaffe-Manohar NPB 312:571 (1989)
         Eq. (30) as transcribed in xsec.InclusiveKernel.amplitudes), and
-        nothing else in W depends on it.  The derivative is therefore the
-        same kernel call with the Delta table replaced by 1, and `fold`
-        below is exact rather than a linearization
-        (test_amplitude_is_exactly_linear_in_delta).
+        nothing else in W depends on it, so `fold` below is exact rather
+        than a linearization (test_amplitude_is_exactly_linear_in_delta).
+
+        The derivative is taken as the DIFFERENCE
+        `kernel.delta_derivative` -- amplitudes at Delta = 1 minus
+        amplitudes at Delta = 0 -- and not as the single Delta = 1 call it
+        was until 2026-09-06.  On the massless path the two are the same
+        bits, because a_2 there is Delta times a kinematic factor and
+        nothing else; with the exact finite-gamma b-sector switched on
+        (`tensor_gamma`) they are not, because that call also returns the
+        b1-b4 leakage h2, which is independent of Delta and would ride
+        into this operator as an additive constant (plans/08 D2 risk R1).
         """
         key = (category.name, tuple(category.populations), category.theta_s,
                category.phi_s, category.lam_e, category.pe)
         if key not in self._cellder:
             smp = self.sampler
-            tab = dict(smp.tables)
-            tab["delta"] = np.ones_like(smp.x_cells)
             out = np.zeros_like(smp.x_cells)
             for p_m, mm in zip(np.asarray(category.populations, dtype=float),
                                m_values(category.j)):
                 if p_m <= 0.0:
                     continue
-                _w, _a1, a2 = smp.kernel.amplitudes(
-                    tab, smp.x_cells, smp.q2_cells, smp.s,
+                _w, _a1, a2 = smp.kernel.delta_derivative(
+                    smp.tables, smp.x_cells, smp.q2_cells, smp.s,
                     smp._state(category, mm), with_perp=smp.with_perp)
                 out = out + p_m * a2
             self._cellder[key] = out / float(category.moments()[1])
@@ -571,8 +717,43 @@ def measure_inclusive(resp, plan, lumi_pb, mask, rng=None, nbins=24,
     return fit
 
 
+def leakage_pedestal(consts, kappa_models):
+    """The bin-independent pedestal a relative-luminosity error leaves on
+    the constant term of `reco.harmonic_ratio_fit`, measured across bins.
+
+    `reco.spin_state_ratio` cancels a phi'-dependent acceptance common to
+    the fills but NOT an error in the luminosity ratio the analysis
+    assumes: that enters R_i as an offset with no phi' dependence, i.e.
+    entirely on the fitted CONSTANT.  The offset is the same in every bin
+    -- it is a property of the fill plan, not of the kinematics -- while
+    the physical constant, the b1-b4 rate shift kappa, is not.  So over a
+    set of bins
+
+        kappa_hat(bin) = kappa(bin) + c,   c bin-independent,
+
+    and `c = <kappa_hat(bin) - kappa_model(bin)>` measures it from the
+    data themselves against the model's SHAPE (the model's own overall
+    level is not separable from `c` at this statistics: the model kappa
+    spans a factor two over the bins while a one-year kappa_hat carries a
+    ~20% error, so a two-parameter fit for level and pedestal together is
+    unconstrained).  Subtracting it restores the in-situ rate sector the
+    `kappa` leakage route rests on: without it the route over-subtracts by
+    kappa_hat/kappa = 1.5-3.4 at the published sweet spots and is
+    NET-HARMFUL at the low-x ones, leaving up to 2.4x the leakage it was
+    meant to remove (run 18 review; `money_cos2phi_reco.py --leakage-scan`
+    prints the ratio bin by bin).
+
+    Non-finite or zero model values are skipped; an empty set gives 0.0,
+    which is the uncalibrated route.
+    """
+    d = [float(k) - float(m) for k, m in zip(consts, kappa_models)
+         if np.isfinite(k) and np.isfinite(m) and m != 0.0]
+    return float(np.mean(d)) if d else 0.0
+
+
 def delta_from_amplitude(fit, summary, delta_center, k_conv=None,
-                         k_rel_err=0.0):
+                         k_rel_err=0.0, tensor_leakage=None,
+                         leakage_rel_err=0.0):
     """MC bin-centering with migration: K = Delta_model(x_c, Q2_c) /
     A_reco-bin(model), Delta_hat = A_hat K, dDelta = dA |K| -- the pure
     kinematic inversion plus the in-bin-shape and migration correction
@@ -592,15 +773,42 @@ def delta_from_amplitude(fit, summary, delta_center, k_conv=None,
     The K error and the statistical error of A_hat come from the same
     data, so the quadrature sum is the conservative reading and not an
     exact treatment; the correlation is not modelled.
+
+    `tensor_leakage` is the O(gamma^2) b1-b4 amplitude the exact
+    finite-gamma kernel leaks into the cos 2phi' channel, per unit P_zz
+    and folded through the same response
+    (`RecoResponse.fold_leakage`): the correction is ADDITIVE on the
+    amplitude, Delta_hat = (A_hat - A_leak) K, and never a rescaling of
+    the Delta kinematic factor, which the switch deliberately leaves
+    alone (plans/08 D2 risk R3).  `K` must then come from a LEAKAGE-FREE
+    a_reco_bin -- `bin_summary`'s default -- or the correction is applied
+    twice (risk R8).  `leakage_rel_err` is the relative width of what the
+    subtraction cannot reach, the unmeasured b3 and b4: at b3 = b4 = 0.1
+    b2 the leakage is 1.60-1.65x the subtracted value, so 0.6 is the band
+    to pass, and it enters the error in quadrature.  The in-situ `kappa`
+    route carries a second width on top of it -- how far the rate sector
+    it used still differs from the model's, after `leakage_pedestal` has
+    taken the relative-luminosity offset out -- and the caller is expected
+    to pass the two in quadrature (`money_cos2phi_reco.py` does).  `None`
+    (the default) reproduces today's dict identically, key for key.
     """
     if k_conv is None:
         k_conv = delta_center / summary["a_reco_bin"]
+    amp = fit["amp"] if tensor_leakage is None else (fit["amp"]
+                                                     - tensor_leakage)
     stat = fit["err"] * abs(k_conv)
-    err_k = abs(fit["amp"] * k_conv) * k_rel_err
-    return {"delta": fit["amp"] * k_conv,
-            "err": float(np.hypot(stat, err_k)) if k_rel_err else stat,
-            "err_stat": stat, "err_k": err_k, "k": k_conv,
-            "k_rel_err": k_rel_err}
+    err_k = abs(amp * k_conv) * k_rel_err
+    err = float(np.hypot(stat, err_k)) if k_rel_err else stat
+    out = {"delta": amp * k_conv, "err": err, "err_stat": stat,
+           "err_k": err_k, "k": k_conv, "k_rel_err": k_rel_err}
+    if tensor_leakage is not None:
+        err_leak = abs(tensor_leakage * k_conv) * leakage_rel_err
+        if err_leak:
+            out["err"] = float(np.hypot(err, err_leak))
+        out.update(amp_raw=fit["amp"], tensor_leakage=tensor_leakage,
+                   delta_leakage=tensor_leakage * k_conv,
+                   err_leakage=err_leak, leakage_rel_err=leakage_rel_err)
+    return out
 
 
 def tilted_shape(base, x_ref, params):
