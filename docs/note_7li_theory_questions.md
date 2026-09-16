@@ -11,9 +11,11 @@ scoping memo’s block in §4.6, and §4.6b, "The ⁷Li theory-questions note".*
 
 ⁷Li is not a variant of the ⁶Li program but its complement, and it buys two things.
 The first is deformation: Q(⁷Li) = −4.00(3) fm² against Q(⁶Li) = −0.0806(6) fm²
-(Stone, INDC(NDS)-0833 2021), a relative dial |Q|/R_ch² of 0.6697 against 0.01202 at
-R_ch = 2.444 and 2.589 fm — a factor 56 between isotopes measured with one estimator
-in one window, so that ⁶Li is the null test and ⁷Li the positive control of the same
+(Stone, INDC(NDS)-0833 2021 — the TUNL evaluation of Tilley et al., NPA 708 (2002) 3
+lists −4.06(8) fm² instead, 1.5% away; this repository takes the newer evaluated
+value, `plans/01` recording −4.06 as superseded), a relative dial |Q|/R_ch² of
+0.6697 against 0.01202 at R_ch = 2.444 and 2.589 fm — a factor 56 between isotopes
+measured with one estimator in one window, so that ⁶Li is the null test and ⁷Li the positive control of the same
 coherent cos 2φ measurement. The second is the far-forward tag: the α spectator sits
 at rigidity R = 0.8557 — clear of the R ≈ 1 at which ⁶Li's α is beam-blind — and lands
 mid-window in the Roman Pots at 10 × 99.5 and 18 × 117.9; at 5 × 40.8 the measured
@@ -106,11 +108,18 @@ elastic form factor in the coherent window, presently a Gaussian of the charge r
 is free — the pure P wave gives ⟨P₂(cos θ_k)⟩ = −T/5 (verified as −0.1999 at M = 3/2,
 +0.1998 at M = 1/2), the in-situ alignment polarimeter of `plans/05` §5.2 — but the
 radial input is not, and it is where the signal lives: over the band β = 0.20 / 0.30 /
-0.40 GeV of the two-parameter P-wave form the mean spectator momentum moves 0.1113 →
-0.1333 → 0.1505 GeV/c and the fraction above 0.3 GeV/c by a factor 3.6, 0.0231 →
-0.0522 → 0.0836, in exactly the region where Cosyn–Weiss find tagged tensor
-asymmetries of order unity ("spectator momenta ≳ 300 MeV, which select configurations
+0.40 GeV of the two-parameter P-wave form ψ_P(k) = k / ((k² + κ²)(k² + β²)) — the
+radial the α–t channel actually carries, `spectator.LI7_ALPHA_TAG` with `l_wave = 1` —
+the mean spectator momentum moves 0.2362 → 0.3059 → 0.3717 GeV/c and the fraction
+above 0.3 GeV/c by a factor 2.17, 0.2209 → 0.3630 → 0.4803, in exactly the region
+where Cosyn–Weiss find tagged tensor asymmetries of order unity ("spectator momenta ≳ 300 MeV, which select configurations
 with large D-wave", `refs/2603.23700.pdf`). The model band is wider than the effect.
+*(Corrected 2026-09-15. The six moments circulated before that date — 0.1113 → 0.1333 →
+0.1505 GeV/c and 0.0231 → 0.0522 → 0.0836, "a factor 3.6" — were computed from n(k)
+without its k² phase-space factor, which for these radial forms returns the S-wave
+Hulthén answer rather than the P-wave one. The α–t spectrum is harder than was
+reported, not softer, by 2.1–2.5 in ⟨k⟩ and 5.7–9.4 in the fraction above 0.3 GeV/c,
+so the channel reaches the Cosyn–Weiss region across the whole band.)*
 **Exists:** the QMC/VMC effective polarizations we use, P_p = +0.866 and P_n = −0.037
 in `polli_fastsim.beams.LI7`, are Wiringa et al. arXiv:1309.3794 via JLab E12-14-001 —
 a reference with no `refs_dict.json` entry and no local copy, the first thing to fix

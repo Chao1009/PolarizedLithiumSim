@@ -459,7 +459,11 @@ deuteron structure function*, Phys. Rev. D 45 (1992) 2264.
 [35] Moments and radii: I. Angeli, K. P. Marinova, At. Data Nucl. Data
 Tables 99 (2013) 69; recommended Q(⁶Li) = −0.0806(6) fm²,
 Q(⁷Li) = −4.00(3) fm² (Pyykkö compilations, via arXiv:2403.06384;
-N. J. Stone, At. Data Nucl. Data Tables 111-112 (2016) 1).
+N. J. Stone, At. Data Nucl. Data Tables 111-112 (2016) 1). The TUNL
+evaluation of D. R. Tilley et al., Nucl. Phys. A 708 (2002) 3 lists
+Q(⁷Li) = −4.06(8) fm² instead, 1.5% away; the value used here is the
+newer evaluated one (`plans/01`, which records −4.06 as superseded),
+and nothing in this note turns on the difference.
 [36] B. Wojtsekhowski, *Polarized internal target experiments based on
 EIC beams*, arXiv:2406.11480.
 [37] M. M. Dalton, A. Deur, C. D. Keith, *Potential for tensor

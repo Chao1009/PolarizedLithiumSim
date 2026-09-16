@@ -15,9 +15,20 @@ sweep rather than on the next review.
      "current": "22-31%",                # what replaced it
      "since":   "2026-08-29",            # when it was replaced
      "note":    "F133: the 6Li alpha tag at the lithium tagging optics",
-     "allow":   ["in angle"]}            # optional: legitimate contexts
+     "allow":   ["in angle"],            # optional: legitimate contexts
+     "except_files": ["^plans/09_"]}     # optional: whole files to skip
 
 and this module greps the live documents for every ``retired`` pattern.
+
+``except_files`` narrows ONE entry to the documents where its form is a
+live claim.  It exists because the history rules below are per paragraph
+and per run section, and a plan can close a whole ``###`` section with one
+dated stamp ("### B2 ... (closed) / Done 2026-08-28.") whose later
+paragraphs then carry that round's numbers with no stamp of their own.
+Excluding the file for that entry is the narrow move; widening the stamp
+rule would weaken every other entry.  Each path regex is matched against
+the repository-relative path, and an entry that uses it says in its
+``note`` which section it is standing off.
 
 What counts as live.  The programme keeps its history in three places, and
 none of them is a live claim:
@@ -167,6 +178,8 @@ def _load():
             # a number carries no case, so nothing is lost by folding it
             e["_rx"] = re.compile(e["retired"], re.IGNORECASE)
             e["_allow"] = [re.compile(a) for a in e.get("allow", [])]
+            e["_except"] = [re.compile(a)
+                            for a in e.get("except_files", [])]
         except re.error as exc:
             bad.append("%s entry %d: %r does not compile: %s"
                        % (DATA.relative_to(ROOT), k, e.get("retired"), exc))
@@ -204,6 +217,7 @@ def _():
         any_rx = None
     runs = _run_sections(ROOT / "plans/00_README.md")
     for path, lines, off in _corpus():
+        rel = str(path.relative_to(ROOT))
         is_template = path.name.endswith(".template.html")
         is_run_log = path == ROOT / "plans/00_README.md"
         for i, raw, window, headlen in _windows(lines):
@@ -211,6 +225,8 @@ def _():
                 continue
             for e in live:
                 since = e["since"]
+                if any(x.search(rel) for x in e["_except"]):
+                    continue
                 m = e["_rx"].search(window)
                 if not m or m.start() > headlen:
                     continue

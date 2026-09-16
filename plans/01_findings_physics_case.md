@@ -72,9 +72,9 @@ simulations within the broader EIC program."*
   EPIOS explicitly motivates "b₁ of the deuteron, free or embedded in ⁶Li".
   *2026-08-28: the ⅓·P_d form is right but P_d is the wrong rank.  b₁ is a
   rank-2 structure function, so the deuteron's alignment survives the α–d
-  motion as the TENSOR dilution 0.921947 — the tagged model's quadrature,
+  motion as the TENSOR dilution 0.921947 (*2026-09-15*: 0.921949 since run 19's i^L phase fix) — the tagged model's quadrature,
   which the closed form 1 − (9/10)P_D approximates — not the vector
-  0.87, and b₁(⁶Li)/nucleon = (2/6) × 0.921947 × b₁(d) = 0.307·b₁(d)
+  0.87, and b₁(⁶Li)/nucleon = (2/6) × 0.921947 × b₁(d) = 0.307·b₁(d) (*2026-09-15*: 0.921949; the 0.307 is unchanged)
   (`polarized.LI6_B1_RANK2_TRANSFER` and `LI6_B1_PER_NUCLEON`, pinned
   against `TaggedModel.tensor_dilution()` in `evgen/tests/test_tagged.py`;
   plans/08 D9).  The α–d D-wave term is still not in the model.*

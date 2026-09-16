@@ -91,44 +91,70 @@ def test_pure_d_wave_forward_ratio():
 
 
 def test_density_matches_independent_transcription(li6):
-    """n_M and p(m_S|M) against a test-local, loop-based CG sum."""
+    """n_M against Cosyn-Weiss Eq. (3.22b) built in CARTESIAN form.
+
+    Genuinely independent of the module: no partial-wave sum, no
+    Clebsch-Gordan coefficients, no spherical harmonics and no i^L.  CW
+    write the momentum-space wave function of a spin-1 S+D pair as a
+    Cartesian tensor contracted with polarization vectors,
+
+      M^ij = (f0 - f2/sqrt2) delta^ij + 3 (f2/sqrt2) khat^i khat^j,
+      n_Lambda = sum_{m_s} |eps^i_Lambda M^ij eps^j*_{m_s}|^2,
+
+    and with f0, f2 the channel's own normalized radial tables that is
+    this module's n_M times the 4pi of Y_00^2 -- exactly, to double
+    precision -- but ONLY with the i^L phase in place: CW's Cartesian +f2
+    is the spherical -psi_2 (S_12 = -2 T on the triplet), so a phase-less
+    sum reproduces this construction at f2 -> -f2 and gets the S-D cross
+    term backwards.  Until 2026-09-15 this test retyped `_amp2_table`'s
+    own CG sum, which tracked whatever that function did, phase and all;
+    it passed throughout the period the phase was missing.
+    """
     model = li6
     ch = model.channel
     kappa = ch.base.kappa
     k = np.array([0.05, 0.15, 0.30, 0.45])
     c = np.array([-0.7, 0.1, 0.9])
-    # test-local normalized radials
-    rad = {}
+    # test-local normalized radials f0, f2 (the same quadrature the model
+    # uses, recomputed here so the test owns its own numbers)
     kg = model.k
+    rad = {}
     for w in ch.waves:
         psi = w.radial(kg, kappa)
         norm = np.sqrt(_trapezoid(psi**2 * kg**2, kg))
-        rad[w.l] = lambda kk, w=w, norm=norm: (np.sqrt(w.prob)
-                                               * w.radial(kk, kappa) / norm)
+        rad[w.l] = np.sqrt(w.prob) * psi / norm
+
+    s2 = np.sqrt(2.0)
+    eps = {1: -np.array([1.0, 1.0j, 0.0]) / s2,
+           0: np.array([0.0, 0.0, 1.0], dtype=complex),
+           -1: np.array([1.0, -1.0j, 0.0]) / s2}
+
+    def n_cw(f0, f2, cth, lam, phi=0.0):
+        sth = np.sqrt(max(0.0, 1.0 - cth * cth))
+        kh = np.array([sth * np.cos(phi), sth * np.sin(phi), cth])
+        mat = (f0 - f2 / s2) * np.eye(3) + 3.0 * (f2 / s2) * np.outer(kh, kh)
+        return float(sum(abs(eps[lam] @ mat @ np.conj(eps[ms])) ** 2
+                         for ms in (1, 0, -1)).real)
+
     for M in (1.0, 0.0, -1.0):
         for kk in k:
             for cc in c:
-                # evaluate the transcription at the nearest cell center
-                # (the module's lookup point) -> exact identity
+                # the module's lookup point: the nearest cell centre
                 ik = np.clip(np.searchsorted(model.k, kk) - 1, 0,
                              model.k.size - 2)
                 ic = np.clip(np.searchsorted(model.c, cc) - 1, 0,
                              model.c.size - 2)
-                kc, ccc = model.k[ik], model.c[ic]
-                dens = 0.0
-                for m_s in (1.0, 0.0, -1.0):
-                    amp = 0.0
-                    for w in ch.waves:
-                        m_l = M - m_s
-                        if abs(m_l) > w.l:
-                            continue
-                        amp += (rad[w.l](kc)
-                                * clebsch_gordan(w.l, m_l, 1.0, m_s, 1.0, M)
-                                * tagged.theta_lm(w.l, int(m_l),
-                                                  np.array([ccc]))[0])
-                    dens += amp * amp
+                dens = n_cw(rad[0][ik], rad[2][ik], model.c[ic],
+                            int(M)) / (4.0 * np.pi)
                 got = model.n_of_kc(M, np.array([kk]), np.array([cc]))[0]
                 assert got == pytest.approx(dens, rel=1e-9)
+                # the phase-less sum is the SAME construction at f2 -> -f2,
+                # and it is a different number: this is the defect the
+                # retyped-CG-sum version of this test could not see
+                wrong = n_cw(rad[0][ik], -rad[2][ik], model.c[ic],
+                             int(M)) / (4.0 * np.pi)
+                if rad[2][ik] > 1e-6:
+                    assert abs(wrong - dens) > 1e-3 * abs(dens)
 
 
 # --- 7Li: polarimetry + forward limit --------------------------------------
@@ -231,17 +257,36 @@ def test_li6_s_wave_reduces_to_inclusive_deuteron():
 
 
 def test_deuteron_tagged_azz_wf_shape(deut):
-    """S/D interference: A_zz^wf(k, theta=90deg) vanishes at k -> 0 (D-wave
-    threshold), grows to O(1) in the 0.25-0.5 GeV/c region."""
+    """S/D interference on the toy deuteron: A_zz^wf(theta_k = 90 deg) is
+    POSITIVE where f2/f0 > 0, vanishes at k -> 0 (D-wave threshold) and
+    grows monotonically to O(1) through the 0.25-0.5 GeV/c region.
+
+    The sign is the physics; the monotonicity is a property of THIS toy.
+    At theta_k = 90 degrees A_zz^wf is CW's quadratic form Q(f2/f0) itself
+    (Eq. 6.12 at 1 - 3cos^2 = 1), which is monotone on 0 <= f2/f0 <= sqrt2
+    and reaches +1 only at sqrt2 -- a ratio this node-free Hulthen pair
+    never attains (max 1.287, at the grid edge) -- so the curve is monotone
+    in k here only because this pair's f2/f0 is.  It is not a general
+    statement: the toy 6Li pair turns over past its sqrt2 crossing at
+    0.744 GeV/c.  The familiar PEAK near 300 MeV/c is not a property of
+    this toy either: it is an AV18 feature, the S-wave node that sends
+    f2/f0 through sqrt2 at k = 0.2988 GeV/c and puts the 90-degree
+    maximum at 0.297, and it is pinned where it belongs, on the real
+    wave function, in test_cosyn_weiss_table_ii_on_av18.  Before
+    2026-09-15 this test pinned a peak at 0.2-0.45 GeV/c which the
+    phase-less code produced by hitting Eq. (6.14)'s MINIMUM at
+    f2/f0 = -1/sqrt2 there -- the right k for the wrong reason, and with
+    |A_zz| in place of A_zz it could not see the sign.
+    """
     ic = np.argmin(np.abs(deut.c))  # cos theta ~ 0
     n = {m: deut.n_of_kc(m)[:, ic] for m in (1.0, 0.0, -1.0)}
     a = (n[1.0] + n[-1.0] - 2 * n[0.0]) / (n[1.0] + n[-1.0] + n[0.0])
     k = deut.k
-    assert abs(a[k < 0.02].max()) < 0.02          # threshold suppression
-    # O(1) asymmetry peaking near 300 MeV/c (CW mechanism); peak location
-    peak = k[np.argmax(np.abs(a))]
+    assert a.min() >= 0.0                          # sign: f2/f0 >= 0 here
+    assert abs(a[k < 0.02].max()) < 0.02           # threshold suppression
+    assert np.diff(a).min() > 0.0                  # monotone in k
     assert np.abs(a[(k > 0.25) & (k < 0.5)]).max() > 0.45
-    assert 0.2 < peak < 0.45
+    assert a.max() < 1.0                           # CW Eq. (6.13) ceiling
     # k-integrated over all angles the wf tensor asymmetry vanishes
     # (L-orthogonality; midpoint-rule residual ~ dc^2) -- the observable
     # lives in the angular structure
@@ -494,9 +539,17 @@ def test_acceptance_weighted_curve_reduces_to_the_90_degree_curve(li6):
     eps_tag = tagged.acceptance_weights(li6, cfg, ff.tagging_optics(cfg))
     a_yr = tagged.azz_tensor_curve(li6, weights=eps_yr)[j]
     a_tag = tagged.azz_tensor_curve(li6, weights=eps_tag)[j]
-    assert ref[j] < -0.4                      # the 90 degree curve
-    assert a_yr > +0.4                        # longitudinal acceptance
-    assert -0.2 < a_tag < 0.0                 # transverse near-beam tail
+    # signs measured on the corrected wave function (2026-09-15): the
+    # 90 degree curve is +0.897 here, the longitudinal Yellow Report
+    # acceptance folds it to -0.953 and the transverse near-beam tail of
+    # the tagging optics to +0.158.  Before the i^L phase was restored
+    # these three read -0.482, +0.522 and -0.087; the STRUCTURE the test
+    # exists for -- opposite sign to the 90 degree curve at the Yellow
+    # Report optics, same sign and much smaller at the tagging optics --
+    # is what survived, and it is what is asserted.
+    assert ref[j] > +0.4                      # the 90 degree curve
+    assert a_yr < -0.4                        # longitudinal acceptance
+    assert 0.0 < a_tag < +0.4                 # transverse near-beam tail
     # eps is a probability, and the near-beam tail the tagging optics opens
     # is the transverse half of the sphere
     assert eps_tag.min() >= 0.0 and eps_tag.max() <= 1.0
@@ -729,64 +782,181 @@ def test_li6_b1_rank2_transfer_constant_is_pinned_to_the_model(li6):
     # what the money plot multiplies the deuteron b1 by, signal and error
     # now on the same per-nucleon footing as delta_models' dilution = 1/3
     assert polarized.b1_li6_from_deuteron(1.0) == pytest.approx(
-        0.921947 / 3.0, abs=1e-6)
+        0.921949 / 3.0, abs=1e-6)
     assert polarized.b1_li6_from_deuteron(
         1.0, polarized.LI6_B1_LEGACY_TRANSFER, 1.0) == pytest.approx(0.87)
 
 
 def test_cosyn_weiss_tensor_gate():
-    """plans/05 §5.4, deuteron limit of tagged mode, quantitatively.
+    """plans/05 SS5.4, deuteron limit of tagged mode, as an IDENTITY.
 
     Cosyn-Weiss II (arXiv:2603.23700) page 35 gives the closed form its
-    FIG. 13 only illustrates.  Their Eq. (6.12) is a ratio of quadratic
-    forms in the S- and D-wave radials times an angular factor
-    (1 - 3 cos^2 theta_k) = -2 P2(cos theta_k); the ratio "takes values in
-    [-2, 1]", the quadratic form peaks at +1 where f2/f0 = sqrt(2)
-    (Eq. 6.13), which for AV18 is k = 0.30 GeV, and the angular factor runs
-    from +1 at theta_k = pi/2 to -2 at theta_k = 0, pi.  TABLE II lists the
-    extremal settings (A_T|| = -2 at k = 0.3 GeV, theta_k = 0; +1 at
-    k = 0.3 GeV, theta_k = pi/2).
+    FIG. 13 only illustrates.  Their Eq. (6.12),
 
-    Our `azz_tensor_curve` computes A_zz^wf = (n_+1 + n_-1 - 2 n_0) /
-    (n_+1 + n_-1 + n_0) in c.m. variables, which maps onto theirs as
-    A_T|| = -2 A_zz^wf.  This gate is the quantitative version of the
-    plans/05 row that used to read "met qualitatively"; no digitization is
-    needed, because the paper states the analytic result."""
-    m = tagged.TaggedModel(tagged.deuteron_channel())
-    p2 = 0.5 * (3.0 * m.c ** 2 - 1.0)
+      A_T|| = (2 f0 + f2/sqrt2)(f2/sqrt2)/(f0^2 + f2^2) x (1 - 3cos^2 th_k),
 
-    # (a) the P2(cos theta_k) angular factor, exactly: A_zz^wf / P2 is
-    #     independent of the angle bin at fixed k.  Cells within 1e-3 of
-    #     the P2 zero at cos theta_k = 1/sqrt(3) are excluded, where the
-    #     ratio is unbounded and says nothing; the report and the manual
-    #     state the exclusion rather than claiming the full range.
+    is a statement about the spin algebra alone: it holds for ANY pair of
+    radial functions, so this module's A_zz^wf must equal it to double
+    precision on the whole (k, cos theta_k) grid, with f0, f2 the
+    channel's own normalized S- and D-wave tables and the mapping
+    A_T|| = +1 x A_zz^wf.  Eqs. (6.13)/(6.14) bound the quadratic form by
+    +1 (at f2/f0 = +sqrt2) and -1/2 (at -1/sqrt2), so with the angular
+    factor in [-2, +1] the whole curve lies in CW's stated [-2, 1].
+
+    What the version of this gate retired on 2026-09-15 got wrong, twice.
+    (i) It mapped A_T|| = -2 A_zz^wf; the -2 is the value of CW's angular
+    factor at theta_k = 0, which A_zz^wf already carries, so the map
+    double-counted it (the correct coefficient is +1, exactly, at every
+    angle).  (ii) It read the toy deuteron's |f2/f0| = 1/sqrt2 at
+    k = 0.3098 GeV/c -- Eq. (6.14)'s MINIMUM -- as Eq. (6.13)'s maximum at
+    +sqrt2, a ratio this Hulthen pair never reaches (its f2/f0 tops out at
+    1.287 on the grid), and so certified the phase-less code's M = 0 axial
+    node as CW's M = +-1 node.  CW's TABLE II is an AV18 result and is
+    pinned on AV18, in test_cosyn_weiss_table_ii_on_av18.
+    """
+    s2 = np.sqrt(2.0)
+    for ch in (tagged.deuteron_channel(), tagged.li6_alpha_channel()):
+        m = tagged.TaggedModel(ch)
+        f0 = m._rad[0][:, None]
+        f2 = m._rad[2][:, None]
+        cw = ((2.0 * f0 + f2 / s2) * (f2 / s2) / (f0 ** 2 + f2 ** 2)
+              * (1.0 - 3.0 * m.c[None, :] ** 2))
+        got = np.stack([tagged.azz_tensor_curve(m, ic)
+                        for ic in range(m.c.size)], axis=1)
+
+        # (a) the identity itself, everywhere on the grid.  Measured
+        #     residual 8.9e-16 (deuteron) and 1.1e-15 (6Li)
+        assert np.abs(got - cw).max() < 1e-12
+
+        # (b) the mapping is A_T|| = +1 x A_zz^wf, so CW's own range is
+        #     the range of A_zz^wf: [-1.9319, +0.9966] for the deuteron
+        #     pair and [-1.9378, +0.9997] for the alpha-d one -- both
+        #     inside [-2, 1], neither attaining it
+        a_par = got                                    # the +1 mapping
+        assert a_par.min() > -2.0 and a_par.max() < 1.0
+        assert a_par.min() < -1.9 and a_par.max() > 0.99
+
+        # (c) the (1 - 3 cos^2 theta_k) factorization: A_zz^wf / P2 is
+        #     independent of the angle bin at fixed k.  Cells within 1e-3
+        #     of the P2 zero at cos theta_k = 1/sqrt(3) are excluded,
+        #     where the ratio is unbounded and says nothing
+        p2 = 0.5 * (3.0 * m.c ** 2 - 1.0)
+        keep = np.abs(p2) > 1e-3
+        ratios = got[:, keep] / p2[None, keep]
+        spread = ratios.max(axis=1) - ratios.min(axis=1)
+        assert spread.max() < 1e-10                    # measured 6.0e-14
+        # and the factorization is -2 Q(k), Q the quadratic form
+        q = (2.0 * m._rad[0] + m._rad[2] / s2) * (m._rad[2] / s2) \
+            / (m._rad[0] ** 2 + m._rad[2] ** 2)
+        np.testing.assert_allclose(ratios.mean(axis=1), -2.0 * q,
+                                   atol=1e-12)
+        # Eq. (6.13)'s ceiling Q <= 1 is ATTAINED at f2/f0 = sqrt2, which
+        # the toy 6Li pair crosses at k = 0.744 GeV/c: q.max = 1 - 4.5e-8
+        # there, and only because no grid cell lands on the crossing.  The
+        # bound is <=, not <
+        assert q.min() >= 0.0 and q.max() <= 1.0 + 1e-12
+
+    # (d) the honest statement about these toy radials: the deuteron pair
+    #     never reaches CW's f2/f0 = sqrt2, so it cannot produce TABLE II;
+    #     the alpha-d pair does, at k = 0.743 GeV/c, far above the tagged
+    #     window.  Both are node-free Hulthen-type forms, which is why
+    #     neither has AV18's f2/f0 -> sqrt2 crossing at 0.30 GeV/c
+    d = tagged.TaggedModel(tagged.deuteron_channel())
+    rd = d._rad[2] / d._rad[0]
+    assert rd.max() == pytest.approx(1.2866, abs=1e-3)
+    assert d.k[int(np.argmax(rd))] == pytest.approx(d.k[-1], abs=1e-9)
+    assert rd.max() < s2
+    li6m = tagged.TaggedModel(tagged.li6_alpha_channel())
+    r6 = li6m._rad[2] / li6m._rad[0]
+    i = int(np.flatnonzero(np.diff(np.sign(r6 - s2)))[0])
+    k_cross = li6m.k[i] + ((s2 - r6[i]) * (li6m.k[i + 1] - li6m.k[i])
+                           / (r6[i + 1] - r6[i]))
+    assert k_cross == pytest.approx(0.743, abs=5e-3)
+
+
+def test_cosyn_weiss_table_ii_on_av18():
+    """CW TABLE II, on the Argonne v18 deuteron rather than on a toy.
+
+    `tagged.av18_deuteron_channel()` is the same spin structure as the
+    deuteron control with the tabulated AV18 u(k), w(k) in place of the
+    Hulthen forms (`polli_fastsim/data/av18/fdeut.av18`, provenance in
+    `data/SOURCES.md`).  It is the only channel here that can reproduce
+    the paper's numbers, because they are AV18 numbers: their f2/f0 passes
+    +sqrt2 at k = 0.30 GeV, where CW note "the polarized neutron
+    distributions have a node", and -1/sqrt2 near 1 GeV.
+
+    Cell-centre caveat: the grid's outermost cos theta_k cell is 0.9896,
+    not 1, so the theta_k = 0 row reads -1.937 rather than -2: the angular
+    factor is 1 - 3 cos^2 th_k = -2 P2(0.9896) = -1.9378, not the -2 it
+    takes on the axis.  The exact -2 is recovered through the P2
+    factorization pinned in test_cosyn_weiss_tensor_gate, and directly by
+    the fine-angle grid below (-1.998 at |cos theta_k| = 0.99975).
+    """
+    m = tagged.TaggedModel(tagged.av18_deuteron_channel())
+    s2 = np.sqrt(2.0)
+    ratio = m._rad[2] / m._rad[0]
+    ic0 = int(np.argmax(np.abs(m.c)))          # nearest cell to theta_k = 0
+    ic90 = int(np.argmin(np.abs(m.c)))         # nearest cell to 90 degrees
+    assert abs(m.c[ic0]) == pytest.approx(0.9896, abs=1e-3)
+
+    # row 1 and 2 of TABLE II: k = 0.3 GeV, f2/f0 = sqrt2, A_T|| = -2 at
+    # theta_k = 0 and +1 at theta_k = pi/2 (mapping A_T|| = +1 A_zz^wf)
     ik = int(np.argmin(np.abs(m.k - 0.30)))
     assert m.k[ik] == pytest.approx(0.3012, abs=5e-4)
-    ratios = np.array([tagged.azz_tensor_curve(m, ic)[ik] / p2[ic]
-                       for ic in range(m.c.size) if abs(p2[ic]) > 1e-3])
-    assert ratios.max() - ratios.min() < 1e-5
-    assert ratios.mean() == pytest.approx(0.99940, abs=1e-4)
+    a0 = tagged.azz_tensor_curve(m, ic0)[ik]
+    a90 = tagged.azz_tensor_curve(m, ic90)[ik]
+    assert a0 == pytest.approx(-1.937, abs=3e-3)        # CW: -2
+    assert abs(a0 - (-2.0)) < 0.07                      # the cell centre
+    assert a90 == pytest.approx(+1.0, abs=3e-3)         # CW: +1
 
-    # (b) the k-envelope: the quadratic form reaches its maximum 1 at
-    #     f2/f0 = sqrt(2), which CW put at k = 0.30 GeV for AV18
-    ic0 = int(np.argmax(np.abs(m.c)))               # nearest cell to theta=0
-    envelope = tagged.azz_tensor_curve(m, ic0) / p2[ic0]
-    j = int(np.argmax(envelope))
-    assert envelope[j] == pytest.approx(1.0, abs=1e-3)
-    assert m.k[j] == pytest.approx(0.3098, abs=5e-4)
-    assert m.k[j] == pytest.approx(0.30, abs=0.02)  # against CW's 0.30 GeV
+    # the f2/f0 = sqrt2 crossing that puts CW's landmark at 0.30 GeV
+    i = int(np.flatnonzero(np.diff(np.sign(ratio - s2)))[0])
+    k_cross = m.k[i] + ((s2 - ratio[i]) * (m.k[i + 1] - m.k[i])
+                        / (ratio[i + 1] - ratio[i]))
+    assert k_cross == pytest.approx(0.299, abs=5e-3)
 
-    # (c) A_T|| = -2 A_zz^wf against CW TABLE II's +1 and -2.  The grid's
-    #     outermost cos theta_k cell is 0.9896, not 1, so the exact extremes
-    #     are recovered through the P2 factorization pinned in (a).
-    ic90 = int(np.argmin(np.abs(m.c)))
-    a_par_90 = -2.0 * tagged.azz_tensor_curve(m, ic90)[j]
-    a_par_0 = -2.0 * tagged.azz_tensor_curve(m, ic0)[j]
-    assert a_par_90 == pytest.approx(0.9997, abs=1e-3)     # CW: +1
-    assert a_par_0 == pytest.approx(-1.9378, abs=2e-3)     # cell centre
-    assert -2.0 * envelope[j] * 1.0 == pytest.approx(-2.0, abs=3e-3)
-    assert -2.0 * envelope[j] * (-0.5) == pytest.approx(1.0, abs=3e-3)
-    # and the whole curve stays inside CW's stated range [-2, 1]
-    for ic in range(m.c.size):
-        a = -2.0 * tagged.azz_tensor_curve(m, ic)
-        assert np.nanmin(a) > -2.001 and np.nanmax(a) < 1.001
+    # the node is in n_{+-1} ALONG THE SPIN AXIS, not in n_0: that is the
+    # convention-free content of TABLE II and the reason the i^L phase
+    # matters.  Resolved on a fine cos theta_k grid, where the outermost
+    # cell is 0.99975 and the off-axis leakage no longer masks the zero
+    fine = tagged.TaggedModel(tagged.av18_deuteron_channel(), nc=4001)
+    jf = int(np.argmin(np.abs(fine._rad[2] / fine._rad[0] - s2)))
+    icf = int(np.argmax(np.abs(fine.c)))
+    n1 = fine.n_of_kc(1.0)[:, icf]
+    n0 = fine.n_of_kc(0.0)[:, icf]
+    assert fine.k[jf] == pytest.approx(0.2968, abs=5e-3)
+    assert n1[jf] / n0[jf] < 1e-3                       # measured 2.7e-4
+    for k_off in (0.2, 0.4):                            # a node, not smallness
+        j = int(np.argmin(np.abs(fine.k - k_off)))
+        assert n1[j] / n0[j] > 0.15
+    assert tagged.azz_tensor_curve(fine, icf)[jf] == pytest.approx(
+        -2.0, abs=3e-3)                                 # -1.9984 measured
+
+    # row 3: k = 1 GeV, theta_k = 0, f2/f0 = -1/sqrt2 -> A_T|| = +1.  CW
+    # call this row "not presumed to be a realistic prediction"; it pins
+    # the OTHER extremum of the quadratic form, Eq. (6.14)
+    j1 = int(np.argmin(np.abs(m.k - 1.0)))
+    assert m.k[j1] == pytest.approx(0.9979, abs=5e-4)
+    assert tagged.azz_tensor_curve(m, ic0)[j1] == pytest.approx(
+        +0.967, abs=0.01)
+    i2 = int(np.flatnonzero(np.diff(np.sign(ratio + 1.0 / s2)))[-1])
+    k2 = m.k[i2] + ((-1.0 / s2 - ratio[i2]) * (m.k[i2 + 1] - m.k[i2])
+                    / (ratio[i2 + 1] - ratio[i2]))
+    assert k2 == pytest.approx(1.03, abs=0.01)
+
+
+def test_mixed_parity_channel_is_rejected():
+    """The i^L phase `_amp2_table` applies is real only while every wave
+    of a channel has the same L parity; mix L = 0 with L = 1 and i^1 = i
+    makes the amplitude complex, which this module's real arrays cannot
+    carry.  Parity forbids the mixture for a state of good parity anyway,
+    so the guard is against a mis-specified channel."""
+    with pytest.raises(ValueError) as err:
+        tagged.TaggedChannel(spectator.LI6_ALPHA_TAG, 1.0, 1.0, 0.0, 1.0,
+                             (tagged.Wave(0, 0.6), tagged.Wave(1, 0.4)),
+                             beams.DEUTERON, "mixed parity")
+    assert "L mod 2" in str(err.value)
+    # the shipped channels are all single-parity and still build
+    for ch in (tagged.li6_alpha_channel(), tagged.li7_alpha_channel(),
+               tagged.deuteron_channel(), tagged.av18_deuteron_channel()):
+        assert len({w.l % 2 for w in ch.waves}) == 1

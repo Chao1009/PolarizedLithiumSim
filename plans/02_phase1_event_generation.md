@@ -162,7 +162,7 @@ below — and the Wang gluon-spin curves are the remainder.*
    `b1_cdks_q2p5.csv` from PRD 95:074036 Fig. 4 theory-1 SD+DD, plus the two
    Q² sets), and they are now ABSOLUTE b₁ rather than a shape times F₁, so
    `toy_b1`/`b1_convolution` ignore the F₁ they are handed (`mode='toy'`
-   restores the shapes).  The ⅓·P_d rescaling became ⅓ × 0.921947 = 0.3073:
+   restores the shapes).  The ⅓·P_d rescaling became ⅓ × 0.921947 = 0.3073 (*2026-09-15*: 0.921949 since run 19's i^L phase fix; the 0.3073 is unchanged):
    the rank-2 tensor transfer, not the vector 0.87 (plans/08 D9).  The two
    camps are no longer a factor ten apart — Miller reaches 11σ per bin at
    x ≈ 0.07 while CDKS stays under 0.2σ everywhere.*

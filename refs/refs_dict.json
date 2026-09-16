@@ -430,8 +430,9 @@
     "7Li"
    ],
    "key_content": [
-    "Intact-recoil tagging efficiency x acceptance at the IR-8 secondary focus: d 47%, 3He 32%, 4He 29%, 7Li 17.8% (17.75%) at top energies; NO 6Li entry (the repo's ~20% is an interpolation, repo-verified).",
-    "Verbatim (repo-verified 2026-08-25 from the PDF): the coherent-VM intact-nucleus detection efficiency at IR-8 'from deuterium (2D) to oxygen (16O) is 47.12%, 32.23%, 29.42%, 17.75%, 12.37%, 6.36%, 1.59%' for 2D, 3He, 4He, 7Li, 9Be, 12C, 16O at top energies (eSTARlight e + A -> e' + A' + VM, VM = J/psi, phi, rho); no 6Li sample in the paper."
+    "ACCEPTANCE-ONLY intact-recoil tagging at the IR-8 secondary focus: d 47%, 3He 32%, 4He 29%, 7Li 17.8% (17.75%) at top energies; NO 6Li entry (the repo's ~20% is an interpolation, repo-verified). The paper labels these 'detection efficiency', but Sec. IV (Event Generator) says the simulation accounts for acceptance only, so each number is an UPPER BOUND on efficiency x acceptance, not the product.",
+    "Verbatim (repo-verified 2026-08-25 from the PDF): the coherent-VM intact-nucleus detection efficiency at IR-8 'from deuterium (2D) to oxygen (16O) is 47.12%, 32.23%, 29.42%, 17.75%, 12.37%, 6.36%, 1.59%' for 2D, 3He, 4He, 7Li, 9Be, 12C, 16O at top energies (eSTARlight e + A -> e' + A' + VM, VM = J/psi, phi, rho); no 6Li sample in the paper.",
+    "Verbatim caveat (repo-verified 2026-09-15 from the PDF, Sec. IV, Event Generator): 'The current simulation only accounts for the acceptance effect and does not incorporate the efficiencies of the detector. Additionally, we did not account for the efficiency and acceptance of the reconstructed distribution, which is to showcase our detection performance at its detector level form.' Every percentage above is therefore acceptance only."
    ],
    "used_in": [
     "plans/06",

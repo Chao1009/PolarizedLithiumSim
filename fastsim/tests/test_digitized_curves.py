@@ -316,7 +316,7 @@ def test_close_kumano_integral_is_reported():
 
 def test_b1_li6_transfer_constants():
     """rank-2 x 2/6 by default; the legacy pair reproduces the old curve."""
-    assert P.LI6_B1_RANK2_TRANSFER == pytest.approx(0.921947, abs=1e-6)
+    assert P.LI6_B1_RANK2_TRANSFER == pytest.approx(0.921949, abs=1e-6)
     assert P.LI6_B1_PER_NUCLEON == pytest.approx(1.0 / 3.0)
     assert P.b1_li6_from_deuteron(1.0) == pytest.approx(0.307316, abs=1e-6)
     assert P.b1_li6_from_deuteron(3.0, P.LI6_B1_LEGACY_TRANSFER,

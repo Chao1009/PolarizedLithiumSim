@@ -179,6 +179,16 @@ Layout: `evgen/polligen/{spin,xsec,tagged,sample,bookkeeping,reweight,io_hepmc,h
      factor 3.3. The 2026-08-26 e+d control also showed that no β in a two-parameter
      Hulthén reproduces BeAGLE's tail, so the band needs restating as one-sided
      upward rather than as a bracket.*
+     *2026-09-15: the VMC upgrade now also carries a sign. Since `tagged.py`
+     applies the i^L phase of the partial-wave expansion (plans/00 run 19), the
+     sign of every tagged ⁶Li A_zz follows sign(ψ₂/ψ₀) of the α–d D radial,
+     which the two-parameter form cannot predict; the model takes it
+     deuteron-like, and the sibling generator's VMC α+d overlap supports that
+     over 0.134–0.444 GeV/c only — it reads −1 below the α–d S node at
+     0.134 and −1 again above the α–d D node at 0.444, two reversals a
+     node-free Hulthén form cannot carry, with 27 / 21 / 26 % of the
+     Yellow-Report-accepted sample above the upper node and 41 / 28 / 37 %
+     of the tagging-optics sample below the lower one. plans/04 #15.*
    - FSI: not modeled at first (IA). Quote tagged asymmetries at low
      spectator virtuality / small |t′| where pole dominance holds
      (Cosyn–Weiss FSI: PRC 97:035209); flag α-spectator FSI as a theory
@@ -220,14 +230,24 @@ deuteron control), not "the four Li channels + deuteron/³He controls" — the �
 ⁷Li t and ³He p tags have no `TaggedChannel`.  The §5.4 deuteron-limit gate is
 now met quantitatively and needed no digitization: Cosyn–Weiss II page 35 gives
 the closed form (their Eq. 6.12) that FIG. 13 only illustrates, and
-`tests/test_tagged.py::test_cosyn_weiss_tensor_gate` pins our model against it —
-A_zz^wf/P₂(cos θ_k) is independent of the angle bin at fixed k to five digits
-(0.99940 at k = 0.3012 GeV), the k-envelope of the radial quadratic form peaks
-at 1.000 at k = 0.3098 GeV against their f₂/f₀ = √2 at k = 0.30 GeV (AV18), and
-under the normalization map A_T∥ = −2 A_zz^wf the extremes are +0.9997 at
-θ_k = π/2 and, extrapolated to θ_k = 0 through the pinned P₂ factorization,
-−2.000, against their TABLE II's +1 and −2.  That map is also why Report 4's
-−0.48 on the 90° curve is CW's +0.96 and not a disagreement.*
+`tests/test_tagged.py::test_cosyn_weiss_tensor_gate` pins our model against it.
+**Restated 2026-09-15** (plans/00 run 19): the gate is now the identity itself,
+not a five-digit ratio.  With the channel's own radial tables as (f₀, f₂),
+max |A_zz^wf − Eq. (6.12)| is 8.9e-16 on the deuteron control and 1.1e-15 on
+⁶Li over the whole (k, cos θ_k) grid, and the (1 − 3cos²θ_k) factorization holds
+to 6.0e-14; the normalization map is **A_T∥ = +1 × A_zz^wf**, because CW's
+factor −2 is the angular factor at θ_k = 0 that A_zz^wf already carries.  The
+old −2 map goes, and with it the sentence that Report 4's −0.48 on the 90°
+curve "is CW's +0.96": on the corrected wave function that curve reads +0.92.
+So does the claimed envelope peak at k = 0.3098 GeV — that is where the toy
+|f₂/f₀| = 1/√2, i.e. Eq. (6.14)'s *minimum*, on a Hulthén deuteron whose f₂/f₀
+never reaches √2 at all (max 1.2866 at the k = 1.2 GeV/c grid edge).  TABLE II
+is instead pinned where it can be met, on the AV18 deuteron
+(`tagged.av18_deuteron_channel()`, `test_cosyn_weiss_table_ii_on_av18`):
+A_zz^wf = −1.937 at the cell nearest θ_k = 0 and −1.998 on a fine near-axis grid
+where n_{±1} has its node, +0.999 at θ_k = 90°, both at the f₂/f₀ = √2 crossing
+k = 0.298 GeV/c (CW: "k = 0.30 GeV"), and +0.967 at k = 1.0 GeV/c with the
+f₂/f₀ = −1/√2 crossing at 1.03 GeV/c.*
 - **Money plot 4:** tagged tensor asymmetry A_zz^tag(p_s) for the α-tagged
   embedded deuteron in ⁶Li, folded with `farforward.py` acceptance and both
   optics — *first tagged spin observable for any A > 2* (extends the
@@ -243,17 +263,18 @@ under the normalization map A_T∥ = −2 A_zz^wf the extremes are +0.9997 at
   rectangular envelope; without that azimuth the tagging optics read 0.51
   against the 0.30 with it, on the levers in force when the omission was
   found (2026-08-28). The answer to the plan's question is **yes, and at the
-  published optics only there**: the α tag is 0.0247 at the Yellow Report
-  optics against 0.2545 at the tagging optics — at L/L_HA = 1/12.8 a 19%
-  cost in tagged events per year here, and a 1.8× / 1.2× *gain* at the
+  published optics only there**: the α tag is 0.0241 at the Yellow Report
+  optics against 0.2542 at the tagging optics — at L/L_HA = 1/12.8 an 18%
+  cost in tagged events per year here, and a 1.8× / 1.3× *gain* at the
   other two configurations — but the median accepted spectator momentum is
   0.32 GeV/c with nothing below k = 0.15 GeV/c, against 0.18 GeV/c with
   36% below it. The tagging optics turns a one-point measurement into a
   curve. Two by-products. The overlay was wrong: an analytic curve at
   θ_k = 90° drawn over a sample the acceptance sculpts to
-  ⟨|cos θ_k|⟩ = 0.80 (the off-rigidity slice, longitudinal) or 0.39 (the
-  near-beam tail, transverse), so its ±0.5 swing between the two optics at
-  k ≈ 0.3 GeV/c was the envelope; the right panel now carries the
+  ⟨|cos θ_k|⟩ = 0.797 (the off-rigidity slice, longitudinal) or 0.395 (the
+  near-beam tail, transverse), so the swing between the two optics at
+  k ≈ 0.3 GeV/c — 1.06 wide on the corrected wave function, ±0.5 on the
+  figure as it stood then — was the envelope; the right panel now carries the
   acceptance-weighted truth per optics, which tracks the markers to 1–2σ,
   with the 90° curve kept as a labelled reference. And the two k spectra
   are reconciled: `tagged.TaggedSampler`'s ⟨k⟩ = 0.122 GeV and 2.5% below
@@ -262,6 +283,17 @@ under the normalization map A_T∥ = −2 A_zz^wf the extremes are +0.9997 at
   identical, the D wave has ⟨k⟩ = 0.278 GeV and P_D = 0.0867 — and since
   A_zz^tag vanishes identically at P_D = 0, the tagged observables must be
   quoted on the S + D spectrum and the acceptance table on the S-wave one.*
+  *2026-09-15 (plans/00 run 19): the numbers above are the corrected ones.
+  `TaggedModel._amp2_table` summed the partial waves without the i^L phase, so
+  the α–d S/D interference carried the wrong relative sign, and every A_zz of
+  this figure flipped with it: at k = 0.325 GeV/c the folded markers now read
+  −0.843 (acceptance-weighted truth −0.871) at the Yellow Report optics and
+  +0.215 (+0.181) at the tagging optics against the θ_k = 90° curve's +0.922,
+  where the published figure read +0.491 (+0.455), −0.066 (−0.095) and −0.482.
+  The tag acceptances moved only in the fourth digit, which is seed noise in
+  either build; the k-marginals, ⟨k⟩ = 0.122 GeV and the D-wave reconciliation
+  are exactly invariant, because the interference cancels in the angular
+  integral.  `evgen/money_tagged_azz_6Li.png` was regenerated.*
 - ⁷Li α-tag: tagged A∥ (polarized-EMC companion on the quasi-free triton)
   + the tagged-α angular-moment polarimetry curve vs P_zz.
   ☑ *2026-08-28: both panels are in `scripts/tagged_polarimetry_7li.py`
@@ -331,10 +363,10 @@ PYTHIA-backed response; 5.B is done, so what is left of the 7–9 weeks is
 | master formula, vector/tensor sectors | `asymmetries.py` | bin-wise identity (toy + grid backends) — ☑ *2026-08-28: `tests/test_xsec_identity.py`, 15 tests at rtol 1e-12, the grid half actually running on CT18NLO + NNPDFpol11_100* |
 | pseudo-experiment estimators | `fom.py` maps | δA agree within trial statistics; pulls unbiased — ☑ *2026-08-28: `tests/test_pseudoexp.py` and `scripts/closure_fom.py` (~65 x-bins per isotope); means unbiased against the σ-weighted truth, spreads within 15% of the three analytic errors* |
 | φ-modulation recovery | injected Δ scenarios | amplitude unbiased with uniform *and* holey φ acceptance — ☑ *2026-08-28: `test_cos2phi_fit_unbiased_with_holey_acceptance` removes two asymmetric φ sectors; the fit is unbiased at 5×SE while the naive moment is biased by >10×SE, so the gate is not vacuous* |
-| deuteron limit of tagged mode | Cosyn–Weiss arXiv:2603.23700 Eq. (6.12), Eqs. (6.13)–(6.14), TABLE II (p. 35) | ☑ *2026-08-28: `test_cosyn_weiss_tensor_gate`. The P₂(cos θ_k) angular factor exact to 1e-5 at fixed k (0.99940 at k = 0.3012 GeV); the radial quadratic form peaks at 1.000 at k = 0.3098 GeV against CW's 0.30 GeV for AV18; A_T∥ = −2 A_zz^wf gives +0.9997 / −2.000 against TABLE II's +1 / −2, and the whole curve stays inside their stated [−2, 1]. The FIG. 13 panels themselves are in light-front variables (α_p, p_pT) the sampler does not carry, so they are a comparison, not a gate* |
+| deuteron limit of tagged mode | Cosyn–Weiss arXiv:2603.23700 Eq. (6.12), Eqs. (6.13)–(6.14), TABLE II (p. 35) | ☑ *2026-09-15 (restates the 2026-08-28 row, which was met on the wrong normalization map): the gate is the **identity**, `test_cosyn_weiss_tensor_gate` — with the channel's own (f₀, f₂), max \|A_zz^wf − Eq. (6.12)\| = 8.9e-16 (deuteron) and 1.1e-15 (⁶Li) over the whole grid, the (1 − 3cos²θ_k) factorization to 6.0e-14, the map A_T∥ = +1 × A_zz^wf (CW's −2 is the θ_k = 0 angular factor A_zz^wf already carries), and the whole curve inside their [−2, 1], approached (< −1.9, > 0.99) but not attained on either Hulthén toy. TABLE II is a separate gate on the **AV18** deuteron, `test_cosyn_weiss_table_ii_on_av18`: −1.937 at the cell nearest θ_k = 0 (−1.998 on a fine near-axis grid, at the n_{±1} node) and +0.999 at 90°, both at the f₂/f₀ = √2 crossing k = 0.298 GeV/c against CW's 0.30, and +0.967 at k = 1.0 GeV/c. The old row's 0.99940 / 0.3098 / +0.9997 / −2.000 are retired: 0.3098 was Eq. (6.14)'s minimum read as Eq. (6.13)'s maximum on a toy whose f₂/f₀ never reaches √2. The FIG. 13 panels themselves are in light-front variables (α_p, p_pT) the sampler does not carry, so they are a comparison, not a gate* |
 | unpolarized spectator spectra | official BeAGLE e+d via `ed_control_analysis.py` | bulk agreement; tail differences documented as the model band — ☑ *2026-08-28: run on the BeAGLE 1.03.02-3.1 eH2 9×130 sample; routing agrees to better than 2 points, but no β reproduces the p_T tail, so the difference is carried as a one-sided upward band rather than the symmetric one this row assumed* |
 | forward limit of tagged ⁷Li | P_p = 0.866, P_n = −0.037 | recovered within the D-state band — ☐ *2026-08-28: only the proton half is asserted (`test_li7_triton_polarization_forward_limit`, P_p within 0.02 of 0.866); the model gives P_n = −0.028 against the gate's −0.037 and nothing tests it, and no D-state band is defined for the neutron* |
-| ⁶Li embedded-d b₁ scaling | `b1_li6_from_deuteron` (rank-2 0.921947 × 2/6) | ☑ *2026-08-28 (plans/08 D9): the transfer is `TaggedModel(li6_alpha_channel()).tensor_dilution()` itself, pinned against it and against the closed form 1 − (9/10) P_D in `test_li6_b1_rank2_transfer_constant_is_pinned_to_the_model`. The 0.87 it replaces is the VECTOR dilution 1 − (3/2) P_D, the wrong rank for b₁, and is still reachable as `--transfer legacy`* |
+| ⁶Li embedded-d b₁ scaling | `b1_li6_from_deuteron` (rank-2 0.921949 × 2/6, *2026-09-15*: 0.921947 before the i^L phase fix, which moved the model's own value 0.9219467 → 0.9219490 and no printed money_b1 number at all) | ☑ *2026-08-28 (plans/08 D9): the transfer is `TaggedModel(li6_alpha_channel()).tensor_dilution()` itself, pinned against it and against the closed form 1 − (9/10) P_D in `test_li6_b1_rank2_transfer_constant_is_pinned_to_the_model`. The 0.87 it replaces is the VECTOR dilution 1 − (3/2) P_D, the wrong rank for b₁, and is still reachable as `--transfer legacy`* |
 | conservation & chain | HepMC3 → abconv → npsim | event-by-event 4-momentum/charge; 100-event smoke passes |
 
 ## 5.5 Risks

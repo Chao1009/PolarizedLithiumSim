@@ -351,5 +351,289 @@
     "allow": [
       "sharpened"
     ]
+  },
+  {
+    "retired": "\\+0\\.491",
+    "current": "−0.843 (acceptance-weighted truth −0.871), the folded A_zz at the Yellow Report optics",
+    "since": "2026-09-15",
+    "note": "run 19 (the i^L partial-wave phase of TaggedModel._amp2_table): money plot 4's folded tensor asymmetries at k = 0.325 GeV/c; plans/09 section B2 is excluded as a whole: it is closed 'Done 2026-08-28.' at its head and its later paragraphs carry that round's numbers with no stamp of their own, and the dated 2026-09-15 note appended to it gives the corrected set",
+    "allow": [
+      "published figure read",
+      "the figure as it stood",
+      "pre-2026-09-15",
+      "Before 2026-09-15",
+      "before the i\\^L phase",
+      "where it now reads",
+      "\\(was [−+-]",
+      "\\(were [−+-]",
+      "the wave-function sign was"
+    ],
+    "except_files": [
+      "^plans/09_nearbeam_nanowire_far_forward\\.md$"
+    ]
+  },
+  {
+    "retired": "\\+0\\.455",
+    "current": "−0.871, the acceptance-weighted truth at the Yellow Report optics",
+    "since": "2026-09-15",
+    "note": "run 19 (the i^L partial-wave phase of TaggedModel._amp2_table): money plot 4's folded tensor asymmetries at k = 0.325 GeV/c; plans/09 section B2 is excluded as a whole: it is closed 'Done 2026-08-28.' at its head and its later paragraphs carry that round's numbers with no stamp of their own, and the dated 2026-09-15 note appended to it gives the corrected set",
+    "allow": [
+      "published figure read",
+      "the figure as it stood",
+      "pre-2026-09-15",
+      "Before 2026-09-15",
+      "before the i\\^L phase",
+      "where it now reads",
+      "\\(was [−+-]",
+      "\\(were [−+-]",
+      "the wave-function sign was"
+    ],
+    "except_files": [
+      "^plans/09_nearbeam_nanowire_far_forward\\.md$"
+    ]
+  },
+  {
+    "retired": "[−-]0\\.066(?![%\\d])",
+    "current": "+0.215, the folded A_zz at the tagging optics",
+    "since": "2026-09-15",
+    "note": "run 19 (the i^L partial-wave phase of TaggedModel._amp2_table): money plot 4's folded tensor asymmetries at k = 0.325 GeV/c; the pattern carries the sign so that the unrelated 0.066% of the O(gamma^2) leakage budget is not matched; plans/09 section B2 is excluded as a whole: it is closed 'Done 2026-08-28.' at its head and its later paragraphs carry that round's numbers with no stamp of their own, and the dated 2026-09-15 note appended to it gives the corrected set",
+    "allow": [
+      "published figure read",
+      "the figure as it stood",
+      "pre-2026-09-15",
+      "Before 2026-09-15",
+      "before the i\\^L phase",
+      "where it now reads",
+      "\\(was [−+-]",
+      "\\(were [−+-]",
+      "the wave-function sign was"
+    ],
+    "except_files": [
+      "^plans/09_nearbeam_nanowire_far_forward\\.md$"
+    ]
+  },
+  {
+    "retired": "[−-]0\\.095(?![%\\d])",
+    "current": "+0.181, the acceptance-weighted truth at the tagging optics",
+    "since": "2026-09-15",
+    "note": "run 19 (the i^L partial-wave phase of TaggedModel._amp2_table): money plot 4's folded tensor asymmetries at k = 0.325 GeV/c; plans/09 section B2 is excluded as a whole: it is closed 'Done 2026-08-28.' at its head and its later paragraphs carry that round's numbers with no stamp of their own, and the dated 2026-09-15 note appended to it gives the corrected set",
+    "allow": [
+      "published figure read",
+      "the figure as it stood",
+      "pre-2026-09-15",
+      "Before 2026-09-15",
+      "before the i\\^L phase",
+      "where it now reads",
+      "\\(was [−+-]",
+      "\\(were [−+-]",
+      "the wave-function sign was"
+    ],
+    "except_files": [
+      "^plans/09_nearbeam_nanowire_far_forward\\.md$"
+    ]
+  },
+  {
+    "retired": "[−-]0\\.482",
+    "current": "+0.922, the analytic theta_k = 90 degree curve at k = 0.325 GeV/c",
+    "since": "2026-09-15",
+    "note": "run 19 (the i^L partial-wave phase of TaggedModel._amp2_table): money plot 4's folded tensor asymmetries at k = 0.325 GeV/c; plans/09 section B2 is excluded as a whole: it is closed 'Done 2026-08-28.' at its head and its later paragraphs carry that round's numbers with no stamp of their own, and the dated 2026-09-15 note appended to it gives the corrected set",
+    "allow": [
+      "published figure read",
+      "the figure as it stood",
+      "pre-2026-09-15",
+      "Before 2026-09-15",
+      "before the i\\^L phase",
+      "where it now reads",
+      "\\(was [−+-]",
+      "\\(were [−+-]",
+      "the wave-function sign was"
+    ],
+    "except_files": [
+      "^plans/09_nearbeam_nanowire_far_forward\\.md$"
+    ]
+  },
+  {
+    "retired": "\\+0\\.49\\s*(?:and|/)\\s*[−-]0\\.07",
+    "current": "−0.84 and +0.22 (Report 4 section 2.1's two-digit form of the same pair)",
+    "since": "2026-09-15",
+    "note": "run 19 (the i^L partial-wave phase of TaggedModel._amp2_table): money plot 4's folded tensor asymmetries at k = 0.325 GeV/c, in the form the reports quote them; plans/09 section B2 is excluded as a whole: it is closed 'Done 2026-08-28.' at its head and its later paragraphs carry that round's numbers with no stamp of their own, and the dated 2026-09-15 note appended to it gives the corrected set",
+    "allow": [
+      "published figure read",
+      "the figure as it stood",
+      "pre-2026-09-15",
+      "Before 2026-09-15",
+      "before the i\\^L phase",
+      "where it now reads",
+      "\\(was [−+-]",
+      "\\(were [−+-]",
+      "the wave-function sign was"
+    ],
+    "except_files": [
+      "^plans/09_nearbeam_nanowire_far_forward\\.md$"
+    ]
+  },
+  {
+    "retired": "curve says [−-]0\\.48\\b",
+    "current": "the theta_k = 90 degree curve says +0.92",
+    "since": "2026-09-15",
+    "note": "run 19 (the i^L partial-wave phase of TaggedModel._amp2_table): money plot 4's folded tensor asymmetries at k = 0.325 GeV/c, in the form the reports quote them; plans/09 section B2 is excluded as a whole: it is closed 'Done 2026-08-28.' at its head and its later paragraphs carry that round's numbers with no stamp of their own, and the dated 2026-09-15 note appended to it gives the corrected set",
+    "allow": [
+      "published figure read",
+      "the figure as it stood",
+      "pre-2026-09-15",
+      "Before 2026-09-15",
+      "before the i\\^L phase",
+      "where it now reads",
+      "\\(was [−+-]",
+      "\\(were [−+-]",
+      "the wave-function sign was"
+    ],
+    "except_files": [
+      "^plans/09_nearbeam_nanowire_far_forward\\.md$"
+    ]
+  },
+  {
+    "retired": "\\+0\\.4594|[−-]0\\.0974|\\+0\\.4471|[−-]0\\.1019",
+    "current": "−0.8628 ± 0.0130 (YR) and +0.1755 ± 0.0070 (tagging) in the k = 0.325 bin at 8e6 events, against the weighted truths −0.8711 and +0.1811; −0.8558 / +0.1778 with the toy b1 shape",
+    "since": "2026-09-15",
+    "note": "run 19: the 8e6-event closure pair of money plot 4 moved with the same phase; plans/09 section B2 is excluded as a whole: it is closed 'Done 2026-08-28.' at its head and its later paragraphs carry that round's numbers with no stamp of their own, and the dated 2026-09-15 note appended to it gives the corrected set",
+    "allow": [
+      "published figure read",
+      "the figure as it stood",
+      "pre-2026-09-15",
+      "Before 2026-09-15",
+      "before the i\\^L phase",
+      "where it now reads",
+      "\\(was [−+-]",
+      "\\(were [−+-]",
+      "the wave-function sign was"
+    ],
+    "except_files": [
+      "^plans/09_nearbeam_nanowire_far_forward\\.md$"
+    ]
+  },
+  {
+    "retired": "0\\.99940",
+    "current": "the identity itself: max |A_zz^wf − Cosyn-Weiss Eq. (6.12)| = 8.9e-16 (deuteron control) and 1.1e-15 (6Li) over the whole grid",
+    "since": "2026-09-15",
+    "note": "run 19: test_cosyn_weiss_tensor_gate became an identity gate; the five-digit ratio was a value of the retired −2 map; the allow list lets a live row name the quartet as retired, which plans/05's validation matrix does",
+    "allow": [
+      "old row's",
+      "are retired",
+      "The old row"
+    ]
+  },
+  {
+    "retired": "0\\.3098",
+    "current": "0.3098 GeV/c is where the toy |f2/f0| = 1/sqrt2, i.e. Eq. (6.14)'s MINIMUM, not an envelope peak; AV18's f2/f0 = sqrt2 crossing is at 0.298 GeV/c",
+    "since": "2026-09-15",
+    "note": "run 19: the retired gate read Eq. (6.14)'s minimum as Eq. (6.13)'s maximum on a Hulthen deuteron whose f2/f0 never reaches sqrt2 (max 1.2866 at the grid edge)",
+    "allow": [
+      "Eq\\. \\(6\\.14\\)",
+      "minimum",
+      "1/√2",
+      "1/sqrt2"
+    ]
+  },
+  {
+    "retired": "A_T[∥‖|]\\s*=\\s*[−-]\\s*2\\s*A_zz|[−-]\\s*2\\s*A_zz\\^?\\s*wf",
+    "current": "A_T∥ = +1 × A_zz^wf",
+    "since": "2026-09-15",
+    "note": "run 19: CW's −2 is the value of their angular factor at theta_k = 0, which A_zz^wf already carries, so the −2 map double-counted it",
+    "allow": [
+      "old −2 map",
+      "double-count"
+    ]
+  },
+  {
+    "retired": "extremes(?: are)?\\s*\\+0\\.99967|\\+0\\.99967\\s*(?:and|/)\\s*[−-]1\\.93782|[−-]1\\.93782\\s*(?:and|/)\\s*\\+0\\.99967",
+    "current": "under the +1 map these two are the 6Li toy's own A_zz^wf range, [−1.93782, +0.99967] at the k = 1.2 GeV/c grid edge (the deuteron pair's is [−1.93188, +0.99661]), not A_T∥ extremes",
+    "since": "2026-09-15",
+    "note": "run 19: the numbers survive, the quantity they belong to does not — the pattern is scoped to the A_T∥-extremes wording so the new A_zz^wf range may quote them; the allow list lets a live sentence name the pair while retiring the quantity, as the manual's Cosyn-Weiss section does",
+    "allow": [
+      "are retired",
+      "old row",
+      "before the i\\^L phase",
+      "pre-2026-09-15"
+    ]
+  },
+  {
+    "retired": "\\+1\\.000\\s*(?:and|/)\\s*[−-]2\\.000|\\+0\\.9997\\s*/\\s*[−-]2\\.000",
+    "current": "inside [−2, 1], approached but not attained on either toy; attained on AV18 (−1.998 near the axis and +0.999 at 90 degrees, at the f2/f0 = sqrt2 crossing)",
+    "since": "2026-09-15",
+    "note": "run 19: the extrapolation to CW's TABLE II was an artefact of the retired −2 map; TABLE II is now pinned on the tabulated AV18 deuteron; the allow list lets a live row name the quartet as retired, which plans/05's validation matrix does",
+    "allow": [
+      "old row's",
+      "are retired",
+      "The old row"
+    ]
+  },
+  {
+    "retired": "0\\.1113\\s*/\\s*0\\.1333\\s*/\\s*0\\.1505",
+    "current": "⟨k⟩ = 0.2362 / 0.3059 / 0.3717 GeV/c at beta = 0.20 / 0.30 / 0.40",
+    "since": "2026-09-15",
+    "note": "run 19 (LiPolGen reconciliation B1): the published 7Li beta-band moments are the S-wave (Hulthen) density evaluated for a channel the code gives l_wave=1; the P-wave form is what spectator.momentum_density(..., l_wave=1) and tagged.li7_alpha_channel use",
+    "allow": [
+      "circulated before that date",
+      "Corrected 2026-09-15"
+    ]
+  },
+  {
+    "retired": "0\\.0231\\s*/\\s*0\\.0522\\s*/\\s*0\\.0836",
+    "current": "P(k > 0.3 GeV/c) = 0.2209 / 0.3630 / 0.4803 at beta = 0.20 / 0.30 / 0.40",
+    "since": "2026-09-15",
+    "note": "run 19 (LiPolGen reconciliation B1): the same S-wave-for-a-P-wave-channel error; the direction of the argument is unchanged and strengthened, the band sits inside the O(1) region rather than below it",
+    "allow": [
+      "circulated before that date",
+      "Corrected 2026-09-15"
+    ]
+  },
+  {
+    "retired": "factor 3\\.6\\b",
+    "current": "a factor 2.17 across the beta = 0.20-0.40 band (0.2209 -> 0.4803)",
+    "since": "2026-09-15",
+    "note": "run 19 (LiPolGen reconciliation B1): 3.6 is the ratio of the S-wave tail fractions; on the code's P wave it is 2.17; the allow list lets the outgoing note quote the figure it withdraws",
+    "allow": [
+      "circulated before that date",
+      "were computed from",
+      "Corrected 2026-09-15"
+    ]
+  },
+  {
+    "retired": "0\\.9219467",
+    "current": "0.9219490",
+    "since": "2026-09-15",
+    "note": "run 19: LI6_B1_RANK2_TRANSFER is TaggedModel(li6_alpha_channel()).tensor_dilution(), whose 7th digit moved with the i^L phase; the 6-digit constant went 0.921947 -> 0.921949",
+    "allow": [
+      "0\\.9219490"
+    ]
+  },
+  {
+    "retired": "0\\.921947\\b",
+    "current": "0.921949 (LI6_B1_RANK2_TRANSFER; b1_li6_from_deuteron(1.0) = 0.30731633, still 0.307316 at six digits)",
+    "since": "2026-09-15",
+    "note": "run 19: the same 7th-digit move, in the 6-digit form the manual, the READMEs and the plans quote",
+    "allow": [
+      "0\\.921949"
+    ]
+  },
+  {
+    "retired": "2\\.5[–-]2\\.8%|1\\.2[–-]1\\.8×|19% cost|costs 19%",
+    "current": "2.4-2.8% (the tagged alpha at the Yellow Report optics), an 18% cost in tagged events per year at 10 x 100, and gains of 1.3x and 1.8x at the other two",
+    "since": "2026-09-15",
+    "note": "run 19: money plot 4 was re-drawn at the published seed after the i^L phase fix (acc 0.0247 -> 0.0241, 0.2545 -> 0.2542, acc x L 0.0199 -> 0.0198), so the tagged-REACH prose moved with it.  Only the prose forms are retired: the bare four-digit tag fractions are category-averaged and their last digit is seed noise in either build, so they are not.  plans/09 is excluded as a whole for the same reason the run-19 asymmetry entries exclude it -- section B2 is closed 'Done 2026-08-28.' at its head and its later paragraphs carry that round's numbers with no stamp of their own, and the dated 2026-09-15 note at the end of B2 gives the corrected set",
+    "allow": [
+      "2\\.4[–-]2\\.8%",
+      "1\\.3[–-]1\\.8×",
+      "18% cost",
+      "costs 18%",
+      "rather than 19%",
+      "pre-2026-09-15",
+      "Before 2026-09-15",
+      "before the i\\^L phase"
+    ],
+    "except_files": [
+      "^plans/09_nearbeam_nanowire_far_forward\\.md$"
+    ]
   }
 ]

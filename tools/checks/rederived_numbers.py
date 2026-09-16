@@ -481,15 +481,20 @@ CLAIMS = [
      r"`acc\(any far-fwd\)` = 0\.9699 / 0\.9690 / 0\.9751 and 0\.9882 / 0\.9921 / 0\.9942"),
 
     # --- money_tagged_azz.py --events 400000 ---
+    # Re-pinned 2026-09-15: the i^L partial-wave phase of
+    # `TaggedModel._amp2_table` moved the folded tensor asymmetries (the
+    # retired pre-fix forms are in tools/retired_numbers.json).  The `acc`
+    # pair is category-averaged and its fourth digit is seed noise in either
+    # build, which is why the first pin stops at the opening "(tagging".
     (["money_tagged_azz"],
-     r"acc 0\.0247 \(YR HA\) vs 0\.2545 \(tagging"),
+     r"acc 0\.0241 \(YR HA\) vs 0\.2542 \(tagging"),
     (["money_tagged_azz"],
-     r"acc × L 0\.0247 vs 0\.0199"),
+     r"acc × L 0\.0241 vs 0\.0198"),
     (["money_tagged_azz"],
-     r"median accepted k 0\.323 vs 0\.177 GeV/c and frac\(k < 0\.15\) 0\.000 vs 0\.363"),
+     r"median accepted k 0\.323 vs 0\.177 GeV/c and frac\(k < 0\.15\) 0\.000 vs 0\.364"),
     (["money_tagged_azz"],
-     r"A_zz = \+0\.491 \(acceptance-weighted truth \+0\.455\) and −0\.066 \(−0\.095\);"
-     r" the θ_k = 90° curve says −0\.482 at both"),
+     r"A_zz = −0\.843 \(acceptance-weighted truth −0\.871\) and \+0\.215 \(\+0\.181\);"
+     r" the θ_k = 90° curve says \+0\.922 at both"),
 ]
 
 

@@ -193,6 +193,56 @@ python3 tools/digitize_figure.py --pdf refs/1311.4561.pdf --page 11 \
   --grid 300 --out fastsim/polli_fastsim/data/b1_miller_q2set.csv
 ```
 
+## `av18/fdeut.av18` — the one file here that is not a digitized curve
+
+R. B. Wiringa, Argonne National Laboratory, **the Argonne v18 deuteron wave
+function**: the solver's own printout, not a figure and not a
+transcription.  Live URL
+`https://www.phy.anl.gov/theory/research/deuteron/fdeut.av18`; that host
+sits behind Cloudflare bot mitigation which answers `HTTP/2 403
+cf-mitigated: challenge` to every non-interactive client, so the copy here
+came through the Internet Archive,
+`http://web.archive.org/web/20250529230933/https://www.phy.anl.gov/theory/research/deuteron/fdeut.av18`,
+which serves the original file bytes (both routes are recorded in
+`LiPolGen/data/vmc/README.md`, fetched there 2026-08-29).  This file is
+those **raw served bytes**, copied byte for byte from
+`LiPolGen/data/vmc/deuteron/fdeut.av18` on 2026-09-15 — 816 110 bytes,
+md5 `7f4a361cd833de83b6a1912f8d86bf58`.
+
+The file carries a header, an r-space block (`r u du/dr w dw/dr`, 10 000
+rows to r = 100 fm), a momentum-space block, and EM form factors.  The
+loader — `polligen.tagged._av18_deuteron_tables`, which finds it with
+`importlib.resources` exactly as `_load_curve` finds the CSVs — reads
+**only the momentum-space block**: the three columns `k  u(k)  w(k)`,
+**201 rows**, k = 0 … 20 **fm⁻¹** in steps of 0.1 fm⁻¹, converted to GeV/c
+with ħc = 0.197327 GeV·fm.  Sign convention, which is the whole reason the
+file is here: `u(k), w(k) = √(2/π) ×` the **plain** Bessel transforms
+∫ j_L(kr) u_L(r) r dr — no i^L, no phase — and **both are positive at low
+k**, the S wave having its node at k = 0.4128 GeV/c (2.092 fm⁻¹) and the D
+wave staying positive through 1.2 GeV/c.  That is the convention
+`TaggedModel._amp2_table` assumes when it applies φ_L = i^L ψ_L, so the
+table is loaded with its signs untouched.
+
+Header cross-checks against the block actually read: `dstate = 0.057599`
+is the D-state probability `tagged.P_D_AV18_DEUTERON`, and the block
+reproduces it, ∫w²k²dk / ∫(u²+w²)k²dk = 0.057600 with
+∫(u²+w²)k²dk = 0.999976 (the table's own normalization, to its printed
+precision); `qm = 0.269673 fm²` is the positive quadrupole moment that
+fixes the sign of w.  The two Cosyn–Weiss landmarks fall where the paper
+puts them: w/u = +√2 at k = 0.2988 GeV/c (their "k = 0.30 GeV") and
+−1/√2 at 1.0257 GeV/c (their "≈ 1 GeV").
+
+Nothing at run time reads this file; it is a gate.
+`evgen/tests/test_tagged.py::test_cosyn_weiss_table_ii_on_av18` builds
+`tagged.av18_deuteron_channel()` from it and reproduces Cosyn–Weiss II
+TABLE II — the axial node of n_{±1}, A_T∥ = −2 along the spin axis at
+k ≈ 0.30 GeV/c and +1 at θ_k = 90° — which the generator's own
+Hulthén-type toy radials cannot, their w/u never reaching √2.  Measured
+2026-09-15 at the w/u = √2 crossing k = 0.298 GeV/c: −1.937 at the grid
+cell nearest θ_k = 0 and −1.998 on a fine (n_c = 4001) near-axis grid,
+where n_{+1}/n_0 = 2.7×10⁻⁴ against 0.16 and 0.19 at k = 0.2 and
+0.4 GeV/c; +0.999 at the 90° cell; and +0.967 at the k = 1.0 GeV/c row.
+
 ## Not digitized
 
 Wang–Bentz–Cloët–Thomas, *Polarized gluon EMC effect*, J. Phys. G 49 (2022)
@@ -205,6 +255,13 @@ Cosyn–Weiss arXiv:2603.23700 FIG. 13 (page 36) is the tagged tensor
 asymmetry A_T∥ in light-front variables (α_p, p_pT) the generator does not
 carry, so it is a comparison rather than a drop-in.  It did not need
 digitizing: page 35 gives the closed form (Eq. 6.12), its extrema
-(Eqs. 6.13–6.14) and Table II, which is what
-`evgen/tests/test_tagged.py::test_cosyn_weiss_tensor_gate` is pinned
-against.
+(Eqs. 6.13–6.14) and Table II.  Eq. (6.12) is pinned as an **identity** —
+A_T∥ = +1 × A_zz^wf, to machine precision on the whole (k, cosθ_k) grid:
+max |A_zz^wf − Eq. (6.12)| = 8.9×10⁻¹⁶ on the deuteron control and
+1.1×10⁻¹⁵ on ⁶Li, with the (1 − 3cos²θ_k) factorization holding to
+6.0×10⁻¹⁴ — by `evgen/tests/test_tagged.py::test_cosyn_weiss_tensor_gate`,
+and TABLE II's own numbers by `…::test_cosyn_weiss_table_ii_on_av18` on the AV18
+table above.  Before 2026-09-15 the first of those pinned a mapping
+A_T∥ = −2 A_zz^wf, which double-counted the (1 − 3cos²θ_k) factor that
+A_zz^wf already carries, and read Eq. (6.14)'s minimum −1/√2 as
+Eq. (6.13)'s maximum +√2 on a toy wave function that never reaches √2.

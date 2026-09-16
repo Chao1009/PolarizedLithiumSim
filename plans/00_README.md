@@ -16,7 +16,7 @@ brings to the EIC, in support of the ANL polarized ⁶,⁷Li ion-source program
 | [06_cos2phi_coherent_backgrounds.md](06_cos2phi_coherent_backgrounds.md) | cos 2φ money plots as projected data points (sweet-spot bins); the coherent intact-⁶Li channel (RP tag, 13.5% HA acceptance) and its full background budget (α+d beam-blindness, T=1 veto pattern, Z-ID question #19) |
 | [07_plb_letter_gluonometry.md](07_plb_letter_gluonometry.md) | The PLB-class simulation letter: scope decision (gluonometry, inclusive + coherent), gap analysis vs referees, work packages WP1–WP7 (grid SFs, reco closure, RC bound, coherent curves, paper production), skeleton, risk register, timeline to the INT program (submit Jan 2027) |
 | [../docs/reproduction_manual.md](../docs/reproduction_manual.md) | **How to reproduce any of it**: environment (Python, PDF grids, PYTHIA 8, eic-shell, a headless browser), every command with its measured runtime and expected output, the third-party generators (PYTHIA 8, BeAGLE over xrootd, ePIC/npsim), the numbers to check against, and what cannot be reproduced here and why |
-| [../docs/consistency_review_2026-09-02.md](../docs/consistency_review_2026-09-02.md) | **The consistency review of Reports 0–4** (2026-09-02, on the run-16 state): the five reports read against each other and against the code, the scripts, the manual and the plans — 260 findings, the 193 contradictions and defects fixed in run 17 along with the 53 wording suggestions of §3b, and the ten mechanical checks of §5.2 built as modules under `tools/checks/` (the sweep is 51 checks with them); its three author decisions are registered as plans/04 #22–24, of which #22 and #23 were answered by their sources in run 18 and #24 remains |
+| [../docs/consistency_review_2026-09-02.md](../docs/consistency_review_2026-09-02.md) | **The consistency review of Reports 0–4** (2026-09-02, on the run-16 state): the five reports read against each other and against the code, the scripts, the manual and the plans — 260 findings, the 193 contradictions and defects fixed in run 17 along with the 53 wording suggestions of §3b, and the ten mechanical checks of §5.2 built as modules under `tools/checks/` (the sweep is 53 checks with them today, 51 in the default run); its three author decisions are registered as plans/04 #22–24, of which #22 and #23 were answered by their sources in run 18 and #24 remains |
 | [08_simulation_chain_completion.md](08_simulation_chain_completion.md) | Completing the simulation chain (2026-08-25): the 23 gaps that survived an adversarial audit of the reconstruction chain, the kernel, the hadronic final state and the fast simulation — ordered, with the convention items reserved for the author (D1, D7, D9) and the externally blocked tail (D2–D8) separated out |
 | [09_nearbeam_nanowire_far_forward.md](09_nearbeam_nanowire_far_forward.md) | A near-beam layer for the far-forward lithium tags (2026-08-26; §9.0 re-derived 2026-08-28 on the Yellow Report divergences and restated 2026-08-29 on the per-configuration transport — at the published optics the machine binds at 10 × 100 and 18 × 275, where a closer approach buys nothing, and the silicon re-measured on 2026-08-28 binds at 5 × 41, where it is worth a factor 77; at the tagging optics a layer that follows the 0.12–0.36 mrad envelope is the difference between no tag and a 25–37% tag), whether a superconducting nanowire can deliver it, the hot-spot firing-threshold answer to open question #19, the obstacle table, and the correction that the ePIC pot geometry has moved since the snapshot `tools/fullsim` measured — report in `reports/nanowire_far_forward.html` |
 | [10_beam_divergence_light_ions.md](10_beam_divergence_light_ions.md) | **The beam energies and the divergence the whole far-forward programme rests on** (2026-08-27): every far-forward acceptance is exp(−B(10σ_θ·A·p_u)²). Two corrections. **The energies**: EIC ions are γ-matched, not rigidity-scaled — the rings must share a revolution period, so ⁶Li sits at **40.8 / 99.5 / 137.5 GeV/u**, not 20.5 / 50 / 137.5. **The divergence**: σ_θ was one energy-independent, isotropic, proton-derived 72.7 µrad; YR Tables 10.1/10.2 give it per configuration and optics, and the species step applies *only* where rigidity binds — so ⁶Li carries the proton's **220/380 and 180/180 µrad** at the two lower configurations and pays √2 only at the top (**92/92**). Together these cost the coherent tag six to twenty-four orders of magnitude, and the recovery needs a two-ring β* de-squeeze the machine may not have |
@@ -56,6 +56,120 @@ brings to the EIC, in support of the ANL polarized ⁶,⁷Li ion-source program
    with partial snakes; ~138/~117 GeV/u top energies.
 5. **Calendar anchor**: INT program on polarized ion beams at EIC,
    March 22 – April 2, 2027 — target for Phase-1 money plots.
+
+## Development run 19 (2026-09-15): the i^L phase of the tagged partial-wave amplitude, the AV18 control, and what money plot 4 reads now
+
+One sign, inside the wave function rather than in the cross section.
+`TaggedModel._amp2_table` summed the cluster partial waves as ψ_L(k) where
+the momentum-space amplitude needs φ_L = i^L ψ_L, so every S + D channel was
+assembled with the wrong relative sign on its D wave and the α–d S/D
+interference — which *is* the tagged tensor observable — came out inverted.
+The run took the claim apart before acting on it: two independent
+verifications — a convention-blind 3-D FFT of the AV18 deuteron spinor,
+built from the S₁₂ operator with no partial waves anywhere, and a
+paper-based transcription of Cosyn–Weiss II in their Cartesian form —
+and a skeptic briefed to refute both; then the one-line fix, an AV18 control
+channel, the gates, the mechanical checks, the documents, a physics review
+(which added a third, independent quadrature of the same wave function) and
+a code review of the result, and a repair pass over their findings.
+Working record under the session scratchpad `run19/` (RESULTS.md per agent).
+
+- ☑ **The fix, and why that form.**  `_amp2_table` multiplies each wave's
+  term by `(-1)**((w.l // 2) % 2)`, the observable part of φ_L = i^L ψ_L
+  when the stored radials are the plain Bessel transforms — positive at low
+  k, as the tabulated AV18 u(k), w(k) are.  Only the RELATIVE phase between
+  waves is observable and it is real, (−1)^⌊L/2⌋, for a same-parity
+  mixture; `TaggedChannel.__post_init__` now rejects a mixed-parity channel
+  outright, because i^L is imaginary for odd L and the amplitude would have
+  to be complex.  ⁷Li, a lone L = 1 wave, is bit-for-bit unchanged.
+- ☑ **Three independent checks that the corrected form is the physical one.**
+  A 3-D FFT of the AV18 deuteron wave function reproduces the partial-wave
+  formula *with* the phase to 1.0000 over all directions to |k| ≤ 1 GeV/c and
+  not the formula without it; an independent direct quadrature (160-point
+  Gauss–Legendre in cos θ, no partial waves, no CG coefficients) gives the
+  same; and the model's A_zz^wf now equals Cosyn–Weiss II Eq. (6.12)
+  identically, to 9 × 10⁻¹⁶ over the whole (k, θ_k) grid, for any pair of
+  radial functions.  The mapping onto their normalization is
+  A_T∥ = +1 × A_zz^wf: their −2 is the value of the angular factor at
+  θ_k = 0, which A_zz^wf already carries.  The gate retired with the fix had
+  it wrong twice — that −2 double-counted, and a Hulthén deuteron whose
+  f₂/f₀ never reaches √2 certified as reproducing their Table II, its
+  "peak at k = 0.3098" being Eq. (6.14)'s *minimum* at −1/√2 misread as
+  Eq. (6.13)'s maximum at +√2.
+- ☑ **An AV18 control, because Table II is an AV18 result.**  The Argonne
+  v18 deuteron momentum table (R. B. Wiringa, ANL; 816 110 bytes, copied
+  byte for byte, provenance and the loader's sign convention in
+  `fastsim/polli_fastsim/data/SOURCES.md`) is loaded by
+  `tagged.av18_deuteron_channel()` as a gate only — nothing the generator
+  ships samples from it.  On it the corrected model returns Cosyn–Weiss
+  Table II: the node of the M = ±1 density on the spin axis at
+  k = 0.2988 GeV/c where w̃/ũ = √2, A_zz = −2.000 there and +1.000 at
+  θ_k = 90°, and the f₂/f₀ = −1/√2 crossing near 1.03 GeV/c.  The file's
+  own header cross-checks come back: norm 0.999976, D state 0.057600
+  against `dstate` 0.057599, Q_d = +0.2697 fm².
+- ☑ **What moved.**  Money plot 4 at 10 × 99.5: the analytic θ_k = 90° curve
+  at k ≈ 0.325 GeV/c now reads **+0.922** (was −0.482), the folded asymmetry
+  **−0.843** at the Yellow Report optics (was +0.491) against an
+  acceptance-weighted truth of **−0.871** (was +0.455), and **+0.215** at the
+  tagging optics (was −0.066) against **+0.181** (was −0.095); ⁶Li
+  p₂(M = 1) is −0.0623 (was +0.0448).  The rank-2 b₁
+  transfer `polarized.LI6_B1_RANK2_TRANSFER`, which is the model's own
+  angle-integrated dilution, moved in its 7th digit, 0.921947 → **0.921949**
+  — `b1_li6_from_deuteron(1.0)` 0.30731567 → 0.30731633, still 0.307316 at
+  the six digits every document prints, so no b₁ number changes and the
+  money_b1 PNG moved by 53 of 787 500 pixels at one channel level.
+- ☑ **What did not.**  ⁷Li, to the last printed digit (p₂(3/2) =
+  −0.199934911727043).  The angle-integrated dilutions, by ≤ 4.3 × 10⁻⁶
+  relative — the interference cancels in the angular integral and only the
+  midpoint-rule residual survives — so the effective polarizations, the
+  inclusive sector and the coherent sector are untouched.  The k marginals
+  of the tagged density exactly, so the α tag's reach half stands as
+  written: median accepted momentum 0.323 against 0.177 GeV/c at the two
+  optics, nothing below 0.15 GeV/c at any published optics.  The tag
+  fractions are category-averaged and their fourth digit is seed noise in
+  either build (0.0247 → 0.0241, 0.2545 → 0.2542 at the published seed),
+  which is why the reach prose now reads 2.4–2.8%, an 18% cost in tagged
+  events per year at 10 × 100 and gains of 1.8× and 1.3× at the other two.
+- ☑ **Gates and checks.**  `test_cosyn_weiss_tensor_gate` is now the
+  Eq. (6.12) identity on both toy channels, with the +1 mapping, the
+  [−2, 1] range, the (1 − 3cos²θ_k) factorization and Eq. (6.13)'s
+  Q ≤ 1 ceiling; `test_cosyn_weiss_table_ii_on_av18` and
+  `test_mixed_parity_channel_is_rejected` are new;
+  `test_density_matches_independent_transcription` was rebuilt on
+  Cosyn–Weiss Eq. (3.22b)'s Cartesian form, which is genuinely independent
+  of the spherical sum and can see the defect its predecessor could not.
+  A mutation test (the phase replaced by 1.0) fails five tests and the new
+  sweep check.  `sign_convention.py` gains a fourth check — the identity at
+  three cells of the model's own grid — and `retired_numbers.json` nineteen
+  entries, with one new optional field, `except_files`, that narrows an
+  entry to the documents where its form is a live claim.
+- ☑ **The documents.**  Report 0 §5.4 (the closed form, the mapping, the
+  Table II control), Report 3 Table 6's two-sampler caption, Report 4 §2.1
+  and §8, three Appendix A rows, the manual §4.1 and its §7 table, the
+  READMEs, `plans/04` #15, `plans/05` §5.B and `plans/08` D9, and one dated
+  note appended to `plans/09` §B2 whose record is left as written.
+- ☑ **The α–d D-wave sign is now a live physics input, and is stated as one.**
+  With the interference restored, the sign of every tagged ⁶Li A_zz follows
+  sign(ψ₂/ψ₀) of the α–d D radial.  The model takes it deuteron-like; the
+  sibling generator's variational α+d overlap supports that between the α–d
+  S and D nodes, 0.134–0.444 GeV/c, and reverses it on both sides, where the
+  node-free two-parameter forms used here cannot follow.  Nor is the sample
+  confined to the supported window: 27 / 21 / 26 % of the Yellow-Report-
+  accepted α lie above the upper node and 41 / 28 / 37 % of the
+  tagging-optics sample below the lower one.  The headline k = 0.325 GeV/c
+  bin is inside it.  Said where the model is defined (next to `P_D_LI6`),
+  in Report 4 §2.1, in `plans/04` #15 and in `plans/05`.
+- ☐ **Left**: the α–d D sign itself, which only a VMC α+d overlap with
+  m-dependence can settle (plans/04 #15, now the sharper half of that ask);
+  the author's D10 (the `tensor_gamma` default) and plans/04 #24 (the ×1.75
+  and the 30–60×), both carried over from run 18; the ⁷Li theory asks, the
+  lattice confirmation and the de-squeezed R₁₂, still external.
+
+Tests: 121 fastsim + 336 evgen, 53 consistency checks (51 in the default
+sweep; the two that re-execute the producing scripts run with `--full`).
+Every registered figure was regenerated at its published command after the
+module edits; the two that moved are money plot 4, on the sign, and the b₁
+money plot, on the 7th digit of the transfer.
 
 ## Development run 18 (2026-09-06): the open items — the sourcing pass, two author questions answered, the tensor-leakage subtraction, the open-box audit
 

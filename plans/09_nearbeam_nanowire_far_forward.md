@@ -56,7 +56,7 @@ external inputs, not work.**
 > Two readings of the ⁶Li α row, added 2026-08-28 with B2.  It is the
 > **pure spectator model** (`spectator.spectator_lab_kinematics`, one
 > partial wave per channel); the tagged generator behind money plot 4
-> carries the S + D expansion of the same channel and reads 2.5–2.8%
+> carries the S + D expansion of the same channel and reads 2.4–2.8%
 > instead of the 1.5% Roman-Pot slice of this row at the Yellow Report
 > optics — the two masks compared like for like — the D wave being the
 > entire difference and also the tensor observable itself (B2).  And an
@@ -64,7 +64,7 @@ external inputs, not work.**
 > observables is **reach**, not rate — at the published optics the α tag
 > admits nothing below a spectator momentum of 0.15 GeV/c, under the
 > tagging optics a third to a half of the accepted sample is there, for
-> a 19% cost in tagged events per year at 10 × 100 and a 1.2–1.8× gain at
+> an 18% cost in tagged events per year at 10 × 100 and a 1.3–1.8× gain at
 > the other two configurations (B2).  For ⁷Li the whole trade inverts and
 > the tagging optics is a factor 7.7–14.5 net loss (B3).
 
@@ -630,6 +630,46 @@ alone is worth +0.6 point at 5 × 40.8 and +0.2 at the other two on the
 Roman-Pot mask, +0.1 uniformly on `1 - lost`; the B0 fraction is 0.0000
 at 10 × 99.5 and 18 × 117.9.)  The script prints both definitions.
 
+**2026-09-15 — the α–d S/D interference sign, and what B2's numbers read
+now.**  The record above stands as written; this note gives the corrected
+headline numbers (plans/00 run 19 for the derivation and the verifications).
+`TaggedModel._amp2_table` summed the partial waves ψ_L(k) without the i^L
+phase of the momentum-space expansion, so the S–D interference of the α–d
+channel entered with the wrong relative sign.  With the phase in place
+(`(-1)**((L//2) % 2)` on each wave, exact for a same-parity mixture; ⁷Li's
+single L = 1 wave is bit-for-bit unchanged) the model reproduces Cosyn–Weiss
+Eq. (6.12) identically, and on the AV18 deuteron it reproduces their TABLE II
+— node of n_{±1} along the spin axis at k = 0.299 GeV/c, A_zz^wf = −1.998
+there (CW: −2) and +0.999 at θ_k = 90° (CW: +1).  Every A_zz of money plot 4 therefore changes sign.
+At 10 × 99.5, 4×10⁵ events, k = 0.325 GeV/c: the θ_k = 90° curve reads
+**+0.922** (was −0.482) and the folded markers **−0.843** against an
+acceptance-weighted truth of **−0.871** at the Yellow Report optics and
+**+0.215** against **+0.181** at the tagging optics (were +0.491/+0.455 and
+−0.066/−0.095).  At 8×10⁶: **−0.8628 ± 0.0130** against −0.8711 (0.6σ) and
+**+0.1755 ± 0.0070** against +0.1811 (0.8σ).  The acceptance-weighted truth
+still tracks the markers — at 4×10⁵ the residuals are ≤ 0.101 (Yellow Report)
+and ≤ 0.074 (tagging), 1.5σ and 1.8σ on errors of 0.053–0.169 and 0.014–0.099;
+at 8×10⁶ the errors are unchanged at 0.012–0.037 and 0.003–0.023, the
+bin-centre residuals ≤ 0.039 and ≤ 0.029, and the one bin that misses is now
+k = 0.375 at the Yellow Report optics (2.5σ against the bin centre, 1.2σ
+against the bin-averaged truth), every populated bin being within 1.5σ / 1.8σ
+once averaged over the bin as the marker is.  The double-counted inclusive b₁
+reads the same way with the opposite sign: −0.8558 and +0.1778 with the old
+toy shape, offsets +0.007 and +0.002.  The reach half of B2 does **not** move:
+the tag fractions are category-averaged and their fourth digit is seed noise in
+either build (0.0247 → 0.0241 and 0.2545 → 0.2542 at the published seed, so
+acc × L 0.0241 vs 0.0198, an 18% cost rather than 19%; 0.0279 → 0.0504 at
+5 × 41 and 0.0261 → 0.0330 at 18 × 275, gains of 1.8× and 1.3×), the median
+accepted momenta 0.323 / 0.177 GeV/c and frac(k < 0.15) 0.000 / 0.364 are the
+same to the printed digits, ⟨|cos θ_k|⟩ is 0.709 / 0.402, 0.797 / 0.395 and
+0.756 / 0.399 at the three configurations, and the k spectra, ⟨k⟩ = 0.122 GeV/c
+and the D-wave reconciliation of the last two paragraphs are *exactly*
+invariant, the interference cancelling in the angular integral.  The swing
+between the two optics is still θ_k sculpting and is now 1.06 wide.  Not
+re-run, and therefore still pre-fix: the `--optics legacy` triple above
+(4.2% / 2.5%, +0.08 / +0.49 against +0.01 / +0.46).
+`evgen/money_tagged_azz_6Li.png` was regenerated at its published command.
+
 ### B3 — ⁷Li ☑
 Done 2026-08-28 with B2. `tagged_polarimetry_7li.py` takes the same
 `--config` / `--optics` and routes with the azimuth; `reco.rp_aperture_for`
@@ -974,8 +1014,8 @@ study should not be what motivates it.
   the IR-8 secondary focus and its z² Cherenkov. The same tagging optics
   buys the ⁶Li *tagged* observables reach rather than rate — nothing
   below k = 0.15 GeV/c at any published optics, a third to a half of the
-  accepted sample there under the tagging one, at a 19% cost in tagged
-  events per year at 10 × 100 and a 1.2–1.8× gain at the other two (B2) —
+  accepted sample there under the tagging one, at an 18% cost in tagged
+  events per year at 10 × 100 and a 1.3–1.8× gain at the other two (B2) —
   and buys ⁷Li a factor 7.7–14.5 net loss (B3), so item (1) is a per-isotope
   recommendation, not a programme-wide one. Superconducting
   nanowires appear nowhere on it.

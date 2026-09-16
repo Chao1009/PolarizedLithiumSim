@@ -175,12 +175,12 @@ automatically.
 ## 2 · The five-minute check: the test suites
 
 ```bash
-cd evgen   && python3 -m pytest tests/ -q     # 334 passed, ~60 s
+cd evgen   && python3 -m pytest tests/ -q     # 336 passed, ~70 s
 cd fastsim && python3 -m pytest tests/ -q     # 121 passed, ~19 s
-python3 tools/consistency_check.py --verbose  # 50 checks (52 with --full), whole repository
+python3 tools/consistency_check.py --verbose  # 51 checks (53 with --full), whole repository
 ```
 
-455 tests, all of which run without the PDF grids except four of the five
+457 tests, all of which run without the PDF grids except four of the five
 in `fastsim/tests/test_grids.py`, which skip.  These are not smoke tests:
 they pin physics identities against independent constructions — the
 spin-1 cross section against an explicit density-matrix trace, the
@@ -190,14 +190,14 @@ nuclear masses against CODATA, the tensor sign against Cosyn Eq. (27).
 If these pass, the machinery is sound and the rest of this manual is
 about numbers, not correctness.
 
-The consistency sweep is the other half of those five minutes: 52 checks
-in eleven groups, 50 of them in the default run (the two that re-execute
+The consistency sweep is the other half of those five minutes: 53 checks
+in eleven groups, 51 of them in the default run (the two that re-execute
 the producing scripts are reported as skipped and run under `--full`).  Five groups are the original ones — PHYSICS invariants
 the simulation must satisfy, SOURCES against the Yellow Report tables,
 DRIFT (superseded values a correction should have removed, statements a
 rewrite must not drop), ARTEFACTS (figures, report numbering, the built
 pages against their templates, and the test counts quoted just above) and
-REFERENCES.  Twenty-seven of the checks, and six of the groups, live in
+REFERENCES.  Twenty-eight of the checks, and six of the groups, live in
 the ten modules under `tools/checks/` that the consistency review of
 2026-09-02 specified and `consistency_check.py` loads: APPENDIX (the
 newest Appendix A revision row names every table whose cells moved with
@@ -208,10 +208,11 @@ than re-read), FIGURES (captions against the scripts that draw them),
 FRONT PAGE (`index.html` and the README map against the report datelines)
 and SPECIFICATIONS (Report 2 §6 against Report 3 Table 9); two of the ten
 land in the older groups, the retired-strings list in DRIFT and the
-sign-convention guards in PHYSICS — the third of those, that the O(γ²)
-tensor-leakage correction reverses with `TENSOR_LL_SIGN`, is run 18's and
-the only one of the twenty-seven that did not arrive with the review.
-Two of the twenty-seven run only under `--full`: the re-derivation of the
+sign-convention guards in PHYSICS — the third and fourth of those, that
+the O(γ²) tensor-leakage correction reverses with `TENSOR_LL_SIGN` and that
+the tagged S–D interference carries the i^L partial-wave phase, are run 18's
+and run 19's, the only two of the twenty-eight that did not arrive with the
+review.  Two of the twenty-eight run only under `--full`: the re-derivation of the
 manual's own expected numbers, which executes seventeen runs into a
 scratch directory outside the repository and costs about two minutes, and
 the title-extent measurement in FIGURES, which reads the published PNGs
@@ -315,7 +316,7 @@ does not move the discriminating region, it takes the x dependence there
 from the calculations instead of from the hand-written EMC table.
 
 `money_b1.py` prints the transfer it used, the two signal curves and the
-per-bin significance.  At the rank-2 default, 0.921947 × 2/6 = 0.307316:
+per-bin significance.  At the rank-2 default, 0.921949 × 2/6 = 0.307316:
 |A_zz| = 2.16×10⁻⁴ / 4.69×10⁻⁴ / 7.46×10⁻⁴ / 1.35×10⁻³ / 1.34×10⁻³ /
 3.33×10⁻³ at x = 0.005 / 0.01 / 0.03 / 0.07 / 0.2 / 0.5 for the Miller
 curve and 1.02×10⁻⁵ / 1.12×10⁻⁵ / 6.60×10⁻⁶ / 1.26×10⁻⁶ / 6.76×10⁻⁵ /
@@ -501,11 +502,11 @@ tagged generator behind money plot 4 (`polligen.tagged`) carries the full
 S + D expansion, and the D wave is the whole difference: its S-wave radial
 *is* `spectator.momentum_density`, ⟨k⟩ = 0.1071 GeV/c in both, while the
 D wave is hard at ⟨k⟩ = 0.2778 and at P_D = 0.0867 pulls the channel mean
-to 0.1219 and the off-rigidity R < 0.95 slice from 1.5% to 2.5%.  Set
+to 0.1219 and the off-rigidity R < 0.95 slice from 1.5% to 2.4%.  Set
 `p_d = 0` and the two agree quantile by quantile
 (`test_boost_matches_fastsim_spectator`).  So the ⁶Li α tag at the Yellow
 Report optics is a 1.5% Roman-Pot slice on the pure spectator model and
-2.5–2.8% on the tagged one, and neither is wrong — the D wave is not an optional tail, it
+2.4–2.8% on the tagged one, and neither is wrong — the D wave is not an optional tail, it
 *is* the tensor observable (with P_D = 0 the α–d density is m-independent
 and A_zz^tag vanishes identically), so the tagged observables are quoted
 on the S + D spectrum and this table on the S-wave one.  For ⁷Li the two
@@ -829,18 +830,21 @@ them.
 **Money plot 4 at 10 × 99.5** (`--events 400000`, seed 20260713, and the
 whole programme year to this observable — `--lumi-fraction 1`, the
 default).  The α
-tag is 0.0247 at the Yellow Report optics against 0.2545 at the tagging
+tag is 0.0241 at the Yellow Report optics against 0.2542 at the tagging
 optics — but the tagging optics runs at L/L_HA = 1/12.8, so in tagged
-events per year the tagging optics costs 19% here (acc × L = 0.0247 vs
-0.0199), which is the worst of the three configurations.  What the 19%
+events per year the tagging optics costs 18% here (acc × L = 0.0241 vs
+0.0198), which is the worst of the three configurations.  `acc` is pooled
+over the three tensor-thirds categories and its fourth digit is seed noise,
+so read that pair as 2.4% against 25% and the cost to within a couple of
+points.  What the 18%
 buys is the REACH, and that is the result: the median accepted
 spectator momentum is 0.323 GeV/c at the Yellow Report optics with
 **nothing at all below k = 0.15 GeV/c**, against 0.177 GeV/c with 36%
-below 0.15 at the tagging optics (0.348/0.323/0.334 and
+below 0.15 at the tagging optics (0.349/0.323/0.334 and
 0.153/0.177/0.161 GeV/c at 5 × 41 / 10 × 100 / 18 × 275; the unfolded
 sample has median 0.093 and 74% below 0.15).  The rate trade is even or
-better at the other two: acc × L/L_HA is 0.0284 → 0.0503 at 5 × 41,
-0.0247 → 0.0199 at 10 × 100 and 0.0265 → 0.0331 at 18 × 275, so at two
+better at the other two: acc × L/L_HA is 0.0279 → 0.0504 at 5 × 41,
+0.0241 → 0.0198 at 10 × 100 and 0.0261 → 0.0330 at 18 × 275, so at two
 of the three configurations the tagging optics gains the reach and the
 rate together, and pays for it only at 10 × 100.  At every published optics
 the ⁶Li α tag admits only the high-k tail; the tagging optics is what
@@ -849,14 +853,19 @@ turns money plot 4 from a one-point measurement into a curve.
 The right panel's coloured curves are the truth weighted by each optics'
 own θ_k acceptance (`tagged.acceptance_weights`,
 `tagged.azz_tensor_curve`), and that is what the markers measure: at
-k ≈ 0.325 GeV/c the folded A_zz is +0.491 against a weighted truth of
-+0.455 at the Yellow Report optics and −0.066 against −0.095 at the
+k ≈ 0.325 GeV/c the folded A_zz is −0.843 against a weighted truth of
+−0.871 at the Yellow Report optics and +0.215 against +0.181 at the
 tagging optics, while the θ_k = 90° curve — drawn as a grey reference —
-says −0.482 at both.  The published version before this round overlaid
+says +0.922 at both.  The published version before this round overlaid
 that 90° curve alone, on samples whose ⟨|cos θ_k|⟩ is 0.80 (the
 off-rigidity window slice, longitudinal) or 0.39 (the near-beam tail,
-transverse); its ±0.5 swing between two optics at k ≈ 0.3 GeV/c was the
-envelope, not the wave function.  Those two averages are not on the
+transverse); the 1.06 spread it showed between the two optics at
+k ≈ 0.3 GeV/c was the envelope, not the wave function.  (Every A_zz in
+this paragraph changed sign on 2026-09-15 with the i^L phase of
+`TaggedModel._amp2_table`, which the Cosyn–Weiss gate below records:
+before the i^L phase the three read +0.491 / −0.066 / −0.482, a spread
+of 0.56.  The mechanism — θ_k sculpting, not the radial wave function —
+is what survived.)  Those two averages are not on the
 script's own output line; the route that gives them, and the third
 configuration's pair, is this probe:
 
@@ -889,20 +898,23 @@ for ci in (0, 1, 2):
         print("config %d  %-30s  <|cos theta_k|> = %.4f" % (ci, name, ct.mean()))
 ```
 
-It prints 0.7149 / 0.4029 at 5 × 40.8, 0.7987 / 0.3948 at 10 × 99.5 and
-0.7615 / 0.3998 at 18 × 137.5 — the same reversal at all three.  Closure, against the prediction at the
+It prints 0.7086 / 0.4021 at 5 × 40.8, 0.7973 / 0.3946 at 10 × 99.5 and
+0.7564 / 0.3990 at 18 × 137.5 — the same reversal at all three.  Closure, against the prediction at the
 bin centre and over the bins the panel draws (more than 50 accepted
-events): the residual is |ΔA_zz| ≤ 0.063 at the Yellow Report optics and
-≤ 0.085 at the tagging optics, which at the figure's own 4 × 10⁵ events
-is within 1.1σ and 1.6σ of errors running 0.053–0.167 and 0.014–0.100.
+events): the residual is |ΔA_zz| ≤ 0.101 at the Yellow Report optics and
+≤ 0.074 at the tagging optics, which at the figure's own 4 × 10⁵ events
+is within 1.5σ and 1.8σ of errors running 0.053–0.169 and 0.014–0.099.
 At `--events 8e6` the errors fall to 0.012–0.037 and 0.003–0.023 and the
-residuals to ≤ 0.025 and ≤ 0.022, and one bin, k = 0.175 at
-the tagging optics, reads 2.7σ on a 0.009 residual: that is the bin in
-which the acceptance turns on — nothing at all is accepted below
-k = 0.189 GeV/c at the Yellow Report optics — so the truth at the bin
-*centre* is not what the bin-averaged marker measures.  Averaged over the
-bin as the marker is, every populated bin is within 1.6σ (Yellow Report)
-and 2.2σ (tagging) at 8 × 10⁶.
+residuals to ≤ 0.039 and ≤ 0.029, and one bin, k = 0.375 at the Yellow
+Report optics, reads 2.5σ on a 0.039 residual: that is where A_zz runs
+steepest across the bin, so the truth at the bin *centre* is not what the
+bin-averaged marker measures — against the truth averaged over the bin
+the same marker is 1.2σ.  The extreme case of the same effect is the
+k = 0.175 bin at the Yellow Report optics, which has no truth at its
+centre at all: nothing is accepted there below k = 0.189 GeV/c (0.078 at
+the tagging optics).  Averaged over the bin as the marker is, every
+populated bin is within 1.5σ (Yellow Report) and 1.8σ (tagging) at
+8 × 10⁶.
 
 **⁷Li polarimetry at 10 × 99.5** (`--events 300000`).  Nothing moves, and
 that is the deliverable: the Roman-Pot tag is 0.9678 at the Yellow Report
@@ -970,25 +982,70 @@ Table 6, its caption and its change log carry the post-2026-08-28 tags,
 and `plans/09` §B3 the same triples.
 
 The **Cosyn–Weiss deuteron limit** (`plans/05` §5.4) is a gate rather than a
-figure, and it runs as a test:
+figure, and it runs as two tests — an identity on the model's own radials
+and a control on a real wave function:
 
 ```bash
 cd evgen && python3 -m pytest tests/test_tagged.py::test_cosyn_weiss_tensor_gate -q
+cd evgen && python3 -m pytest tests/test_tagged.py::test_cosyn_weiss_table_ii_on_av18 -q
 ```
 
-It pins the tagged sampler's wave-function tensor asymmetry against
+Both pin the tagged sampler's wave-function tensor asymmetry against
 Cosyn–Weiss II (`refs/2603.23700.pdf` p. 35, Eqs. (6.12)–(6.14) and
-TABLE II), and needed no digitization because the paper gives the result in
-closed form.  At fixed spectator momentum k = 0.3012 GeV/c the ratio
-A_zz^wf / P₂(cos θ_k) is 0.99940, with a spread below 10⁻⁵, in every
-angular cell away from the zero of P₂ at cos θ_k = 1/√3, where the ratio is
-unbounded and the test excludes the cells with |P₂| ≤ 10⁻³; so their
-angular factorization holds; the radial envelope peaks at
-k = 0.3098 GeV/c against the 0.30 GeV/c they quote for AV18; and under
-A_T∥ = −2 A_zz^wf the extremes are +0.99967 at the cell nearest θ_k = 90°
-and −1.93782 at the outermost cell (|cos θ_k| = 0.98958), which extrapolate
-through that factorization to +1.000 and −2.000 against their tabulated +1
-and −2, the whole curve staying inside their [−2, 1].
+TABLE II), and neither needed digitization because the paper gives the
+result in closed form.
+
+The **identity gate** evaluates Eq. (6.12) directly on the model's stored
+radial tables (f₀ = the L = 0 table, f₂ = the L = 2 table) and compares it
+with the A_zz^wf the density gives.  The two agree to
+8.9 × 10⁻¹⁶ on the deuteron control and 1.1 × 10⁻¹⁵ on ⁶Li over the whole
+(k, cos θ_k) grid, so the generator's angular structure *is* their closed
+form rather than merely resembling it, and the map between the two
+conventions is A_T∥ = +1 × A_zz^wf: their −2 is the angular factor at
+θ_k = 0, which A_zz^wf already carries.  The factorization is then a
+statement about the radial half alone — A_zz^wf / P₂(cos θ_k) is a function
+of k only, constant across the angular cells to 6.0 × 10⁻¹⁴ (deuteron) and
+4.4 × 10⁻¹⁴ (⁶Li) with the cells at the zero of P₂ (cos θ_k = 1/√3, where
+the ratio is unbounded) excluded at |P₂| ≤ 10⁻³, and equal to −1.639538 and
+−1.793865 at k = 0.3012 GeV/c.  On both toys the curve stays inside
+Cosyn–Weiss's [−2, 1] — deuteron range [−1.93188, +0.99661], ⁶Li
+[−1.93782, +0.99967], both reached at the k = 1.2 GeV/c grid edge — so it
+approaches their endpoints without attaining them, because the Hulthén-form
+f₂/f₀ of the toy deuteron never reaches √2 = 1.41421 (its maximum is
+1.2866, again at the grid edge); the toy ⁶Li does cross √2, at
+k = 0.7432 GeV/c.
+
+The **TABLE II control** removes the toy from the argument.
+`tagged.av18_deuteron_channel()` builds the same channel on the tabulated
+Argonne v18 deuteron (`fastsim/polli_fastsim/data/av18/fdeut.av18`,
+provenance in `fastsim/polli_fastsim/data/SOURCES.md`; the loader reads the
+201-row `k u(k) w(k)` block, reproduces the file header's D-state
+probability as 0.057600 against `dstate` 0.057599 and its norm as 0.999976,
+and finds the u(k) node at 0.4128 GeV/c).  On it the three TABLE II
+landmarks come out: A_zz^wf = −1.93712 at the cell nearest θ_k = 0
+(|cos θ_k| = 0.98958) and k = 0.30115 GeV/c against their −2 — the gap is
+the cell centre, the exact −2 P₂ of that cell being −1.93783 — and +0.99931 at
+the 90° cell against their +1; the f₂/f₀ = +√2 crossing that puts it there
+at k = 0.29812 GeV/c on the model grid and 0.2988 from a cubic spline on the
+raw k table, against the 0.30 GeV they quote; and, at k = 0.99787 GeV/c,
++0.96734 against their +1, with the f₂/f₀ = −1/√2 crossing at 1.0349 GeV/c
+on the grid (1.0257 by spline) against their "∼1 GeV".  Their physical
+statement — that n_{±1} has a node along the spin axis where f₂/f₀ = √2 —
+is pinned on a fine nc = 4001 angular grid: at |cos θ_k| = 0.99975 the ratio
+n_{+1}/n₀ is 2.726 × 10⁻⁴ at k = 0.29685 GeV/c, against 0.164 at k = 0.2 and
+0.193 at k = 0.4, and A_zz^wf there is −1.99837.
+
+*(2026-09-15.)* The gate these two replaced got the comparison wrong twice,
+and the two errors together let the pre-fix model reproduce Cosyn–Weiss's
+tabulated +1 and −2: it mapped
+A_T∥ = −2 A_zz^wf, double-counting the θ_k = 0 angular factor, and it read
+the |f₂/f₀| = 1/√2 point of the toy Hulthén deuteron at k = 0.3098 GeV/c —
+Eq. (6.14)'s *minimum* — as Eq. (6.13)'s maximum and matched it to
+Cosyn–Weiss's 0.30 GeV/c.  The toy deuteron's f₂/f₀ never reaches √2 at
+all, so it has no such maximum; the node is an AV18 feature, which is why
+the control above is run on the real wave function.  The old row's
+headline, A_zz^wf/P₂ = 0.99940 at k = 0.3012 GeV/c, and the A_T∥ pair it
+reported at the outermost cells, are retired with it.
 
 ### 4.2 The cos 2φ money plots, truth level
 
@@ -1489,6 +1546,7 @@ python3 - <<'PY'   # 3 s
 import sys; sys.path[:0] = [".", "../fastsim"]
 import numpy as np
 from polligen import coherent as coh, spin, tagged
+from polli_fastsim import spectator as sp
 print("octupole(m=+1/2) : %.3f" % spin.moments_along_axis(1.5, (0, 1, 0, 0))[2])
 B = coh.gaussian_slope(2.444)
 print("c2 = 1 at |t|    : %.4f %.4f GeV^2"
@@ -1497,12 +1555,14 @@ s6 = coh.CoherentScenario()
 print("6Li c2 at .05/.25: %.3f %.3f"
       % (s6.cos2phi_coefficient_deformation(0.05, 1.0),
          s6.cos2phi_coefficient_deformation(0.25, 1.0)))
+kk = np.linspace(0.0, 3.0, 300001)          # fine trapezoid in k, GeV/c
+ch = sp.LI7_ALPHA_TAG                       # l_wave = 1: the alpha-t P wave
 for b in (0.20, 0.30, 0.40):
+    w = kk * kk * sp.momentum_density(kk, ch.kappa, b, ch.l_wave)
     m = tagged.TaggedModel(tagged.li7_alpha_channel(beta=b))
-    w = np.trapz(m.n_of_kc(1.5), m.c, axis=1)
     print("beta %.2f         : <k> %.4f  P(k>0.3) %.4f  <P2> %.4f %.4f"
-          % (b, np.trapz(w * m.k, m.k) / np.trapz(w, m.k),
-             np.trapz(w[m.k > 0.3], m.k[m.k > 0.3]) / np.trapz(w, m.k),
+          % (b, np.trapz(w * kk, kk) / np.trapz(w, kk),
+             np.trapz(w[kk > 0.3], kk[kk > 0.3]) / np.trapz(w, kk),
              m.p2_moment(1.5), m.p2_moment(0.5)))
 PY
 ```
@@ -1515,11 +1575,26 @@ reaches unity, 0.0175 and 0.0088 GeV², i.e. inside the first tagged bin
 in both rescalings, which is the quantitative statement that ⁷Li has no
 coherent scenario until the amplitude exists; the ⁶Li coefficients at
 the same two |t|, 0.100 and 0.500, for the contrast; and the cost of the
-β = 0.20–0.40 default of plans/04 #15 on the ⁷Li P wave — ⟨k⟩ = 0.1113,
-0.1333 and 0.1505 GeV/c with P(k > 0.3 GeV/c) = 0.0231, 0.0522 and
-0.0836, a factor 3.6 across the band, while ⟨P₂⟩ = −T/5 holds throughout
+β = 0.20–0.40 default of plans/04 #15 on the ⁷Li P wave — ⟨k⟩ = 0.2362,
+0.3059 and 0.3717 GeV/c with P(k > 0.3 GeV/c) = 0.2209, 0.3630 and
+0.4803, a factor 2.17 across the band, while ⟨P₂⟩ = −T/5 holds throughout
 — −0.1999 at M = 3/2 and +0.1998 at M = 1/2 — because the angular moment
-is fixed by Clebsch–Gordan and carries no radial parameter at all.
+is fixed by Clebsch–Gordan and carries no radial parameter at all.  The
+⟨k⟩ and P(k > 0.3) are moments of k² |ψ_P(k)|² with the P-wave radial
+ψ_P = k / ((k² + κ²)(k² + β²)) that the α–t channel actually carries
+(`spectator.LI7_ALPHA_TAG`, `l_wave = 1`), on a fine trapezoid to
+3 GeV/c rather than on the tagged model's k ≤ 1.2 GeV/c grid, which
+truncates them to 0.2288 / 0.2893 / 0.3414 and 0.2167 / 0.3549 / 0.4679.
+*(Corrected 2026-09-15.  The triples
+0.1113 / 0.1333 / 0.1505 and 0.0231 / 0.0522 / 0.0836, “a factor 3.6”,
+circulated before that date because the probe printed moments of n(k)
+without its k² phase-space factor; for these two radial forms that
+omission returns the S-wave Hulthén answer, 0.1113 / 0.1335 / 0.1510 and
+0.0235 / 0.0529 / 0.0848, so the ⁷Li spectator spectrum was
+being reported as if the channel were the ⁶Li one.  The P wave is
+harder than that by a factor 2.1–2.5 in ⟨k⟩ and 5.7–9.4 in the fraction
+above 0.3 GeV/c, which strengthens rather than weakens the reach
+argument the band is quoted for.)*
 
 ---
 
@@ -1804,7 +1879,7 @@ trust anything downstream of it.
 | … what the change moves | the three commands below | `target_mass_bound.py` and `money_tagged_azz.py --events 400000` reprint byte-identically (the first because its shifts are ratios linear in g₁, the second because its electrons are unpolarized); `closure_fom.py`'s ⁶Li A_∥ panel moves max \|spread/analytic − 1\| 0.20 → 0.18 in the same x = 0.00105 bin at ⟨N⟩ 2970 → 2974, inside its own 0.15 band, and its A_zz and cos 2φ panels and both ⁷Li panels do not move with the polarization value (the A_zz panel's worst bin does move with run 16's tensor sign, +0.23 at x = 0.00126 → +0.22 at x = 0.00603, ⟨N⟩ 3257 → 4316, both isotopes).  The isolation probe is `closure_fom.py` run with `beams.LI6` and `beams.IONS["6Li"]` replaced by `dataclasses.replace(beams.LI6, eff_pol_p=beams.LI6_NAIVE_ONE_THIRD, eff_pol_n=beams.LI6_NAIVE_ONE_THIRD)` before the script is executed |
 | … the one script that scales in full | `fastsim/scripts/money_polemc.py --ion 6Li` | δΔR at 10 fb⁻¹/u rises by the whole 1.233, 0.0496 / 0.0374 / 0.0409 / 0.0761 → 0.0612 / 0.0461 / 0.0504 / 0.0938 at x = 0.09 / 0.28 / 0.45 / 0.71, the best bin from 0.62σ to 0.50σ and the valence-window bin at x = 0.355 from 0.55σ to 0.45σ, with 22 rather than 23 bins surviving the ≥ 100-event floor.  The published polarized-EMC reach is the ⁷Li row above and does not move |
 | … the vector-L term of the master formula | the §4.1 probe | at 10 × 99.5 GeV/u, w_avg at θ_S = 0, m = 1, λ_e P_e = 0.7 and no b₁ is −0.000247 / 0.000010 / 0.000129 / 0.000363 / 0.000500 / 0.000862 over the six accepted grid cells nearest (x, Q²) = (0.005, 1.1) … (0.28, 25), against −0.000304 / 0.000012 / 0.000159 / 0.000448 / 0.000616 / 0.001063 on the retired constant — the ratio is 0.811228 in every cell, the term being linear in g₁ |
-| b₁ signal and reach | `scripts/money_b1.py` | transfer 0.921947 × 2/6 = 0.307316, signal Q² binned (the default since 2026-08-29) at ⟨Q²⟩ = 3.23 / 3.97 / 5.55 / 8.87 / 18.69 / 52.42 GeV²; \|A_zz\| = 2.16×10⁻⁴ / 4.69×10⁻⁴ / 7.46×10⁻⁴ / 1.35×10⁻³ / 1.34×10⁻³ / 3.33×10⁻³ (digitized Miller) and 1.02×10⁻⁵ / 1.12×10⁻⁵ / 6.60×10⁻⁶ / 1.26×10⁻⁶ / 6.76×10⁻⁵ / 4.12×10⁻⁴ (CDKS convolution) at x = 0.005 / 0.01 / 0.03 / 0.07 / 0.2 / 0.5, against δA_zz = 9.31×10⁻⁵ / 8.84×10⁻⁵ / 9.73×10⁻⁵ / 3.55×10⁻⁴ / 1.17×10⁻³ at P_zz = 0.6: 1.6 / 4.7 / 7.3 / 10.4 / 5.5 / 5.8 σ per bin for Miller and ≤ 0.2 σ everywhere for CDKS.  `--transfer legacy` gives 4.5 / 13.2 / 20.7 / 29.5 / 15.5 / 16.4 σ; `--signal-q2 fixed` restores the retired fixed slice; the quoted \|A_zz\| are evaluated on the dense x grid at the bins' interpolated (Q², y), not interpolated from the ~39 bin values across Miller's x = 0.577 zero crossing |
+| b₁ signal and reach | `scripts/money_b1.py` | transfer 0.921949 × 2/6 = 0.307316, signal Q² binned (the default since 2026-08-29) at ⟨Q²⟩ = 3.23 / 3.97 / 5.55 / 8.87 / 18.69 / 52.42 GeV²; \|A_zz\| = 2.16×10⁻⁴ / 4.69×10⁻⁴ / 7.46×10⁻⁴ / 1.35×10⁻³ / 1.34×10⁻³ / 3.33×10⁻³ (digitized Miller) and 1.02×10⁻⁵ / 1.12×10⁻⁵ / 6.60×10⁻⁶ / 1.26×10⁻⁶ / 6.76×10⁻⁵ / 4.12×10⁻⁴ (CDKS convolution) at x = 0.005 / 0.01 / 0.03 / 0.07 / 0.2 / 0.5, against δA_zz = 9.31×10⁻⁵ / 8.84×10⁻⁵ / 9.73×10⁻⁵ / 3.55×10⁻⁴ / 1.17×10⁻³ at P_zz = 0.6: 1.6 / 4.7 / 7.3 / 10.4 / 5.5 / 5.8 σ per bin for Miller and ≤ 0.2 σ everywhere for CDKS.  `--transfer legacy` gives 4.5 / 13.2 / 20.7 / 29.5 / 15.5 / 16.4 σ; `--signal-q2 fixed` restores the retired fixed slice; the quoted \|A_zz\| are evaluated on the dense x grid at the bins' interpolated (Q², y), not interpolated from the ~39 bin values across Miller's x = 0.577 zero crossing |
 | the digitized curves' ratio of effects | the §3.1b snippet | CBT 2.25 / 1.69 / 1.41 / 1.14 against TMT 1.01 / 0.98 / 1.00 / 1.08 at x = 0.40 / 0.45 / 0.50 / 0.60; CBT's minimum 1.06 at x = 0.696; the unpolarized ratios pass through 1 at x = 0.280 and 0.840 (CBT) and 0.721 (TMT), which is why the transfer is a valence-window strength factor (0.5322 for CBT and 0.2113 for TMT on the default EPPS21 baseline; 1 and 0.397009 on the legacy `cbt` one, which is what every figure published before 2026-08-29 used); the two published polarized curves agree to better than 0.008 over 0.028 < x < 0.30, and inside the valence window the transferred TMT depletion 0.021 / 0.026 / 0.044 tracks the baseline's own unpolarized 0.021 / 0.027 / 0.041 at x = 0.40 / 0.45 / 0.65 to within 0.003 against the transferred CBT's 0.041 / 0.043 / 0.050, so ΔR separates by 0.021 at x = 0.36 and 0.006 at 0.65; ⁷Li's own unpolarized curve, 0.034 / 0.048 / 0.087, and the untransferred pair 0.077 / 0.082 / 0.094 against 0.039 / 0.048 / 0.083, separating by 0.040 at x = 0.36 and 0.011 at 0.65, are the pre-2026-08-29 reading `--emc-baseline cbt` returns (§3.1b) |
 | A_bag triple (frozen R) | `scripts/money_delta_20260729.py --emit-a-bag-reference` | −0.317767 / −0.310041 / −0.296750 |
 | A_bag triple (published R) | `… --r-model r1998 --emit-a-bag-reference` | −0.237040 / −0.235825 / −0.234926 |
@@ -1843,10 +1918,11 @@ trust anything downstream of it.
 | coherent tag at the three half-widths | `scripts/nearbeam_aperture_scan.py` | silicon / YR HA envelope / tagging envelope: 9.4×10⁻¹⁰ / 7.2×10⁻⁸ / 0.37 (5 × 41), 2.0×10⁻¹⁹ / 6.2×10⁻²⁷ / 0.25 (10 × 100), 1.2×10⁻⁵ / 7.1×10⁻¹⁴ / 0.33 (18 × 275).  The silicon column is the aperture re-measured on 2026-08-28 (horizontal 2.50 / 1.51 / 0.53 mrad against 2.00 / 1.35 / 1.03, with the vertical at shut / 2.12 / 0.92 mrad), and the 18 × 275 YR column moved with it because that column takes the vertical at max(measured, 10σ_v) and the measured c_y fell from 2.3 to 0.92 mrad |
 | ⁶Li α tag (routed) at the three half-widths | same | 0.0170 / 0.0177 / 0.3159, 0.0163 / 0.0162 / 0.2235, 0.0289 / 0.0247 / 0.2920 |
 | ⁷Li α tag at the same three | `… --isotope 7Li` | 0.9668 / 0.9684 / 0.9878 (5 × 41), 0.9682 / 0.9672 / 0.9910 (10 × 100), 0.9812 / 0.9747 / 0.9943 (18 × 275) — flat to three points across the whole 0.05–3 mrad axis in angle (at 5 × 41 the measured per-band insertion leaves 57%, station 2 only — see the ⁷Li α-tag row of `tagging_acceptance.py` above), at 1/7.9 / 1/14.8 / 1/10.1 of the luminosity for the tagging point.  Panel (a) stays the coherent intact ⁶Li at either setting: `polligen.coherent` is ⁶Li-specific and a ⁷Li coherent channel is a different amplitude (plans/09 B3, open) |
-| money plot 4: ⁶Li α-tag reach, 10 × 99.5 | `scripts/money_tagged_azz.py --outdir . --events 400000` | acc 0.0247 (YR HA) vs 0.2545 (tagging, L/L_HA = 1/12.8) — acc × L 0.0247 vs 0.0199, a 19% cost — but median accepted k 0.323 vs 0.177 GeV/c and frac(k < 0.15) 0.000 vs 0.363.  At k ≈ 0.325 GeV/c A_zz = +0.491 (acceptance-weighted truth +0.455) and −0.066 (−0.095); the θ_k = 90° curve says −0.482 at both.  ⟨\|cos θ_k\|⟩ of the accepted sample is 0.80 (YR) against 0.39 (tagging) — not on the script's output line, but from the probe of §4.1, which gives 0.7149 / 0.4029, 0.7987 / 0.3948 and 0.7615 / 0.3998 at the three configurations — so the two optics read the S/D interference at opposite ends of θ_k; at `--events 8000000` the k = 0.325 bin closes on the weighted prediction at +0.4594 ± 0.0129 against +0.4548 (0.4σ) and −0.0974 ± 0.0070 against −0.0945 (0.4σ).  `acc` is the unbinned accepted fraction: 9–11% of the accepted α lie above the 0.6 GeV/c right edge of the panel.  The kernel forms b₁/F₁, and the digitized Miller b₁ that `polli_fastsim.polarized.toy_b1` returns by default is tapered above its last point (x = 0.9) with the (1 − x)³ falloff of F₁ (`polarized._interp_tapered`, 2026-08-29): frozen at its x = 0.9 value it made the ratio diverge at the generator grid's x = 0.9550 cell and raised `ValueError: negative phi-averaged density` (min(1 + w_avg) = −2.32 in 22 of 2750 cells).  b₁ enters this figure through w_avg alone, so the row's numbers do not depend on it at the digits quoted; a ⁶Li b₁ is read off `money_b1.py`, not off this generator |
-| … the same at the other two configurations | `… --config 0` / `--config 2` | acc 0.0284 / 0.0265 (YR HA) vs 0.3433 / 0.3127 (tagging); median accepted k 0.348 / 0.334 GeV/c (YR HA, frac below 0.15 GeV/c = 0.000) against 0.153 / 0.161 with 0.484 / 0.446 (tagging); acc × L/L_HA 0.0284 → 0.0503 and 0.0265 → 0.0331, i.e. the tagging optics gains reach *and* rate at both, and costs rate only at 10 × 100 |
+| money plot 4: ⁶Li α-tag reach, 10 × 99.5 | `scripts/money_tagged_azz.py --outdir . --events 400000` | acc 0.0241 (YR HA) vs 0.2542 (tagging, L/L_HA = 1/12.8) — acc × L 0.0241 vs 0.0198, an 18% cost — but median accepted k 0.323 vs 0.177 GeV/c and frac(k < 0.15) 0.000 vs 0.364.  At k ≈ 0.325 GeV/c A_zz = −0.843 (acceptance-weighted truth −0.871) and +0.215 (+0.181); the θ_k = 90° curve says +0.922 at both.  ⟨\|cos θ_k\|⟩ of the accepted sample is 0.80 (YR) against 0.39 (tagging) — not on the script's output line, but from the probe of §4.1, which gives 0.7086 / 0.4021, 0.7973 / 0.3946 and 0.7564 / 0.3990 at the three configurations — so the two optics read the S/D interference at opposite ends of θ_k; at `--events 8000000` the k = 0.325 bin closes on the weighted prediction at −0.8628 ± 0.0130 against −0.8711 (0.6σ) and +0.1755 ± 0.0070 against +0.1811 (0.8σ).  The four `acc` digits are category-averaged and their last digit is seed noise; the A_zz signs are post-2026-09-15 (the i^L phase of `TaggedModel._amp2_table`): before the i^L phase the same three read +0.491 / −0.066 / −0.482.  `acc` is the unbinned accepted fraction: 9–11% of the accepted α lie above the 0.6 GeV/c right edge of the panel.  The kernel forms b₁/F₁, and the digitized Miller b₁ that `polli_fastsim.polarized.toy_b1` returns by default is tapered above its last point (x = 0.9) with the (1 − x)³ falloff of F₁ (`polarized._interp_tapered`, 2026-08-29): frozen at its x = 0.9 value it made the ratio diverge at the generator grid's x = 0.9550 cell and raised `ValueError: negative phi-averaged density` (min(1 + w_avg) = −2.32 in 22 of 2750 cells).  b₁ enters this figure through w_avg alone, so the row's numbers do not depend on it at the digits quoted; a ⁶Li b₁ is read off `money_b1.py`, not off this generator |
+| … the same at the other two configurations | `… --config 0` / `--config 2` | acc 0.0279 / 0.0261 (YR HA) vs 0.3434 / 0.3123 (tagging); median accepted k 0.349 / 0.334 GeV/c (YR HA, frac below 0.15 GeV/c = 0.000) against 0.153 / 0.161 with 0.484 / 0.446 (tagging); acc × L/L_HA 0.0279 → 0.0504 and 0.0261 → 0.0330, i.e. the tagging optics gains reach *and* rate at both, and costs rate only at 10 × 100.  At k ≈ 0.325 GeV/c A_zz = −0.820 (truth −0.871) and +0.220 (+0.189) at 5 × 40.8, −0.864 (−0.871) and +0.235 (+0.189) at 18 × 137.5, against the same +0.922 on the 90° curve.  Neither is a published stem: both write `money_tagged_azz_6Li_<key>_menu.png` |
 | ⁷Li polarimetry and tagged EMC, 10 × 99.5 | `scripts/tagged_polarimetry_7li.py` | acc(RP) 0.9678 (YR HA) vs 0.9909 (tagging); acc(any far-fwd) 0.9690 vs 0.9921; ⟨P₂⟩ slope −0.1947 vs −0.1962 against the analytic −0.2000 (legacy 73 μrad: −0.1929); median δA_∥ 0.01152 vs 0.01141 *at equal generated statistics* — the plotted bars are drawn there, and the figure says so.  At `--config 0` and `--config 2` the tags are 0.9617 / 0.9728 (YR HA) against 0.9800 / 0.9919 (tagging).  At equal luminosity the tagging optics multiplies every ⁷Li error bar by 2.78 / 3.81 / 3.15 — a factor 7.7–14.5 net loss |
-| Cosyn–Weiss deuteron limit (`plans/05` §5.4) | `python3 -m pytest tests/test_tagged.py::test_cosyn_weiss_tensor_gate -q` | A_zz^wf / P₂(cos θ_k) = 0.99940 at k = 0.3012 GeV/c in every angular cell away from the P₂ zero (cells with \|P₂\| ≤ 10⁻³ excluded), spread < 10⁻⁵; radial envelope peak at k = 0.3098 GeV/c against Cosyn–Weiss's 0.30 GeV/c for AV18; A_T∥ = −2 A_zz^wf extremes +0.99967 and −1.93782 at the outermost cells, +1.000 / −2.000 extrapolated, against their TABLE II's +1 and −2 |
+| Cosyn–Weiss deuteron limit, the identity gate (`plans/05` §5.4) | `python3 -m pytest tests/test_tagged.py::test_cosyn_weiss_tensor_gate -q` | max \|A_zz^wf − Eq. (6.12)(f₀ = rad₀, f₂ = rad₂)\| = 8.9×10⁻¹⁶ (deuteron control) and 1.1×10⁻¹⁵ (⁶Li) over the whole (k, cos θ_k) grid, i.e. the map is A_T∥ = +1 × A_zz^wf; A_zz^wf / P₂(cos θ_k) depends on k alone (spread 6.0×10⁻¹⁴ and 4.4×10⁻¹⁴ over all k, cells with \|P₂\| ≤ 10⁻³ excluded) and equals −1.639538 / −1.793865 at k = 0.3012 GeV/c; ranges [−1.93188, +0.99661] and [−1.93782, +0.99967], both at the k = 1.2 GeV/c grid edge, inside Cosyn–Weiss's [−2, 1] but not attaining it, because the toy deuteron's f₂/f₀ peaks at 1.2866 and never reaches √2 (the toy ⁶Li crosses √2 at k = 0.7432 GeV/c) |
+| … and TABLE II on the real wave function | `python3 -m pytest tests/test_tagged.py::test_cosyn_weiss_table_ii_on_av18 -q` | on `tagged.av18_deuteron_channel()`: A_zz^wf = −1.93712 at the cell nearest θ_k = 0 (\|cos θ_k\| = 0.98958) and k = 0.30115 GeV/c against TABLE II's −2 (the cell-centre value of that row is −1.93783) and +0.99931 at the 90° cell against their +1; f₂/f₀ = +√2 at k = 0.29812 GeV/c on the grid, 0.2988 by cubic spline on the raw table, against their 0.30 GeV; the axial node of n_{±1} on a fine nc = 4001 grid, n_{+1}/n₀ = 2.726×10⁻⁴ at k = 0.29685 GeV/c and \|cos θ_k\| = 0.99975 against 0.164 at k = 0.2 and 0.193 at k = 0.4, with A_zz^wf = −1.99837 there; the third row +0.96734 at k = 0.99787 GeV/c against their +1, with the f₂/f₀ = −1/√2 crossing at 1.0349 GeV/c (1.0257 by spline) against their “∼1 GeV”; the loader's own cross-checks on the file, ∫(u²+w²)k²dk = 0.999976, D-state 0.057600 against the header's `dstate` 0.057599, u(k) node at 0.4128 GeV/c |
 | the chain at the tagging optics | `scripts/nearbeam_reach_gain.py --n-mc 2000000` | pots at the silicon (2.50 × 6.49, 1.51 × 2.12 and 0.53 × 0.92 mrad): acc 0 and 0 of 7 bins at 5 × 41 and 10 × 100, acc 1.45×10⁻⁵ with 268 tagged/yr and 0 of 7 at 18 × 275 — its one populated bin, 231 expected tagged recoils in 0.17–0.25 GeV², is printed as `DROPPED` by the minimum-count guard `nearbeam_reach_gain.MIN_TAGGED_PER_BIN` = 1000 (2026-08-28), which is below two counts per (α, β) cell of the 12 × 24 design in each of the two fills; the fit that bin used to get returned a_t = −1.56 ± 2.22 at a t_ref outside the linear model, which is a count and not a measurement and alone set the vertical range of panel (a).  A dropped bin appears in neither panel and is counted out of the header's surviving-bin tally, and the empty-bin `RuntimeWarning` from `truth_reference` goes with it.  Nothing else in the run moves: pots following: acc 0.3643 / 0.2471 / 0.3246, N_tag 2.31 / 2.38 / 6.00 ×10⁶/yr, 7 of 7 \|t\| bins, δa_t 0.0063 / 0.0052 / 0.0051 / 0.0037 / 0.0050 / 0.0089 / 0.0190 (5 × 41), 0.0130 / 0.0072 / 0.0063 / 0.0040 / 0.0048 / 0.0077 / 0.0148 (10 × 100), 0.0039 / 0.0031 / 0.0032 / 0.0023 / 0.0033 / 0.0064 / 0.0153 (18 × 275).  `--fit likelihood` leaves the errors alone (0.0037–0.0195 / 0.0040–0.0152 / 0.0023–0.0155) and moves only the recovered a_t of the sparsest bin, 0.1196 → 0.1825 against 0.1835 injected at 5 × 41 |
 | … the run-13 \|t\| window on the same transport | `scripts/nearbeam_reach_gain.py --n-mc 2000000 --t-edges 0.05,0.08,0.12,0.17,0.25` | writes the guarded stem `nearbeam_reach_gain_6Li_tedges.png`; δa_t 0.0037 / 0.0050 / 0.0088 / 0.0190 (5 × 41), 0.0040 / 0.0048 / 0.0077 / 0.0149 (10 × 100), 0.0023 / 0.0033 / 0.0064 / 0.0149 (18 × 275) |
 | sizing strip at the tagging envelope | `scripts/nearbeam_sensor_budget.py` | d50 / d90 / d99 = 176 / 489 / 823 μrad (5 × 41), 65 / 184 / 315 (10 × 100), 50 / 141 / 239 (18 × 275) — the two lower rows follow the 0.36 and 0.19 mrad envelopes of the per-configuration levers, the 18 × 275 row being on its own lever either way; α at 137.5 GeV/u 77 / 270 / 624.  The strip does not move with the aperture and that is the point of it: it measures the gap between the silicon and the *tagging* envelope, and the tagging envelope is the near edge.  What moves is how much strip there is to build — 12.4 mm at 18 × 275 (0.53 → 0.12 mrad at R₁₂ = 30.0 m) → 496 mm², 3968 microwire channels, 551 111 nanowire devices, against the 9.3 mm the retired 72.7 μrad envelope gave |

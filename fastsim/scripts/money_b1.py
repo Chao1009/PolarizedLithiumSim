@@ -10,7 +10,7 @@ magnitude below it at x >~ 0.2. Shown for two tensor polarizations --
 this plot sets the P_zz requirement for the source.
 
 `--transfer rank2` (the default) carries the deuteron b1 into 6Li with the
-rank-2 tensor transfer of the tagged two-cluster model, 0.921947, times the
+rank-2 tensor transfer of the tagged two-cluster model, 0.921949, times the
 2-of-6 per-nucleon factor; `--transfer legacy` restores the 0.87 x 1 of the
 figures published before 2026-08-28, which was the VECTOR dilution and no
 per-nucleon factor at all -- signal and error on different normalisations
@@ -150,7 +150,7 @@ def main():
     ap.add_argument("--transfer", default="rank2",
                     choices=["rank2", "legacy"],
                     help="deuteron -> 6Li b1 transfer: 'rank2' (default) is "
-                         "0.921947 x 2/6, 'legacy' the pre-2026-08-28 "
+                         "0.921949 x 2/6, 'legacy' the pre-2026-08-28 "
                          "0.87 x 1 (plans/08 D9)")
     ap.add_argument("--signal-q2", default="binned", dest="signal_q2",
                     choices=["binned", "fixed"],

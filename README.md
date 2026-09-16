@@ -44,7 +44,7 @@ here and why.
 # and NNPDFpol11_100 installed)
 cd fastsim && python -m pytest tests/ -q
 
-# event generator (323 tests)
+# event generator (336 tests)
 cd evgen && python -m pytest tests/ -q
 
 # money plots (outputs land next to the scripts' working directory)

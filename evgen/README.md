@@ -15,7 +15,7 @@ next. Imports `../fastsim/polli_fastsim` — nothing there is duplicated.
 
 ```bash
 cd evgen
-python3 -m pytest tests/ -q            # 334 tests
+python3 -m pytest tests/ -q            # 336 tests
 python3 scripts/closure_fom.py --ion 6Li --events 200000 --trials 200
 python3 scripts/closure_fom.py --ion 7Li --events 200000 --trials 200
 python3 scripts/money_tagged_azz.py --events 400000       # money plot 4 (--config, --optics, --lumi-fraction)
@@ -39,7 +39,7 @@ python3 scripts/nearbeam_sensor_budget.py # plans/09: hot-spot Z-ID, sizing, cha
 python3 scripts/nearbeam_zid_power.py     # plans/09: how much charge information Z-ID needs
 python3 scripts/nearbeam_two_hit.py       # plans/09 B4: two-hit topology of 6Li -> alpha + d, and the partner-fragment veto
 python3 ../reports/build_report.py --pdf  # assemble reports/ pages
-python3 ../tools/consistency_check.py     # 50 checks (52 with --full): does everything still agree?
+python3 ../tools/consistency_check.py     # 51 checks (53 with --full): does everything still agree?
 #   reports are numbered in reading order:
 #   -> 0 polarized_li_primer.html/pdf (educational physics primer)
 #   -> 1 cos2phi_money_plots_report.html/pdf (the projected measurements)
@@ -102,20 +102,25 @@ per-configuration optics (`--optics menu` = Yellow Report high-acceptance
 plus the lithium tagging optics, `--config {0,1,2}`) with the spectator's
 own lab azimuth against the rectangular 10(σ_h, σ_v) envelope, and it
 overlays the truth **weighted by each optics' θ_k acceptance** beside the
-θ_k = 90° curve.  Both matter.  At 10 × 99.5 the α tag is 2.5% at the
-Yellow Report optics against 25% at the tagging optics — a 19% cost in
+θ_k = 90° curve.  Both matter.  At 10 × 99.5 the α tag is 2.4% at the
+Yellow Report optics against 25% at the tagging optics — an 18% cost in
 tagged events per year, since the tagging optics runs at L/L_HA = 1/12.8,
-and a gain of 1.8× and 1.2× at the other two configurations — but
+and a gain of 1.8× and 1.3× at the other two configurations — but
 the median accepted spectator momentum is 0.32 GeV/c with **nothing below
 k = 0.15 GeV/c** against 0.18 GeV/c with 36% below it: at every published
 optics the ⁶Li α tag admits only the high-k tail, and the tagging optics
 is what turns money plot 4 from a one-point measurement into a curve.  And
 the accepted sample is not at θ_k = 90°: the surviving off-rigidity window
-slice is longitudinal (⟨|cos θ_k|⟩ = 0.79) while the near-beam tail the
-tagging optics opens is transverse (0.40), so the folded A_zz reads +0.49
-and −0.07 at k ≈ 0.33 GeV/c where the 90° curve says −0.48.  The ±0.5
-swing the pre-2026-08-28 figure showed between its two optics was that
-θ_k sculpting, not the wave function (plans/09 B2).
+slice is longitudinal (⟨|cos θ_k|⟩ = 0.797) while the near-beam tail the
+tagging optics opens is transverse (0.395), so the folded A_zz reads −0.84
+and +0.22 at k ≈ 0.33 GeV/c where the 90° curve says +0.92.  The swing
+between the two optics at k ≈ 0.3 GeV/c — 1.06 wide on the corrected wave
+function, ±0.5 on the pre-2026-08-28 figure — is that θ_k sculpting, not
+the wave function (plans/09 B2).  The A_zz numbers themselves are the
+2026-09-15 ones: `tagged.py` now carries the i^L phase of the partial-wave
+expansion, so the α–d S/D interference enters with the sign the momentum-
+space wave function actually has, and every A_zz^wf of this figure changed
+sign (the acceptance-weighted truths are −0.87 and +0.18; plans/00 run 19).
 
 `tagged_polarimetry_7li.py`: the ⁷Li α-tag pair — the in-situ alignment
 polarimeter ⟨P₂(cos θ_k)⟩ = −T/5 and the tagged polarized-EMC companion

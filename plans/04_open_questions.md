@@ -262,13 +262,41 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
     α+t P for ⁷Li) to replace the two-parameter radial forms whose tail
     dominates tagged acceptances (e+d control: BeAGLE tails 2–13× Hulthén).
     *Engage:* R.B. Wiringa (ANL, local). *Default:* β = 0.20–0.40 band.
-    *2026-08-29:* the cost of that band is now measured on the ⁷Li P
-    wave — ⟨k⟩ = 0.1113 / 0.1333 / 0.1505 GeV/c and P(k > 0.3 GeV/c) =
-    0.0231 / 0.0522 / 0.0836 at β = 0.20 / 0.30 / 0.40, a factor 3.6 in
-    exactly the region where the tagged tensor asymmetries are O(1),
-    while the angular moment ⟨P₂⟩ = −T/5 is fixed by Clebsch–Gordan and
-    does not move — and the ask is `docs/note_7li_theory_questions.md`
-    §3.
+    *2026-08-29, moments corrected 2026-09-15:* the cost of that band is
+    measured on the ⁷Li P wave — ⟨k⟩ = 0.2362 / 0.3059 / 0.3717 GeV/c and
+    P(k > 0.3 GeV/c) = 0.2209 / 0.3630 / 0.4803 at β = 0.20 / 0.30 / 0.40,
+    a factor 2.17 in exactly the region where the tagged tensor
+    asymmetries are O(1), while the angular moment ⟨P₂⟩ = −T/5 is fixed by
+    Clebsch–Gordan and does not move — and the ask is
+    `docs/note_7li_theory_questions.md` §3.  (The triples first entered here
+    were `momentum_density(…, l_wave=0)`, the S-wave form, evaluated for a
+    channel whose wave is `l_wave = 1`; they are retired in
+    `tools/retired_numbers.json`.  On the P wave the band is wider in ⟨k⟩
+    and far heavier in the tagged region — a fifth of the ⁷Li α spectrum
+    is already above 0.3 GeV/c at β = 0.20 — while the direction of the
+    argument, that this tail is what a VMC overlap must settle, is
+    unchanged.)
+    *2026-09-15:* the ask acquired a second, sharper part — the **sign**
+    of the α–d D radial is now a live physics input of the tagged ⁶Li
+    channel, not a convention.  `polligen/tagged.py` applies the i^L phase
+    of the momentum-space partial-wave expansion (plans/00 run 19), so the
+    sign of the S–D interference — and with it the sign of every tagged
+    A_zz — follows the sign of ψ₂/ψ₀ directly.  The model takes it
+    deuteron-like (ψ₂/ψ₀ > 0, as AV18's w(k)/u(k) is at low k).  The
+    sibling generator's VMC α+d overlap supports that over 0.134–0.444 GeV/c
+    and nowhere else: it measures sign(ψ₂/ψ₀) = −1 below the α–d S node at
+    0.134 GeV/c, +1 between the nodes, and −1 again above the α–d D node at
+    0.444 GeV/c, and the node-free Hulthén forms used here can represent
+    neither reversal.  Nor is the accepted sample confined to the supported
+    window: 27 / 21 / 26 % of the Yellow-Report-accepted α lie above
+    0.444 GeV/c at the three configurations — where LiPolGen's own
+    acceptance-weighted VMC A_zz^tag changes sign between k = 0.40 and 0.50
+    (−0.08 → +0.12) against a Hulthén −0.73 / −0.59 — and 41 / 28 / 37 %
+    of the tagging-optics sample lies below 0.134 GeV/c.  The k = 0.325 GeV/c
+    headline bin of money plot 4 is inside the supported window; the tails
+    on either side of it are not.  A VMC overlap would settle
+    both the tail and the sign in one object; the statement of the adopted
+    sign lives next to `P_D_LI6` in `tagged.py`.
 16. **FSI for cluster spectators beyond IA** (α rescattering off DIS
     debris; deuteron case solved in PRC 97:035209, pole extrapolation).
     *Engage:* Cosyn, Sargsian. *Default:* IA, quoted at small |t′|.

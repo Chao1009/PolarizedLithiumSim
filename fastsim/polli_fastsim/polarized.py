@@ -866,11 +866,15 @@ def close_kumano_integral(mode="cdks"):
 # `polligen.tagged.TaggedModel(li6_alpha_channel()).tensor_dilution()`
 # evaluated at `beams.P_D_LI6` (pinned in evgen/tests/test_tagged.py).
 # It is a quadrature over the channel and not a closed form: the closed
-# form 1 - (9/10) P_D gives 0.921970 against the 0.9219467 measured, so
+# form 1 - (9/10) P_D gives 0.921970 against the 0.9219490 measured, so
 # the two are pinned to each other at 1e-4 and not asserted equal.
 # The 0.87 it replaces is the VECTOR dilution 1 - (3/2) P_D -- the wrong
 # rank for b1, and the whole of plans/08 D9.
-LI6_B1_RANK2_TRANSFER = 0.921947
+# The 7th digit moved on 2026-09-15 (0.9219467 -> 0.9219490) when the i^L
+# phase of the tagged amplitude was restored: the dilution is an
+# angle-integrated quadrature, so the S-D interference it inherits enters
+# only through the midpoint-rule residual, 2.5e-6 relative.
+LI6_B1_RANK2_TRANSFER = 0.921949
 LI6_B1_LEGACY_TRANSFER = 0.87
 # 6Li carries two polarized nucleons out of six.  The factor puts the
 # signal on the same per-nucleon footing as the F1 it is divided by and as

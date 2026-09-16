@@ -31,8 +31,14 @@ Two corrections of 2026-08-28 (plans/09 B2) change what this figure says.
     the tagging optics) while the off-rigidity R < 0.95 window slice, which
     is all that survives at the Yellow Report optics, is longitudinal
     (0.71-0.80).  The two read the S/D interference at opposite ends of
-    theta_k, and the +-0.5 swing the published version showed between its
-    two optics at k ~ 0.3 GeV/c was that, not the wave function.  The
+    theta_k, and the swing the published version showed between its two
+    optics at k ~ 0.3 GeV/c was that, not the wave function: at the
+    k = 0.325 GeV/c bin the two optics read -0.843 and +0.215 on one and
+    the same sample, a gap of 1.06 straddling the 90 deg curve's +0.922,
+    and the acceptance-weighted predictions -0.871 and +0.181 account for
+    both ends.  (Before 2026-09-15 the same three numbers read +0.491,
+    -0.066 and -0.482: the mechanism was right, the wave-function sign was
+    not -- see TWO SIGNS MEET HERE below.)  The
     right panel therefore carries, per optics, the acceptance-weighted
     prediction
 
@@ -43,38 +49,58 @@ Two corrections of 2026-08-28 (plans/09 B2) change what this figure says.
     the markers should be compared against; the 90 deg curve is kept as a
     labelled reference.  eps concentrated at c = 0 returns it exactly
     (pinned in test_tagged.py).  Closure, measured with `--events 8e6
-    --config 1` at the k = 0.325 GeV/c bin: +0.4594 +- 0.0129 against the
-    weighted prediction +0.4548 at the Yellow Report optics (0.4 sigma)
-    and -0.0974 +- 0.0070 against -0.0945 at the tagging optics (0.4
+    --config 1` at the k = 0.325 GeV/c bin: -0.8628 +- 0.0130 against the
+    weighted prediction -0.8711 at the Yellow Report optics (0.6 sigma)
+    and +0.1755 +- 0.0070 against +0.1811 at the tagging optics (0.8
     sigma).  Over all populated bins the residual against the prediction
-    at the bin centre is |dA_zz| <= 0.063 (Yellow Report) and <= 0.085
-    (tagging) at the default 4e5 events -- within 1.1 sigma (YR) and 1.6
-    sigma (tagging), where the errors are 0.053-0.167 and 0.014-0.100.  At
+    at the bin centre is |dA_zz| <= 0.101 (Yellow Report) and <= 0.074
+    (tagging) at the default 4e5 events -- within 1.5 sigma (YR) and 1.8
+    sigma (tagging), where the errors are 0.053-0.169 and 0.014-0.099.  At
     8e6 the errors fall to 0.012-0.037 and 0.003-0.023 and the residuals
-    to 0.025 and 0.022, and one bin, k = 0.175 at the tagging optics, then
-    reads 2.7 sigma: that bin is where eps(k) turns on (nothing at all is
-    accepted below k = 0.189 GeV/c at the Yellow Report optics), so the
-    truth at the bin CENTRE is not the truth the bin-averaged marker
-    measures.  Averaged over each bin the way the marker is, every
-    populated bin is within 1.6 sigma (YR) and 2.2 sigma (tagging) at 8e6
-    as well.  These numbers are
+    to 0.039 and 0.029, and one bin, k = 0.375 at the Yellow Report
+    optics, then reads 2.5 sigma: the acceptance varies steeply across
+    that bin (and nothing at all is accepted below k = 0.189 GeV/c at the
+    Yellow Report optics), so the truth at the bin CENTRE is not the truth
+    the bin-averaged marker measures -- against the bin-AVERAGED
+    prediction the same bin is 1.2 sigma.  Averaged over each bin the way
+    the marker is, every populated bin is within 1.5 sigma (YR) and 1.8
+    sigma (tagging) at 8e6.  These numbers are
     for the kernel WITHOUT an inclusive b1 (see the comment at the kernel
-    below): with the toy shape the closure read +0.4471 / -0.1019, the
-    -0.008 being the double-counted b1.
+    below): with the toy shape the closure reads -0.8558 / +0.1778, the
+    +0.007 / +0.002 shift being the double-counted b1.
 
 TWO SIGNS MEET HERE, AND THEY ARE INDEPENDENT.  The asymmetry this
 figure measures is the WAVE-FUNCTION one, A_zz^wf = (n_+1 + n_-1 -
 2 n_0)/(n_+1 + n_-1 + n_0) of `tagged.azz_tensor_curve`: its sign is fixed
 by the alpha-d S/D interference of the two-cluster model -- by which
 spin-projection state puts more spectator strength at that k -- and by
-nothing else.  The INCLUSIVE tensor sign, `asymmetries.TENSOR_LL_SIGN`,
-which since 2026-08-29 is the literature's (A_zz = -(2/3) b1/F1, Cosyn
-et al. Eq. 27 / HERMES; plans/08 D1), enters this script only through the
-b1 rate shift w_avg of the struck cluster's kernel, at the 10^-3 level of
-a quantity that is O(1) here.  Flipping it changes no digit of the
-numbers below, which is why D1 could be decided without re-running this
-figure: it was verified by re-running it anyway, at the published
-`--events 400000`, and every printed digit is unchanged.
+nothing else.  THAT SIGN WAS CORRECTED ON 2026-09-15: the momentum-space
+amplitude carries the plane-wave phase phi_L = i^L psi_L, which
+`tagged._amp2_table` did not apply, so every number this figure printed
+before that date had the S-D interference inverted (the 90 deg curve read
+-0.482 at k = 0.325 GeV/c where it now reads +0.922).  The correction is
+what makes the model reproduce Cosyn-Weiss II Eq. (6.12) identically and
+their TABLE II on AV18 (test_cosyn_weiss_tensor_gate,
+test_cosyn_weiss_table_ii_on_av18); the remaining sign input is the sign
+of the alpha-d D radial itself, taken deuteron-like and supported by the
+VMC alpha+d overlap over 0.134-0.444 GeV/c ONLY -- that overlap reads the
+opposite sign below the alpha-d S node at 0.134 and again above the
+alpha-d D node at 0.444, neither of which a node-free Hulthen form can
+carry, and 27 / 21 / 26 % of the Yellow-Report-accepted sample sits above
+the upper node with 41 / 28 / 37 % of the tagging-optics sample below the
+lower one.  The k = 0.325 GeV/c bin quoted above is inside the supported
+window; the tails on either side of it are not (see `tagged.P_D_LI6`).
+
+The INCLUSIVE tensor sign, `asymmetries.TENSOR_LL_SIGN`, which since
+2026-08-29 is the literature's (A_zz = -(2/3) b1/F1, Cosyn et al. Eq. 27
+/ HERMES; plans/08 D1), enters this script only through the b1 rate shift
+w_avg of the struck cluster's kernel, at the 10^-3 level of a quantity
+that is O(1) here -- and with `b1_func=None` below, not at all.  Flipping
+it changes no digit of the numbers above, which is why D1 could be
+decided without re-running this figure: it was verified by re-running it
+anyway, at the published `--events 400000`, and every printed digit is
+unchanged (re-verified 2026-09-15 on the corrected wave function: the two
+summary blocks are character-identical).
 
 Output: `money_tagged_azz_6Li.png` for the published combination
 (--config 1 --optics menu) and `money_tagged_azz_6Li_<key>_<optics>.png`

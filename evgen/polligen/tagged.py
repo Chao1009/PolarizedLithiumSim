@@ -7,10 +7,28 @@ ground state is expanded in cluster relative partial waves,
             psihat_L(k) Y_L^{m_L}(khat) |S_c m_S>,
 
 with S_c the channel spin (the coupled cluster spins), psihat_L normalized
-radial waves and a_L^2 = P_L the wave probabilities.  Everything the
-tagged observables need follows from the joint amplitude
+radial waves and a_L^2 = P_L the wave probabilities.  The radial tables
+(`Wave.radial`, and the tabulated AV18 control) are in the PLAIN
+Bessel-transform convention, psihat_L(k) ~ int j_L(kr) u_L(r) r dr, which
+is positive at low k -- so the momentum-space amplitude carries the
+plane-wave phase phi_L = i^L psihat_L: a coordinate-space
+sum_L u_L(r)/r [Y_L x chi_S]_JM transforms into sum_L (-i)^L psihat_L(k)
+[Y_L x chi_S]_JM.  Both phases appear because they belong to opposite
+conventions -- (-i)^L is the expansion of e^{-ik.r}, i^L that of
+e^{+ik.r} -- and they differ by (-1)^L, a GLOBAL sign within one parity;
+only the RELATIVE phase between waves is observable, so nothing here
+depends on which of the two is taken.  Everything the tagged
+observables need follows from the joint amplitude
 
-  A_{m_S}(M; k, khat) = sum_L a_L psihat_L(k) C_L(M, m_S) Y_L^{M-m_S}(khat):
+  A_{m_S}(M; k, khat) = sum_L i^L a_L psihat_L(k) C_L(M, m_S)
+                              Y_L^{M-m_S}(khat):
+
+For the same-parity mixtures this module allows (guarded in
+TaggedChannel.__post_init__) the relative phase is real, (-1)^(L//2) --
++1 and -1 for L = 0 and 2, +1 for a lone L = 1 wave -- so A stays real.
+Dropping it inverts the S-D interference: it moves the axial node of the
+deuteron density from M = +-1 to M = 0 and flips the sign of A_zz^wf
+(run 19, 2026-09-15; the pre-fix sign was published through 2026-09-06).
 
 * spectator momentum density  n_M(k, khat) = sum_{m_S} |A_{m_S}|^2
   (L-interference gives the Cosyn-Weiss-style m-dependence: S/D for the
@@ -102,7 +120,13 @@ NEUTRON = beams.Ion("n", 1, 0, 0.5, eff_pol_p=0.0, eff_pol_n=1.0)
 
 def theta_lm(l, m, c):
     """|m|-azimuth-stripped spherical harmonic Theta_l^m(theta) with
-    Condon-Shortley signs: Y_l^m = Theta_l^m(theta) exp(i m phi)."""
+    Condon-Shortley signs: Y_l^m = Theta_l^m(theta) exp(i m phi).
+
+    These are the harmonic's own signs only.  The plane-wave phase i^L of
+    the momentum-space amplitude is a separate factor, applied per wave in
+    `TaggedModel._amp2_table`; the two never interact, because two waves
+    of a channel share a cell only at m_l = 0, where Theta_L^0 is real,
+    positive-normalized and free of any Condon-Shortley (-1)^m."""
     c = np.asarray(c, dtype=float)
     s = np.sqrt(np.maximum(1.0 - c * c, 0.0))
     if l == 0 and m == 0:
@@ -150,6 +174,32 @@ class Wave:
 
 
 @dataclass(frozen=True)
+class TabulatedWave:
+    """One partial wave whose radial shape is a TABLE, not a formula.
+
+    Same duck type as `Wave` -- `l`, `prob`, `radial(k, kappa)` -- but the
+    table already is the wave function, so `kappa` is accepted and
+    ignored.  `k_table` is in GeV/c and must be increasing; values are
+    linearly interpolated and ZERO beyond the table's last point (the AV18
+    table runs to 20 fm^-1 = 3.95 GeV/c, far outside any grid used here).
+    Signs are the table's own: no phase is applied at load, because the
+    i^L phase of the momentum-space amplitude belongs to
+    `TaggedModel._amp2_table` and is applied there for every wave alike.
+    """
+    l: int
+    prob: float
+    k_table: Tuple[float, ...]
+    psi_table: Tuple[float, ...]
+    label: str = ""
+
+    def radial(self, k, kappa=None):
+        kt = np.asarray(self.k_table, dtype=float)
+        pt = np.asarray(self.psi_table, dtype=float)
+        return np.interp(np.asarray(k, dtype=float), kt, pt,
+                         left=pt[0], right=0.0)
+
+
+@dataclass(frozen=True)
 class TaggedChannel:
     """Spin structure on top of a kinematic spectator.ClusterChannel."""
     base: spectator.ClusterChannel   # masses, separation energy, boost
@@ -166,6 +216,23 @@ class TaggedChannel:
         if abs(tot - 1.0) > 1e-9:
             raise ValueError("wave probabilities must sum to 1 (got %g)"
                              % tot)
+        # All waves must share L mod 2.  The momentum-space amplitude
+        # carries phi_L = i^L psihat_L (module docstring); for one parity
+        # that phase is real up to an irrelevant overall factor, which is
+        # what lets `TaggedModel._amp2_table` sum REAL amplitudes with the
+        # relative factor (-1)^(L//2).  Mix parities and i^L is imaginary
+        # for the odd waves, so the amplitude -- and the machinery here --
+        # would have to become complex.  Parity also forbids the mixture
+        # physically for a state of good parity, so this is a guard
+        # against a mis-specified channel, not a missing feature.
+        parities = sorted({w.l % 2 for w in self.waves})
+        if len(parities) > 1:
+            raise ValueError(
+                "all waves of a channel must share L mod 2 (got L = %s): "
+                "with mixed parity the i^L phase of the momentum-space "
+                "amplitude is imaginary for the odd waves and the "
+                "amplitude would have to be complex"
+                % ([w.l for w in self.waves],))
 
 
 # --- default channels (radial betas carry the model band, as in fastsim) --
@@ -181,6 +248,28 @@ class TaggedChannel:
 # replacement, plans/04 #15), and the deuteron's own AV18-like D state.
 P_D_LI6 = beams.P_D_LI6
 P_D_DEUTERON = beams.P_D_DEUTERON
+
+# SIGN of the alpha-d D wave -- a live physics input, not a convention.
+# P_D_LI6 is a probability and fixes only the magnitude; since the i^L
+# phase was restored (run 19) the SIGN of the alpha-d D radial relative to
+# the S wave sets the sign of the 6Li tagged A_zz, and this model takes it
+# deuteron-like (psihat_2/psihat_0 > 0, both Hulthen-type forms positive).
+# LiPolGen's VMC alpha+d overlap measures THREE sign regions, not one:
+# sign(psi_2/psi_0) = -1 below the alpha-d S node at 0.134 GeV/c, +1
+# between the nodes, and -1 again above the alpha-d D node at 0.444 GeV/c.
+# The Hulthen-type forms used here are node-free and positive-definite and
+# can represent NEITHER reversal, so the adopted sign is the VMC's
+# measurement over 0.134-0.444 GeV/c only and the model's assumption
+# outside it -- and the accepted sample is not confined to that window.
+# Acceptance-weighted over this model's density at the three 6Li
+# configurations (5x40.8 / 10x99.5 / 18x137.5 GeV/u): 27 / 21 / 26 % of
+# the Yellow-Report-accepted alpha lie ABOVE 0.444 GeV/c, where LiPolGen's
+# own acceptance-weighted VMC A_zz^tag changes sign between k = 0.40 and
+# 0.50 (-0.08 -> +0.12) while its Hulthen channel stays at -0.73 / -0.59;
+# and 41 / 28 / 37 % of the tagging-optics sample lies BELOW 0.134 GeV/c.
+# The k = 0.325 GeV/c headline bin of money plot 4 is inside the supported
+# window; the tails on either side of it are not.  VMC overlaps are the
+# scheduled replacement of this whole radial input (plans/04 #15).
 
 
 def li6_alpha_channel(beta=0.30, p_d=P_D_LI6):
@@ -203,6 +292,77 @@ def deuteron_channel(beta=0.30, p_d=P_D_DEUTERON):
     return TaggedChannel(spectator.DEUTERON_P_TAG, 1.0, 0.5, 0.5, 1.0,
                          (Wave(0, 1.0 - p_d, beta), Wave(2, p_d, beta)),
                          NEUTRON, "d control (n struck, p tagged)")
+
+
+# --- AV18 deuteron control (the real wave function, not a toy) ---------
+
+# `fastsim/polli_fastsim/data/av18/fdeut.av18`, R. B. Wiringa (ANL), the
+# raw served bytes (provenance in `data/SOURCES.md`).  Its k-block is
+# `k [fm^-1]  u(k)  w(k)`, 201 rows, k = 0 .. 20 fm^-1, with
+# u(k), w(k) = sqrt(2/pi) x the PLAIN Bessel transforms and both positive
+# at low k -- exactly the convention `_amp2_table`'s i^L phase assumes.
+# The file header's `dstate` is the D-state probability.
+HBARC_GEV_FM = 0.197327
+P_D_AV18_DEUTERON = 0.057599
+_AV18_CACHE = {}
+
+
+def _av18_deuteron_tables():
+    """(k [GeV/c], u(k), w(k)) of the committed AV18 deuteron file.
+
+    Read with `importlib.resources` from `polli_fastsim/data/av18`, the
+    same way `polarized._load_curve` reads the digitized CSVs, so the
+    table travels with the package however it is put on the path.  Cached.
+    """
+    if "d" not in _AV18_CACHE:
+        try:
+            from importlib.resources import files
+            text = (files("polli_fastsim") / "data" / "av18"
+                    / "fdeut.av18").read_text()
+        except Exception:                  # pragma: no cover - fallback
+            import os
+            here = os.path.join(os.path.dirname(
+                os.path.abspath(beams.__file__)), "data", "av18",
+                "fdeut.av18")
+            with open(here, encoding="utf-8") as fh:
+                text = fh.read()
+        lines = text.splitlines()
+        i = next(j for j, ln in enumerate(lines)
+                 if ln.strip().startswith("k ") and "u(k)" in ln)
+        rows = []
+        for ln in lines[i + 1:]:
+            parts = ln.split()
+            if len(parts) != 3:
+                if rows:
+                    break
+                continue
+            rows.append([float(x) for x in parts])
+        tab = np.array(rows)
+        if tab.shape != (201, 3):
+            raise ValueError("unexpected AV18 k-block shape %s" % (tab.shape,))
+        _AV18_CACHE["d"] = (tab[:, 0] * HBARC_GEV_FM, tab[:, 1], tab[:, 2])
+    return _AV18_CACHE["d"]
+
+
+def av18_deuteron_channel():
+    """Deuteron control on the REAL AV18 wave function.
+
+    Same kinematics and spin structure as `deuteron_channel`, with the
+    Hulthen-type toy radials replaced by the tabulated AV18 u(k), w(k) and
+    the file's own D-state probability.  This is the channel that
+    reproduces Cosyn-Weiss II TABLE II quantitatively -- the axial node of
+    n_{+-1} at k = 0.2988 GeV/c where w/u = sqrt2, A_zz^wf = -2 there and
+    +1 at theta_k = 90 degrees -- which the toy pair cannot, its w/u never
+    reaching sqrt2 (test_cosyn_weiss_table_ii_on_av18).  It is a gate, not
+    a production channel: nothing the generator ships samples from it.
+    """
+    k, u, w = _av18_deuteron_tables()
+    p_d = P_D_AV18_DEUTERON
+    return TaggedChannel(
+        spectator.DEUTERON_P_TAG, 1.0, 0.5, 0.5, 1.0,
+        (TabulatedWave(0, 1.0 - p_d, tuple(k), tuple(u), "AV18 u(k)"),
+         TabulatedWave(2, p_d, tuple(k), tuple(w), "AV18 w(k)")),
+        NEUTRON, "d control (AV18 u(k), w(k))")
 
 
 class TaggedModel:
@@ -244,7 +404,17 @@ class TaggedModel:
                                     ch.j_ion, M)
                 if cg == 0.0:
                     continue
-                amp = amp + (self._rad[w.l][:, None] * cg
+                # phi_L = i^L psihat_L: the momentum-space amplitude of
+                # a coordinate-space wave function carries the plane-wave
+                # phase, and the stored radials are the PLAIN Bessel
+                # transforms (positive at low k, like the AV18 deuteron's
+                # tabulated u(k), w(k)), not phased ones.  Only the
+                # relative phase is observable; for the same-parity
+                # mixtures TaggedChannel allows it is the real
+                # (-1)^(L//2) = +1, -1 for L = 0, 2 (and +1 for a lone
+                # L = 1 wave, so 7Li is bit-for-bit unaffected).
+                phase = (-1.0) ** ((w.l // 2) % 2)
+                amp = amp + (phase * self._rad[w.l][:, None] * cg
                              * theta_lm(w.l, int(round(m_l)), cc))
             out[i] = amp * amp
         self._amp2[M] = out

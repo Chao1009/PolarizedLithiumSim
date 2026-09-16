@@ -1,4 +1,4 @@
-"""The tensor sign convention: the constant, and the caveat at every display.
+"""The tensor sign conventions: the tensor kernel's, and the wave function's.
 
 Motivated by ``docs/consistency_review_2026-09-02.md`` section "5.2 Mechanical
 checks tools/consistency_check.py could add", item 8 ("Sign-convention
@@ -12,7 +12,7 @@ terms carry the other sign, so a reader who takes the displayed formula for
 what the code evaluates gets A_zz backwards.  Report 2 displayed it without
 the caveat until the consistency review; Reports 0 and 1 carried it.
 
-Three assertions:
+Four assertions:
 
   * the constant is still -1 -- if it is flipped back, every "opposite"
     sentence in the reports becomes wrong at once;
@@ -33,7 +33,33 @@ Three assertions:
     one sweet spot: both harmonics carry -TENSOR_LL_SIGN, so flipping it
     inside a try/finally flips h2 and leaves the kinematic ratio
     L = h2/h0 -- what the subtraction multiplies the fitted kappa by --
-    untouched.
+    untouched;
+  * the OTHER sign in the tensor sector, the one inside the wave function,
+    is still there.  Development run 19 (2026-09-15) found that
+    ``polligen.tagged.TaggedModel._amp2_table`` summed its partial waves
+    without the i^L phase of phi_L = i^L psi_L, so the S-D interference
+    that carries the whole tagged tensor asymmetry entered with the wrong
+    relative sign: A_zz^wf(90 deg) came out negative, the axial node of
+    the spectator density sat in M = 0 instead of M = +-1, and the folded
+    money-plot asymmetries read +0.49 / -0.07 where the corrected model
+    reads -0.84 / +0.22.  The defect is invisible to every angle-
+    integrated quantity (``tensor_dilution`` moved by 4.3e-6 relative, the
+    k-marginals not at all), so nothing else in this sweep would see it
+    come back.  The statement that does is Cosyn-Weiss II
+    (arXiv:2603.23700) Eq. (6.12),
+
+        A_T|| = (2 f0 + f2/sqrt2)(f2/sqrt2)/(f0^2 + f2^2) (1 - 3 cos^2 th),
+
+    which is spin algebra alone -- it holds for ANY pair of radial
+    functions -- so the module's own A_zz^wf must equal it to double
+    precision when f0, f2 are the channel's own stored tables, under the
+    mapping A_T|| = +1 x A_zz^wf.  Dropping the phase is exactly
+    f2 -> -f2 in that expression, which is a different number at every
+    point where f2 is not small, so the identity is a one-sided gate on
+    the phase.  ``evgen/tests/test_tagged.py`` makes the same statement
+    over the whole (k, cos th_k) grid and adds CW's TABLE II on the
+    tabulated AV18 deuteron; this check is the three-point form of it, so
+    that the sweep catches the regression without the test suite.
 """
 
 import re
@@ -150,4 +176,61 @@ def _():
                    "reports state h2 < 0 < h0, i.e. that the leakage cancels "
                    "part of a negative Delta rather than faking one"
                    % (a, float(h0.item())))
+    return bad
+
+
+# three (k, cos theta_k) cells of the model's own grid, chosen away from the
+# P2 zero and spanning the tagged window: the identity is exact everywhere,
+# so three points are a spot check of an algebraic statement, not a sample.
+_CW_POINTS = ((0.15, -0.9), (0.30, 0.0), (0.50, 0.9))
+# below this the phase-less alternative (f2 -> -f2) is too close to the
+# corrected value for the point to discriminate; measured separations are
+# 1.06 / 1.32 / 2.07 (deuteron) and 1.24 / 1.39 / 2.03 (6Li).  The third
+# cell was (0.50, 0.6) until 2026-09-15, one grid cell from the P2 zero at
+# cos th_k = 1/sqrt(3) = 0.5774, where the separation is only 0.08 against
+# this 0.05: a change of nc or k_max that moved that cell would have made
+# the check report "move the point" rather than a regression
+_CW_GAP = 0.05
+
+
+@check("physics: the tagged S-D interference carries the i^L partial-wave "
+       "phase (Cosyn-Weiss Eq. 6.12)")
+def _():
+    import numpy as np
+    from polligen import tagged
+
+    s2 = np.sqrt(2.0)
+    bad = []
+    for name, channel in (("deuteron", tagged.deuteron_channel),
+                          ("6Li alpha-d", tagged.li6_alpha_channel)):
+        m = tagged.TaggedModel(channel())
+        if 0 not in m._rad or 2 not in m._rad:
+            bad.append("polligen.tagged: the %s channel no longer carries an "
+                       "S and a D wave, so the Cosyn-Weiss Eq. (6.12) "
+                       "identity cannot be formed" % name)
+            continue
+        for k_t, c_t in _CW_POINTS:
+            ik = int(np.argmin(np.abs(m.k - k_t)))
+            ic = int(np.argmin(np.abs(m.c - c_t)))
+            f0, f2, c = m._rad[0][ik], m._rad[2][ik], m.c[ic]
+            quad = (2.0 * f0 + f2 / s2) * (f2 / s2) / (f0 ** 2 + f2 ** 2)
+            cw = quad * (1.0 - 3.0 * c ** 2)
+            # the same expression with the phase dropped, i.e. f2 -> -f2
+            flip = ((2.0 * f0 - f2 / s2) * (-f2 / s2) / (f0 ** 2 + f2 ** 2)
+                    * (1.0 - 3.0 * c ** 2))
+            got = float(tagged.azz_tensor_curve(m, ic)[ik])
+            if abs(cw - flip) < _CW_GAP:               # the check must bite
+                bad.append("polligen.tagged: at %s k = %.4f, cos th_k = %.4f "
+                           "the phase-less form differs by only %.3g, so this "
+                           "cell no longer discriminates -- move the point"
+                           % (name, m.k[ik], c, abs(cw - flip)))
+                continue
+            if abs(got - cw) > 1e-10:
+                bad.append("polligen.tagged (%s): A_zz^wf = %.9f at k = %.4f, "
+                           "cos th_k = %.4f, against Cosyn-Weiss Eq. (6.12)'s "
+                           "%.9f built from the model's own f0, f2 (the "
+                           "phase-less f2 -> -f2 form gives %.9f). The i^L "
+                           "partial-wave phase of _amp2_table, restored "
+                           "2026-09-15, is the thing that makes these equal"
+                           % (name, got, m.k[ik], c, cw, flip))
     return bad

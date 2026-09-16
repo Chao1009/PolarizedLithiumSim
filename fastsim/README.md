@@ -169,7 +169,7 @@ arithmetic is pinned by `tests/test_run_share.py`.
 - **b₁**: δA_zz ≈ 0.9×10⁻⁴ (x < 0.05) to 1.2×10⁻³ (x ≈ 0.56) per x-bin,
   combined over Q² and the three energies (`money_b1.py`), at 10 fb⁻¹/u,
   P_zz = 0.6–0.8 — unchanged.  What changed is the **signal**: with the
-  digitized Miller b₁ and the rank-2 transfer 0.921947 × 2/6 = 0.3073,
+  digitized Miller b₁ and the rank-2 transfer 0.921949 × 2/6 = 0.3073,
   |A_zz| is 2.2×10⁻⁴ at x = 0.005 rising to 1.4×10⁻³ at x = 0.07 and
   3.3×10⁻³ at 0.5, i.e. 1.6 / 4.7 / 7.3 / 10.4 / 5.5 / 5.8 σ per bin at
   x = 0.0035 / 0.009 / 0.028 / 0.071 / 0.18 / 0.45 (P_zz = 0.6).  The
