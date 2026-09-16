@@ -40,6 +40,75 @@ source /opt/detector/epic-24.07.0/setup.sh   # sets $DETECTOR_PATH
 ```
 (current containers use `/opt/detector/epic-main/bin/thisepic.sh`).
 
+## The reconstruction leg — the first EICrecon output (2026-09-15)
+
+The runbook's third clause, `eicrecon -Ppodio:output_file=… sim.edm4hep.root`,
+had never been run: until this date no EICrecon output existed anywhere in the
+tree. It runs, and what it returns is worth more than the file.
+
+```bash
+SIF=~/Projects/eic-2026/local/lib/eic_xl-nightly.sif
+S=<scratch>                      # npsim writes its caches into $PWD
+python3 tools/fullsim/ion_gun_hepmc.py --out $S/li6_100.hepmc \
+    --pdg 1000030060 --a 6 --p-per-nucleon 137.5 \
+    --pt $(python3 -c "print(' '.join('%.5f' % (825e-3*(0.2+0.2*i)) for i in range(25)))") \
+    --nphi 4 > $S/li6_100.index                       # 100 events
+singularity exec --env S=$S $SIF bash -lc '
+  source /opt/detector/epic-main/bin/thisepic.sh
+  cd $S
+  npsim --compactFile $DETECTOR_PATH/epic_craterlake_18x275.xml \
+        -N 100 --inputFiles $S/li6_100.hepmc \
+        --physics.list FTFP_BERT --part.minimalKineticEnergy "100*MeV" \
+        --outputFile $S/sim.edm4hep.root
+  eicrecon -Pdd4hep:xml_files=$DETECTOR_PATH/epic_craterlake_18x275.xml \
+           -Ppodio:output_file=$S/reco.edm4eic.root $S/sim.edm4hep.root'
+```
+
+**Versions, recorded as the runbook asks.** `npsim` **1.8.0**
+(`/opt/software/linux-x86_64_v2/npsim-1.8.0-s2yzj4e7osdlvcun2xu6saily2ilpfbr`);
+`EICrecon version: git.77d0cef8f035e0f7c78d9eb240f4116a18f5430f=main`; geometry
+`epic-git.9aaa296976d3ad9de404f775ae89fc17a068c07c_main-ur6von3dpmaimo6hibxvji7rseapbgc7`
+(the `$DETECTOR_PATH` prefix — the epic hash is the one the container row above
+carries). Geant4 runs single-threaded (`Multi-threaded mode requested, but not
+supported by this compilation`). Cost on the 8-core box: **npsim 6 min 10 s**
+for 100 ⁶Li events, **eicrecon 47 s**. Output `reco.edm4eic.root`, 37.5 MB,
+**100 events, 1335 collections**.
+
+**`eicrecon` does not inherit npsim's compact file.** `thisepic.sh` exports
+`DETECTOR_CONFIG=epic`, so the literal command of plans/03 §2.0 loads
+`$DETECTOR_PATH/epic.xml`, whose line 40 includes
+`compact/fields/beamline_5x41.xml` — the same trap `ff_gun_scan.sh` encodes on
+the simulation side, now on the reconstruction side: 18 × 275 hits reconstructed
+against 5 × 41 beamline fields. The `-Pdd4hep:xml_files=…` above is the fix, and
+it belongs in the runbook. For *this* input it changed nothing (both runs agree
+collection by collection), which is the second finding, below.
+
+**What the reconstruction does with a lithium ion.**
+
+| collection | ⁶Li, 825 GeV | proton control, 275 GeV |
+|---|---|---|
+| `ForwardRomanPotHits` | 1179 hits, 76/100 ev | 474, 87/100 |
+| `ForwardRomanPotRecHits` | 1031, 76 | 443, 87 |
+| **`ForwardRomanPotRecParticles`** | **0, 0** | **72, 72** |
+| `ForwardRomanPotStaticRecParticles` | 0, 0 | 72, 72 |
+| `ForwardOffMRecParticles` | 0, 0 | 0, 0 |
+| `B0TrackerHits` / `B0TrackerCKFTracks` | 1402, 17 / 0, 0 | — |
+| `HcalFarForwardZDCClusters` | 19, 19 | 6, 6 |
+| `ReconstructedHcalFarForwardZDCNeutrals` | 19, 19 | — |
+
+**Digitisation works and reconstruction does not.** 1031 of the 1179 Roman-Pot
+sim hits become `RecHits`, and **not one becomes a `RecParticle`**. The control
+is the same chain with a 275 GeV proton at the same ring setting, 100 events,
+θ = 0.3–3.9 mrad: 72 reconstructed particles at 275.0 ± 1.7 GeV (rms). So the zero is
+not a broken chain, a wrong geometry or an empty window — it is the species.
+This is `MatrixTransferStaticConfig.h`'s `partMass = 0.938272, partCharge = 1`
+(plans/03 §2.2 (2)) with a measured consequence rather than a code reading: the
+ePIC far-forward Roman-Pot reconstruction returns **nothing at all** for a
+lithium ion, so `fastsim`'s own transport is not an interim stand-in for an
+EICrecon path that exists — it is the only path there is. The ZDC neutral chain,
+by contrast, reconstructs in every event that reaches it, and the B0 tracker
+digitises but seeds no track at these angles.
+
 ## Far-forward gun scan (plan 2.2.1)
 
 ```bash
@@ -47,6 +116,12 @@ SIF=~/Projects/eic/local/lib/jug_xl-nightly.sif
 singularity exec $SIF bash ff_gun_scan.sh ~/Projects/eic/data/ff_gun 60
 singularity exec $SIF python3 ff_gun_hits.py ~/Projects/eic/data/ff_gun
 ```
+
+(`ff_gun_hits.py --b0-zdc` adds the B0 tracker/ECal and the two ZDC
+collections' hit positions to `--per-event`, which the counting table below
+has reported as a yes/no since 2026-06-12 and never as a place. For B0 the
+place *is* the IP angle: IP6 → B0 layer 1 is a pure 5.900 m drift at every
+ring setting — see the transfer-matrix section below.)
 
 The scan shoots fragments along the ion axis (−25 mrad in x) with total
 momenta chosen so the rigidity ratio R relative to the default
@@ -652,6 +727,191 @@ larger. What a closer approach is *worth* does not depend on any of it —
 > superseded coherent-tag table it carried — 9.8×10⁻⁷ / 7.7×10⁻¹⁶ /
 > 1.9×10⁻¹⁷ at the measured aperture — is replaced by
 > **9.4×10⁻¹⁰ / 2.0×10⁻¹⁹ / 1.2×10⁻⁵** (`nearbeam_aperture_scan.py`).
+
+## The transfer matrix (2026-09-15) — the second row, measured
+
+Everything in the section above is the **first row** of the IP6 → Roman-Pot
+transfer: R₁₂ = dx/dθ_x, R₃₄ = dy/dθ_y and D = dx/dR are all
+*d(position at the pot)/d(something at the IP)*. Writing the ion line to one
+pot plane in the usual form,
+
+    x_pot   =  R₁₁ x_IP + R₁₂ x′_IP + D  δ
+    x′_pot  =  R₂₁ x_IP + R₂₂ x′_IP + D′ δ
+
+what was never measured was anything that needs either a **displacement at the
+IP** (R₁₁, R₂₁) or an **angle at the pot** (R₂₁, R₂₂, D′). plans/03 §2.2 (2)
+recorded them as outstanding. They are measured here, with the vertical
+R₃₃/R₄₃/R₄₄ alongside, in the same geometry and with the same
+Theil–Sen-then-least-squares fit the published levers use.
+
+**Two things made it possible that August did not have.** `ion_gun_hepmc.py`
+now writes a HepMC3 **vertex**, so (x₀, y₀) at the IP is a scan coordinate like
+(p_T, φ) — the record DD4hep's reader accepts is a status-4 beam copy of the ion
+with production vertex 0, then `V -1 0 [1] @ x y z t`, then the status-1 ion
+(a *bare* `V` line with nothing incoming fails the parse; see `write_hepmc3`).
+And `ForwardRomanPotHits` is an edm4hep `SimTrackerHit` collection carrying
+**`momentum` as well as `position`**, so x′_pot is *read* at station 1 — the
+plane R₁₂, R₃₄ and D are quoted at — instead of being differenced between
+stations. The same branch identifies the primary: `|p| > 0.5 p_beam` separates
+an 825 GeV ⁶Li from everything it knocks out, which is a cleaner cut than the
+hit-count cleanliness one the position-only fits needed.
+
+**Through a zero-insertion geometry.** A transfer matrix belongs to the magnets,
+and the per-energy insertion holds the silicon 16 / 32 / 48 mm off the axis
+horizontally at y ≈ 0, so an ion at θ = 0 with a millimetre of IP offset is
+never seen. `tools/fullsim/ff_zero_insertion.sh` is the recipe of the R₃₄
+paragraph above, now executable: the four `offset_*_RP_section` constants set to
+`0.0*cm`, every field untouched.
+
+### The commands, exactly as run
+
+```bash
+SIF=~/Projects/eic-2026/local/lib/eic_xl-nightly.sif
+S=<scratch>                      # NOT the repo: npsim caches land in $PWD
+R=<this repository>              # absolute; the container sees the host paths
+for C in 18x275 10x100 5x41; do
+  python3 $R/tools/fullsim/ff_transfer_scan.py build --config $C --out $S/x$C
+  python3 $R/tools/fullsim/ff_transfer_scan.py build --config $C --out $S/x$C \
+      --stem scan_topup --legs x0,y0 --topup          # 16 more rows for R21
+done
+singularity exec --env S=$S --env R=$R $SIF bash -lc '
+  source /opt/detector/epic-main/bin/thisepic.sh
+  cd $S
+  for C in 18x275 10x100 5x41; do
+    bash $R/tools/fullsim/ff_zero_insertion.sh $C $S/zero
+    for STEM in scan scan_topup; do
+      npsim --compactFile $S/zero/epic_craterlake_${C}_zero.xml \
+            --inputFiles $S/x$C/$STEM.hepmc --numberOfEvents $(grep -c "^E " $S/x$C/$STEM.hepmc) \
+            --physics.list FTFP_BERT --part.minimalKineticEnergy "100*MeV" \
+            --outputFile $S/x$C/$STEM.edm4hep.root
+    done
+  done'
+for C in 18x275 10x100 5x41; do          # the fit runs on the HOST (uproot)
+  python3 $R/tools/fullsim/ff_transfer_scan.py fit $S/x$C --config $C
+done
+```
+
+158 events per configuration (142 + 16), ~7 min of npsim each. The scan legs are
+`thx`/`thy` (θ = 0.2–4.0 mrad in 0.2 steps at φ = 0/180 and 90/270 — the
+published ladders, and the controls), `x0`/`y0` (θ = 0, vertex walked to
+±32 mm), `dlt` (θ = 0, δ = 0 … ±0.15) and `b0x`/`b0y` (θ = 6–20 mrad, the B0
+window). ⁶Li at each ring's **reference rigidity** — 123 / 300 / 825 GeV total,
+the rigidity-scaled matching momenta, not the γ-matched fill menu.
+
+### What came out
+
+Station 1 layer 1. Every entry is a slope ± its standard error; the percentage
+is that error over the slope, which is the quantity to read as the fit residual.
+
+| configuration | R₁₁ | R₂₁ [rad/m] | R₂₂ | D′ [rad] |
+|---|---|---|---|---|
+| 5 × 41 | **1.148** ± 1.8% | **−0.0837** ± 2.8% | **−0.4955** ± 1.2% | **0.0175** ± 2.6% |
+| 10 × 100 | **1.227** ± 0.8% | **−0.0651** ± 0.8% | **−0.3060** ± 0.9% | **0.0179** ± 2.4% |
+| 18 × 275 | **1.852** ± 1.1% | **−0.0209** ± 4.5% | **0.1944** ± 1.5% | **0.0182** ± 4.0% |
+
+| configuration | R₃₃ | R₄₃ [rad/m] | R₄₄ |
+|---|---|---|---|
+| 5 × 41 | **−4.199** ± 0.7% | **−0.2186** ± 1.7% | **0.0055** ± 0.0040 |
+| 10 × 100 | **−3.711** ± 0.3% | **−0.2028** ± 0.5% | **−0.0856** ± 3.8% |
+| 18 × 275 | **−3.031** ± 0.4% | **−0.1778** ± 0.4% | **−0.1512** ± 2.2% |
+
+**The controls close, which is what makes it a measurement.** The three
+published levers come out of the *same files* and reproduce `POT_LEVERS`:
+
+| configuration | R₁₂ measured | carried | R₃₄ measured | carried | D measured | carried |
+|---|---|---|---|---|---|---|
+| 5 × 41 | 19.186 ± 0.061 | 19.24 (−0.3%) | 4.617 ± 0.055 | 4.56 (+1.3%) | 0.2845 ± 0.0078 | 0.311 ‡ |
+| 10 × 100 | 21.341 ± 0.052 | 21.25 (+0.4%) | 3.255 ± 0.064 | 3.35 (−2.8%) | 0.2818 ± 0.0074 | 0.287 (−1.8%) |
+| 18 × 275 | 29.961 ± 0.054 | 29.97 (−0.03%) | 3.081 ± 0.064 | 2.93 (+5.2%) | 0.2875 ± 0.0115 | 0.292 (−1.5%) |
+
+‡ the one 8% outlier, and the expected one: the carried 5 × 41 D is a
+**station-2** fit, because through the real insertion the R = 0.857 α reaches no
+station-1 silicon there. The zero-insertion file has station 1, and the two
+stations differ by 8% in D — exactly the spread `POT_DISPERSION_2`'s note
+records. The 19.186 m against 19.24 is the same 0.3% zero-insertion control the
+2026-08-29 R₃₄ run reported, reproduced independently.
+
+**And the blocks come out symplectic without having been fitted to be.** A
+linear transfer at fixed rigidity has determinant exactly 1:
+
+| configuration | R₁₁R₂₂ − R₁₂R₂₁ | R₃₃R₄₄ − R₃₄R₄₃ |
+|---|---|---|
+| 5 × 41 | 1.038 | 0.986 |
+| 10 × 100 | 1.013 | 0.978 |
+| 18 × 275 | 0.985 | 1.006 |
+
+(in-file values; with the *carried* R₁₂/R₃₄ substituted — which is what
+`farforward.pot_transfer_for` returns — 1.042 / 1.008 / 0.986 and
+0.974 / 0.997 / 0.979). Four numbers measured on four different legs of the
+scan, closing on 1 to 4% at three ring settings, is a stronger statement than
+any one of the residuals.
+
+**Three things the numbers say.**
+
+*R₂₂ changes sign* between 10 × 100 and 18 × 275: −0.496, −0.306, **+0.194**.
+The horizontal phase advance from IP6 to the pots crosses a node as the energy
+rises, so the top configuration is the only one where a positive angle at the IP
+is still a positive angle at the pot.
+
+*R₄₄ at 5 × 41 is zero to the measurement*, 0.0055 ± 0.0040. The vertical plane
+there is point-to-parallel at the pots and the outgoing vertical angle carries
+**no memory of the IP angle at all**. The symplectic check survives it because
+R₃₄R₄₃ = −1.009 carries the whole determinant on its own.
+
+*D′ is flat*, 0.0175 / 0.0179 / 0.0182 rad across a factor 6.7 in beam energy,
+where R₁₁ grows by 1.6× and R₂₁ falls by 4×.
+
+**The dispersion is quadratic over this range too.** Fitting the `dlt` leg's
+nine rigidities with a quadratic rather than a line gives D₂ = −0.195 / −0.196 /
+−0.311 m against the carried −0.190 / −0.206 / −0.215. The two lower
+configurations close to 3–5%; 18 × 275 does not, and the reason is the window:
+the carried fit is three points spanning δ ∈ [−0.143, +0.286] from *three
+species* (α, ⁶Li, triton) and is anchored on the triton, while this one is nine
+points of one ⁶Li over |δ| ≤ 0.15. They are curvatures over different ranges and
+the disagreement is not a correction to either — `POT_DISPERSION_2` is unchanged.
+
+**B0 and ZDC, on the same scan.** The `b0x`/`b0y` legs are the first ladder in
+this repository to reach the B0 window (5.5–20 mrad) at all; the routing scan at
+the top of this file found `B0 = 0` everywhere because nothing it shot went that
+wide. The B0 tracker layers sit at z = **5896 / 6166 / 6436 / 6706 mm**, and in
+layer 1
+
+| configuration | dx/dθ_x [m] | dy/dθ_y [m] |
+|---|---|---|
+| 5 × 41 | 5.9003 ± 0.0007 | 5.9006 ± 0.0010 |
+| 10 × 100 | 5.9010 ± 0.0003 | 5.9016 ± 0.0004 |
+| 18 × 275 | 5.9001 ± 0.0001 | 5.9013 ± 0.0002 |
+
+— **the lever is the distance**, 5.900 m against the layer's 5.896 m, at every
+ring setting to 0.02%. IP6 → B0 layer 1 is a pure drift: a B0 hit measures the
+IP angle directly and needs no per-configuration optics, which is why
+`farforward.B0_DRIFT_M` is one number where `POT_LEVERS` needs three. The ZDC is
+a calorimeter with no momentum branch, so what it contributes is where the
+breakup lands: at 18 × 275, 41 events with `HcalFarForwardZDC` hits and 50 with
+`EcalFarForwardZDC`, concentrated in the `thx` leg (20 and 25) with ⟨E⟩ = 1.8
+and 11.9 GeV at ⟨x⟩ ≈ −1.07 m — the ⁶Li breaking up upstream, not the primary.
+
+**What moved in the code.** Nothing did. `farforward.POT_SECOND_ROW`,
+`POT_SECOND_ROW_VERTICAL`, `B0_DRIFT_M`, `B0_LAYER_Z_MM`, `pot_transfer_for`
+and `propagate_to_pot` are **new names**; `POT_LEVERS`, `POT_DISPERSION_2` and
+the scalar aliases are untouched, and `pot_transfer_for` returns the *carried*
+R₁₂/R₃₄/D/D₂ rather than the values re-measured here. Every published figure and
+acceptance number is bit-for-bit what it was.
+
+### Caveats (this scan)
+
+One event per scan point, no beam divergence and no vertex spread; hit level,
+not reconstruction (the section above shows why reconstruction is not available
+for a lithium ion). The IP offsets run to ±32 mm, far outside any real beam —
+they are a lever for a linear coefficient, not a beam condition, and the
+outermost rows drop out of the fit because the displaced ion no longer reaches
+station-1 silicon — two of the nineteen horizontal rows at 5 × 41 (|x₀| = 32 mm)
+and four at 10 × 100 and 18 × 275, asymmetrically on the −x side (|x₀| ≥ 16 and
+≥ 12 mm respectively). R₃₃ and R₄₃
+are fitted on 7–10 rows because the vertical top-up rows land outside the
+silicon; their standard errors are nonetheless the smallest in the table. Every
+element is quoted at **station 1 layer 1** and the station-to-station spread of
+the first row (up to 8% in D, 2% in R₁₂) should be assumed for the second.
 
 ## e+d control inputs (plan 1.5.3)
 

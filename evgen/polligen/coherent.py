@@ -144,6 +144,30 @@ class CoherentScenario:
              deformation an open possibility covered by the quoted
              5-sigma floors -- whether the gluonic quadrupole cancels
              like the charge one is precisely the measurement.
+             HOW FAR THE DEFAULT SITS FROM THE CHARGE SECTOR, as
+             arithmetic rather than as an adjective (priced in the
+             sibling generator, LiPolGen phase_C_numbers.md C4, and
+             recorded as plans/04 #27): read as a charge-sector
+             deformation, eps_b0 = -0.08 at slope_b = 50 is
+             delta_{+-1} = eps_b0 B = -4.0 GeV^-2 and implies a 6Li
+             charge quadrupole of -0.9345 fm^2 -- 11.6x the measured
+             -0.0806 fm^2 of the line above and 1.5x even the alpha-d
+             model's -0.615.  Run backwards, the measured Q gives
+             eps_b0 = -0.0069 and the alpha-d model -0.0527, so the
+             CHARGE-SECTOR band is -(0.0069 .. 0.0527), of which the
+             band quoted above contains only its top row.  (The
+             sibling's table reads 11.4x and -0.0070 because it still
+             carries the superseded -0.0818 fm^2; the quadrupole is the
+             only difference.)  a_2 is linear in eps_b0, so on the
+             charge-sector reading every coherent modulation here is up
+             to 11.6x smaller and every
+             significance falls by the same factor at fixed luminosity.
+             The default is NOT changed by this: the no-cancellation
+             premise above is the scenario's whole point, and which of
+             the two readings holds is the measurement.  Note also that
+             eps_b0 and slope_b are not independent -- every observable
+             uses the product delta = eps_b0 B -- so a slope_b scan at
+             fixed eps_b0 scans the implied quadrupole with it.
              Caveat (arXiv:2411.14934): JIMWLK evolution washes out
              deformation toward small x, so the low-x_P tail may shrink.
     """

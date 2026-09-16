@@ -10,6 +10,12 @@ so the per-event table IS the acceptance map.  Pass the index file that
 ion_gun_hepmc.py prints as --index to label the rows, and --positions to
 print where in the Roman-Pot plane each accepted ion landed (the cutout
 geometry itself, plans/04 #20).
+
+--b0-zdc adds the same for the B0 tracker/ECal and the two ZDC
+collections, which the counting table has reported as a yes/no since
+2026-06-12 and never as a place.  For B0 the place IS the IP angle:
+IP6 -> B0 layer 1 is a pure drift of 5.900 m at every ring setting
+(measured 2026-09-15, ff_transfer_scan.py).
 """
 
 import argparse
@@ -84,7 +90,63 @@ def hit_branches(tree, pattern):
     return out
 
 
-def per_event(path, index=None, positions=False):
+def b0_zdc_positions(t, nev, rows=None):
+    """B0 tracker and ZDC hit positions, per event.
+
+    The counting table has carried B0 and ZDC columns since 2026-06-12,
+    but `--positions` printed the Roman Pots only, so the two were a
+    yes/no and never a place.  They are a place: the B0 tracker layers
+    (z = 5896 / 6166 / 6436 / 6706 mm) sit on a PURE DRIFT from IP6 --
+    dx/dtheta_x = 5.900 m at every ring setting, measured 2026-09-15
+    (`ff_transfer_scan.py`, `farforward.B0_DRIFT_M`) -- so a B0 row's x
+    and y ARE the IP angle times 5.900 m, with no optics in between.  The
+    ZDC is a calorimeter: it has no momentum branch, so what it reports
+    is the energy-weighted centroid of the deposit, which is where the
+    breakup landed and not where the primary went.
+    """
+    for label, pat in (("B0", PATTERNS["B0"]), ("ZDC", PATTERNS["ZDC"])):
+        for b in hit_branches(t, pat):
+            coll = b.split(".")[0]
+            if f"{coll}.position.x" not in t:
+                continue
+            xs = t[f"{coll}.position.x"].array(library="np")
+            ys = t[f"{coll}.position.y"].array(library="np")
+            zs = t[f"{coll}.position.z"].array(library="np")
+            es = (t[f"{coll}.energy"].array(library="np")
+                  if f"{coll}.energy" in t else None)
+            head = False
+            for i in range(nev):
+                if len(xs[i]) == 0:
+                    continue
+                if not head:
+                    print()
+                    print("%s hit positions [mm], collection %s%s"
+                          % (label, coll.split("/")[-1],
+                             " (energy-weighted centroid)" if es is not None
+                             else ""))
+                    print("ievt " + ("  pT[GeV]  phi[deg] " if rows else "")
+                          + "  nhit      meanx     meany     meanz"
+                            "      sumE[GeV]")
+                    head = True
+                x = np.asarray(xs[i], dtype=float)
+                y = np.asarray(ys[i], dtype=float)
+                z = np.asarray(zs[i], dtype=float)
+                w = (np.asarray(es[i], dtype=float) if es is not None
+                     else np.ones(len(x)))
+                if w.sum() <= 0:            # a tracker, or a zero-E shower
+                    w = np.ones(len(x))
+                lbl = ""
+                if rows and i < len(rows):
+                    lbl = (f"  {float(rows[i][1]):7.2f}  "
+                           f"{float(rows[i][2]):7.1f} ")
+                print(f"{i:4d} " + lbl
+                      + f" {len(x):5d} {np.average(x, weights=w):10.2f} "
+                        f"{np.average(y, weights=w):9.2f} "
+                        f"{np.average(z, weights=w):9.1f} "
+                        f"{(float(np.sum(es[i])) if es is not None else 0.0):10.3f}")
+
+
+def per_event(path, index=None, positions=False, b0_zdc=False):
     """One row per event: which far-forward systems saw >= 1 hit."""
     t = uproot.open(path)["events"]
     nev = t.num_entries
@@ -167,6 +229,8 @@ def per_event(path, index=None, positions=False):
                             f"{u[m].min():9.2f} {u[m].max():8.2f} "
                             f"{y[m].min():9.2f} {y[m].max():8.2f} "
                             f"{z[m].mean():9.1f}   {coll}")
+    if b0_zdc:
+        b0_zdc_positions(t, nev, rows)
     return hit
 
 
@@ -178,6 +242,8 @@ def main():
     ap.add_argument("--index", default=None,
                     help="index file printed by ion_gun_hepmc.py")
     ap.add_argument("--positions", action="store_true")
+    ap.add_argument("--b0-zdc", action="store_true",
+                    help="also print B0 tracker and ZDC hit positions")
     args = ap.parse_args()
     outdir = args.target
     if args.per_event:
@@ -187,7 +253,7 @@ def main():
             sys.exit(f"no gun_*.edm4hep.root in {outdir}")
         for f in files:
             print(f"# {f}")
-            per_event(f, args.index, args.positions)
+            per_event(f, args.index, args.positions, args.b0_zdc)
         return
     files = ([outdir] if os.path.isfile(outdir)
              else sorted(glob.glob(f"{outdir}/gun_*.edm4hep.root")))

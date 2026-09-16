@@ -516,3 +516,186 @@ def test_sweet_spot_electrons_are_insensitive_to_the_table():
     for eta in (-2.93, -2.92, -2.42):
         assert reco.emcal_resolution(9.9, eta=eta) == pytest.approx(
             reco.emcal_resolution(9.9), rel=1e-12)
+
+
+# --- electron ID: the eta-only curve and the gap under it --------------------
+
+#: eps_eID at fourteen eta values, pinned to the value the published chain
+#: has used since 2026-08-24.  The work package asked for an (x, Q2) axis
+#: on this curve from "the Yellow Report electron-ID tables"; the Yellow
+#: Report has no such table (the evidence is in the `eps_eid` docstring and
+#: in Report 2), so the curve stays eta-only and this test is what says so
+#: the next time somebody reaches for it.
+EPS_EID_PINNED = (
+    (-4.00, 0.00),
+    (-3.50, 0.85),
+    (-3.25, 0.885),
+    (-3.00, 0.92),
+    (-2.50, 0.935),
+    (-2.00, 0.95),
+    (-1.00, 0.93),
+    (0.00, 0.90),
+    (1.00, 0.90),
+    (2.00, 0.85),
+    (2.50, 0.825),
+    (3.00, 0.80),
+    (3.50, 0.70),
+    (4.00, 0.00),
+)
+
+
+def test_eps_eid_is_eta_only_and_pinned():
+    eta = np.array([e for e, _v in EPS_EID_PINNED])
+    want = np.array([v for _e, v in EPS_EID_PINNED])
+    got = reco.eps_eid(eta)
+    assert got.shape == eta.shape
+    assert np.max(np.abs(got - want)) < 1e-15
+    # and it takes no other axis: a caller cannot pass (x, Q2)
+    with pytest.raises(TypeError):
+        reco.eps_eid(eta, 0.03, 1.14)
+
+
+def test_eps_eid_yellow_report_working_point_is_recorded():
+    """The Yellow Report's electron efficiency is a WORKING POINT, and the
+    constant that records it must stay what the document says (Fig. 11.48
+    caption: 95% for an E/p cut, 92% with the shower shape as well)."""
+    wp = reco.EPS_EID_YR_WORKING_POINT
+    assert wp["e_over_p"] == 0.95 and wp["e_over_p_and_shape"] == 0.92
+    # the two are distinct working points of two different cuts, and each
+    # is flat in eta, momentum, x and Q2 -- which is the whole point, and
+    # why substituting either would move no number in a spin-state ratio
+    assert len(set(wp.values())) == 2
+
+
+# --- Fermi motion of the struck cluster --------------------------------------
+
+def test_fermi_channel_weights_are_the_nucleon_shares():
+    chans, wts = reco.fermi_channels_for(6, 3)
+    names = {c.spectator: w for c, w in zip(chans, wts)}
+    # the deuteron cluster (2 nucleons) is struck 2/6 of the time, leaving
+    # the alpha as spectator; the alpha (4) is struck 4/6
+    assert names["alpha"] == pytest.approx(2.0 / 6.0)
+    assert names["d"] == pytest.approx(4.0 / 6.0)
+    assert sum(wts) == pytest.approx(1.0)
+    with pytest.raises(ValueError):
+        reco.fermi_channels_for(12, 6)
+
+
+def test_fermi_alpha_at_zero_internal_momentum_is_the_binding_ratio():
+    """alpha(k = 0) = [A/(A - A_spec)] (M_A - m_spec)/M_A exactly -- it is
+    NOT 1, because the struck cluster is worth M_A - m_spec and not its own
+    free mass."""
+    for ch in reco.fermi_channels_for(6, 3)[0]:
+        a_struck = ch.beam_A - ch.spectator_A
+        want = (ch.beam_A / a_struck) * (ch.m_beam - ch.m_spec) / ch.m_beam
+        assert float(reco.fermi_alpha(ch, 0.0, 0.0, 0.0)) == pytest.approx(
+            want, rel=1e-15)
+    chans = {c.spectator: c for c in reco.fermi_channels_for(6, 3)[0]}
+    assert float(reco.fermi_alpha(chans["alpha"], 0, 0, 0)) == pytest.approx(
+        1.00373, abs=1e-5)
+    assert float(reco.fermi_alpha(chans["d"], 0, 0, 0)) == pytest.approx(
+        0.99774, abs=1e-5)
+
+
+def test_fermi_alpha_is_linear_in_the_longitudinal_momentum():
+    ch = reco.fermi_channels_for(6, 3)[0][0]
+    kz = np.array([-0.05, 0.0, 0.05])
+    a = reco.fermi_alpha(ch, 0.0, 0.0, kz)
+    # at fixed |k| the only kz dependence left is the explicit + kz
+    scale = (ch.beam_A / (ch.beam_A - ch.spectator_A)) / ch.m_beam
+    assert (a[2] - a[0]) == pytest.approx(0.10 * scale, rel=1e-12)
+
+
+def test_fermi_sample_reproduces_the_density_moments():
+    """The drawn internal momentum must be the density's own: mean |k| and
+    <k^2>^(1/2) within 1% of the quadrature moments of k^2 n(k)."""
+    rng = np.random.default_rng(20260915)
+    alpha, k = reco.fermi_alpha_sample(6, 3, 300_000, rng)
+    m1, m2 = reco.fermi_k_moments(6, 3)
+    assert abs(k.mean() / m1 - 1.0) < 0.01
+    assert abs(np.sqrt((k ** 2).mean()) / m2 - 1.0) < 0.01
+    # the mixture is centred just below 1 and spreads by a few per cent
+    assert abs(alpha.mean() - 0.9985) < 0.002
+    assert 0.02 < alpha.std() < 0.05
+
+
+def test_fermi_beta_widens_the_density_monotonically():
+    m_lo = reco.fermi_k_moments(6, 3, beta=0.20)
+    m_mid = reco.fermi_k_moments(6, 3, beta=0.30)
+    m_hi = reco.fermi_k_moments(6, 3, beta=0.40)
+    assert m_lo[0] < m_mid[0] < m_hi[0]
+    assert m_lo[1] < m_mid[1] < m_hi[1]
+
+
+def test_fermi_sample_accepts_one_named_channel():
+    rng = np.random.default_rng(3)
+    ch = reco.fermi_channels_for(6, 3)[0][0]
+    alpha, k = reco.fermi_alpha_sample(6, 3, 20_000, rng, channel=ch.name)
+    m1, m2 = reco.fermi_k_moments(6, 3, channel=ch.name)
+    assert abs(k.mean() / m1 - 1.0) < 0.02
+    with pytest.raises(ValueError):
+        reco.fermi_alpha_sample(6, 3, 10, rng, channel="not a channel")
+
+
+# --- the PNG-stem guard of the 5R/7R driver ---------------------------------
+
+def _reco_args(**kw):
+    """The argparse namespace `money_cos2phi_reco.reco_setting_keys` reads,
+    at the settings every published 5R/7R number is made with."""
+    import argparse
+    base = dict(config=1, y_method="mixed", y_min=0.01, fermi_smear=False,
+                fermi_beta=0.30, e_scale=1.0, eid_tilt=0.0,
+                emcal_eta_table=False, y_had_res=0.25)
+    base.update(kw)
+    return argparse.Namespace(**base)
+
+
+def _setting_keys(**kw):
+    sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]
+                           / "scripts"))
+    import money_cos2phi_reco as m          # noqa: PLC0415 (heavy import)
+    return m.reco_setting_keys(_reco_args(**kw))
+
+
+def test_published_reco_settings_carry_no_stem_key():
+    """The published combination -- middle configuration, mixed method,
+    y >= 0.01, no Fermi smearing, every detector nuisance nominal -- must
+    return no key at all, or the published stems move.  The `--tag
+    _hfscal` pair is this same combination with a hadronic final state, so
+    it is covered by the same statement."""
+    assert _setting_keys() == []
+
+
+def test_every_non_default_reco_setting_takes_its_own_stem():
+    """Each setting that changes what 5R and 7R measure, or the detector
+    they are measured through, appends a key rather than overwriting the
+    published figure (the guard of `fom.run_share_tag`).  Every one of
+    these wrote the bare published stem before 2026-09-15."""
+    for kw, want in ((dict(config=0), "cfg0"),
+                     (dict(config=2), "cfg2"),
+                     (dict(y_method="electron"), "eonly"),
+                     (dict(y_min=0.05), "ymin0p05"),
+                     (dict(fermi_smear=True), "fermi"),
+                     (dict(fermi_smear=True, fermi_beta=0.20), "fermib0p2"),
+                     (dict(e_scale=1.01), "escale1p01"),
+                     (dict(eid_tilt=0.05), "eidtilt0p05"),
+                     (dict(eid_tilt=-0.05), "eidtiltm0p05"),
+                     (dict(emcal_eta_table=True), "emcaltab"),
+                     (dict(y_had_res=0.15), "yhad0p15")):
+        assert _setting_keys(**kw) == [want], kw
+    # they compose, in a fixed order, so one run cannot land on another's
+    assert _setting_keys(config=0, y_method="electron", y_min=0.05) == [
+        "cfg0", "eonly", "ymin0p05"]
+
+
+def test_monte_carlo_settings_are_deliberately_not_keyed():
+    """`--n-mc-per-cell` and `--seed` move the Monte-Carlo noise and not
+    the quantity drawn -- the manual's own quick-look command is
+    `--n-mc-per-cell 60` -- so they carry no key by design.  Pinned so
+    that the choice is a decision rather than an oversight."""
+    args = _reco_args()
+    args.n_mc_per_cell, args.seed = 60, 12345
+    sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]
+                           / "scripts"))
+    import money_cos2phi_reco as m          # noqa: PLC0415
+    assert m.reco_setting_keys(args) == []

@@ -39,8 +39,9 @@ Done in this session: `fastsim/polli_fastsim` (tested, 6/6 passing).
 
 *2026-08-28: items 1 and 4 are done (notes below); item 2's record is in place,
 and its value was settled on 2026-08-29 (plans/04 #6, the cluster picture);
-item 3 is untouched — the
-analysis still runs the generic 40×30 log grid, not the YR ~5 bins/decade. The
+item 3 was untouched on that date — the
+analysis still ran the generic 40×30 log grid, not the YR ~5 bins/decade; it
+is ticked on 2026-09-15 below. The
 header glyph was ☐ and is set to ◐ here on the audit's own reading — the step
 itself stays open, and no other open item's marker was moved.*
 
@@ -82,6 +83,34 @@ itself stays open, and no other open item's marker was moved.*
 3. Binning conventions: match HERMES b₁ x-points (zero crossing at x ≈ 0.2,
    b₁ ~ 0.1 at x ~ 0.01), E12-14-001 (0.06 < x < 0.8) and YR inclusive
    binning (~5 bins/decade) so every comparison is one-to-one.
+   ☑ *2026-09-15: adopted.  `beams.YR_BINS_PER_DECADE` = 5 with `YR_GRID`,
+   `YR_X_EDGES` and `YR_Q2_EDGES` written out and `analysis_grid(binning)`
+   returning the `fom.project_rates` grid keywords for a named lattice,
+   threaded into `evgen/scripts/phase_space_bins.py` and
+   `fastsim/scripts/coverage_and_stat_maps.py` behind
+   `--binning {log40x30,yr}` (`generic` an accepted alias of the default),
+   which is bit-for-bit what it was on the published grid.  The YR lattice is
+   anchored on the decade boundaries (edges at 10^(k/5)) rather than
+   subdividing this project's own span, so its bins are the published ones:
+   x = 10⁻⁴…1 is four exact decades, 20 bins, and Q² = 1–2×10³ GeV² is rounded
+   OUT to 10^3.4 = 2512 GeV², 17 bins, so that no part of the published span
+   is dropped — at the price of one extra Q² row, 1585–2512 GeV², which the
+   electron acceptance barely reaches: it is empty at 5 × 40.8 and carries
+   9.0×10² and 4.4×10⁴ accepted events at 10 × 99.5 and 18 × 137.5, i.e.
+   2×10⁻⁷ and 7×10⁻⁶ of the accepted rate (⁷Li the same to two digits).
+   Measured `bins_per_decade` is 5.000 in both variables against 10.0 and
+   9.1 on the published grid.  The drift at 10 × ⁶Li 99.5 GeV/u, one EIC
+   year: accepted cells 461 → 124, N_DIS 5.193 → 5.236 ×10⁹ (×1.0083, and
+   ×1.0049 / ×1.0791 at the low and top configurations — the coarse lattice
+   straddles the acceptance boundary more crudely where the boundary is
+   longest), median events per bin 3.00×10⁶ → 1.24×10⁷, the best per-bin
+   cos 2φ cell moving from (x = 0.0282, Q² = 1.14) to (0.0316, 1.26) and
+   the smallest per-bin δA from 2.978 to 1.624 ×10⁻⁴.  Those last two are
+   pooling, not reach: √4.12 = 2.03 of the coarser bin.  The
+   coherent map drifts the other way, −4.4%, f_coh(x) being steep across a
+   five-per-decade x bin and evaluated at its centre — which is why
+   `--binning` is a comparison convention and defaults to the grid the
+   published figures were made on (`W3b/G-MONEY`, this run).*
 4. Calendar anchor: aim Phase-1 money plots at the INT program "Towards
    Realizing the Program with Polarized Ion Beams at EIC",
    **March 22 – April 2, 2027**.
@@ -109,6 +138,36 @@ Fig. 3 is digitized, both panels, into `wbct_emc_nm_Q5.csv` and
 residue already recorded in item 1 — no nuclear PDF grid exists for ⁷Li, so
 the ⁷Li projection runs on the A = 6 baseline — which is an external
 availability limit, not work this step can do.*
+
+*2026-09-15, the toy→grid switch reaches the last map script:
+`fastsim/scripts/phase_space_map.py` had no `--pdf` — it hard-wired
+`polarized.ToyG1()` where the other five fast-sim map scripts and
+`evgen/scripts/target_mass_bound.py` already take the flag — and now takes
+one, through `inputs.get_backends`, default `toy`, a non-default backend
+writing its own `_grid` stems.  The default reproduces every pre-existing
+output bit-for-bit (26 files, both ions; the script's outputs are working
+files, not committed figures, and the published `__PS__` map is
+`evgen/scripts/phase_space_bins.py`'s, which took its own `--pdf` under
+plans/07 WP1).  The drift the switch exposes is worth recording because it
+is not where one would look for it.  Of the twelve ⁶Li maps only the three
+`err_g1f1` panels move at all: the rate and the A_zz and A_cos2φ precision
+maps are byte-identical on the two backends, since the g1 model enters
+`fom.project_observables` only through ρ = g₂/g₁ in the effective
+depolarization.  And even there the move is small — δ(g₁/F₁) grid/toy has
+median 1.0000 on every accepted map, spans 0.977–1.021 / 0.996–1.159 /
+0.998–1.052 at 5 × 40.8 / 10 × 99.5 / 18 × 137.5 GeV/u, and is 1.0000
+throughout 0.25 < x < 0.6.  **A statistical-precision map is blind to the
+one defect the backend swap is here to expose.**  What moves is the central
+A_∥, which this script computes and does not plot: the rate-weighted |A_∥|
+over the accepted ⁶Li map falls 1.42 → 0.87, 1.49 → 0.34 and
+1.75 → 0.23 ×10⁻³ at the three configurations, and A_∥ changes **sign** in
+16 / 20 / 17 accepted cells carrying 13.3 / 9.1 / 2.5% of the accepted
+rate — all at x = 0.014–0.036, none of them inside the 0.25 < x < 0.6
+window where `ToyG1.a1n` has the wrong sign against NNPDFpol1.1 (there the
+median grid/toy is 1.04 / 0.90 / 0.84).  On ⁷Li no accepted cell flips,
+the neutron weight being 23× smaller than the proton's.  The grid leg costs
+46 s against 10 s.  Whether Report 0's toy-input reach numbers are re-led
+with the grid leg is plans/04 #28.*
 
 1. Unpolarized: LHAPDF inside eic-shell (container ships LHAPDF6) or the
    pure-python `parton` package locally; CT18NNLO + EPPS21/nNNPDF3.0 nuclear

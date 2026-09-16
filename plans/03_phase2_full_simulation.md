@@ -52,6 +52,13 @@ Local `epic` @ 24.08.0 and `EICrecon` @ v1.6.0 checkouts are ~2 years stale.
    eicrecon -Ppodio:output_file=reco.edm4eic.root sim.edm4hep.root
    ```
    Record exact commands + versions in `fullsim/README.md` as the runbook.
+   *(2026-09-15: the block above is the tutorial's, and the runbook's form
+   differs in two places the first real run found — `epic_craterlake.xml`
+   loads the 5 × 41 beamline fields, and `eicrecon` does NOT inherit npsim's
+   compact file because `thisepic.sh` exports `DETECTOR_CONFIG=epic`, so both
+   legs need the configuration named explicitly, `--compactFile
+   $DETECTOR_PATH/epic_craterlake_18x275.xml` and
+   `-Pdd4hep:xml_files=$DETECTOR_PATH/epic_craterlake_18x275.xml`.)*
 
 ☑ *2026-09-06: the step header is set to ☑. Item 1 is done — the current
 `eic_xl-nightly` container (`epic-main` 9aaa2969, 2026-08-22) is installed at
@@ -199,6 +206,28 @@ second-order dispersion D2 = −0.190 / −0.206 / −0.215 m, which is what mak
 the over-rigid arithmetic reproduce the measurement to a tenth of a
 millimetre; R11, R21, R22 and D′ are still unmeasured.*
 
+◐ *2026-09-15 on (2): the "derive" half is done and the B0/ZDC half is examined.
+R11, R21, R22 and D′ are measured, per configuration, at pot station 1, by
+`tools/fullsim/ff_transfer_scan.py` through the zero-insertion geometry of
+`ff_zero_insertion.sh`: 1.148 / 1.227 / 1.852, −0.0837 / −0.0651 / −0.0209 rad m⁻¹,
+−0.4955 / −0.3060 / +0.1944 and 0.0175 / 0.0179 / 0.0182 rad at 5 × 41 / 10 × 100 /
+18 × 275, with 0.8–4.5 % standard errors, plus the vertical R33/R43/R44. They sit
+in `farforward.POT_SECOND_ROW` and `POT_SECOND_ROW_VERTICAL` as NEW names —
+POT_LEVERS and D2 are untouched and came out of the same files as controls (R12
+19.186 / 21.341 / 29.961 m against the carried 19.24 / 21.25 / 29.97). The blocks
+are symplectic to 4 % without having been fitted to be. B0: the 6–20 mrad leg is
+the first ladder here to reach the B0 window, and IP6 → B0 layer 1 is a PURE DRIFT
+— dx/dθ_x = 5.900 m at all three settings against the layer's z = 5896 mm, so a B0
+hit measures the IP angle with no per-configuration optics (`farforward.B0_DRIFT_M`).
+ZDC is a calorimeter with no momentum branch and is reported as hit counts and
+energy-weighted centroids per leg. The "request" half is now a MEASURED external
+blocker rather than a code reading: with the first EICrecon run (Step 2.3,
+2026-09-15) the Roman-Pot reconstruction returns zero `RecParticles` for a lithium
+ion where a proton control gives 72, so `MatrixTransferStaticConfig.h`'s
+`partMass = 0.938272, partCharge = 1` does not merely mislabel the species, it
+drops it. Item (3), the reco-level efficiency × purity × mis-tag matrix, is
+unchanged and still externally gated.*
+
 ☐ *2026-08-28 on (4): feeding parameterizations back is done (the measured pot
 aperture and the per-configuration optics are in the fast sim), and the
 acceptance half of the note is published (Report 3 §5/Table 6, Report 4). What
@@ -207,6 +236,22 @@ remains is the reco-level efficiency × purity × mis-tag matrix of work-plan it
 step 2.1's Li presets.*
 
 ## Step 2.3 ☐ Central-detector physics performance (4 weeks)
+
+☐ *2026-09-15: the residue Step 2.0 deferred here is closed — the literal
+`eicrecon` command has been run and the tree has its first reconstructed sample.
+100 ⁶Li events at 137.5 GeV/u through `epic_craterlake_18x275.xml` gave
+`sim.edm4hep.root` (62.6 MB) and `reco.edm4eic.root` (37.5 MB, 100 events, 1335
+collections); npsim 1.8.0, `EICrecon git.77d0cef8…=main`, epic `9aaa2969…`, 6 min
+10 s + 47 s on the analysis box. Commands and versions are in
+`tools/fullsim/README.md` §"The reconstruction leg" and docs/reproduction_manual.md
+§5.3. Two things it taught. `thisepic.sh` exports `DETECTOR_CONFIG=epic`, so the
+command as written loads `epic.xml`, which includes `beamline_5x41.xml` — the
+`ff_gun_scan.sh` gotcha on the reconstruction side; pass
+`-Pdd4hep:xml_files=$DETECTOR_PATH/epic_craterlake_18x275.xml`. And the
+far-forward reconstruction returns NOTHING for a lithium ion: 1031 of 1179
+Roman-Pot sim hits become `RecHits` and zero become `ForwardRomanPotRecParticles`,
+where a 275 GeV proton control through the same chain gives 72 at 275.0 ± 1.7 GeV.
+The central-detector items 1–4 below are untouched by this and stay ☐.*
 
 1. Scattered electron: e-ID efficiency/purity vs (x,Q²); kinematic
    reconstruction (electron vs JB vs Σ/DA — tutorial-kinematic-
@@ -228,6 +273,26 @@ background model, and there is no Fermi smearing in the reconstruction chain.
 Item 2's "purity ≳ 0.8 or rebin" gate is unmet even parametrically (0.56–0.75
 calibrated, 0.42–0.68 uncalibrated) — see the note under plans/02 Step 1.6.*
 
+☐ *2026-09-15: item 1's Fermi half is now in the chain and its e-ID half is
+closed as far as the reference set allows. `RecoModel.fermi_smear` (default
+off) gives every pseudo-event's struck cluster an internal momentum from the
+cluster momentum densities of `polli_fastsim.spectator`, so the vertex sits at
+ss = α s (`reco.fermi_alpha`) and the analysis, reconstructing with the nominal
+per-nucleon beam, reports x_meas = α x_vertex at the same Q²; ⟨|k|⟩ = 0.1071 GeV
+and ⟨k²⟩^½ = 0.1345 GeV reproduce the density's own moments to 0.04% and 0.02%,
+α = 0.9985 ± 0.0297, and the effect on the four 5R sweet spots is
++0.21 / +0.07 / −0.06 / −0.01% against statistical errors of 1.7–3.2%, with the
+bin-centering ratio moving by 0.01% and 7R unmoved at the printed precision
+(`money_cos2phi_reco.py --fermi-smear`, own stem). The (x, Q²) axis on ε_eID is
+NOT closed and cannot be from the Yellow Report: its only electron efficiency is
+the working point its pion-suppression numbers are quoted at — 95% for an E/p
+cut, 92% with the shower shape (Table 11.29, Fig. 11.48) — flat in η, momentum,
+x and Q²; Fig. 11.49 is purity, Fig. 8.4 is yields. The curve stays η-only, the
+constant is recorded as `reco.EPS_EID_YR_WORKING_POINT`, and the gap is written
+into the docstring, Report 2 Table 2 and Report 2 §7 rather than filled with
+invented numbers. The purity ≳ 0.8 half of item 2 is untouched; so is the npsim/
+EICrecon gate.*
+
 ## Step 2.4 ☐ Pseudo-experiment closure tests (4 weeks)
 
 1. Weight reconstructed unpolarized samples with Phase-1 asymmetry models
@@ -247,6 +312,43 @@ coverage gaps survive even at the parametric level: only A_cos2φ has been run
 through a detector response — there is no reco-level A∥ or A_zz — and
 `RunPlan.delta_p_over_p` is read by nothing outside the tests, so no money plot
 yet carries a polarimetry-scale band.*
+
+☐ *2026-09-15: both coverage gaps of that note are closed at the parametric
+level; the EICrecon gate is not. `recopseudo.measure_azz` / `measure_apar` run
+the tensor-thirds and helicity-flip estimators of `polligen.estimators` on the
+exact expected per-fill counts of a RECONSTRUCTED (x, Q²) bin of the same
+response 5R and 7R use — `RecoResponse.expected_rates` — with the analytic
+errors of `asymmetries.err_azz` / `err_a_parallel`. The thirds estimator is an
+identity there and is pinned as one: across the three fills the φ-averaged rate
+factors sum to exactly 3, so read at true kinematics with neither selection nor
+ε_eID it returns the σ-weighted analytic A_zz to 2×10⁻¹⁴, pinned at 1e-9 (A∥
+to 0.29%, the residue
+being the finite-γ longitudinal form the kernel carries by default). Over 240
+pseudo-experiments of a bin at x = 0.03–0.10, Q² = 3–10 GeV², the pulls against
+the reconstructed-bin truth have means −0.056 ± 0.066 (A_zz) and +0.103 ± 0.059
+(A∥) with spreads 1.03 and 0.91 of the analytic errors, and the
+relative-luminosity biases of item 3 are reproduced through the response and
+removed by the luminosity-corrected estimators. `RunPlan.delta_p_over_p` is now
+read by a money plot: `money_azz_reco.py --delta-p-over-p` draws it as the pure
+scale it is — both estimators divide by a MEASURED polarization, and the band
+is measured rather than assumed: each edge is the same drawn counts re-read by
+the same estimator at P(1 ± δP/P), whose half-width comes out at
+δP/P/(1 − (δP/P)²) of the central value at every bin, δP/P to 0.09%, and one
+polarization draw scales all seven bins by the same 1/(1 + δP/P) to 2×10⁻¹⁶ — on
+its own stem `money_azz_reco_pol0p03_6Li.png`. At the 3% ring value that band is
+0.18–0.53 of the one-year statistical error and 0.56–1.67 of the ten-year one,
+so polarimetry and not statistics limits a ten-year A_zz over the middle of the
+Q² = 3–10 GeV² slice. Item 3's φ-acceptance stability stays where plans/07 WP3
+left it.*
+
+☐ *2026-09-15 on the EICrecon clause above: `eicrecon` now runs in the tree
+and a reconstructed sample exists (Step 2.3, 100 ⁶Li events at 137.5 GeV/u;
+`tools/fullsim/README.md` §"The reconstruction leg"), so "invoked in zero
+scripts" no longer holds. What this step needs is unchanged: that sample is a
+far-forward gun ladder, not a weighted physics sample, and nothing has been fed
+back to the estimators. The two parametric coverage gaps of the 2026-08-28 note
+are closed by the clause above, at the parametric level; the reconstructed
+sample this step is written around is what stands.*
 
 ## Step 2.5 ☐ Campaign-scale production & write-up (ongoing)
 
@@ -335,6 +437,6 @@ samples.
 | Li optics/afterburner configs don't exist | verified: 3 concrete artifacts to add (preset, beamline XML, runcard); ⁶Li can proxy d/He4 (same Z/A); engage FF WG early for ⁷Li |
 | ⁶Li α-tag fails at IP6 (R=1 beam-blind) | quantify pT-tail acceptance; document IR-8 secondary-focus case; pivot ⁶Li tagging to p/³He channels — *superseded (2026-08-28): the risk materialised (1.7–2.6% at every published optics) and was answered by a mitigation this row predates — the one-plane β\* de-squeeze of Report 1 §6.1, 22–31% at 1/6.8–1/12.8 of the luminosity, with IR-8 (≈20%) as the fallback; the p/³He fragments were evaluated and classified as vetoable breakup backgrounds, not tags (plans/06 §6.2)* |
 | Geant4/DD4hep mishandles light-ion or excited-ion primaries | gun tests in 2.1.4; sanitize PDG codes to ground states |
-| EICrecon FF matrices proton-tuned | derive Li-rigidity matrices with FF WG |
+| EICrecon FF matrices proton-tuned | derive Li-rigidity matrices with FF WG — *sharpened (2026-09-15): the "derive" half is done in this repository (`farforward.POT_LEVERS` + `POT_SECOND_ROW`, the full first-order IP6 → pot transfer per configuration), and the request half is now measured rather than read off the source: the reconstruction returns ZERO `ForwardRomanPotRecParticles` for a lithium ion where a 275 GeV proton control gives 72, so `MatrixTransferStaticConfig.h` drops the species rather than mislabelling it* |
 | Compute exceeds local resources | guns + small samples locally; campaign production via collaboration |
 | Container/geometry churn | pin container per study; record versions in every output dir |

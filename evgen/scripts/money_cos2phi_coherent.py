@@ -34,6 +34,11 @@ Error bars assume the whole luminosity in the transverse-tensor fill
 run-plan split scales N down proportionally).
 
 Usage:  python3 scripts/money_cos2phi_coherent.py
+        python3 scripts/money_cos2phi_coherent.py --pzz-plus 0.6 --pzz-zero -1.2
+
+The second form reads panel (d) with the two-fill spin-state ratio
+instead of the single-fill binned fit (money_cos2phi.py header; plans/07
+WP3): 0.67x on dA and on the 5-sigma floors, its own '_twofill' stem.
 """
 
 import argparse
@@ -48,10 +53,13 @@ import matplotlib  # noqa: E402
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 
-from money_cos2phi import (add_pdf_arg, describe_backends,  # noqa: E402
-                           output_stem_tag, pdf_backends)
+from money_cos2phi import (add_pdf_arg, add_two_fill_args,  # noqa: E402
+                           check_two_fill_args, describe_backends,
+                           output_stem_tag, pdf_backends,
+                           two_fill_err_ratio, two_fill_pzz)
 
 from polligen import coherent as coh  # noqa: E402
+from polligen import reco  # noqa: E402
 from polligen.recopseudo import T_EDGES_PUBLISHED  # noqa: E402
 from polligen.estimators import (cos2phi_fit_binned,  # noqa: E402
                                  cos2phi_fit_err)
@@ -100,9 +108,17 @@ def main():
                     help="flat gluon-transversity scenario amplitude "
                          "at Pzz=1 (band 3e-3..1e-2)")
     add_pdf_arg(ap)
+    add_two_fill_args(ap)
     ap.add_argument("--seed", type=int, default=20260810)
     ap.add_argument("--outdir", default=".")
     args = ap.parse_args()
+    check_two_fill_args(ap, args)
+    # the two-fill spin-state-sorted path (plans/07 WP3).  The coherent
+    # tagged rate carries no tensor dependence in this scenario model, so
+    # the two fills split N in half and differ only through a_2, which is
+    # exactly linear in P_zz (coherent.a2_deformation).
+    pzz_pair = two_fill_pzz(args)
+    two_fill = pzz_pair is not None
 
     config = beams.default_configs("6Li")[args.config]
     rng = np.random.default_rng(args.seed)
@@ -237,26 +253,59 @@ def main():
     a2_def_band = [coh.CoherentScenario(eps_b0=e).a2_tagged(cut_ha,
                                                             args.pzz)
                    for e in EPS_BAND]
-    counts, edges = phi_histogram_pseudo(n_bin, a2_def, nbins=24, rng=rng)
-    amp_hat = cos2phi_fit_binned(counts, edges, args.pzz)
-    err = cos2phi_fit_err(n_bin, args.pzz)
-    err10 = cos2phi_fit_err(lumi_ratio * n_bin, args.pzz)
-    centers = 0.5 * (edges[:-1] + edges[1:])
-    nbar = counts.mean()
-    ax4.errorbar(centers, counts / nbar,
-                 yerr=np.sqrt(np.maximum(counts, 1.0)) / nbar, fmt="o",
-                 color="black", ms=3.5, capsize=2, lw=1, zorder=3)
     phi = np.linspace(0, 2 * np.pi, 200)
-    ax4.plot(phi, 1 + a2_def * np.cos(2 * phi), "-", color=C_TRUTH,
-             lw=1.6)
-    ax4.plot(phi, 1 + amp_hat * args.pzz * np.cos(2 * phi), "--",
-             color=C_FIT, lw=1.4)
+    if two_fill:
+        lumis = [0.5 * n_bin, 0.5 * n_bin]   # only their ratio is used
+        rows = []
+        edges = None
+        for pf, nf in zip(pzz_pair, lumis):
+            c, edges = phi_histogram_pseudo(
+                nf, sc.a2_tagged(cut_ha, pf), nbins=24, rng=rng)
+            rows.append(c)
+        fit = reco.harmonic_ratio_fit(np.asarray(rows, dtype=float),
+                                      lumis, list(pzz_pair), edges)
+        amp_hat = fit["amp"]
+        err = fit["err"]
+        err10 = float(reco.err_harmonic_ratio(lumi_ratio * n_bin,
+                                              list(pzz_pair)))
+        r, var_r, sig2, pbar = reco.spin_state_ratio(
+            np.asarray(rows, dtype=float), lumis, list(pzz_pair))
+        t_bin = r / (sig2 - pbar * r)
+        t_err = (np.sqrt(np.maximum(var_r, 0.0))
+                 * np.abs((1.0 + pbar * t_bin) / (sig2 - pbar * r)))
+        counts = np.asarray(rows, dtype=float).sum(axis=0)
+        centers = 0.5 * (edges[:-1] + edges[1:])
+        # the panel shows the estimator's own observable, T(phi') with the
+        # fitted pedestal removed, on the a_2 scale of the P_zz = |P+| fill
+        scale = abs(pzz_pair[0])
+        ax4.errorbar(centers, 1.0 + scale * (t_bin - fit["const"]),
+                     yerr=scale * t_err, fmt="o",
+                     color="black", ms=3.5, capsize=2, lw=1, zorder=3)
+        ax4.plot(phi, 1 + scale * (a2_def / args.pzz) * np.cos(2 * phi),
+                 "-", color=C_TRUTH, lw=1.6)
+        ax4.plot(phi, 1 + scale * amp_hat * np.cos(2 * phi), "--",
+                 color=C_FIT, lw=1.4)
+    else:
+        counts, edges = phi_histogram_pseudo(n_bin, a2_def, nbins=24, rng=rng)
+        amp_hat = cos2phi_fit_binned(counts, edges, args.pzz)
+        err = cos2phi_fit_err(n_bin, args.pzz)
+        err10 = cos2phi_fit_err(lumi_ratio * n_bin, args.pzz)
+        centers = 0.5 * (edges[:-1] + edges[1:])
+        nbar = counts.mean()
+        ax4.errorbar(centers, counts / nbar,
+                     yerr=np.sqrt(np.maximum(counts, 1.0)) / nbar, fmt="o",
+                     color="black", ms=3.5, capsize=2, lw=1, zorder=3)
+        ax4.plot(phi, 1 + a2_def * np.cos(2 * phi), "-", color=C_TRUTH,
+                 lw=1.6)
+        ax4.plot(phi, 1 + amp_hat * args.pzz * np.cos(2 * phi), "--",
+                 color=C_FIT, lw=1.4)
     ax4.plot(phi, 1 + args.amp * args.pzz * np.cos(2 * phi), "-",
              color="0.55", lw=0.9)
     ax4.annotate(r"deformation-anchored $\langle a_2\rangle=%.3f$"
                  % a2_def, xy=(0.03, 0.94), xycoords="axes fraction",
                  color=C_TRUTH, fontsize=7.5)
-    ax4.annotate("binned fit", xy=(0.03, 0.87), xycoords="axes fraction",
+    ax4.annotate("spin-state ratio fit" if two_fill else "binned fit",
+                 xy=(0.03, 0.87), xycoords="axes fraction",
                  color=C_FIT, fontsize=7.5)
     ax4.annotate(r"gluon-transversity scenario (%.3f)"
                  % (args.amp * args.pzz), xy=(0.03, 0.80),
@@ -278,12 +327,15 @@ def main():
 
     fig.suptitle(
         r"Coherent $e\,^6$Li$\,\to\,e'X\,^6$Li(g.s.), transversely "
-        r"tensor-polarized, %s, $P_{zz}=%.2f$"
+        r"tensor-polarized, %s, %s"
         "\n(scenario rates; modulation anchored on the polarized-$d$ "
         "CGC calculation, PLB 858:139053)\n"
         "statistical errors only; backgrounds, purity and tensor "
         "radiative corrections not included"
-        % (config.label(), args.pzz), fontsize=10)
+        % (config.label(),
+           (r"two fills $P_{zz}=%+.2f / %+.2f$ (spin-state ratio)"
+            % pzz_pair) if two_fill else r"$P_{zz}=%.2f$" % args.pzz),
+        fontsize=10)
     fig.tight_layout(rect=(0, 0, 1, 0.91))
     outdir = pathlib.Path(args.outdir)
     outdir.mkdir(parents=True, exist_ok=True)
@@ -295,6 +347,12 @@ def main():
     fig.savefig(out, dpi=140)
     print("wrote", out)
     print("backend:", describe_backends(args, backends))
+    if two_fill:
+        print("estimator: two-fill spin-state ratio "
+              "(reco.harmonic_ratio_fit), P_zz = %+.3g / %+.3g at equal "
+              "luminosity; dA(two-fill)/dA(single-fill at P_zz = %.3g) "
+              "= %.4f" % (pzz_pair[0], pzz_pair[1], args.pzz,
+                          two_fill_err_ratio(args.pzz, pzz_pair)))
     print("coherent produced: %.3g   RP-tagged (HA): %.3g   (HD): %.3g"
           % (n_coh.sum(), n_tag.sum(),
              tagged[HIGH_DIVERGENCE.name].sum()))

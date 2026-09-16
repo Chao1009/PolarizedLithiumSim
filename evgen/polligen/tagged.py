@@ -114,6 +114,31 @@ from .spin import clebsch_gordan, m_values
 # triton: Roman-Pot tag 0.9614 / 0.9676 / 0.9726 -> 0.9620 / 0.9678 /
 # 0.9728 at the Yellow Report optics (docs/reproduction_manual.md 4.1,
 # plans/08 D7).  The figure was regenerated with the change.
+#
+# WHICH FOOTING EACH NUMBER IS ON -- the -0.028/-0.037 confusion the
+# plans/05 SS5.4 forward-limit gate carried until 2026-09-15.  The two
+# constants below are PER NUCLEON, mirrored from Bissey's 3He
+# (P_p = -0.028, P_n = +0.86, PRC 65:064317, the per-nucleon source
+# beams.HE3 cites at beams.py's Ion docstring).  The -0.037 of the gate
+# is a different object: it is the WHOLE-NUCLEUS 7Li VMC sum, quoted by
+# JLab PR12-14-001 Eq. (29) from Wiringa et al. PRC 89 (2014) 024305
+# Table I (1.981 spin-up against 2.019 spin-down neutrons in the M = 3/2
+# state, i.e. -0.038; the proposal's rounding of the same calculation is
+# -0.037), and beams.LI7 stores it DIVIDED BY N = 4 so that N * P_n
+# returns it.  The proton half hid the distinction because the triton has
+# Z = 1: 1 x 0.86 is the same number on either footing, against the gate's
+# 0.866.  The neutron half does not, because the triton has N = 2, and the
+# model's whole-nucleus 7Li neutron polarization -- the alpha spectator
+# being spin-0 and contributing exactly zero -- is
+#     P_t(M = 3/2) x N_t x eff_pol_n = 1 x 2 x (-0.028) = -0.056,
+# a factor 1.51 in magnitude from the ab initio -0.037 and 1.47 from
+# Table I's -0.038.  That gap is a KNOWN MODEL DIFFERENCE and not a band:
+# the two-cluster alpha + t decomposition puts all of the 7Li neutron
+# spin on the triton's two neutrons, where VMC spreads it over four
+# correlated ones, and no D-state admixture exists in this channel to
+# widen a tolerance around it (the 7Li alpha tag is a lone L = 1 wave).
+# Pinned, with the gap printed, in
+# test_tagged.py::test_li7_neutron_forward_limit_both_footings.
 TRITON = beams.Ion("t", 3, 1, 0.5, eff_pol_p=0.86, eff_pol_n=-0.028)
 NEUTRON = beams.Ion("n", 1, 0, 0.5, eff_pol_p=0.0, eff_pol_n=1.0)
 

@@ -2,11 +2,26 @@
 """Produce x-Q2 phase-space / rate / FOM maps for e+6Li and e+7Li.
 
 Usage:  python3 scripts/phase_space_map.py [--ion 7Li] [--lumi 10]
-                [--run-share 1.0] [--outdir out]
+                [--run-share 1.0] [--pdf toy] [--outdir out]
 
 `--lumi` is the programme luminosity and `--run-share` this observable's
 share of it (plans/07 WP2); rates scale as their product and every
 published map is at share 1.
+
+`--pdf {toy,grid}` selects the g1 backend through
+`inputs.get_backends`, as the other fast-sim map scripts already do:
+`toy` (the default, and the one every committed map was drawn on) is
+`polarized.ToyG1`, `grid` is `PartonG1` on NNPDFpol11_100.  `ToyG1.a1n`
+carries the wrong SIGN over roughly 0.25 < x < 0.6 against NNPDFpol1.1,
+and 6Li weights the neutron term equally with the proton one -- but the
+maps drawn here are nearly blind to that: g1 reaches them only through
+rho = g2/g1 in the effective depolarization, so on a 6Li run the rate and
+the Azz and A_cos2phi panels are byte-identical on the two backends, and
+delta(g1/F1) has a grid/toy median of 1.0000 and is 1.0000 throughout
+0.25 < x < 0.6.  What the swap moves is the central A_par, which this
+script computes and does not plot (plans/02 step 1.2, 2026-09-15).
+A non-default backend writes its own `_grid` stem; the toy stems are
+untouched.
 
 Outputs per beam configuration:
   - x-Q2 coverage + event-rate heat map (log axes)
@@ -23,7 +38,8 @@ import numpy as np
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 
 from polli_fastsim import beams, fom
-from polli_fastsim.polarized import ToyG1, toy_b1, toy_delta_gluon
+from polli_fastsim.inputs import get_backends
+from polli_fastsim.polarized import toy_b1, toy_delta_gluon
 
 import matplotlib
 matplotlib.use("Agg")
@@ -58,6 +74,9 @@ def main():
                     help="this observable's share of that programme "
                          "luminosity (plans/07 WP2; default 1.0, which the "
                          "published maps assume)")
+    ap.add_argument("--pdf", default="toy", choices=["toy", "grid"],
+                    help="g1 backend: 'toy' (default, the published maps) "
+                         "or 'grid' (NNPDFpol11_100 via parton)")
     ap.add_argument("--outdir", default="out")
     args = ap.parse_args()
     if not args.run_share > 0:
@@ -71,8 +90,13 @@ def main():
     # a non-default share writes its own files: the published maps are the
     # share-1 ones
     share_key = fom.run_share_tag(args.run_share)
-    suffix = ("_" + share_key) if share_key else ""
-    g1_model = ToyG1()
+    backends = get_backends(args.pdf)
+    g1_model = backends["g1"]
+    # a non-default backend writes its own files, as a non-default share
+    # does: the committed maps are the toy, share-1 ones
+    keys = [k for k in (backends["tag"] if args.pdf != "toy" else "",
+                        share_key) if k]
+    suffix = ("_" + "_".join(keys)) if keys else ""
 
     summary = []
     for cfg in beams.default_configs(args.ion):
@@ -124,7 +148,7 @@ def main():
     (outdir / f"summary_{args.ion}{suffix}.txt").write_text(text + "\n")
     print(f"# ion={args.ion}  L={lumi_eff:g} fb^-1/nucleon  "
           f"Pe={scenario.pol_electron} Pz={scenario.pol_ion_vector} "
-          f"Pzz={scenario.pol_ion_tensor}")
+          f"Pzz={scenario.pol_ion_tensor}  pdf={backends['tag']}")
     print("# " + fom.run_share_header(args.lumi, args.run_share))
     print(text)
     print(f"\nplots written to {outdir}/")

@@ -30,6 +30,7 @@ module scaled the low and mid points as 41*Z/A and 100*Z/A, giving 20.5 and
 roughly DOUBLES p_ion at the low configuration.
 """
 
+import math
 from dataclasses import dataclass
 
 PROTON_TOP_MOMENTUM = 275.0  # GeV
@@ -299,3 +300,88 @@ def default_configs(ion_name: str = "7Li") -> list:
         BeamConfig(e, ion, round(ion.momentum_per_nucleon_at(p), 1))
         for e, p in zip(ELECTRON_ENERGIES, PROTON_CONFIG_ENERGIES)
     ]
+
+
+# --- analysis binning conventions -----------------------------------------
+#
+# Every (x, Q2) map in this repository runs the GENERIC 40 x 30 log-log
+# grid over 1e-4 <= x <= 1 and 1 <= Q2 <= 2e3 GeV^2 -- 10.0 bins per decade
+# in x and 9.09 in Q2.  It is this project's own grid and matches no
+# published projection bin for bin.
+#
+# The Yellow Report inclusive binning is coarser and is a round FIVE
+# logarithmic bins per decade in both variables (the convention quoted on
+# the ePIC inclusive-DIS reconstruction slides,
+# refs/EIC_Seminar_SMaple_2024.pdf slide 42: "five log bins per decade"),
+# which is what makes a bin-by-bin comparison with published YR
+# projections one-to-one -- plans/02 Step 1.1 item 3.
+#
+# The YR lattice is anchored on the DECADE boundaries, i.e. edges at
+# 10^(k/5), so that its bins are the published ones and not an arbitrary
+# five-per-decade subdivision of this project's span.  The x span
+# 1e-4 .. 1 is four exact decades (20 bins).  The Q2 span 1 .. 2e3 GeV^2
+# is 3.301 decades, so the lattice edge above it is 10^3.4 = 2512 GeV^2
+# and the YR Q2 range is rounded OUT to that edge (17 bins) rather than
+# in, so that no part of the published span is dropped.  The price is one
+# extra Q2 row above 2e3; how much of it the acceptance reaches is
+# measured in the plans/07 addendum of 2026-09-15.
+#
+# NOTHING in this module reads these names, and no default anywhere
+# changes: `analysis_grid()` with no argument returns exactly the
+# `fom.project_rates` defaults, so a caller that threads it through is
+# bit-for-bit what it was.
+
+YR_BINS_PER_DECADE = 5
+
+#: The generic grid: the published default of `fom.project_rates`.
+GENERIC_GRID = {"nx": 40, "nq2": 30,
+                "x_range": (1e-4, 1.0), "q2_range": (1.0, 2e3)}
+
+#: The YR grid: the same spans on the decade-anchored 5-per-decade lattice.
+YR_GRID = {"nx": 20, "nq2": 17,
+           "x_range": (1e-4, 1.0), "q2_range": (1.0, 10.0 ** 3.4)}
+
+#: The YR bin edges themselves, written out.  `analysis_grid("yr")` is what
+#: production code threads into `fom.project_rates`; these two tuples are
+#: the same lattice spelled out for the record, and
+#: `fastsim/tests/test_beams.py` pins them against `kinematics.log_grid`.
+YR_X_EDGES = tuple(10.0 ** (-4.0 + k / YR_BINS_PER_DECADE)
+                   for k in range(YR_GRID["nx"] + 1))
+YR_Q2_EDGES = tuple(10.0 ** (k / YR_BINS_PER_DECADE)
+                    for k in range(YR_GRID["nq2"] + 1))
+
+BINNINGS = {"log40x30": GENERIC_GRID, "generic": GENERIC_GRID,
+            "yr": YR_GRID}
+
+
+def analysis_grid(binning: str = "log40x30") -> dict:
+    """`fom.project_rates` grid keyword arguments for a named binning.
+
+    'log40x30' (the default; 'generic' is an accepted alias) returns the
+    published 40 x 30 log grid, so threading it through changes nothing.
+    'yr' returns the Yellow-Report five-bins-per-decade grid.
+    """
+    try:
+        return dict(BINNINGS[binning])
+    except KeyError:
+        raise ValueError("unknown binning %r (choose from %s)"
+                         % (binning, ", ".join(sorted(BINNINGS)))) from None
+
+
+def binning_tag(binning: str = "log40x30") -> str:
+    """Filename key for a non-default binning ('' on the published grid).
+
+    The guard convention of `fom.run_share_tag` and
+    `money_cos2phi.output_stem_tag`: a run on a binning other than the
+    published one writes its own stem rather than over the published map.
+    """
+    if binning not in BINNINGS:
+        raise ValueError("unknown binning %r" % (binning,))
+    return "yr" if binning == "yr" else ""
+
+
+def bins_per_decade(edges) -> float:
+    """Logarithmic bin density of an edge array, bins per decade of the
+    span it covers -- 5.0 exactly for the YR lattice."""
+    edges = [float(e) for e in edges]
+    return (len(edges) - 1) / (math.log10(edges[-1]) - math.log10(edges[0]))

@@ -157,19 +157,33 @@ def optics_menu(config, which):
     return [(o.name, o, c, m) for o, c, m in table[which]]
 
 
-def output_stem(base, key, config, optics, lumi_fraction=1.0):
+#: plans/05 step 5.B wave-function band.  The LEFT panel has drawn it
+#: since the figure existed; `--beta-band` extends it to the
+#: acceptance-folded RIGHT panel (2026-09-15).  `BETA_EDGES` is the two
+#: EDGES alone -- the central value is already in every published cell of
+#: this script, so the band run adds only 0.20 and 0.40 to it.
+BETA_CENTRAL = 0.30
+BETA_EDGES = (0.20, 0.40)
+
+
+def output_stem(base, key, config, optics, lumi_fraction=1.0,
+                beta_band=False):
     """File stem for one run.  The published artefact is the DEFAULT
     combination alone -- `--config 1 --optics menu` at the full programme
-    share.  Keying the guard on the configuration alone would let
-    `--optics legacy` at the default configuration overwrite the published
-    PNG with the retired 73/164 microrad figure, which is exactly the run
-    the manual documents; keying it on the optics alone would let a
-    run-plan share do the same with smaller error bars."""
+    share and beta = 0.30 on the folded panel.  Keying the guard on the
+    configuration alone would let `--optics legacy` at the default
+    configuration overwrite the published PNG with the retired 73/164
+    microrad figure, which is exactly the run the manual documents; keying
+    it on the optics alone would let a run-plan share do the same with
+    smaller error bars; and `--beta-band` redraws the right panel, so it
+    takes a key of its own."""
     share_key = fom.run_share_tag(lumi_fraction)
-    if config == 1 and optics == "menu" and not share_key:
+    if config == 1 and optics == "menu" and not share_key and not beta_band:
         return base
     stem = "%s_%s_%s" % (base, key, optics)
-    return "%s_%s" % (stem, share_key) if share_key else stem
+    if share_key:
+        stem = "%s_%s" % (stem, share_key)
+    return stem + "_betaband" if beta_band else stem
 
 
 # the two live in polligen.tagged so a test can pin them (and so Report 4
@@ -242,6 +256,21 @@ def main():
                          "Section 6.1 with its luminosity fraction; "
                          "'legacy' the retired proton-derived 73/164 "
                          "microrad pair, for reproduction only")
+    ap.add_argument("--beta-band", action="store_true", dest="beta_band",
+                    help="extend the plans/05 beta = 0.20/0.30/0.40 "
+                         "wave-function band from the analytic LEFT panel, "
+                         "which has always carried it, to the "
+                         "acceptance-folded RIGHT one: the two edges' "
+                         "acceptance-weighted truth curves are drawn and "
+                         "their folded markers, tag acceptances and "
+                         "k = 0.325 GeV/c readings are printed.  DEFAULT "
+                         "OFF, and the band run writes its own "
+                         "`_betaband` stem, so the published figure stays "
+                         "bit-for-bit.  The band is one-sided IN BETA: the "
+                         "2026-08-26 e+d control found that no beta in a "
+                         "two-parameter Hulthen form reproduces BeAGLE's "
+                         "p_T tail (2-13x), so the true short-range scale "
+                         "is at or above 0.40")
     ap.add_argument("--seed", type=int, default=20260713)
     ap.add_argument("--outdir", default=".")
     args = ap.parse_args()
@@ -345,11 +374,43 @@ def main():
                args.lumi_ref * args.lumi_fraction,
                "%.4f" % err_azz(max(n_ref[i300], 1), PZZ)
                if n[i300] > 0 else "n/a"))
+    # --- the beta band on the FOLDED panel (default off) --------------------
+    # The left panel has drawn the analytic band since this figure existed;
+    # the right one ran beta = 0.30 alone, which is the plans/05 step 5.B
+    # rule this closes.  Everything above is untouched by the flag -- that
+    # is what makes the default run bit-for-bit -- and each edge gets its
+    # own RNG stream seeded exactly as the central one, so the beta = 0.30
+    # cells of a band run reproduce the published run marker by marker.
+    band_summary = []
+    if args.beta_band:
+        for beta in BETA_EDGES:
+            m_b = tagged.TaggedModel(tagged.li6_alpha_channel(beta=beta))
+            s_b = tagged.TaggedSampler(m_b, kern, config, fom.Scenario())
+            rng_b = np.random.default_rng(args.seed)
+            folded_b, n_gen_b = folded_asymmetry(s_b, plan, args.events,
+                                                 k_edges, menu, rng_b, key)
+            for name, optics, colour, _marker in menu:
+                a_b, n_b, k_acc_b = folded_b[name]
+                eps_b = acceptance_table(m_b, config, optics)
+                wf_b = azz_wf_curve(m_b, weights=eps_b)
+                ax2.plot(m_b.k, wf_b, ":" if beta < BETA_CENTRAL else "--",
+                         lw=1.0, color=colour, alpha=0.7,
+                         label=r"acc.-weighted truth, %s, $\beta$ = %.2f"
+                               % (name, beta))
+                i300b = np.argmin(np.abs(kc - 0.3))
+                band_summary.append(
+                    (beta, name, k_acc_b.size / n_gen_b,
+                     a_b[i300b] if n_b[i300b] > 0 else np.nan,
+                     float(np.interp(kc[i300b], m_b.k, wf_b)),
+                     float(np.median(k_acc_b)) if k_acc_b.size else np.nan))
+
     ax2.set_xlabel(r"$k_{\rm rec}$ [GeV/$c$]")
     ax2.set_ylabel(r"$A_{zz}^{\rm tag}$ (RP-accepted)")
     ax2.set_title("acceptance-folded, tensor-thirds fills")
     ax2.set_xlim(0, 0.6)
-    ax2.legend(fontsize=6.5)
+    # the band run adds two labelled curves per optics, so its legend is set
+    # a point smaller; the default stays at 6.5 and the PNG bit-for-bit
+    ax2.legend(fontsize=5.5 if args.beta_band else 6.5)
     ax2.axhline(0, color="0.6", lw=0.5)
 
     fig.suptitle(r"$^6$Li($e,e^\prime\alpha$)X: tagged tensor asymmetry of the "
@@ -361,12 +422,44 @@ def main():
     outdir = pathlib.Path(args.outdir)
     outdir.mkdir(parents=True, exist_ok=True)
     stem = output_stem("money_tagged_azz_6Li", key, args.config, args.optics,
-                       lumi_fraction=args.lumi_fraction)
+                       lumi_fraction=args.lumi_fraction,
+                       beta_band=args.beta_band)
     out = outdir / (stem + ".png")
     fig.savefig(out, dpi=140)
     print("wrote", out)
     for line in summary:
         print(line)
+    if band_summary:
+        print("beta band on the folded panel (plans/05 step 5.B).  The band "
+              "is one-sided IN BETA -- the 2026-08-26 e+d control found "
+              "that no beta in a two-parameter Hulthen form reproduces "
+              "BeAGLE's p_T tail (2-13x), so the true short-range scale is "
+              "at or above 0.40 -- so read the 0.40 end, not the middle:")
+        i3 = int(np.argmin(np.abs(kc - 0.3)))
+        for name, optics, _c, _m in menu:
+            a_c, n_c, k_acc_c = folded[name]
+            wf_c = azz_wf_curve(central,
+                                weights=acceptance_table(central, config,
+                                                         optics))
+            rows = sorted(
+                [(b, acc_b, a_b, wf_b, med_b)
+                 for b, nm, acc_b, a_b, wf_b, med_b in band_summary
+                 if nm == name]
+                + [(BETA_CENTRAL, k_acc_c.size / n_gen,
+                    a_c[i3] if n_c[i3] > 0 else np.nan,
+                    float(np.interp(kc[i3], central.k, wf_c)),
+                    float(np.median(k_acc_c)) if k_acc_c.size else np.nan)])
+            accs = [r[1] for r in rows]
+            print("  %-30s tag acc %s ; span x%.2f"
+                  % (name, " / ".join("beta %.2f: %.4f" % (r[0], r[1])
+                                      for r in rows),
+                     max(accs) / min(accs)))
+            print("  %-30s A_zz(k = %.3f) %s ; acc.-weighted truth %s ; "
+                  "median accepted k %s GeV/c"
+                  % ("", kc[i3],
+                     " / ".join("%+.3f" % r[2] for r in rows),
+                     " / ".join("%+.3f" % r[3] for r in rows),
+                     " / ".join("%.3f" % r[4] for r in rows)))
 
 
 if __name__ == "__main__":

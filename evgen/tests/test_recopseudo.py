@@ -1242,3 +1242,249 @@ def test_relative_luminosity_bias_is_one_third_per_unit_ratio_error():
     # and in absolute terms it is small: a per-cent ratio error costs ~0.3%
     t = fit([0.5 * 1.005, 0.5 * 0.995])
     assert abs(t / base - 1.0) < 0.005
+
+
+# --- Fermi motion of the struck cluster (plans/03 2.3) -----------------------
+
+def _fermi_pair(sampler, **kw):
+    """The same response with the Fermi switch off and on, built from
+    fresh generators seeded identically."""
+    off = rp.RecoResponse(sampler, rp.RecoModel(), n_mc_per_cell=200,
+                          rng=np.random.default_rng(7))
+    on = rp.RecoResponse(sampler, rp.RecoModel(fermi_smear=True, **kw),
+                         n_mc_per_cell=200, rng=np.random.default_rng(7))
+    return off, on
+
+
+def test_fermi_smear_default_is_off_and_bit_for_bit(response):
+    """The switch must be inert when off: alpha is drawn from its own
+    stream, so an off response is bit for bit the one that existed before
+    the hook and an on/off pair shares every other random number."""
+    sampler, _resp = response
+    off, on = _fermi_pair(sampler)
+    ref = rp.RecoResponse(sampler, rp.RecoModel(), n_mc_per_cell=200,
+                          rng=np.random.default_rng(7))
+    for name in ("x", "q2", "y", "x_reco", "q2_reco", "y_reco", "eff",
+                 "dil", "w", "phi_true"):
+        a, b = getattr(off, name), getattr(ref, name)
+        assert np.array_equal(a, b, equal_nan=True), name
+    assert off.fermi_alpha is None and off.fermi_reject == 0.0
+    # the on/off pair shares the cell draw exactly (alpha comes from its
+    # own stream); the physics azimuth is a property of the scattered
+    # electron and so moves with the vertex, but by at most a few mrad --
+    # it is defined against the NUCLEAR momentum and spin axis, which the
+    # internal momentum of one cluster does not touch
+    assert np.array_equal(on.x, off.x) and np.array_equal(on.q2, off.q2)
+    dphi = np.angle(np.exp(1j * (on.phi_true - off.phi_true)))
+    # the rms is the meaningful bound (1.3e-4 rad on the production
+    # response, 2.2e-5 rate-weighted, against its 3 mrad angular
+    # resolution); the worst single event reaches 12 mrad there
+    assert np.max(np.abs(dphi)) < 5.0e-2
+    assert np.sqrt((dphi ** 2).mean()) < 1.0e-3
+    # and differs where it must
+    assert on.fermi_alpha is not None
+    assert not np.array_equal(on.x_reco, off.x_reco, equal_nan=True)
+
+
+def test_fermi_smear_draws_the_spectator_density(response):
+    """The mean and rms of the internal momentum the response actually
+    draws match the momentum density of polli_fastsim.spectator to 1% --
+    the acceptance test of the work-package item."""
+    sampler, _resp = response
+    _off, on = _fermi_pair(sampler)
+    m1, m2 = reco.fermi_k_moments(CONFIG.ion.A, CONFIG.ion.Z)
+    assert abs(on.fermi_k.mean() / m1 - 1.0) < 0.01
+    assert abs(np.sqrt((on.fermi_k ** 2).mean()) / m2 - 1.0) < 0.01
+    # and the light-cone fraction it turns into is centred just below 1
+    assert abs(on.fermi_alpha_drawn.mean() - 0.9985) < 0.003
+    # only a handful of events fall at y > 1 at their own alpha
+    assert 0.0 < on.fermi_reject < 0.01
+
+
+def test_fermi_smear_shifts_reconstructed_x_by_alpha(response):
+    """The whole content of the collinear reading: at fixed Q2 the analysis
+    reports x_meas = alpha x_vertex, so the migration ratio tracks alpha
+    event by event where the reconstruction is otherwise clean."""
+    sampler, _resp = response
+    off, on = _fermi_pair(sampler)
+    # the mixed method takes y from the hadronic stand-in, which carries a
+    # 25% smear of its own; compare instead on the ELECTRON-method x, where
+    # the alpha shift is the only difference between the two responses
+    off_e = rp.RecoResponse(sampler, rp.RecoModel(y_method="electron"),
+                            n_mc_per_cell=200, rng=np.random.default_rng(11))
+    on_e = rp.RecoResponse(sampler,
+                           rp.RecoModel(y_method="electron", fermi_smear=True),
+                           n_mc_per_cell=200, rng=np.random.default_rng(11))
+    good = (np.isfinite(off_e.x_reco) & np.isfinite(on_e.x_reco)
+            & (off_e.x_reco > 0) & (on_e.fermi_alpha > 0.5)
+            & (on_e.fermi_alpha < 1.5))
+    ratio = on_e.x_reco[good] / off_e.x_reco[good]
+    # the detector smearing rides on a different E' in the two responses,
+    # so the two are not the same number event by event; the alpha shift is
+    # nevertheless what carries the ratio
+    assert np.corrcoef(ratio, on_e.fermi_alpha[good])[0, 1] > 0.75
+    assert abs(np.median(ratio) - np.median(on_e.fermi_alpha[good])) < 0.02
+
+
+def test_fermi_smear_refuses_the_hfs_path(response):
+    sampler, _resp = response
+    with pytest.raises(ValueError, match="electron side"):
+        rp.RecoResponse(sampler,
+                        rp.RecoModel(fermi_smear=True, y_source="hfs"),
+                        n_mc_per_cell=20, rng=np.random.default_rng(1))
+
+
+def test_fermi_smear_moves_the_amplitude_below_the_statistical_error(response):
+    """What the switch is for: the shift it puts on a reconstructed-bin
+    amplitude must be small against that bin's own error, and the ratio of
+    the fit to the reconstructed-bin truth must barely move -- the truth
+    reference moves with the data."""
+    sampler, _resp = response
+    off, on = _fermi_pair(sampler)
+    cat = bk.tensor_flip_plan(0.6).categories[0]
+    edges = (0.01, 0.03, 1.0, 3.0)
+    s_off = off.bin_summary(*edges, cat)
+    s_on = on.bin_summary(*edges, cat)
+    shift = s_on["a_reco_bin"] / s_off["a_reco_bin"] - 1.0
+    assert abs(shift) < 0.02
+    # the reconstructed-over-true amplitude ratio is what a bin-centering
+    # factor carries, and it is stable
+    r_off = s_off["a_reco_bin"] / s_off["a_true_bin"]
+    r_on = s_on["a_reco_bin"] / s_on["a_true_bin"]
+    assert abs(r_on - r_off) < 0.02
+
+
+# --- reco-level A_parallel and A_zz (plans/03 2.4) ---------------------------
+
+RATE_BIN = (0.03, 0.10, 3.0, 10.0)
+
+
+@pytest.fixture(scope="module")
+def rate_response():
+    """A response whose kernel carries BOTH sectors: the b1 model the
+    tensor thirds read and the vector g1 the helicity flips read."""
+    kern = InclusiveKernel(
+        beams.LI6, b1_func=toy_b1,
+        delta_func=lambda x, q2, f1: toy_delta_gluon(x, q2, f1, scale=3e-2))
+    analysis = fom.Scenario(lumi_fb_per_nucleon=10.0, pol_ion_tensor=0.6)
+    sampler = InclusiveSampler(kern, CONFIG, rp.generator_scenario(analysis),
+                               nx=20, nq2=15, x_range=(3e-3, 0.5),
+                               q2_range=(0.7, 100.0))
+    resp = rp.RecoResponse(sampler, rp.RecoModel(), n_mc_per_cell=300,
+                           rng=np.random.default_rng(21))
+    return resp, resp.mask_reco(*RATE_BIN), resp.mask_true(*RATE_BIN)
+
+
+def _ensemble(fn, resp, plan, lumi, mask, n_exp, seed):
+    rng = np.random.default_rng(seed)
+    vals, errs, ns = [], [], []
+    for _ in range(n_exp):
+        r = fn(resp, plan, lumi, mask, rng=rng)
+        vals.append(r["value"])
+        errs.append(r["err"])
+        ns.append(r["n"])
+    ref = fn(resp, plan, lumi, mask, poisson=False)
+    return (np.array(vals), np.array(errs), np.array(ns),
+            ref["truth_reco_bin"])
+
+
+def test_expected_rates_is_the_phi_integral_of_expected_counts(rate_response):
+    resp, mask, _true = rate_response
+    plan = bk.tensor_thirds_plan(0.7, 0.6)
+    edges = np.linspace(0.0, 2.0 * np.pi, 24 + 1)
+    binned = resp.expected_counts(plan.categories, 1e3, mask, edges).sum(axis=1)
+    rates = resp.expected_rates(plan.categories, 1e3, mask)
+    assert rates == pytest.approx(binned, rel=1e-12)
+    # dropping the selection and eps_eID can only add events
+    bare = resp.expected_rates(plan.categories, 1e3, mask, with_eff=False)
+    assert np.all(bare > rates)
+
+
+def test_reco_azz_closure(rate_response):
+    """Gate: the reconstructed-level thirds estimator returns the
+    reconstructed-bin truth over 240 pseudo-experiments with an unbiased
+    pull, and its spread is the analytic sqrt(2/N)/P_zz to 15%."""
+    resp, mask, true_mask = rate_response
+    plan = bk.tensor_thirds_plan(0.7, 0.6)
+    vals, errs, ns, truth = _ensemble(rp.measure_azz, resp, plan, 300.0,
+                                      mask, 240, seed=31)
+    pull = (vals - truth) / errs
+    assert abs(pull.mean()) < 0.15
+    assert 0.85 < vals.std(ddof=1) / errs.mean() < 1.15
+    assert 0.85 < pull.std(ddof=1) < 1.15
+    # the bin migrates: the reco-bin truth is not the true-bin one, and
+    # both are the same sign and within a few tens of per cent
+    ref = rp.measure_azz(resp, plan, 300.0, mask, poisson=False,
+                         true_mask=true_mask)
+    assert ref["truth_true_bin"] * truth > 0
+    assert 0.7 < truth / ref["truth_true_bin"] < 1.3
+
+
+def test_reco_apar_closure(rate_response):
+    """The same gate for the helicity-flip estimator, whose analytic error
+    is 1/(P_e P_z sqrt(N))."""
+    resp, mask, true_mask = rate_response
+    plan = bk.helicity_flip_plan(1.0, 0.7, 0.7)
+    vals, errs, ns, truth = _ensemble(rp.measure_apar, resp, plan, 300.0,
+                                      mask, 240, seed=32)
+    pull = (vals - truth) / errs
+    assert abs(pull.mean()) < 0.15
+    assert 0.85 < vals.std(ddof=1) / errs.mean() < 1.15
+    assert 0.85 < pull.std(ddof=1) < 1.15
+    ref = rp.measure_apar(resp, plan, 300.0, mask, poisson=False,
+                          true_mask=true_mask)
+    assert ref["truth_true_bin"] * truth > 0
+    assert 0.7 < truth / ref["truth_true_bin"] < 1.3
+
+
+def test_reco_rate_estimators_see_the_relative_luminosity_offset(
+        rate_response):
+    """Both rate estimators are biased by the analytic first-order formula
+    when the analysis assumes the nominal shares, and unbiased when it
+    uses the ones the luminosity monitor measured -- the same statement
+    the truth-level gate makes, now through the response."""
+    resp, mask, _true = rate_response
+    pz, pzz, delta = 0.7, 0.6, 0.02
+    plan = bk.tensor_thirds_plan(pz, pzz, rel_lumi_offset=delta)
+    nominal = [1.0 / 3.0] * 3
+    naive = rp.measure_azz(resp, plan, 300.0, mask, poisson=False,
+                           lumi_assumed=nominal)["value"]
+    fixed = rp.measure_azz(resp, plan, 300.0, mask, poisson=False)["value"]
+    # the naive estimator moves by the bookkeeping formula; the offset
+    # enters the shares, so the corrected one is the offset-free answer
+    clean = rp.measure_azz(resp, bk.tensor_thirds_plan(pz, pzz), 300.0, mask,
+                           poisson=False)["value"]
+    assert naive - clean == pytest.approx(bk.azz_rel_lumi_bias(delta, pzz),
+                                          rel=0.05)
+    assert fixed == pytest.approx(clean, rel=1e-9)
+
+    pe = 0.7
+    vplan = bk.helicity_flip_plan(1.0, pz, pe, rel_lumi_offset=delta)
+    v_naive = rp.measure_apar(resp, vplan, 300.0, mask, poisson=False,
+                              lumi_assumed=[0.5, 0.5])["value"]
+    v_fixed = rp.measure_apar(resp, vplan, 300.0, mask,
+                              poisson=False)["value"]
+    v_clean = rp.measure_apar(resp, bk.helicity_flip_plan(1.0, pz, pe), 300.0,
+                              mask, poisson=False)["value"]
+    assert v_naive - v_clean == pytest.approx(
+        bk.apar_rel_lumi_bias(delta, pe, pz), rel=0.05)
+    assert v_fixed == pytest.approx(v_clean, rel=1e-9)
+
+
+def test_polarimetry_scale_is_exactly_one_to_one_on_both_rate_estimators(
+        rate_response):
+    """The polarimetry band of the money plot: dividing by a P that is
+    wrong by delta_p_over_p scales the answer by 1/(1 + delta) exactly, so
+    the band half-width is delta_p_over_p x the central value."""
+    resp, mask, _true = rate_response
+    pz, pzz, dp = 0.7, 0.6, 0.03
+    plan = bk.tensor_thirds_plan(pz, pzz)
+    base = rp.measure_azz(resp, plan, 300.0, mask, poisson=False)["value"]
+    hi = rp.measure_azz(resp, bk.tensor_thirds_plan(pz, pzz), 300.0, mask,
+                        poisson=False)
+    counts = hi["expected"]
+    lum = hi["lumi_fractions"]
+    shifted = rp._azz_of(counts, pzz * (1.0 + dp), lum)
+    assert shifted == pytest.approx(base / (1.0 + dp), rel=1e-12)
+    assert abs(shifted - base) == pytest.approx(abs(base) * dp / (1.0 + dp),
+                                                rel=1e-12)

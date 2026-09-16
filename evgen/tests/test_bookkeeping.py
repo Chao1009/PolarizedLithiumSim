@@ -215,3 +215,69 @@ def test_unsupported_spin_is_refused():
         bk.helicity_flip_plan(2.0, 0.5, PE, pzz=0.3)
     with pytest.raises(ValueError):
         bk.helicity_flip_plan(1.0, 0.5, PE, pzz=-2.0)   # unphysical corner
+
+
+# --- the polarimetry scale (plans/04 #5) -------------------------------------
+
+def test_polarimetry_scale_is_a_reproducible_per_plan_draw():
+    """`RunPlan` smears each polarization ONCE, from a fixed-seed stream,
+    so the same plan built twice carries the same measured values and two
+    plans with different seeds do not.  This is what makes a polarimetry
+    band a reproducible figure element rather than a per-call random."""
+    cats = bk.tensor_thirds_plan(0.7, 0.6).categories
+    kw = dict(pz_true=0.7, pzz_true=0.6, delta_p_over_p=0.03)
+    a = bk.RunPlan(cats, polarimetry_seed=77, **kw)
+    b = bk.RunPlan(cats, polarimetry_seed=77, **kw)
+    c = bk.RunPlan(cats, polarimetry_seed=78, **kw)
+    assert a.measured == b.measured
+    assert a.measured["pzz"] != c.measured["pzz"]
+    # and the draw is a scale of the right size: |measured/true - 1| is a
+    # standard normal times delta_p_over_p
+    for seed in range(200):
+        plan = bk.RunPlan(cats, polarimetry_seed=seed, **kw)
+        assert abs(plan.measured["pzz"] / 0.6 - 1.0) < 0.03 * 5.0
+
+
+def test_polarimetry_scale_is_exactly_one_to_one_on_the_rate_estimators():
+    """The money-plot band: both rate estimators divide by a MEASURED
+    polarization, so an error delta on it multiplies the answer by
+    1/(1 + delta) and nothing else -- the band half-width is
+    delta/(1 + delta) x the central value, and delta x it to first order.
+    Checked at 1e-4 (the plans/05 reference) and at 3% (the ring)."""
+    n_p, n_m, n_0 = 1.03e6, 0.99e6, 1.01e6
+    for delta in (1e-4, 0.03):
+        base = est.azz_thirds(n_p, n_m, n_0, 0.6)
+        moved = est.azz_thirds(n_p, n_m, n_0, 0.6 * (1.0 + delta))
+        assert moved == pytest.approx(base / (1.0 + delta), rel=1e-14)
+        assert abs(moved - base) == pytest.approx(
+            abs(base) * delta / (1.0 + delta), rel=1e-12)
+        b2 = est.apar_flip(n_p, n_m, 0.7, 0.7)
+        m2 = est.apar_flip(n_p, n_m, 0.7 * (1.0 + delta), 0.7)
+        assert m2 == pytest.approx(b2 / (1.0 + delta), rel=1e-14)
+
+
+def test_polarimetry_scale_is_off_by_default_everywhere():
+    """Every plan constructor leaves delta_p_over_p at zero, so no
+    published number carries the band unless a script asks for it."""
+    plans = (bk.tensor_thirds_plan(0.7, 0.6),
+             bk.helicity_flip_plan(1.0, 0.7, 0.7),
+             bk.transverse_tensor_plan(0.6),
+             bk.tensor_flip_plan(0.6))
+    for plan in plans:
+        assert plan.delta_p_over_p == 0.0
+        for key, true in (("pe", plan.pe_true), ("pz", plan.pz_true),
+                          ("pzz", plan.pzz_true)):
+            assert plan.measured[key] == true
+
+
+def test_with_offset_carries_the_polarimetry_state():
+    """`with_offset` rebuilds a RunPlan; it must not silently drop the
+    polarimetry scale or reseed it, or a systematic scan would compare a
+    banded plan with an unbanded one."""
+    cats = bk.tensor_thirds_plan(0.7, 0.6).categories
+    plan = bk.RunPlan(cats, pz_true=0.7, pzz_true=0.6, delta_p_over_p=0.03,
+                      polarimetry_seed=91)
+    moved = bk.with_offset(plan, "azz0", 0.02)
+    assert moved.delta_p_over_p == plan.delta_p_over_p
+    assert moved.polarimetry_seed == plan.polarimetry_seed
+    assert moved.measured == plan.measured

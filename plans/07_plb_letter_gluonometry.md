@@ -67,6 +67,107 @@ envelope with best-bin δA = 1.8×10⁻³ / 0.6×10⁻³ — and the finding tha
 published IP6 optics delivers that envelope (plans/10), which turns claim 3
 into the letter's far-forward requirement.
 
+#### §7.1 re-derived on the two-fill estimator (2026-09-15)
+
+The three truth-level drivers (`money_cos2phi.py`,
+`money_cos2phi_coherent.py`, `money_delta_extraction.py`) now carry the
+two-fill path WP3 asked for: `--pzz-plus/--pzz-zero`, both defaulting to
+`None`, which split the same total luminosity between an m = ±1-rich fill
+and an m = 0-rich one and read them with `reco.harmonic_ratio_fit` — the
+spin-state-sorted ratio the reconstructed-level chain has used since
+2026-08-28 — instead of the single-fill binned fit. With the flags unset
+every printed line and every published PNG is bit for bit what it was; a
+run with them on writes its own `_twofill` stem. Equal luminosity in the
+two fills is not a flag, because the 0.67 rests on it and a free share
+under one stem key would put two numbers behind one file name.
+
+**The factor, measured three ways.** The closed form is
+δÂ(two-fill)/δÂ(single) = P₊/σ_P = 0.6/0.9 = 0.6667 at (+0.6, −1.2). At the
+four sweet spots the drivers print the ratio of the *fitted* errors as
+**0.6665 / 0.6666 / 0.6666 / 0.6668** — the estimator delivers its own
+algebra with no reconstruction-level loss, which is the statement the
+generator level can make and the reconstructed level cannot (there
+0.60–0.72, Report 1 §5.2, because efficiency and purity ride on top).
+Â stays unbiased: the four pulls against the two-fill truth are
+−0.4, +0.9, −1.2 and −0.8 σ.
+
+**What moves in the table above, and by how much** (mid configuration,
+toy backend, the published seed, so that only the estimator changes):
+
+| §7.1 row | single fill (published) | two fills (+0.6, −1.2) | factor |
+|---|---|---|---|
+| sweet-spot amplitudes | (0.44–0.95)×10⁻² | unchanged | 1 |
+| per-bin δA, 1 yr | 1.7 / 1.4 / 2.7 / 4.5 ×10⁻⁴ | 1.2 / 0.95 / 1.8 / 3.0 ×10⁻⁴ | 0.667 |
+| per-bin δA, 10 yr | 5.5 / 4.5 / 8.7 / 14 ×10⁻⁵ | 3.6 / 3.0 / 5.8 / 9.4 ×10⁻⁵ | 0.667 |
+| significance per bin, year 1 | 21–43σ | **32–64σ** | 1.5 |
+| relative δΔ, best bin per Q² slice, year 1 | 2.5 / 2.4 / 9.5% | **1.7 / 1.6 / 6.3%** | 0.667 |
+| coherent best-bin δÂ, 1 yr / 10 yr | 1.8 / 0.57 ×10⁻³ | **1.2 / 0.38 ×10⁻³** | 0.667 |
+| coherent 5σ floors, 1 yr / 10 yr | 0.90% / 0.28% | **0.60% / 0.19%** | 0.667 |
+| coherent tag acceptance, N_tag, ⟨a₂⟩ | — | unchanged | 1 |
+
+Everything that moves moves by the one factor, because the estimator
+changes the error and nothing else: the amplitudes, the tag acceptance,
+N_tag and ⟨a₂⟩ are properties of the beam and the model, not of how the
+fills are sorted. The 1.5× gain is real **only** if the source delivers
+m = 0-rich bunches at |P_zz| = 1.2 at the same purity as the ±1 fill at
+0.6 — the condition WP3 attached to it and the one the run plan below
+prices. `two_fill_err_ratio` makes the dependence explicit: at (+0.6,
+−0.6), equal purity with no m = 0 enrichment, the two-fill error equals
+the single-fill one, and at (+0.6, 0) it is twice as large.
+
+Which footing §7.1 and Report 1 quote is not settled here, for the same
+reason the WP1 grid column is not: it is an author call, and the two calls
+are coupled (the drift table above is on single-fill errors). Report 1
+§3.3 records that the two paths now come from one code path; its published
+single-state numbers are untouched.
+
+#### The Yellow-Report binning, priced (2026-09-15)
+
+plans/02 Step 1.1 item 3 asked for the YR inclusive convention, ~5
+logarithmic bins per decade, in place of the generic 40 × 30 log grid.
+`beams.YR_GRID` / `YR_X_EDGES` / `YR_Q2_EDGES` hard-code it as a
+decade-anchored lattice — edges at 10^(k/5), so the bins are the published
+ones and not a five-way split of this project's span — and
+`phase_space_bins.py` and `coverage_and_stat_maps.py` reach it through
+`--binning {log40x30,yr}`, default `log40x30`, which is bit for bit the
+published grid (the four money-plot stems and all twelve coverage PNGs
+verified by md5 before and after). A YR run writes its own `_yr` stem.
+
+The x span 1e−4…1 is four exact decades, 20 bins. The Q² span 1…2×10³ is
+3.301 decades, so the lattice edge above it is 10^3.4 = 2512 GeV² and the
+YR range is rounded **out** to it (17 bins) rather than in, so that no part
+of the published span is dropped. The extra row costs nothing: it holds
+zero accepted events at every configuration of both isotopes, the electron
+acceptance cutting off well below Q² = 2×10³ (pinned in
+`evgen/tests/test_money_scripts.py`).
+
+**The drift, mid configuration, one EIC year.** Accepted cells 461 → 124;
+N_DIS 5.193 → 5.236 ×10⁹ (+0.8%, entirely the coarser grid's cell-centre
+acceptance test, none of it the extra Q² row); median events per bin
+3.00×10⁶ → 1.24×10⁷ (×4.1); max per-bin cos 2φ significance 24.8 → 46.8
+(×1.89) and min per-bin δA 2.98 → 1.62 ×10⁻⁴ (×0.55, i.e. 1/1.83) — both of
+them pooling and not a gain, of the order of the √4.1 the median cell gains
+and short of it because the extremal cells are not the median one. The rate drift is configuration-dependent and grows with beam energy:
+N_DIS ×1.005 / ×1.008 / ×1.079 at 5 × 40.8, 10 × 99.5 and 18 × 137.5 ⁶Li
+(×1.005 / ×1.008 / ×1.094 for ⁷Li), because the coarse lattice straddles
+the acceptance boundary more crudely where the boundary is longest. The
+coherent map drifts the other way — N_coh 1.234 → 1.180 ×10⁸ and N_tag
+1.669 → 1.598 ×10⁷, −4.4 and −4.3% — because f_coh(x) is steep across a
+5-per-decade x bin and is evaluated at its centre.
+
+**What the analysis binning does to the money plots.** The sweet spots
+move to the nearest YR cells, (0.028, 1.14) → (0.032, 1.26), (0.011, 1.14)
+→ (0.013, 1.26), (0.071, 3.13) → (0.079, 3.16) and (0.141, 14.3) →
+(0.126, 12.6); the Δ-extraction combs drop from 10 / 9 / 10 merged x-bin
+pairs per Q² slice to 5 / 5 / 5; and the tagged coherent super-bin, 3 × 2
+cells on both grids (the pad-1 window is clipped against the Q² = 1 floor),
+grows by ×3.02 in yield (1.75 → 5.28 ×10⁶). The last two are the
+reason the YR grid is a comparison convention rather than a replacement:
+it is the grid on which a YR projection can be read off bin for bin, and
+the grid on which this measurement has the fewest Δ(x) points. Adopting it
+for the published figures is therefore a separate call from providing it,
+which is why `--binning` defaults to the grid the figures were made on.
+
 ## 7.2 Venue
 
 - **Primary: Physics Letters B.** Precedents for exactly this genre:
@@ -504,6 +605,23 @@ reconstructed-level closure is now specified end to end and seeded in
   The residue stays where it is: the ☐ note above keeps the two trailing clauses
   open — the e′-only variant at y ≥ 0.05 and the x ≈ 0.1 low-configuration
   projection.*
+  ☑ *2026-09-15: both trailing clauses are closed, run rather than argued, and
+  are Report 2 §5.1 Figures 5 and 6 with their command lines. The x ≈ 0.1 case
+  is now a low-configuration projection: at e5 × ⁶Li40.8 (s = 816 GeV²/u) the
+  same figure-of-merit selection puts two of the four sweet spots at
+  x = 0.089 and 0.141 with Q² = 1.14 and 3.13 GeV², where the middle
+  configuration cannot go at all (y = Q²/(sx) = 0.0032 at x = 0.089,
+  Q² = 1.14, below the y ≥ 0.01 floor), at purities 0.68–0.70 and
+  Â = 13.38 ± 0.11 ×10⁻³ against a reconstructed-bin truth of 13.35 — 0.8% in
+  one year (`money_cos2phi_reco.py --config 0`, own stem). The e′-only variant
+  is quoted where the method is usable: at y ≥ 0.05 it is the BETTER of the
+  two, purity 0.73 / 0.80 / 0.76 / 0.77 against 0.65 / 0.64 / 0.70 / 0.69 for
+  the mixed method in the same bins and δÂ 0.98–0.99 of it, unbiased over
+  twenty pulls from five response seeds (mean +0.10, sd 0.99); what the window
+  costs is reach, x ≤ 0.072 at this s (`--y-method electron --y-min 0.05`, own
+  stem). The `--y-min` flag and the filename keys for the beam configuration,
+  the y method and the y floor were added with them, and the published 5R/7R
+  stems are reproduced md5-identically after the change.*
 - ☑ **Estimator: spin-state-sorted ratio** (`reco.harmonic_ratio_fit`) of
   m = ±1-rich (P_zz = +0.6) and m = 0-rich (−1.2) fills, with a sin 2φ′
   term; the single-fill fit is biased by the detector's cos 2φ′ acceptance
@@ -523,6 +641,14 @@ reconstructed-level closure is now specified end to end and seeded in
   stays where it is: the ☐ note above keeps the second clause open — §7.1 is still
   quoted from single-state fits and the three generator-level drivers have no
   two-fill path.*
+  ☑ *2026-09-15: the residue is now half closed. The three generator-level
+  drivers do carry a two-fill path — `--pzz-plus/--pzz-zero`, default off and
+  bit-for-bit, on their own `_twofill` stem — and §7.1 is re-derived with it in
+  the dated addendum under §7.1 above: δA and δΔ ×0.667 (measured 0.6665–0.6668
+  at the four sweet spots), significance 21–43σ → 32–64σ, the amplitudes and the
+  coherent model numbers unmoved. What stays open is only which footing the
+  published §7.1 and Report 1 quote, which is an author call coupled to the WP1
+  grid column (T05).*
 - ☑ **Angles from four-vectors**: `reco.azimuth_wrt_lepton_plane` (covariant
   φ_S, = φ_e − φ_S to O(γ²)); head-on transformation applied (e′ odd
   harmonics only). The 2-D φ-hole closure of the original bullet becomes

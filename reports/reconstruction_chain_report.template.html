@@ -228,7 +228,7 @@
     <tr><td>EMCal σ<sub>E</sub>/E for e′</td><td class="mono">2%/√E ⊕ 1%</td><td>YR requirement of the backward crystals [7], applied at every η (<code>RecoModel.emcal_eta_table = False</code>); exact at the three of the mid configuration's four sweet spots with η &lt; −2 and optimistic by a factor 2 at the fourth, η = −1.65, where the YR asks 7%/√E (Report 3 Table 8) — those four spanning η = −2.9 to −1.6, the twelve of the three configurations −3.4 to −0.9, the twelfth of them in the barrel; switching the η-dependent table on changes Δ̂ by 0.000% at the first three spots and 0.10% at the fourth, and by up to 0.7% at 5 × 40.8</td><td>δQ²/Q² (subdominant to the angles)</td></tr>
     <tr><td>tracking σ<sub>p</sub>/p</td><td class="mono">√((a p)² + b²), η-piecewise</td><td>YR requirement (Table 11.2, and Fig. 8.3 / Table 8.20 which differ backward), endcap constants padded; a requirement, not an achievement</td><td>only with <code>energy="best"</code></td></tr>
     <tr><td>track angular resolution</td><td class="mono">5 / 3 / 2 / 1 mrad by η (3 mrad at spots 1–2, 2 mrad at spots 3–4)</td><td><span class="status-no">placeholder</span> — no YR angular requirement exists; it is also the only stand-in for the 81–211 μrad beam-divergence floor on θ′</td><td>δQ²/Q² = 5.2% at spots 1–2; a factor ≲ 3 bracket (purity 0.66 → 0.70 at a third of it)</td></tr>
-    <tr><td>electron identification</td><td class="mono">ε<sub>eID</sub>(η) = 0.70–0.95</td><td>constructed from the ATHENA [16] and ECCE proposal values but anchored at one point — ECCE's 0.95 at η = −2.0 — the barrel matching neither and the forward tail running below both; no ePIC curve [17]; no purity or background model</td><td>none on Â beyond statistics — a fill-independent efficiency cancels in the ratio (an η tilt of 0.05 moves Δ̂ by 0.02%)</td></tr>
+    <tr><td>electron identification</td><td class="mono">ε<sub>eID</sub>(η) = 0.70–0.95</td><td>constructed from the ATHENA [16] and ECCE proposal values but anchored at one point — ECCE's 0.95 at η = −2.0 — the barrel matching neither and the forward tail running below both; no ePIC curve [17]; no purity or background model.  The Yellow Report carries no (x, Q²) axis to give it either (searched 2026-09-15): its only electron efficiency is the WORKING POINT its pion-suppression numbers are quoted at — 95% for an E/p cut and 92% with the shower shape as well (Table 11.29, Fig. 11.48) — flat in η, momentum, x and Q², so the curve stays η-only</td><td>none on Â beyond statistics — a fill-independent efficiency cancels in the ratio (an η tilt of 0.05 moves Δ̂ by 0.02%)</td></tr>
     <tr><td>electron energy scale</td><td class="mono">nuisance ±1%</td><td>unknown to the analysis; d ln x/d ln E′ = 2 − y for the Σ method</td><td>0.3–1.0% on Δ̂ per 1%</td></tr>
     <tr><td>hadron-side coverage and thresholds</td><td class="mono">tracks |η| ≤ 3.5, p<sub>T</sub> &gt; 0.2 GeV, 95%; calorimeters |η| ≤ 3.7; γ &gt; 0.1 GeV; hadrons &gt; 0.5 GeV, 90%</td><td>stand-ins of the right magnitude in the detector frame (the ePIC nominal forward reach is 4.0; B0 at η = 4.6–5.9 not modelled)</td><td>the captured fraction of Σ<sub>h</sub> (0.70–0.85 at the sweet spots, Table 3); 4.0 recovers a third of the forward loss (0.170 → 0.115 at the first spot) with δy/y unchanged</td></tr>
     <tr><td>hadron-side resolutions</td><td class="mono">YR tables per region</td><td>requirement values [7], with the YR 2% EMCal constant</td><td>subdominant to the noise below y = 0.02</td></tr>
@@ -354,6 +354,77 @@
     <figcaption><b>Money plot 7R — Δ(x,Q²) from reconstructed bins.</b> xΔ points at the three sweet-spot Q² slices from the same pseudo-measurements, converted with the bin-centering factor fitted through the response (§4.4), so that the error bars carry the statistics, the shape fit, the response Monte Carlo and the prior spread; one-year (open) and ten-year (filled) draws are independent.</figcaption>
   </figure>
 
+  <p>Two questions the mixed-method default leaves open are settled here by
+running them rather than by extrapolating the resolution formula.</p>
+
+  <p><b>x ≈ 0.1 at the low configuration.</b> The middle configuration cannot
+put x ≈ 0.1 at Q² = 1.14 GeV² at all: y = Q²/(sx) = 0.0032 there, below the
+reconstructed y ≥ 0.01 floor of the selection, which is why its four sweet spots
+run x = 0.011–0.141, the two at Q² = 1.14 GeV² sitting at x = 0.028 and 0.011
+and the one at Q² = 3.13 GeV² at 0.071. At
+e(5) × ⁶Li(40.8), s = 816 GeV² per nucleon instead of 3980, and the same
+figure-of-merit selection returns x = 0.089 / 0.036 / 0.141 / 0.141 at
+Q² = 1.14 / 1.14 / 3.13 / 14.3 GeV², at y = 0.016 / 0.039 / 0.027 / 0.124. The
+reconstructed measurement there is not degraded: purities 0.68–0.70,
+reconstruction efficiencies 0.58–0.65 and dilutions D = 0.94–0.99, against
+0.63–0.69, 0.42–0.66 and 0.90–0.99 at the middle configuration, and
+N = 2.06 × 10⁸ events in one year at the x = 0.089, Q² = 1.14 GeV² bin against
+1.85 × 10⁸ at the middle configuration's x = 0.028 bin, both at the same
+programme luminosity of 10 fb⁻¹ per nucleon. The fit returns
+Â = 13.38 ± 0.11, 8.82 ± 0.10, 12.51 ± 0.14 and 9.88 ± 0.31 × 10⁻³ against
+reconstructed-bin truths of 13.35, 8.78, 12.42 and 9.31 × 10⁻³ — four pulls
+between +0.3 and +1.8 — so the amplitude at x ≈ 0.1 and Q² = 1.14 GeV² is
+measured to 0.8% in one year. Unfolded, δΔ = 0.6 / 0.3 / 0.1 × 10⁻³ on
+Δ = −0.0629 / −0.0173 / −0.0007 at the three Q² slices, at purities
+0.57 / 0.58 / 0.49.</p>
+
+  <figure>
+    <div class="panel"><img src="data:image/png;base64,__RC8__" alt="Money plot 5R at the low configuration: reconstructed-level phi-prime pseudo-data in the four sweet-spot bins and amplitude versus x"></div>
+    <figcaption><b>Figure 5 — the low configuration reaches x ≈ 0.1 at low Q²</b>
+(e5 × ⁶Li40.8, P<sub>zz</sub> = 0.6, model A, mixed method with the 25% Gaussian
+hadronic-y stand-in, otherwise the settings of money plot 5R;
+<code>money_cos2phi_reco.py --config 0</code>). Left: the acceptance-free
+modulation T(φ′) − κ̂ per unit P<sub>zz</sub> in the four sweet-spot super-bins,
+of which the first sits at x = 0.089 and the last two at x = 0.141, with the
+reconstructed-bin truth and the fit. Right: the amplitude in reconstructed x bins
+along the Q² = 1.14 GeV² slice.</figcaption>
+  </figure>
+
+  <p><b>The electron method alone above y = 0.05.</b> The electron method loses y
+as (1 − y)/y, and at the published sweet spots, y = 0.010–0.025, the bin-centre
+formula of §4.2 gives δy/y = 1.18 / 0.46 / 1.07 / 0.46 (Table 3), which is what the mixed
+method exists to avoid. Raising the reconstructed floor to y ≥ 0.05 moves the
+same selection to x = 0.0056 / 0.0022 / 0.0141 / 0.0708 at
+Q² = 1.14 / 1.14 / 3.13 / 14.3 GeV², where y = 0.051 / 0.128 / 0.056 / 0.051 and
+the same formula gives δy/y = 0.22 / 0.08 / 0.20 / 0.22. Run through the full
+chain in that window, the electron method alone is the better of the two: purity
+0.73 / 0.80 / 0.76 / 0.77 against 0.65 / 0.64 / 0.70 / 0.69 for the mixed method
+in the same bins, D = 0.95–1.01 against 0.90–0.99, and statistical errors
+δÂ = 1.08 / 0.89 / 1.44 / 3.80 × 10⁻⁴ against 1.10 / 0.90 / 1.46 / 3.83 × 10⁻⁴,
+i.e. 0.98–0.99 of them. The advantage is migration, not statistics: dropping the
+hadronic sum removes the Σ resolution from the x reconstruction at a y where the
+electron no longer needs it. It is unbiased — over five response seeds the twenty
+pulls against the reconstructed-bin truth have mean +0.10 and spread 0.99, and
+none exceeds 2.8. Unfolded, δΔ = 10.7 / 6.1 / 2.8 × 10⁻³ on
+Δ = −0.2425 / −0.1469 / −0.0592 at purities 0.66 / 0.66 / 0.70, against
+0.57 / 0.57 / 0.58 for the mixed method there. What the window costs is reach:
+y ≥ 0.05 at Q² ≤ 14.3 GeV² and this s is x ≤ 0.072, so the electron-only
+analysis buys its resolution by giving up the moderate-x half of the programme,
+which is where Δ is largest.</p>
+
+  <figure>
+    <div class="panel"><img src="data:image/png;base64,__RC9__" alt="Money plot 5R with the electron method alone above y of 0.05: reconstructed-level phi-prime pseudo-data in the four sweet-spot bins and amplitude versus x"></div>
+    <figcaption><b>Figure 6 — the electron method alone above y = 0.05</b>
+(e10 × ⁶Li99.5, P<sub>zz</sub> = 0.6, model A, Q²<sub>e</sub> and y<sub>e</sub>
+from the scattered electron with no hadronic sum, reconstructed y ≥ 0.05,
+otherwise the settings of money plot 5R;
+<code>money_cos2phi_reco.py --y-method electron --y-min 0.05</code>). Left: the
+acceptance-free modulation T(φ′) − κ̂ per unit P<sub>zz</sub> in the four
+sweet-spot super-bins of that window, with the reconstructed-bin truth and the
+fit. Right: the amplitude in reconstructed x bins along the Q² = 1.14 GeV²
+slice.</figcaption>
+  </figure>
+
   <h3>5.2 · Coherent: money plot 6R</h3>
 
   <table>
@@ -378,6 +449,82 @@
   <figure>
     <div class="panel"><img src="data:image/png;base64,__RC5__" alt="Money plot 6R: raw spin-sorted yields versus beta, the acceptance-free modulation with fits, the two-dimensional modulation map, and the extracted coefficients versus t"></div>
     <figcaption><b>Money plot 6R — the coherent channel at the reconstructed level</b> (5 × 40.8 at the tagging optics). <b>(a)</b> Raw spin-sorted yields versus the reconstructed recoil azimuth β in the lowest |t| bin, 0.017–0.028 GeV², eight of whose twenty-four β bins the cutout leaves empty: the cutout shape dominates both states identically. <b>(b)</b> The modulations T(β) and T(α) from the spin-state ratio, the template-fit prediction per β bin (ticks) and the smooth a<sub>t</sub> cos 2β and a<sub>e</sub> cos 2α curves. <b>(c)</b> The expected modulation map in (α, β). <b>(d)</b> a<sub>t</sub>(t<sub>ref</sub>) and a<sub>e</sub> in each of the seven reconstructed |t| bins (1 yr open, 10 yr filled) against the injected curves, whose four lowest points — t<sub>ref</sub> = 0.023, 0.030, 0.036 and 0.046 GeV², the last of them the retired window's own lowest bin — are the extrapolation below the anchor described in §4.5.</figcaption>
+  </figure>
+
+  <h3>5.3 · The rate asymmetries at the reconstructed level</h3>
+
+  <p>The cos 2φ′ measurement is an azimuthal harmonic; the two RATE
+asymmetries of the same programme — the tensor A<sub>zz</sub> from
+HERMES-style thirds fills at (P<sub>z</sub>, +P<sub>zz</sub>),
+(−P<sub>z</sub>, +P<sub>zz</sub>) and the m = 0-enriched
+(0, −2P<sub>zz</sub>), and the vector A<sub>∥</sub> from electron-helicity
+flips on one longitudinally polarized fill — run through the same
+response, the same reconstructed-level selection and the same
+ε<sub>eID</sub>(η). What they read is the fill's φ′-averaged rate factor
+rather than its cos 2φ′ coefficient, so they need no azimuth at all; the
+estimators are the canonical ones,
+(y<sub>+</sub> + y<sub>−</sub> − 2y<sub>0</sub>)/(y<sub>+</sub> + y<sub>−</sub> + y<sub>0</sub>)/P<sub>zz</sub>
+and (y<sub>+</sub> − y<sub>−</sub>)/(y<sub>+</sub> + y<sub>−</sub>)/(P<sub>e</sub>P<sub>z</sub>).</p>
+
+  <p>The thirds estimator is an identity on this response and is pinned as
+one: across the three fills the φ′-averaged rate factors sum to exactly
+three, so the estimator's denominator carries no tensor term and, read at
+true kinematics with neither the selection nor ε<sub>eID</sub>, it returns
+the cross-section-weighted analytic A<sub>zz</sub> of the projections to
+2×10⁻¹⁴ relative, and is pinned in the test suite at 10⁻⁹. The helicity-flip estimator returns the
+analytic A<sub>∥</sub> to 0.29%, the residue being the finite-γ factor the
+generator kernel carries by default and the massless reference does not.
+Both are unbiased through the full chain: over 240 pseudo-experiments of a
+reconstructed bin at x = 0.03–0.10, Q² = 3–10 GeV² the pulls against the
+reconstructed-bin truth have means −0.06 ± 0.07 (A<sub>zz</sub>) and
++0.10 ± 0.06 (A<sub>∥</sub>), and their spreads are 1.03 and 0.91 times the
+analytic √(2/N)/P<sub>zz</sub> and 1/(P<sub>e</sub>P<sub>z</sub>√N). Migration
+costs these observables less than it costs the harmonic, because a rate
+ratio is insensitive to any bin-independent loss: the reconstructed-bin
+truth sits within 1.2 (A<sub>zz</sub>) and 0.4 (A<sub>∥</sub>) one-year
+standard errors of the true-bin one across the seven bins of Figures 7
+and 8.</p>
+
+  <p>The polarimetry scale enters here and not in the harmonic fits: both
+estimators divide by a MEASURED polarization, so an error δP/P multiplies
+every point by 1/(1 + δP/P) and does nothing else. It is therefore a pure
+scale, fully correlated across x, and its band half-width is δP/P times
+the central value. The band is not drawn by multiplying the points by
+δP/P: each edge is the same drawn counts re-read by the same estimator with
+the polarization it divides by moved to P(1 ± δP/P), so the half-width it
+carries is a measurement of the claim rather than a restatement of it. It
+comes out at δP/P/(1 − (δP/P)²) of the central value at every bin — δP/P to
+0.09% at the ring value — and one polarization draw scales all seven bins by
+the same 1/(1 + δP/P) to floating point. At the
+3% ring value of plans/04 the band is 0.4–1.5×10⁻⁴ across Figure 7's
+seven bins, which is 0.18–0.53 of the one-year statistical error and
+0.56–1.67 times the ten-year one — 1.3×10⁻⁴ against 2.5×10⁻⁴ and
+7.9×10⁻⁵ at the best-measured bin, x = 0.080. Polarimetry, not statistics,
+is what a ten-year A<sub>zz</sub> is limited by over the middle of this
+slice, and because it is one number and not seven, it does not improve by
+combining bins.</p>
+
+  <figure>
+    <div class="panel"><img src="data:image/png;base64,__RC10__" alt="Reconstructed-level A_zz in reconstructed x bins along one Q2 slice, against the reconstructed-bin and true-bin truths"></div>
+    <figcaption><b>Figure 7 — A<sub>zz</sub> at the reconstructed level</b>
+(e10 × ⁶Li99.5, P<sub>zz</sub> = 0.6, tensor-thirds fills, toy b₁;
+<code>money_azz_reco.py</code>). Seven reconstructed x bins of the
+Q² = 3–10 GeV² slice, each holding 8×10⁶–1.4×10⁸ events in one year, with
+one-year (thin) and ten-year (thick) statistical bars, against the
+reconstructed-bin truth and the true-bin truth. A<sub>zz</sub> deepens from
+−1.6×10⁻³ at x = 0.013 to −4.6×10⁻³ at x = 0.13 and turns over to −4.2×10⁻³
+at the last bin, x = 0.20; the one-year errors are 2.0×10⁻⁴ at the low-x end
+and 8.3×10⁻⁴ at that last bin, where the slice holds 8×10⁶ events.</figcaption>
+  </figure>
+
+  <figure>
+    <div class="panel"><img src="data:image/png;base64,__RC11__" alt="Reconstructed-level A_parallel in reconstructed x bins along one Q2 slice, against the reconstructed-bin and true-bin truths"></div>
+    <figcaption><b>Figure 8 — A<sub>∥</sub> at the reconstructed level</b>
+(the same response and bins, P<sub>e</sub>P<sub>z</sub> = 0.49,
+electron-helicity flips; <code>money_azz_reco.py --observable apar</code>).
+The asymmetry crosses zero between x = 0.02 and 0.03 on this g₁ model, so the
+migration is quoted in units of the one-year error rather than as a ratio;
+the one-year errors run 1.8×10⁻⁴ to 7.2×10⁻⁴.</figcaption>
   </figure>
 
   <h2>6 · Systematic effects and the specifications they imply</h2>
@@ -409,6 +556,35 @@
 
   <p>Collinear initial-state radiation is bounded rather than assumed. Every pseudo-event is given a photon of energy fraction z from the exponentiated leading-log electron structure function D(z, Q²) = (t/2)z<sup>t/2−1</sup>S(t) − (t/4)(2−z), t = (2α/π)[ln(Q²/m<sub>e</sub>²) − 1], S(t) = e<sup>(t/2)(3/4−γ<sub>E</sub>)</sup>/Γ(1+t/2) [21,22]; the hard vertex then sits at ŝ = (1 − z)s while the analysis reconstructs with the nominal beam. The truncated exponentiation normalises to 1 + O(t²), the residual being 7×10<sup>−4</sup> at the mid configuration's rate-weighted ⟨t⟩ = 0.070, its mean Q² being 4.4 GeV², where 27% of the selected rate radiates above z = 10<sup>−4</sup>, ⟨z⟩ = 0.025 and ⟨z⟩ = 0.092 among those that do. Three of the four effects this could have are exactly zero. The covariant azimuth is invariant under k → (1−z)k for a massless target — cos φ′ and sin φ′ both acquire the factor [2ac((1−z)a−b)]<sup>−1/2</sup> with a = P·k, b = P·k′, c = k·k′, and the arctangent divides it out — so radiation fakes neither a cos φ′ nor a cos 2φ′ modulation. The residual is 3.6×10<sup>−15</sup> rad — double-precision roundoff — over a 2×10<sup>4</sup>-event sample flat in (log x, log y) with z up to 0.9; over the 1.84×10<sup>6</sup> events of the response itself, where the physical ⁶Li mass leaves the O(γ²) term of the projector, it reaches 2.6×10<sup>−2</sup> rad and dilutes cos 2φ′ by 9×10<sup>−8</sup> rate-weighted. An unpolarized-lepton QED correction is common to the two fills by construction and cancels in the spin-state ratio of §4.3. And x is exact: the nominal s the analysis divides by exceeds the true ŝ by 1/(1 − z), the electron-method Q² exceeds the hard Q² by the same 1/(1 − z), and y<sub>Σ</sub> knows no beam energy [6], so x = Q²<sub>e</sub>/(s y<sub>Σ</sub>) is the hard x identically. What is left is the Q²<sub>e</sub> <i>label</i>, high by 1/(1 − z), and the migration it causes. Measured with common random numbers — the radiation draws from its own stream, so the two responses sit on the same pseudo-events — at 1600 pseudo-events per cell, the four sweet spots lose 0.015 to 0.044 in purity (0.653 → 0.638, 0.633 → 0.613, 0.679 → 0.659, 0.684 → 0.640) and 0.005 to 0.019 in efficiency, and Δ̂ corrected with an ISR-free bin-centering is biased by +0.62 ± 0.03, +0.50 ± 0.02, +0.94 ± 0.03 and +1.22 ± 0.02%. A single response draw scatters by 4 to 14% of the bound — the seed-to-seed standard deviation is 0.05 to 0.09 percentage points and one seed can sit two of those from the mean — so those are means over eight response seeds and the errors are the standard errors of that mean, not a Monte Carlo floor. The generator window truncates the feed-in, since an event whose Q² lies below it cannot radiate into an analysis bin; opening it moves the worst spot to 1.87, 2.81, 2.26 and 2.34% at Q² = 0.35, 0.15, 0.05 and 0.02 GeV², so the bound saturates in a 1.8–2.8% band rather than at a single value, and ≤2.9% is what the ≤5% gate of plans/07 WP4 is read against. It passes by a factor 1.7. The number is not an artefact of the Gaussian y stand-in: run through the PYTHIA hadronic final state with the calibrated scale it is +0.38, +0.44, +0.46 and +0.88%. The method comparison behind the choice of estimator is sharp, and has to be read at a stated y because the electron-method ratios go as (y + z)(1 − z)/y. At z = 0.092 and the rate-weighted ⟨y⟩ = 0.189 of the whole selected sample the observed-to-hard ratios (Q², y, x) are (1.102, 1.351, 0.740) for the electron method, (1.000, 1.000, 0.908) for Σ, (0.976, 0.908, 0.976) for Jacquet–Blondel, (1.214, 1.000, 1.102) for the double angle and (1.102, 1.000, 1.000) for the mixed pair the chain uses. At the sweet spots themselves, where y = 0.0101, 0.0254, 0.0111 and 0.0254, the same photon multiplies the electron-method y by 9.2, 4.2, 8.5 and 4.2 and collapses x<sub>e</sub> to 0.11–0.24 of the hard x, quite apart from resolution; every other row is unchanged except Jacquet–Blondel's Q², which rises to 0.998. Only the mixed row is 1.000 at every y. Q²<sub>Σ</sub> = p<sub>T,e</sub>²/(1 − y<sub>Σ</sub>) uses no beam energy either, so labelling the bin with it instead of Q²<sub>e</sub> would remove the migration entirely at the price of the Σ resolution on the label; that is a change to the chain and is not made here. Neither is the E − p<sub>z</sub> window every HERA analysis used against radiative events: the visible sum is 2(1 − z)E<sub>e</sub> and is already reconstructed, as Σ<sub>h</sub> + E′(1 − cos θ) = E′(1 − cos θ)/(1 − y<sub>Σ</sub>), and requiring it within 15% of 2E<sub>e</sub> keeps 87% of the non-radiative selected rate on the 25% Gaussian y stand-in and 98% through the PYTHIA final state with the calibrated Σ scale (82% and 93% of the radiative rate), the loss falling almost entirely above y = 0.2, where the two chains put 99.5% and 97.2% of the discarded non-radiative rate — the retention below it is 1.000 and 0.998 on either chain, against 0.78 and 0.27 above it on the stand-in and 0.97 and 0.88 on PYTHIA — and amounting to 0.06% or less at the four sweet spots themselves; the mitigated bias is +0.23, +0.16, +0.22 and +0.18% on the stand-in chain and +0.17, +0.19, +0.20 and +0.16% on the PYTHIA one, independent of the generator window. The chain does not apply the window: the gate already passes at ≤2.9% without it, it is free only where these bins sit, and the rate it removes is the y > 0.2 rate that carries the low-x end of every Q² slice. Outside all of this and unbounded: the tensor-sector radiative correction, which has never been calculated (plans/05 §5.5) and which no unpolarized study can stand in for; the polarized-lepton correction, irrelevant to an unpolarized beam; wide-angle real emission, which carries no logarithm and does not factorise into a beam-energy shift; final-state radiation, largely reabsorbed by the calorimeter cluster; and the elastic and quasi-elastic radiative tails, which the W² ≥ 10 GeV² cut removes.</p>
 
+  <p>Fermi motion of the struck cluster is not in the published response
+either, and is bounded the same way. The chain reconstructs with the
+NOMINAL per-nucleon beam, while the struck cluster carries the internal
+momentum of the two-body ground state; in the collinear reading its
+per-nucleon light-cone fraction α puts the vertex at αs, so at the same
+Q² the analysis reports x<sub>meas</sub> = α x<sub>vertex</sub> and the
+same y. Drawing the internal momentum from the cluster momentum densities
+of the far-forward tagging study — Hulthén for the S-wave ⁶Li, with κ
+from the measured 1.474 MeV separation energy — and mixing the two
+breakups by nucleon share gives ⟨|k|⟩ = 0.107 GeV, ⟨k²⟩<sup>½</sup> = 0.135
+GeV and α = 0.9985 ± 0.0297; α is not centred on 1 because the struck
+cluster is worth M<sub>A</sub> − m<sub>spec</sub> and not its own free mass
+(1.0037 and 0.9977 at k = 0 for the two channels). Folded through the
+whole chain this moves the reconstructed-bin amplitude of the four sweet
+spots by +0.21, +0.07, −0.06 and −0.01% and the reconstructed-bin truth
+by the same amounts, so the ratio between them — what a bin-centering
+factor carries — moves by at most 0.01%, and Δ̂ and its errors do not
+move at the printed precision. Over the 0.20–0.40 GeV scan of the
+short-range scale, which is the tail uncertainty the densities are crude
+in by design, the amplitude shift spans +0.07 to +0.29% at the first spot
+and less at the others, against a one-year statistical error of 1.7–3.2%
+there. What the reading leaves out is the transverse component: the
+internal momentum tilts the struck nucleon out of the beam axis, which a
+collinear α drops. The physics azimuth does not move with it — it is
+defined against the NUCLEAR momentum and the nuclear spin axis, not the
+cluster's — and the residual through the chain is at most 12 mrad, with
+an rms of 0.13 mrad and a rate-weighted rms of 0.02 mrad, against the
+3 mrad angular resolution the reconstruction already carries.</p>
+
   <h2>References</h2>
   <div class="refs">
     <p>[1] R. L. Jaffe, A. Manohar, <i>Nuclear gluonometry</i>, Phys. Lett. B 223 (1989) 218.</p>
@@ -439,6 +615,7 @@
 
   <table>
     <tr><th>Date</th><th>Revision</th></tr>
+    <tr><td class="mono">2026-09-15</td><td>§5.1 gains the two reconstructed-level variants the work package had left as clauses (plans/07 WP3 addendum): the x ≈ 0.1 case run as a low-configuration projection rather than argued from a δy/y comparison (Figure 5), and the electron method alone quoted in the window where it is usable, y ≥ 0.05 (Figure 6), against a mixed-method control in the same bins. <code>money_cos2phi_reco.py</code> gained a <code>--y-min</code> flag and a filename key for every setting that changes what 5R and 7R measure, or the detector they are measured through, and carried none — the beam configuration, the y method, the reconstructed y floor, the Fermi switch, and the four detector nuisances (electron energy scale, ε<sub>eID</sub> η tilt, the Yellow-Report EMCal η table, the hadronic-y resolution of the Gaussian stand-in) — so that no variant can overwrite the published stems, which are reproduced md5-identically after the change.  §5.3 is new: the two RATE asymmetries of the same run plan — tensor thirds for A<sub>zz</sub>, electron-helicity flips for A<sub>∥</sub> — now run through the reconstruction chain (<code>recopseudo.measure_azz</code> / <code>measure_apar</code>, <code>money_azz_reco.py</code>), with the thirds identity pinned at 10⁻⁹, 240-pseudo-experiment closure and the polarimetry scale of plans/04 measured as the correlated band it is, quoted against Figure 7's bins and drawn on its own stem (Figures 7 and 8).  §3's electron-ID row records what a search of the Yellow Report returned: its only electron efficiency is a working point (95% on an E/p cut, 92% with the shower shape, Table 11.29 and Fig. 11.48), so ε<sub>eID</sub> stays η-only and the missing (x, Q²) axis is recorded rather than invented (Table 2's electron-identification row); §7 gains the Fermi-motion bound of the struck cluster, a default-off switch of the response measured at its own stem.  Table 2 is the only table whose cells move; Tables 1, 3, 4, 5 and 6 are unchanged.</td></tr>
     <tr><td class="mono">2026-09-06</td><td>Sourcing pass. Table 2's tracking row names the Yellow Report sources that actually differ backward — Table 11.2 against Fig. 8.3 / Table 8.20 — as Report 3 Table 8 now does; Fig. 8.3 was read as an image for the first time on 2026-09-06; §4.1 records the κ̂ subtraction of the tensor leakage, default off.</td></tr>
     <tr><td class="mono">2026-09-02</td><td><b>Consistency revision</b> from a cross-document review of the five reports against the code, the plans and the manual, adjudicated finding by finding in <code>docs/consistency_review_2026-09-02.md</code> (its identifiers in parentheses). §2 states the b₁, b₂ sign convention at the master formula itself — the simulation has carried <code>TENSOR_LL_SIGN</code> = −1 since 2026-08-29, the convention every published b₁ is quoted in — and says that the tensor polarization weights the inclusive rate as well as its azimuth, the hadronic final state being blind to it (F002, F013, F200). Table 2: the Yellow Report hadron table is its strong-hadron-cooling one, at the start-of-store emittance (C001); the ⁶Li menu cites this repository rather than the ZEUS leading-proton paper (F082); the spin axis is the arcs' stable direction assumed delivered at IP6 (F137); η = −2.9 to −1.6 is the mid configuration's four spots, against −3.4 to −0.9 over the twelve (F134); the angular placeholder is given per spot (F201) and ε<sub>eID</sub>'s single anchor and low forward tail are stated (F204); the nominal forward reach recovers a third of the loss, 0.170 → 0.115 at the first spot (F199); the recoil's own dispersion is stated rather than modelled, what the tagging optics folds in being the beam's momentum spread (F083); the fixed-pot tag reads 10⁻⁵–10⁻¹⁹ against 9 × 10⁻¹⁰–6 × 10⁻²⁷ at the published optics (F012); u₁ and u₂ are placed against the ZEUS central values rather than at a 1σ edge (C003); the R1998 shift at the second spot is +18% (F190); and the Z-identification ask becomes EICROC's input charge range and the gain-suppression curve, with the α + d partner veto as a second lever (F202). §4.1 conditions the O(γ²) tensor leakage on the b₃ = b₄ = 0 the kernel defaults to (−0.052% at a tenth of b₂) and records the A<sub>∥</sub> target-mass term as the generator default since 2026-08-29 (F174, F006). §4.2 and Table 3: all four sweet spots sit at y = 0.010–0.025, not three (F062, F089); δQ²/Q² is given as an rms through the response beside the bin-centre formula (F198); E′ = 9.93 / 9.77 / 9.97 GeV and θ′ = 108 mrad at the second spot (F207, F208); the figure pointers follow the 2026-08-29 renumbering (F090). §4.4 restates the unfold scan from the run that produces it — 20–29% with an assumed prior, folded residuals 4.0 / 5.7 / 5.8% (model B) and 4.0 / 4.3 / 3.6% (toy), the spot quadruples ending +3.1 and +2.9 — and Table 6's row with it, 2.5–8.6% (F069, F132, F197). §4.5 and Figure 3: the fixed-aperture tag is sourced to Report 3 §5 and the caption accounts for the markers panel (c)'s floor hides (F131); the tagged fraction 37.6% is per recoil above t<sub>min</sub>, against Table 5's 36% per recoil produced (F210); ⟨cos 2β⟩ = −0.49 and −0.95 are in the true recoil azimuth, the divergence smearing diluting the first to the −0.31 money plot 6R annotates (F087). §5: Table 4's third row carries Report 1's current 2.7 × 10⁻⁴ (F064); the reconstructed-to-truth error ratio is 0.60–0.72 over the two hadronic-y models and 0.60–0.67 with the Gaussian stand-in, the reconstruction efficiency being read before the analysis cuts (F066, F213, F165); the prior spread 3.7 / 2.1 / 1.3% is the ten-year decomposition, against 3.9 / 2.0 / 1.4% in one year (F196); the abstract's "unbiased above 10⁵ recoils" becomes a 1.5% bound and Table 5's caption is scoped to its twenty draws (F170); Figure 4's panel (c) purities are migration-only and its panel (d) count truth-level (F205, F206). §6 points at plans/00 run 10 for the polarimetry precedents rather than at Report 1 §7 (F067); §7 states the pot aperture as a 2026-08-28 measurement in the current geometry, lattice-conditional at 5 × 41 (F005), the sweet-spot y values as 0.0101 / 0.0254 / 0.0111 / 0.0254 (F033), and ⟨t⟩ = 0.070 and ⟨Q²⟩ = 4.4 GeV² as separate averages (F195). The rows below are corrected where they misstate what they record: the fourth sweet spot named by its bin (F081), the target-mass default (F006), and the cutout floor separated into 3.8–6.3× below the retired 0.05 GeV² edge and 1.3–2.2× below the adopted one (F194). The figures are regenerated on the same libraries with corrected labels — the hadronic-resolution legend names the earlier chain rather than the published 5R/7R, money plot 7R's title fits its panel, and 6R's u₁, u₂ curves are no longer called 1σ bounds (F209, F211, C003); no number moves with them. Wording suggestions of the same review applied: F030, F032, F063, F065, F084, F088, F091 — the open rank-2 question on Δ's dilution, the alignment axis referenced to the beam at the master formula, the ISR bound labelled per hadronic-y chain, the tagging optics priced on each configuration's measured baseline levers, Table 5's unbiased bins scoped to 5 × 40.8, the O(γ²) leakage stated per closure configuration, and the EMCal resolution's factor-2 optimism at the fourth sweet spot.</td></tr>
     <tr><td class="mono">2026-08-29</td><td>Verification pass over the round. §4.1's O(γ²) azimuth bound restated on a re-run of <code>target_mass_bound.py</code>: 1.4, 1.2 and 5.9 mrad at the mid, top and low configurations, against the 1.3 and 6.0 the text had rounded to. Table 3's fourth sweet spot, (0.141, 14.3 GeV²), corrected to the run that produced it — Σ, JB, DA = 0.15, 0.15, 0.21 and δy/y(e′ alone) = 0.46, and 1.07 at the third spot. The acceptance-harmonic fake is five to eleven times the projected amplitudes, as Report 1 states it. Table 5's caption no longer refers to sine columns the table does not carry. §4.5 notes that the fourth extrapolated bin is marginal at 18 × 137.5, t<sub>ref</sub> = 0.0498 against the anchor's lowest point at 0.050. The Z/A = 0.5 lattice edge is quoted as the applied 1.61 mrad. §2's six-stage list is set as prose. The figures are renumbered into order of appearance — the two hadronic figures 1 and 2, the coherent figure 3, the inclusive figure 4 — and references [8], [10], [11], [16], [17], [19] and [20], defined but uncited, are cited at their anchors. §4.5's cutout harmonics are restated from the run that produces them: the fake ⟨cos 2β⟩ at the measured aperture is −0.95, the value the 2026-08-28 re-measurement implies and the one its two sentence-mates, 9 × 10⁻¹⁰ and 7 × 10⁻¹⁴, were already carrying, and at the tagging cutout it is −0.49 on the per-configuration levers, rather than the −0.27 the retired 72.7 μrad envelope had left behind; the tagging-optics tag there is 37%, and Table 5's 6R row reads 36% at the reconstructed level. The 7R stand-in error at Q² = 1.14 GeV² is 2.4 × 10⁻³ and the PYTHIA one at 3.13 GeV² 1.2 × 10⁻³, and Table 4's spot-1 PYTHIA bar ± 0.12, each a rounding of the printed value rather than a change in it. The abstract's tagged-recoil range follows Table 5's own row headers, 2.3–6.0 × 10⁶ a year, the lower end having moved with the per-configuration transport adopted the same day. §4.1's b₁–b₄ leakage into cos 2φ′ is stated as a measurement rather than a bound from the same day: the exact finite-γ tensor kernel makes it −0.033% of the amplitude at this configuration's sweet spots, with the sign that cancels, in place of the ≤ 0.15% the bound claimed — first published that day as −0.23%, and corrected within it once the two finite-γ rows of the source's own Table 1 were made the kernel's anchor and fixed the twist-3 channel's sign as the cancelling one; and the sign of the by-product κ in §4.3 is fixed by the tensor convention settled with it. The finite-γ longitudinal kernel implemented default-off the day before is the generator's default from this date (<code>InclusiveKernel(target_mass=True)</code>, the author decision of 2026-08-29; <code>target_mass=False</code> remains the massless limit, bit-for-bit), and §4.1 says so beside the tensor switch, whose default is the opposite; no number of this report moves, since no Δ here is built from A<sub>∥</sub>.</td></tr>

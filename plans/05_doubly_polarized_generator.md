@@ -172,13 +172,40 @@ Layout: `evgen/polligen/{spin,xsec,tagged,sample,bookkeeping,reweight,io_hepmc,h
      dominance found in the e+d control (BeAGLE pT tails 2–13× the Hulthén
      model) is the driving systematic → always run the β = 0.20/0.30/0.40
      band until VMC lands.
-     ☐ *2026-08-28: the rule is not kept. `tagging_acceptance.py` scans the band,
-     but the acceptance-folded panel of money plot 4, `tagged_polarimetry_7li.py`
-     and the two near-beam scans all run β = 0.30 alone, and Reports 3 and 4
-     publish the ⁶Li α tag as bare 1.7–2.6% / 22–31% where the scan itself spans a
-     factor 3.3. The 2026-08-26 e+d control also showed that no β in a two-parameter
-     Hulthén reproduces BeAGLE's tail, so the band needs restating as one-sided
-     upward rather than as a bracket.*
+     ☑ *2026-09-15 (run 19b; restates the 2026-08-28 box it replaces, which
+     counted four call sites where there are three). `--beta-band` is now on
+     `tagged_polarimetry_7li.py`, `nearbeam_aperture_scan.py` and
+     `money_tagged_azz.py`'s acceptance-folded panel, **default off** and on its
+     own `_betaband` stem, so every published PNG regenerates to the same md5
+     (a449a360… / c091b7c0… / 9f13e2ba… against `df32780`) and the printed text
+     byte for byte. The fourth site of the old box, `nearbeam_reach_gain.py`,
+     carries **no cluster β at all** — an AST walk finds no `beta` attribute or
+     keyword and no spectator import; it runs the coherent intact-⁶Li chain, whose
+     model band is the 40–60 GeV⁻² one around B = 50 — so a flag there would be a
+     no-op and the measurement is recorded in its docstring instead. **What the
+     band is worth, measured:** the ⁶Li α tag spans **×3.35–3.44** over
+     β = 0.20–0.40 at the Yellow Report high-acceptance envelope (0.0082 / 0.0177 /
+     0.0283 at 5 × 41, 0.0076 / 0.0162 / 0.0254 at 10 × 100, 0.0114 / 0.0247 /
+     0.0391 at 18 × 275) and **×1.35–1.52** at the tagging optics (0.2591 / 0.3159 /
+     0.3490, 0.1695 / 0.2235 / 0.2584, 0.2298 / 0.2920 / 0.3298); the ⁷Li α tag
+     spans ×1.01–1.04 and moves the *other* way (0.9840 / 0.9684 / 0.9509 at
+     5 × 41 on the Yellow Report envelope, ×1.03), because
+     it is caught by the momentum window and a harder spectrum only spills a little
+     of it out. On money plot 4 the band moves the **rate** by ×3.08 (YR) and ×1.45
+     (tagging) and the **asymmetry** by ≤ 0.07 absolute — acceptance-weighted truth
+     at k = 0.325 GeV/c −0.889 / −0.871 / −0.824 and +0.185 / +0.181 / +0.171 — so
+     the tagged A_zz is the robust half of that figure and the α-tag fraction is
+     not. **The band is one-sided IN β and not in the tag:** the 2026-08-26 e+d
+     control found that no β in a two-parameter Hulthén form reproduces BeAGLE's
+     p_T tail (2–13×), so the true short-range scale sits at or above 0.40 — read
+     that end, not the middle — while what the tag then does is upward for ⁶Li and
+     downward for ⁷Li. Independent evidence, from the VMC upgrade the band stands
+     in for in the sibling generator LiPolGen (`README.md`,
+     `--cluster-wave {hulthen,vmc}`): the ⁶Li α-tag fraction goes 0.0264 → 0.0348
+     at 10 × 99.5 on the YR high-acceptance envelope and 0.2551 → 0.2486 at the
+     tagging optics — **opposite directions at the two optics**, which is why the
+     band is quoted per optics and never as one factor. Reports 3 §5 / Table 6 and
+     4 §2.1 no longer publish the ⁶Li α tag bare.*
      *2026-09-15: the VMC upgrade now also carries a sign. Since `tagged.py`
      applies the i^L phase of the partial-wave expansion (plans/00 run 19), the
      sign of every tagged ⁶Li A_zz follows sign(ψ₂/ψ₀) of the α–d D radial,
@@ -348,8 +375,16 @@ job; plans/02 step 1.5.4).
   exist; `reco.py`/`recopseudo.py` fold resolutions analytically rather
   than reading a reconstructed file. `draw_category` already returns the
   Mode-G event-dict shape so that a writer can consume it unchanged.*
+  **Disposition 2026-09-15 (run 19b):** the step splits cleanly and the two
+  halves have different owners. The **generator-side half is delivered** —
+  `polligen/reweight.py` and its 16 tests are the ☑ clause above, and nothing
+  in this repository is owed for it. The **reco-level half stays ◐**, and its
+  blocker has moved rather than cleared: the writer it waits on is step 5.D's,
+  which the sibling generator LiPolGen now ships (see 5.D below), so what is
+  left here is not a writer but a *reader* — `abconv → npsim → EICrecon` output
+  fed back to `estimators.py` — and the EICrecon leg is open on both sides.
 
-### Step 5.D ☐ Final states + HepMC3 + chain smoke test (2 weeks)
+### Step 5.D ☑-by-sibling Final states + HepMC3 + chain smoke test (2 weeks)
 Tier T1 (cluster-internal nucleon + partner spectators; t* remnant → d or
 nn per the triton wave function — crude, flagged), `io_hepmc.py` (ASCII
 HepMC3; status-4 beams so `abconv` accepts it; 10-digit fragment PDG;
@@ -362,8 +397,28 @@ sample of `tools/pythia8`); what T2 still owes is the attachment to the
 abconv → npsim → EICrecon smoke per plans/03 step 2.1.4 (⁶Li can proxy the
 existing d/⁴He beamline configs; ⁷Li needs the new field maps — already
 plans/03 step 2.1.2).
+  ☑-by-sibling *2026-09-15 (run 19b). **This repository will not duplicate the
+  writer.** The three deliverables this box names — the HepMC3 writer, the
+  ion-spin attribute convention and the abconv → npsim chain gate — are shipped
+  by the sibling generator `LiPolGen`, and `io_hepmc.py` is therefore withdrawn
+  rather than deferred. Evidence, read there: `include/lipolgen/hepmc_writer.hpp`
+  / `src/hepmc/hepmc_writer.cpp` write `lipolgen::Event` records as HepMC3
+  Asciiv3; `docs/HEPMC3_CONVENTION.md` is the named-attribute schema and says in
+  its own first paragraph that it **is** `plans/04` open item **#17** ("no such
+  convention exists upstream in HepMC3 or in the EIC software stack, so LiPolGen
+  defines one here and is prepared to propose it to the ePIC MC group") — so #17
+  is answered by a document, and what remains of it is the proposal to the ePIC
+  MC group, not the schema; `README.md:130` "ePIC chain gate passed: HepMC3 →
+  `npsim` (direct, and via `abconv -p ip6_hiacc_100x10`)", with
+  `docs/OPEN_ITEMS_SOLUTIONS.md:38` recording 10/10 events through `npsim` both
+  ways. **The EICrecon leg is still open on both sides** — the sibling's
+  `docs/PHYSICS_CHANNELS.md:954` says "the `abconv` → `npsim` → EICrecon smoke
+  test is not run from this repository" — and it is the same leg step 5.C's
+  reco-level half waits on. The T1 remnant tier and the tagged-final-state half
+  of T2 are a separate question from the writer and stay where §5.5's risk row
+  puts them.*
 
-### Step 5.E ☐ Physics production + write-up (2 weeks + ongoing)
+### Step 5.E ◐ Physics production + write-up (2 weeks + ongoing)
 Regenerate all money plots from generator pseudo-experiments (statistical
 FOMs now include acceptance × estimator effects); tagged-FOM table
 (efficiency × purity × dilution per channel); short generator note —
@@ -381,6 +436,59 @@ INT-facing circulation note already exists as docs/note_cos2phi_coherent_6Li.md;
 since 2026-08-29 docs/note_7li_theory_questions.md carries the ⁷Li theory asks
 to the same audience.*
 
+**Disposition 2026-09-15 (run 19b).** The step has three deliverables and they
+are now in three different states. The **write-up half is superseded** by
+plans/07 §7.0 D1, above — there is no generator note to write. The **money-plot
+regeneration half** is carried by the individual figure boxes of §5.3 and by
+plans/07 WP3, not by this step. The **tagged-FOM table is delivered**, below.
+
+#### 5.E tagged-FOM table (efficiency × purity × dilution per channel) ☑ *2026-09-15*
+
+`fastsim/scripts/tagged_fom_table.py` (new). Efficiency is the
+`tagging_acceptance.py` machinery — `spectator.spectator_lab_kinematics` folded
+with `farforward.acceptance_summary`, tagged = 1 − lost, the definition Report 3
+Table 6 tabulates — at 4 × 10⁵ spectators per cell over the β = 0.20/0.30/0.40
+band. Dilution is the tagged spin model's own,
+`TaggedModel.tensor_dilution()` where the channel spin allows a rank-2 moment
+and `.vector_dilution()` for ⁷Li, whose S_c = ½ has none; the script **asserts**
+that the ⁶Li row reproduces `polarized.b1_li6_from_deuteron(1.0)` rather than
+transcribing 0.921949 a second time, which is the drift plans/08 D9 exists to
+prevent.
+
+| channel | rank | D_model | footing | **D_published** | observable |
+|---|---|---|---|---|---|
+| ⁶Li α (embedded d) | 2 | 0.9219490 | 2/6 per-nucleon (`LI6_B1_PER_NUCLEON`, D9) | **0.3073163** | tagged A_zz, money plot 4 |
+| ⁷Li α (quasi-free t) | 1 | 1.0000000 | P_p(t) = 0.86 (`tagged.TRITON.eff_pol_p`, per nucleon = whole-triton, §5.4) | **0.8600000** | tagged A_∥ |
+| d–p control | 2 | 0.9594889 | 1 (quoted on the deuteron itself) | **0.9594889** | Cosyn–Weiss tagged A_zz |
+
+| channel | optics | ε (β = 0.30) | ε over the β band | purity, \|t\| window | purity, incoherent bkg | ε × D | ε × D² |
+|---|---|---|---|---|---|---|---|
+| ⁶Li α | YR high-acceptance | 0.0168–0.0255 | 0.0079–0.0395 | n/a | **unavailable (FLUKA)** | 0.0052–0.0078 | 0.0016–0.0024 |
+| ⁶Li α | tagging | 0.2236–0.3150 | 0.1691–0.3486 | n/a | **unavailable (FLUKA)** | 0.0687–0.0968 | 0.0211–0.0298 |
+| ⁷Li α | YR high-acceptance | 0.9688–0.9755 | 0.9511–0.9873 | n/a | **unavailable (FLUKA)** | 0.8332–0.8389 | 0.7165–0.7215 |
+| ⁷Li α | tagging | 0.9874–0.9941 | 0.9794–0.9970 | n/a | **unavailable (FLUKA)** | 0.8492–0.8550 | 0.7303–0.7353 |
+| d–p | YR high-acceptance | 0.9549–0.9564 | 0.9461–0.9713 | n/a | **unavailable (FLUKA)** | 0.9163–0.9176 | 0.8791–0.8805 |
+| d–p | tagging | 0.9549–0.9564 | 0.9461–0.9713 | n/a | **unavailable (FLUKA)** | 0.9163–0.9176 | 0.8791–0.8805 |
+
+Ranges are over the three beam configurations. `ε × D` is this step's literal
+product with the purity factor left open; `ε × D²` is the statistical figure of
+merit, since δA divides by D (`fom.Scenario.analyzing_power`) and the count goes
+as ε.
+
+**The two purity columns are the honest half of the table.** The kinematic one is
+`n/a` by construction: a spectator tag is selected by a rigidity/angle window and
+not by a \|t\| fit, and the only \|t\|-window purity this project holds — 80–99%
+incoherent rejection from the e+Pb coherent-J/ψ study arXiv:2108.01694
+(PRD **104** 114030), plans/06 and plans/07 risk row 9 — belongs to the
+**coherent** intact-⁶Li recoil, a different channel, and is recorded here as the
+reference it is. The incoherent-background one is **unavailable and FLUKA-gated**:
+BeAGLE links FLUKA, whose licence is personal and per-user, so no A = 6, 7
+breakup sample exists anywhere in this project (`docs/reproduction_manual.md`,
+plans/08 D5). It is left empty rather than guessed, which is why the product is
+reported as ε × D and not as one number that would look complete — and why **no
+Report 3 row is proposed for this table**: a published row needs every column
+sourced, and one of them is not.
+
 Total ≈ 7–9 focused weeks to 5.E; 5.A+5.C alone (≈ 3–4 weeks) already
 upgrade every Phase-1 FOM to pseudo-experiment grade.
 
@@ -389,6 +497,16 @@ upgrade every Phase-1 FOM to pseudo-experiment grade.
 pseudo-experiment grade and `hfs.py` replaced the 25% hadronic-y stand-in with a
 PYTHIA-backed response; 5.B is done, so what is left of the 7–9 weeks is
 5.C + 5.D + 5.E.*
+
+— *restated 2026-09-15 (run 19b), on the three dispositions above: **what is left
+of the 7–9 weeks is the reco-level half of 5.C, and nothing else in this
+repository.** 5.D is delivered by the sibling generator and its writer is
+withdrawn here rather than deferred; 5.E's write-up half is superseded by
+plans/07 §7.0 D1 and its tagged-FOM table is delivered above, leaving only the
+FLUKA-gated purity column, which is external. The residue is one reader —
+`abconv → npsim → EICrecon` output fed back to `estimators.py` — and the EICrecon
+leg is open on both sides, so it is gated on the ePIC chain and not on effort
+here.*
 
 ## 5.4 Validation matrix (gates, in order)
 
@@ -400,7 +518,7 @@ PYTHIA-backed response; 5.B is done, so what is left of the 7–9 weeks is
 | φ-modulation recovery | injected Δ scenarios | amplitude unbiased with uniform *and* holey φ acceptance — ☑ *2026-08-28: `test_cos2phi_fit_unbiased_with_holey_acceptance` removes two asymmetric φ sectors; the fit is unbiased at 5×SE while the naive moment is biased by >10×SE, so the gate is not vacuous* |
 | deuteron limit of tagged mode | Cosyn–Weiss arXiv:2603.23700 Eq. (6.12), Eqs. (6.13)–(6.14), TABLE II (p. 35) | ☑ *2026-09-15 (restates the 2026-08-28 row, which was met on the wrong normalization map): the gate is the **identity**, `test_cosyn_weiss_tensor_gate` — with the channel's own (f₀, f₂), max \|A_zz^wf − Eq. (6.12)\| = 8.9e-16 (deuteron) and 1.1e-15 (⁶Li) over the whole grid, the (1 − 3cos²θ_k) factorization to 6.0e-14, the map A_T∥ = +1 × A_zz^wf (CW's −2 is the θ_k = 0 angular factor A_zz^wf already carries), and the whole curve inside their [−2, 1], approached (< −1.9, > 0.99) but not attained on either Hulthén toy. TABLE II is a separate gate on the **AV18** deuteron, `test_cosyn_weiss_table_ii_on_av18`: −1.937 at the cell nearest θ_k = 0 (−1.998 on a fine near-axis grid, at the n_{±1} node) and +0.999 at 90°, both at the f₂/f₀ = √2 crossing k = 0.298 GeV/c against CW's 0.30, and +0.967 at k = 1.0 GeV/c. The old row's 0.99940 / 0.3098 / +0.9997 / −2.000 are retired: 0.3098 was Eq. (6.14)'s minimum read as Eq. (6.13)'s maximum on a toy whose f₂/f₀ never reaches √2. The FIG. 13 panels themselves are in light-front variables (α_p, p_pT) the sampler does not carry, so they are a comparison, not a gate* |
 | unpolarized spectator spectra | official BeAGLE e+d via `ed_control_analysis.py` | bulk agreement; tail differences documented as the model band — ☑ *2026-08-28: run on the BeAGLE 1.03.02-3.1 eH2 9×130 sample; routing agrees to better than 2 points, but no β reproduces the p_T tail, so the difference is carried as a one-sided upward band rather than the symmetric one this row assumed* |
-| forward limit of tagged ⁷Li | P_p = 0.866, P_n = −0.037 | recovered within the D-state band — ☐ *2026-08-28: only the proton half is asserted (`test_li7_triton_polarization_forward_limit`, P_p within 0.02 of 0.866); the model gives P_n = −0.028 against the gate's −0.037 and nothing tests it, and no D-state band is defined for the neutron* |
+| forward limit of tagged ⁷Li | **whole-nucleus ⁷Li VMC sums**: P_p = +0.866, P_n = −0.037 (JLab PR12-14-001 Eq. 29, rounding Wiringa *et al.* PRC **89** (2014) 024305 Table I's +0.868 / −0.038; `beams.LI7` stores them divided by Z = 3 and N = 4) | ☑ *2026-09-15 (restates the 2026-08-28 row, which compared two different objects). Both halves are now asserted and the neutron gap is recorded rather than left open. The **proton** half, `test_li7_triton_polarization_forward_limit`: the model's whole-nucleus P_p is P_t(M = 3/2) × Z_t × `TRITON.eff_pol_p` = 1 × 1 × 0.86 = **+0.86**, within 0.02 of +0.866. The **neutron** half, the new `test_li7_neutron_forward_limit_both_footings`, which prints the gap: `TRITON`'s −0.028 is **per nucleon** — the isospin mirror of Bissey's ³He (PRC **65** 064317), per-nucleon like every `Ion` slot since plans/08 D7 — and is **not** the gate's whole-nucleus −0.037. On the whole-nucleus footing the model gives P_t(M = 3/2) × N_t × (−0.028) = 1 × 2 × (−0.028) = **−0.056**, the α spectator being spin-0 and contributing exactly zero; per nucleon that is **−0.014** over ⁷Li's N = 4 and **−0.028** over the triton's own two neutrons. The gap to the ab initio value is **−0.019 (×1.5135)** against −0.037 and −0.018 (×1.4737) against Table I's −0.038, and it is a **known model difference, not a band**: the α + t decomposition puts all the ⁷Li neutron spin on two neutrons where VMC spreads it over four correlated ones, and this channel is a lone L = 1 wave with no D-state admixture to widen a tolerance around — which is why the proton half hid the distinction (Z_t = 1 makes 0.86 the same number on either footing) and the neutron half does not. The convention statement is at `tagged.py`'s `TRITON`* |
 | ⁶Li embedded-d b₁ scaling | `b1_li6_from_deuteron` (rank-2 0.921949 × 2/6, *2026-09-15*: 0.921947 before the i^L phase fix, which moved the model's own value 0.9219467 → 0.9219490 and no printed money_b1 number at all) | ☑ *2026-08-28 (plans/08 D9): the transfer is `TaggedModel(li6_alpha_channel()).tensor_dilution()` itself, pinned against it and against the closed form 1 − (9/10) P_D in `test_li6_b1_rank2_transfer_constant_is_pinned_to_the_model`. The 0.87 it replaces is the VECTOR dilution 1 − (3/2) P_D, the wrong rank for b₁, and is still reachable as `--transfer legacy`* |
 | conservation & chain | HepMC3 → abconv → npsim | event-by-event 4-momentum/charge; 100-event smoke passes |
 
@@ -409,7 +527,7 @@ PYTHIA-backed response; 5.B is done, so what is left of the 7–9 weeks is
 | risk | mitigation |
 |---|---|
 | spin-3/2 inclusive SF basis incomplete in the literature | rank ≤ 2 truncation + scenario shapes; co-author the formal note (turns a risk into a paper) |
-| cluster-overlap tail dominates tagged acceptances (known from e+d control) | β-band always quoted; VMC overlaps as the scheduled fix; BeAGLE-vs-IA spread as the model systematic — *2026-08-28: the band is not always quoted (the acceptance-folded half of money plot 4 and the published α-tag numbers are β = 0.30 alone) and the e+d control showed no β covers BeAGLE's tail, so the mitigation needs restating as one-sided upward* |
+| cluster-overlap tail dominates tagged acceptances (known from e+d control) | β-band always quoted; VMC overlaps as the scheduled fix; BeAGLE-vs-IA spread as the model systematic — ☑ *2026-09-15 (run 19b): the band is now quoted everywhere a β exists — `--beta-band` on the three spectator call sites, default off and bit-for-bit — and it is restated as one-sided **in β** rather than as a bracket: no β in a two-parameter Hulthén form reproduces BeAGLE's p_T tail, so the true scale is at or above 0.40. The tag's own direction is then channel-dependent, up for ⁶Li (×3.35–3.44 at the Yellow Report envelope) and down for ⁷Li (×1.01–1.04), and the sibling generator's VMC upgrade moves it in opposite directions at the two optics (0.0264 → 0.0348 at the YR envelope, 0.2551 → 0.2486 at the tagging optics), so it is a per-optics band and never one factor. §5.3 step 5.B carries the numbers* |
 | α-spectator FSI beyond IA | quote at small |t′| (pole dominance); engage Cosyn/Sargsian (plans/04 #16); Mode W on BeAGLE brackets rescattering qualitatively |
 | t* remnant treatment (d vs nn) too crude for double-tag studies | affects T1 tier only; gate double-tag claims on a ³He control (Friščić et al. PLB 823:136726 as template) — *2026-08-28: the gate is holding and nothing is due — no double-tag claim exists and the T1 remnant tier is unbuilt; the unpolarized ³He control has run, its polarized Friščić-template version waits on T1. What remains is the author's judgement of when a double-tag claim may be made* |
 | tensor-observable RC unknown | RC hook + vector-case band (step 1.4 — the unpolarized ISR migration bound is measured, `polligen/radiative.py`, 2026-08-28); flag in every tensor plot |

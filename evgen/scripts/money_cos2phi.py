@@ -24,7 +24,15 @@ Statistics via per-phi-bin Poisson draws from exact expected yields
 the binned estimator at any luminosity.  The whole luminosity is
 assigned to the transverse-tensor fill (FOM-map convention).
 
+Estimator: ONE fill at --pzz and the binned cos 2phi' fit, which is what
+every published number here is.  `--pzz-plus/--pzz-zero` instead splits
+the same luminosity between an m = +-1-rich and an m = 0-rich fill and
+reads them with the spin-state-sorted ratio reco.harmonic_ratio_fit --
+the estimator of the measurement (plans/07 WP3), worth 0.67x on dA at
+(+0.6, -1.2) -- on its own '_twofill' stem.
+
 Usage:  python3 scripts/money_cos2phi.py --delta-model moment_A
+        python3 scripts/money_cos2phi.py --pzz-plus 0.6 --pzz-zero -1.2
 """
 
 import argparse
@@ -41,6 +49,8 @@ import matplotlib.pyplot as plt  # noqa: E402
 from matplotlib.gridspec import GridSpec  # noqa: E402
 
 from polligen import bookkeeping as bk  # noqa: E402
+from polligen import reco  # noqa: E402
+from polligen import spin as spinmod  # noqa: E402
 from polligen.estimators import (cos2phi_fit_binned,  # noqa: E402
                                  cos2phi_fit_err)
 from polligen.sample import InclusiveSampler, phi_histogram_pseudo  # noqa: E402
@@ -214,6 +224,115 @@ def pdf_tag(args):
     return "grid" if getattr(args, "pdf", "toy") == "grid" else ""
 
 
+def add_binning_arg(ap):
+    """`--binning {log40x30,yr}` -- the (x, Q2) ANALYSIS grid.
+
+    The published maps run this project's own 40 x 30 log grid, which is
+    10.0 x 9.1 bins per decade and matches no published projection bin for
+    bin.  `yr` is the Yellow-Report inclusive convention, five logarithmic
+    bins per decade in both variables on the decade-anchored lattice
+    (`beams.YR_GRID` / `beams.YR_X_EDGES` / `beams.YR_Q2_EDGES`), which is
+    what makes a comparison with published YR projections one-to-one --
+    plans/02 Step 1.1 item 3.  `generic` is an accepted alias of the
+    default spelling.
+    """
+    ap.add_argument("--binning", default="log40x30",
+                    choices=("log40x30", "generic", "yr"),
+                    help="(x, Q2) analysis binning.  'log40x30' (the "
+                         "default, and every published PNG; 'generic' is "
+                         "the same grid) is this project's 40 x 30 log "
+                         "grid over x in [1e-4, 1], Q2 in [1, 2e3]; 'yr' "
+                         "is the Yellow-Report five-bins-per-decade "
+                         "lattice (20 x 17 over x in [1e-4, 1], Q2 in "
+                         "[1, 2512]) and writes its own '_yr' PNG stem")
+
+
+def binning_tag(args):
+    """Filename key for a non-default `--binning` ('' on the published
+    40 x 30 grid)."""
+    return beams.binning_tag(getattr(args, "binning", "log40x30"))
+
+
+# --- the two-fill (spin-state-sorted) switches ----------------------------
+#
+# The published truth-level numbers come from a SINGLE tensor-polarized
+# fill at P_zz = +0.6 and the binned cos 2phi' fit
+# (`estimators.cos2phi_fit_binned`), whose statistical error is
+# sqrt(2/N)/P_zz / dilution.  The reconstructed-level chain instead runs
+# the acceptance-cancelling pattern of plans/07 WP3 -- an m = +-1-rich fill
+# at P_zz = +0.6 alternating bunch by bunch with an m = 0-rich fill at
+# -1.2 -- and the spin-state-sorted ratio estimator
+# `reco.harmonic_ratio_fit`, whose error is 2 sqrt(2/N)/(P+ - P0) /
+# dilution at equal luminosity.  At (+0.6, -1.2) that is 0.6/0.9 = 2/3 of
+# the single-fill error on the SAME total luminosity: the m = 0-rich fill
+# carries twice the tensor lever arm of the fill it replaces.
+#
+# BOTH FLAGS DEFAULT TO None: with neither given the drivers take exactly
+# today's single-fill path and every published line and PNG is bit for
+# bit what it has always been.  Given together they switch the estimator
+# and append '_twofill' to the stem.  The luminosity split is fixed at
+# 50/50, because the 0.67 rests on it and a free share under the same
+# stem key would put two different numbers behind one file name.
+
+
+def add_two_fill_args(ap):
+    """`--pzz-plus/--pzz-zero` -- the two-fill spin-state-sorted path."""
+    ap.add_argument("--pzz-plus", type=float, default=None, dest="pzz_plus",
+                    help="tensor polarization of the m = +-1-rich fill.  "
+                         "Given together with --pzz-zero it switches the "
+                         "driver from the single-fill binned cos 2phi' fit "
+                         "to the spin-state-sorted ratio estimator "
+                         "reco.harmonic_ratio_fit at equal luminosity in "
+                         "the two fills, and writes its own '_twofill' "
+                         "PNG stem.  The published run is (0.6, -1.2)")
+    ap.add_argument("--pzz-zero", type=float, default=None, dest="pzz_zero",
+                    help="tensor polarization of the m = 0-rich fill "
+                         "(-2 x --pzz-plus at the same source purity); "
+                         "--pzz-plus only")
+
+
+def check_two_fill_args(ap, args):
+    """Refuse a half-specified or degenerate two-fill run."""
+    if (args.pzz_plus is None) != (args.pzz_zero is None):
+        ap.error("--pzz-plus and --pzz-zero must be given together: the "
+                 "ratio estimator needs both fills, and one alone would "
+                 "silently fall back to the single-fill path under a "
+                 "stem that claims otherwise")
+    if args.pzz_plus is None:
+        return
+    if args.pzz_plus == args.pzz_zero:
+        ap.error("--pzz-plus and --pzz-zero must differ: the estimator "
+                 "divides by (P+ - P0)")
+
+
+def two_fill_pzz(args):
+    """(P+, P0) when the two-fill path is on, else None."""
+    if getattr(args, "pzz_plus", None) is None:
+        return None
+    return (float(args.pzz_plus), float(args.pzz_zero))
+
+
+def two_fill_tag(args):
+    """Filename key for the two-fill path ('' on the published
+    single-fill one)."""
+    return "twofill" if two_fill_pzz(args) is not None else ""
+
+
+def two_fill_plan(pzz_pair, phi_s=0.0, name="cos2phi"):
+    """Equal-luminosity two-fill run plan at the two tensor polarizations.
+
+    `bookkeeping.tensor_flip_plan` is the same object at the fixed
+    purity-matched pair (P, -2P); this builder takes the two values
+    independently so that a run can price a source that does not deliver
+    the m = 0-rich bunches at the same purity."""
+    cats = [bk.SpinCategory("%s%+g" % (name, p), 1.0,
+                            spinmod.spin1_populations(0.0, p),
+                            theta_s=np.pi / 2.0, phi_s=phi_s,
+                            lumi_fraction=0.5)
+            for p in pzz_pair]
+    return bk.RunPlan(cats, pzz_true=pzz_pair[0])
+
+
 def describe_backends(args, backends):
     """One line naming what `--pdf` actually loaded, for the run record."""
     nf2 = backends["nuclear"]
@@ -229,12 +348,16 @@ def describe_backends(args, backends):
 def output_stem_tag(args):
     """The whole non-default-settings key of a truth-level money PNG.
 
-    `--pdf grid` first, then the tensor-leakage keys, so that the
-    published toy massless-path stem stays the bare one and any other
-    run writes beside it rather than over it -- the guard convention of
-    `tensor_leakage_tag` below, extended to the backend.
+    `--pdf grid` first, then the binning, then the two-fill estimator,
+    then the tensor-leakage keys, so that the published toy massless-path
+    single-fill stem stays the bare one and any other run writes beside
+    it rather than over it -- the guard convention of
+    `tensor_leakage_tag` below, extended to the backend, the analysis
+    grid and the estimator.
     """
-    return "_".join(k for k in (pdf_tag(args), tensor_leakage_tag(args)) if k)
+    return "_".join(k for k in (pdf_tag(args), binning_tag(args),
+                                two_fill_tag(args),
+                                tensor_leakage_tag(args)) if k)
 
 
 def truth_leakage_route(args):
@@ -334,6 +457,81 @@ def measure(sampler, cat, mask, lumi_pb, pzz, rng, nbins=24):
             "sigma_pb": sigma_pb}
 
 
+def measure_two_fill(sampler, cats, mask, lumi_pb, pzz_pair, rng, nbins=24):
+    """One two-fill spin-state-sorted pseudo-measurement on a super-bin.
+
+    The same TOTAL luminosity as `measure`, split 50/50 between the two
+    fills.  Each fill is drawn exactly as the single-fill path draws its
+    one sample -- the category's own accepted cross section sigma_f and
+    its own effective modulation a2_f from
+    `sampler.effective_modulation`, Poisson per phi' bin -- and the two
+    count rows go into `reco.harmonic_ratio_fit`, which forms the
+    acceptance-free spin-state ratio, inverts it for the modulation
+    T_i = kappa + A cos 2phi' and fits A by weighted LSQ.
+
+    The estimator's target is EXACT here, not linearized.  Both sigma_f
+    and the numerator of a2_f are linear in P_zz (the populations are),
+    so sigma_f = sigma_0 (1 + P_f kappa) and a2_f = P_f A/(1 + P_f kappa),
+    and the drawn yields are L_f sigma_0 (1 + P_f kappa +
+    P_f A cos 2phi') bin by bin -- the estimator's model with no
+    remainder.  Two fills therefore determine (sigma_0, kappa) and hence
+    the amplitude A the fit should return; `truth` below is that A, and
+    `truth_single` is the single-fill convention a2(P+)/P+ that the
+    published numbers quote, so the two can be compared without confusing
+    a change of estimator with a change of definition.
+    """
+    lumis = [0.5 * lumi_pb, 0.5 * lumi_pb]
+    p_plus, p_zero = float(pzz_pair[0]), float(pzz_pair[1])
+    sig, a2 = [], []
+    counts, edges = [], None
+    for cat, lf in zip(cats, lumis):
+        sigma_pb, _a1, a2_eff = sampler.effective_modulation(cat, mask=mask)
+        sig.append(sigma_pb)
+        a2.append(a2_eff)
+        c, edges = phi_histogram_pseudo(lf * sigma_pb, a2_eff,
+                                        nbins=nbins, rng=rng)
+        counts.append(c)
+    counts = np.asarray(counts, dtype=float)
+    n_exp = float(sum(l * s for l, s in zip(lumis, sig)))
+    # (sigma_0, kappa) from the two fills, then the exact amplitude
+    denom = p_plus - p_zero
+    sigma_0 = (sig[1] * p_plus - sig[0] * p_zero) / denom
+    if sigma_0 > 0.0:
+        amp_true = a2[0] * sig[0] / (sigma_0 * p_plus) if p_plus else 0.0
+        kappa_true = (sig[0] - sig[1]) / (sigma_0 * denom)
+    else:
+        amp_true, kappa_true = 0.0, 0.0
+    fit = reco.harmonic_ratio_fit(counts, lumis, [p_plus, p_zero], edges)
+    # the per-bin modulation the fit runs on, for the figure: the exact
+    # inversion T = R/(sigma_P^2 - Pbar R) of the same spin-state ratio
+    r, var_r, sig2, pbar = reco.spin_state_ratio(counts, lumis,
+                                                 [p_plus, p_zero])
+    t_bin = r / (sig2 - pbar * r)
+    jac = (1.0 + pbar * t_bin) / (sig2 - pbar * r)
+    return {"n": n_exp, "truth": amp_true,
+            "truth_single": (a2[0] / p_plus) if p_plus else 0.0,
+            "const_truth": kappa_true,
+            "amp": fit["amp"], "err": fit["err"], "const": fit["const"],
+            "t": t_bin, "t_err": np.sqrt(np.maximum(var_r, 0.0)) * np.abs(jac),
+            "counts": counts, "edges": edges,
+            "a2_eff": a2[0], "sigma_pb": sigma_0,
+            "sigma_fills": tuple(sig),
+            "err_analytic": float(reco.err_harmonic_ratio(
+                max(n_exp, 1e-12), [p_plus, p_zero], nbins=nbins))}
+
+
+def two_fill_err_ratio(pzz_single, pzz_pair):
+    """dA(two-fill) / dA(single-fill) at the same total N.
+
+    sqrt(2/N)/sigma_P vs sqrt(2/N)/P_single, i.e. P_single/sigma_P; the
+    finite-bin dilution is the same factor in both and cancels.  At
+    (0.6; +0.6, -1.2) it is 0.6/0.9 = 2/3."""
+    p = np.asarray(pzz_pair, dtype=float)
+    pbar = p.mean()
+    sigma_p = float(np.sqrt(((p - pbar) ** 2).mean()))
+    return abs(pzz_single) / sigma_p
+
+
 def build_delta_model(args, config, scenario, backends=None):
     """Delta model from the unified registry; moment_A needs the
     rate-weighted <Q2> of the accepted phase space and a per-nucleon
@@ -381,11 +579,13 @@ def main():
     ap.add_argument("--pzz", type=float, default=0.60)
     ap.add_argument("--nspots", type=int, default=4)
     add_pdf_arg(ap)
+    add_two_fill_args(ap)
     add_tensor_leakage_args(ap)
     ap.add_argument("--seed", type=int, default=20260810)
     ap.add_argument("--outdir", default=".")
     args = ap.parse_args()
     check_tensor_leakage_args(ap, args)
+    check_two_fill_args(ap, args)
 
     config = beams.default_configs("6Li")[args.config]
     lumi1_pb = args.lumi_1yr * 1e3
@@ -420,6 +620,26 @@ def main():
     cat = plan.categories[0]
     subtract = args.subtract_tensor_leakage != "none"
 
+    # the two-fill path: the same super-bins and the same total
+    # luminosity, drawn in two fills and read with the spin-state-sorted
+    # ratio estimator instead of the single-fill binned fit
+    pzz_pair = two_fill_pzz(args)
+    two_fill = pzz_pair is not None
+    plan2 = two_fill_plan(pzz_pair) if two_fill else None
+
+    def do_measure(mask, lumi_pb):
+        if two_fill:
+            return measure_two_fill(sampler, plan2.categories, mask,
+                                    lumi_pb, pzz_pair, rng)
+        return measure(sampler, cat, mask, lumi_pb, plan.pzz_true, rng)
+
+    def single_fill_err(mask, lumi_pb):
+        """dA the published single-fill estimator would give on the same
+        super-bin and the same total luminosity -- the denominator of the
+        0.67 the two-fill path is priced against."""
+        sigma_pb, _a1, _a2 = sampler.effective_modulation(cat, mask=mask)
+        return cos2phi_fit_err(lumi_pb * sigma_pb, plan.pzz_true)
+
     def leak_of(mask, m):
         """The leakage to remove from one super-bin's amplitude and truth,
         per unit P_zz.  At the truth level the 'kappa' and 'model' routes
@@ -440,7 +660,7 @@ def main():
         ax = fig.add_subplot(gs[k // 2, k % 2])
         xlo, xhi, q2lo, q2hi = superbin_edges(proj, i, j)
         mask = superbin_mask(sampler, xlo, xhi, q2lo, q2hi)
-        m = measure(sampler, cat, mask, lumi1_pb, plan.pzz_true, rng)
+        m = do_measure(mask, lumi1_pb)
         leak = leak_of(mask, m)
         if leak:
             # additive on the amplitude; the truth reference and the drawn
@@ -449,27 +669,45 @@ def main():
             m["amp"] -= leak
             m["truth"] -= leak
             m["a2_eff"] = m["a2_eff"] - leak * plan.pzz_true
-        err10 = cos2phi_fit_err(lumi10_pb * m["sigma_pb"],
-                                plan.pzz_true)
+        err10 = (float(reco.err_harmonic_ratio(lumi10_pb * m["n"]
+                                               / max(lumi1_pb, 1e-30),
+                                               pzz_pair))
+                 if two_fill else
+                 cos2phi_fit_err(lumi10_pb * m["sigma_pb"], plan.pzz_true))
         centers = 0.5 * (m["edges"][:-1] + m["edges"][1:])
-        nbar = m["counts"].mean()
-        mod = 1e3 * (m["counts"] / nbar - 1.0)
-        mod_err = 1e3 * np.sqrt(np.maximum(m["counts"], 1.0)) / nbar
-        ax.errorbar(centers, mod, yerr=mod_err, fmt="o", color="black",
-                    ms=3.5, capsize=2, lw=1, zorder=3)
         phi = np.linspace(0, 2 * np.pi, 200)
-        ax.plot(phi, 1e3 * m["a2_eff"] * np.cos(2 * phi), "-",
-                color=C_TRUTH, lw=1.6)
-        fit_amp = m["amp"] * plan.pzz_true
-        ax.plot(phi, 1e3 * fit_amp * np.cos(2 * phi), "--", color=C_FIT,
-                lw=1.4)
+        if two_fill:
+            # the observable of the two-fill analysis is the spin-state
+            # ratio inverted for the modulation, T = kappa + A cos 2phi';
+            # the fitted pedestal is removed so that the panel shows the
+            # same thing the single-fill one does
+            ax.errorbar(centers, 1e3 * (m["t"] - m["const"]),
+                        yerr=1e3 * m["t_err"], fmt="o", color="black",
+                        ms=3.5, capsize=2, lw=1, zorder=3)
+            ax.plot(phi, 1e3 * m["truth"] * np.cos(2 * phi), "-",
+                    color=C_TRUTH, lw=1.6)
+            ax.plot(phi, 1e3 * m["amp"] * np.cos(2 * phi), "--",
+                    color=C_FIT, lw=1.4)
+        else:
+            nbar = m["counts"].mean()
+            mod = 1e3 * (m["counts"] / nbar - 1.0)
+            mod_err = 1e3 * np.sqrt(np.maximum(m["counts"], 1.0)) / nbar
+            ax.errorbar(centers, mod, yerr=mod_err, fmt="o", color="black",
+                        ms=3.5, capsize=2, lw=1, zorder=3)
+            ax.plot(phi, 1e3 * m["a2_eff"] * np.cos(2 * phi), "-",
+                    color=C_TRUTH, lw=1.6)
+            fit_amp = m["amp"] * plan.pzz_true
+            ax.plot(phi, 1e3 * fit_amp * np.cos(2 * phi), "--", color=C_FIT,
+                    lw=1.4)
         ax.set_xlim(0, 2 * np.pi)
         ax.set_xticks([0, np.pi, 2 * np.pi])
         ax.set_xticklabels(["0", r"$\pi$", r"$2\pi$"])
         ax.set_xlabel(r"$\phi' = \phi - \phi_S$", fontsize=9, labelpad=1)
         if k % 2 == 0:
-            ax.set_ylabel(r"$N(\phi')/\langle N\rangle - 1$"
-                          r"  $[\times 10^{-3}]$", fontsize=9)
+            ax.set_ylabel((r"$T(\phi') - \hat\kappa$"
+                           r"  $[\times 10^{-3}]$") if two_fill else
+                          (r"$N(\phi')/\langle N\rangle - 1$"
+                           r"  $[\times 10^{-3}]$"), fontsize=9)
         ax.tick_params(labelsize=8)
         ax.axhline(0.0, color="0.85", lw=0.6, zorder=0)
         ax.annotate(
@@ -483,13 +721,17 @@ def main():
             ax.annotate("injected (%s)" % PRETTY.get(args.delta_model, args.delta_model),
                         xy=(0.03, 0.93), xycoords="axes fraction",
                         color=C_TRUTH, fontsize=7)
-            ax.annotate("binned fit", xy=(0.03, 0.84),
+            ax.annotate("spin-state ratio fit" if two_fill else "binned fit",
+                        xy=(0.03, 0.84),
                         xycoords="axes fraction", color=C_FIT, fontsize=7)
         summary.append(
             "spot %d: x=%.3g Q2=%.3g  N_1yr=%.2e  A_truth=%+.2e  "
-            "A_hat=%+.2e +- %.1e (1yr) +- %.1e (10yr)"
+            "A_hat=%+.2e +- %.1e (1yr) +- %.1e (10yr)%s"
             % (k + 1, xs, qs, m["n"], m["truth"], m["amp"], m["err"],
-               err10))
+               err10,
+               ("  dA/dA_single=%.4f  sig=%.1f"
+                % (m["err"] / single_fill_err(mask, lumi1_pb),
+                   abs(m["truth"]) / m["err"])) if two_fill else ""))
 
     # --- right: amplitude vs x along the sweet-spot Q2 slice --------------
     ax = fig.add_subplot(gs[:, 2])
@@ -504,12 +746,12 @@ def main():
         mask = superbin_mask(sampler, xe[i0], xe[i0 + 2], q2lo, q2hi)
         if not mask.any():
             continue
-        m = measure(sampler, cat, mask, lumi1_pb, plan.pzz_true, rng)
+        m = do_measure(mask, lumi1_pb)
         if m["n"] < 1e3 or m["err"] > 8e-3:
             continue
         # independent 10-yr pseudo-measurement (2026-08-11 audit: reusing
         # the 1-yr draw with 10-yr bars scattered points ~sqrt(10) sigma)
-        m10 = measure(sampler, cat, mask, lumi10_pb, plan.pzz_true, rng)
+        m10 = do_measure(mask, lumi10_pb)
         leak = leak_of(mask, m)
         if leak:
             m["amp"] -= leak
@@ -558,10 +800,12 @@ def main():
 
     fig.suptitle(
         r"Nuclear gluonometry, transversely tensor-polarized $^6$Li, "
-        r"%s, $P_{zz}=%.2f$""\n"
+        r"%s, %s""\n"
         r"$\Delta$: %s;  $\phi'$ pseudo-data at 1 yr (%g fb$^{-1}$/u); "
         "statistical errors only, no backgrounds or tensor radiative corrections"
-        % (config.label(), plan.pzz_true,
+        % (config.label(),
+           (r"two fills $P_{zz}=%+.2f / %+.2f$ (spin-state ratio)"
+            % pzz_pair) if two_fill else r"$P_{zz}=%.2f$" % plan.pzz_true,
            PRETTY.get(args.delta_model, args.delta_model)
            + (" (bag moment, dilution 1/3)" if args.delta_model == "moment_A" else ""),
            args.lumi_1yr),
@@ -576,6 +820,12 @@ def main():
     fig.savefig(out, dpi=140)
     print("wrote", out)
     print("backend:", describe_backends(args, backends))
+    if two_fill:
+        print("estimator: two-fill spin-state ratio "
+              "(reco.harmonic_ratio_fit), P_zz = %+.3g / %+.3g at equal "
+              "luminosity; dA(two-fill)/dA(single-fill at P_zz = %.3g) "
+              "= %.4f" % (pzz_pair[0], pzz_pair[1], args.pzz,
+                          two_fill_err_ratio(args.pzz, pzz_pair)))
     print("delta model:", model.info(),
           "" if q2_ref is None else "(<Q2> = %.3g GeV^2)" % q2_ref)
     if args.tensor_gamma:

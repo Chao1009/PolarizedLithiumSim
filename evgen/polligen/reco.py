@@ -42,7 +42,12 @@ import numpy as np
 
 from polli_fastsim.farforward import HIGH_ACCEPTANCE, HIGH_DIVERGENCE
 from polli_fastsim.kinematics import scattered_electron
+from polli_fastsim import spectator as _spectator
 from polli_fastsim.spectator import M_U
+
+#: numpy 2 renamed trapz -> trapezoid; the repository supports both
+#: (same shim as polligen/tagged.py).
+_trapezoid = getattr(np, "trapezoid", None) or np.trapz
 
 XING_IP6 = 25.0e-3   # rad, horizontal crossing angle at IP6
 XING_IP8 = 35.0e-3   # rad, IP8
@@ -479,6 +484,20 @@ def tracking_angular_resolution(eta):
     return out
 
 
+#: The Yellow Report's electron-ID working point: the efficiency to
+#: electrons at which every pion-suppression number of its calorimetry
+#: chapter is quoted -- 95% for an E/p cut alone and 92% once the shower
+#: shape is used as well (arXiv:2103.05419 Fig. 11.48 and its caption,
+#: printed p. 496; Table 11.29 lists the same quantity per technology).
+#: It carries NO eta, momentum, x or Q2 dependence, which is the evidence
+#: behind the gap recorded in `eps_eid` below.  Nothing in the chain reads
+#: it: a FLAT efficiency is identically null in the spin-state ratio, so
+#: substituting it would move no number.  It is here so that the one
+#: sourced electron-ID efficiency in the reference set is in the code
+#: beside the constructed profile that is not.
+EPS_EID_YR_WORKING_POINT = {"e_over_p": 0.95, "e_over_p_and_shape": 0.92}
+
+
 def eps_eid(eta):
     """Electron-ID efficiency eps_eID(eta); zero outside |eta| > 3.5.
 
@@ -504,7 +523,37 @@ def eps_eid(eta):
     spin-state RATIO (reco.spin_state_ratio), so an eta-dependent but
     fill-independent efficiency cancels exactly, bin by bin; eps_eID should
     enter the statistical error and nothing else.  Check that before
-    spending effort on the curve."""
+    spending effort on the curve.
+
+    NO (x, Q2) AXIS EXISTS TO GIVE IT (searched 2026-09-15, plans/03 2.3).
+    The work package asks for an (x, Q2)-resolved eps_eID from "the Yellow
+    Report electron-ID tables".  The Yellow Report (arXiv:2103.05419,
+    refs/2103.05419_part1-4.pdf) has no such table, and this was checked
+    exhaustively rather than assumed:
+      * Table 11.29 (part 3, printed p. 495) -- "Measured pion suppression
+        factor R_pi and the associated efficiency eps_e to electrons" -- is
+        the only table in the document that carries an electron efficiency.
+        It is indexed by CALORIMETER TECHNOLOGY (PbWO4, Pb/Sc, W/ScFi,
+        shashlyk), by its energy resolution and by the test-beam energy,
+        and eps_e is the WORKING POINT the pion rejection is quoted at
+        (50, 84, 90, 92, 95, 98, 99.9%), not a measured curve against any
+        kinematic variable.
+      * Figure 11.48 (right) is the only eta-resolved electron-ID plot:
+        simulated PION SUPPRESSION for PbWO4 at eta = -3.5, -3.0, -2.5, at
+        FIXED eps_e = 95% (E/p cut) and 92% (E/p and shower shape).  The
+        eta dependence it shows is the pion rejection's, not the
+        efficiency's, and it is caused by the momentum resolution.
+      * Figure 11.49 is electron PURITY of the DIS sample against momentum
+        in three eta bands at 18 x 275 -- the other half of the plans/02
+        box, and an AUTHOR item, not this one.
+      * Figure 8.4 is the only (x, Q2)-plane figure in the detector
+        chapters and shows PYTHIA 6 neutral-current YIELDS, not any
+        efficiency.
+    So the Yellow Report's own treatment fixes eps_e at a working point and
+    reports what it buys; it gives nothing to digitize.  The curve stays
+    eta-only and the gap is recorded rather than filled with invented
+    numbers.  What the Yellow Report does supply is the working point
+    itself, EPS_EID_YR_WORKING_POINT below."""
     eta = np.asarray(eta, dtype=float)
     eta_pts = np.array([-3.5, -3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0, 3.5])
     eps_pts = np.array([0.85, 0.92, 0.95, 0.93, 0.90, 0.90, 0.85, 0.80, 0.70])
@@ -548,6 +597,129 @@ def mixed_method(q2_electron, y_hadronic, s):
     / 'mixed' method used at HERA at low y): x = Q2_e / (s y_had)."""
     return np.asarray(q2_electron, dtype=float) / (s * np.asarray(y_hadronic,
                                                                     dtype=float))
+
+
+# --- Fermi motion of the struck cluster (plans/03 2.3) --------------------
+
+def fermi_channels_for(a_beam, z_beam):
+    """(channels, weights) of the cluster-spectator breakups of one beam.
+
+    The weight of a channel in an INCLUSIVE per-nucleon measurement is the
+    probability that the virtual photon strikes THAT channel's struck
+    cluster, taken as the cluster's share of the nucleons: for 6Li the
+    deuteron cluster is struck 2/6 of the time (alpha spectator) and the
+    alpha 4/6 (deuteron spectator).  It is the same two-cluster picture
+    the far-forward tagging study runs on, used here for the internal
+    momentum alone.
+
+    Raises for a beam `spectator.CHANNELS` does not describe: the whole
+    point of drawing k from that module is that its kappa comes from a
+    measured separation energy, so a beam without one must not silently
+    fall back to anything."""
+    chans = [c for c in _spectator.CHANNELS
+             if c.beam_A == int(a_beam) and c.beam_Z == int(z_beam)]
+    if not chans:
+        raise ValueError("no cluster-spectator channel for (Z, A) = (%d, %d) "
+                         "in polli_fastsim.spectator.CHANNELS"
+                         % (int(z_beam), int(a_beam)))
+    w = np.array([c.partner_A for c in chans], dtype=float)
+    return chans, w / w.sum()
+
+
+def fermi_alpha(channel, kx, ky, kz):
+    """Per-nucleon light-cone fraction alpha of the STRUCK cluster.
+
+    The nucleus is at rest with its ground-state mass M_A; the spectator
+    cluster carries the internal momentum k and so the energy
+    E_s = sqrt(m_s^2 + k^2), leaving the struck cluster with the
+    four-momentum (M_A - E_s, -k).  Its light-cone component along the
+    beam direction is M_A - E_s + k_z, and per nucleon of that cluster,
+    measured against the nucleus's own average M_A / A,
+
+        alpha = [A / (A - A_spec)] (M_A - E_s + k_z) / M_A.
+
+    In the collinear limit the struck nucleon's four-momentum is alpha
+    times the NOMINAL per-nucleon one, so an analysis that reconstructs
+    with the nominal beam reports, at the same Q2,
+
+        x_measured = alpha x_vertex,      y_measured = y_vertex,
+
+    y being a ratio in the target momentum and therefore blind to it.
+    alpha is the WHOLE Fermi effect on the inclusive kinematics in this
+    approximation, and it is not centred on 1: the binding puts it at
+    1.0037 (deuteron struck) and 0.9977 (alpha struck) at k = 0 for 6Li.
+
+    What it leaves out, and what it is therefore a floor rather than a
+    model of: the transverse k_T tilts the struck nucleon out of the beam
+    axis, which this collinear reading drops; the physics azimuth is
+    defined against the NUCLEAR momentum and the nuclear spin axis, so it
+    does not move with k at all; and off-shellness of the struck cluster
+    is not modelled."""
+    kx = np.asarray(kx, dtype=float)
+    ky = np.asarray(ky, dtype=float)
+    kz = np.asarray(kz, dtype=float)
+    m_s = channel.m_spec
+    m_a = channel.m_beam
+    e_s = np.sqrt(m_s * m_s + kx * kx + ky * ky + kz * kz)
+    a_struck = channel.beam_A - channel.spectator_A
+    return (channel.beam_A / float(a_struck)) * (m_a - e_s + kz) / m_a
+
+
+def fermi_alpha_sample(a_beam, z_beam, n, rng, beta=0.30, k_max=1.5,
+                       channel=None):
+    """n draws of the per-nucleon light-cone fraction alpha for a beam.
+
+    `channel` picks one `spectator.ClusterChannel` by its `name`; the
+    default mixes the beam's channels with the nucleon-share weights of
+    `fermi_channels_for`.  k comes from `spectator.sample_k`, i.e. from
+    the two-parameter cluster momentum densities of that module (Hulthen
+    for the S-wave 6Li, the P-wave form for 7Li) whose kappa is set by the
+    measured separation energy; `beta` is its short-range scale, crude by
+    design in the high-k tail and the dominant uncertainty on anything
+    read off this (spectator.py module docstring).
+
+    Returns (alpha, k_mag), the second so that a caller can print the
+    momentum it actually drew against the density's own moments."""
+    chans, wts = fermi_channels_for(a_beam, z_beam)
+    if channel is not None:
+        chans = [c for c in chans if c.name == channel]
+        if not chans:
+            raise ValueError("no channel named %r for this beam" % (channel,))
+        wts = np.array([1.0])
+    n = int(n)
+    pick = rng.choice(len(chans), size=n, p=wts) if len(chans) > 1 \
+        else np.zeros(n, dtype=int)
+    alpha = np.empty(n)
+    kmag = np.empty(n)
+    for i, ch in enumerate(chans):
+        sel = pick == i
+        m = int(sel.sum())
+        if not m:
+            continue
+        kx, ky, kz = _spectator.sample_k(ch, m, beta=beta, k_max=k_max,
+                                         rng=rng)
+        alpha[sel] = fermi_alpha(ch, kx, ky, kz)
+        kmag[sel] = np.sqrt(kx * kx + ky * ky + kz * kz)
+    return alpha, kmag
+
+
+def fermi_k_moments(a_beam, z_beam, beta=0.30, k_max=1.5, channel=None,
+                    ngrid=200001):
+    """(<|k|>, <k^2>^(1/2)) of the SAME mixture by quadrature on
+    k^2 n(k) -- the analytic moments a drawn sample must reproduce."""
+    chans, wts = fermi_channels_for(a_beam, z_beam)
+    if channel is not None:
+        chans = [c for c in chans if c.name == channel]
+        wts = np.array([1.0])
+    grid = np.linspace(1e-4, k_max, ngrid)
+    m1 = m2 = 0.0
+    for ch, w in zip(chans, wts):
+        pdf = grid * grid * _spectator.momentum_density(grid, ch.kappa, beta,
+                                                        ch.l_wave)
+        norm = _trapezoid(pdf, grid)
+        m1 += w * _trapezoid(pdf * grid, grid) / norm
+        m2 += w * _trapezoid(pdf * grid * grid, grid) / norm
+    return float(m1), float(np.sqrt(m2))
 
 
 # --- spin-state-sorted harmonic estimator ---------------------------------

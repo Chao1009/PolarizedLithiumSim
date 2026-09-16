@@ -43,6 +43,35 @@ sensor package IS the limit at every configuration: a near-beam layer
 that reaches the envelope is what makes the optics worth having.  This
 script prices every aperture per configuration and marks the three.
 
+THE WAVE-FUNCTION BAND IS ONE-SIDED UPWARD, AND `--beta-band` DRAWS IT
+(2026-09-15, plans/05 step 5.B).  Panel (b)'s cluster model carries a
+short-range scale beta whose central value is 0.30 GeV; plans/05 has
+required the beta = 0.20/0.30/0.40 band to be quoted with every tagged
+number since the e+d control, and this scan ran beta = 0.30 alone.
+`--beta-band` adds the two edges to the panel and to the printed marks; it
+is DEFAULT OFF and appends `_betaband` to the output stem, so the
+published PNG is the beta = 0.30 one, bit for bit.  The band is not a
+symmetric bracket: the 2026-08-26 e+d control found that NO beta in a
+two-parameter Hulthen form reproduces BeAGLE's p_T tail (the tail runs
+2-13x the model), so the true short-range scale sits at or ABOVE the top
+of the band and never below it.  ONE-SIDED IN BETA IS NOT ONE-SIDED IN THE
+TAG, and the two lithium channels move in opposite directions (measured
+2026-09-15, this script, 2e5 spectators): the 6Li alpha tag RISES with
+beta -- 0.0082 / 0.0177 / 0.0283 at the 5 x 41 Yellow Report envelope,
+0.0076 / 0.0162 / 0.0254 at 10 x 100 and 0.0114 / 0.0247 / 0.0391 at
+18 x 275, a span of x3.35-3.44, against x1.35-1.52 at the tagging optics
+(0.2591 / 0.3159 / 0.3490, 0.1695 / 0.2235 / 0.2584, 0.2298 / 0.2920 /
+0.3298) -- while the 7Li alpha tag FALLS, 0.9840 / 0.9684 / 0.9509 and
+x1.01-1.04 across every optics, because it is caught by the momentum
+window and a harder spectrum only spills a little of it out.  The sibling generator
+LiPolGen measures the same one-sidedness from the other end, with the VMC
+alpha+d overlap this band stands in for: its 6Li alpha-tag fraction goes
+0.0264 (Hulthen) -> 0.0348 (VMC) at 10 x 99.5 on the Yellow Report
+high-acceptance envelope, and 0.2486 (VMC) against 0.2551 (Hulthen) at the
+tagging optics -- opposite directions at the two optics, which is why the
+band is quoted per optics and not as one factor
+(`/home/cpeng/Projects/polli/LiPolGen/README.md`, `--cluster-wave` row).
+
 `--isotope` (plans/09 B3) selects the species of PANEL (b) alone.  For 7Li
 the same scan is flat: the 7Li alpha is off rigidity at R = 0.856, so it
 is accepted by the Roman-Pot momentum window and never has to clear the
@@ -96,6 +125,15 @@ def coherent_acceptance(theta_x, p_ion, slope_b, theta_y):
 
 ALPHA_CHANNEL = {"6Li": sp.LI6_ALPHA_TAG, "7Li": sp.LI7_ALPHA_TAG}
 
+#: The plans/05 step 5.B wave-function band, and the central value every
+#: published number is at.  `--beta-band` opts into the first.
+BETA_CENTRAL = 0.30
+BETA_BAND = (0.20, 0.30, 0.40)
+#: line style of each band member in panel (b); the central one keeps the
+#: solid line the published figure has
+BETA_STYLE = {0.20: (":", 1.1, 0.75), 0.30: ("-", 1.6, 1.0),
+              0.40: ("--", 1.1, 0.75)}
+
 
 def alpha_acceptance(theta_x, theta_y, p_per_nucleon, channel=None,
                      n=200000, beta=0.30, seed=7, pot_config="18x275"):
@@ -144,8 +182,16 @@ def main():
                     help="species of the alpha-tag panel (b).  Panel (a), "
                          "the coherent intact-nucleus recoil, is 6Li at "
                          "either setting -- see the module docstring")
+    ap.add_argument("--beta-band", action="store_true", dest="beta_band",
+                    help="draw panel (b) over the plans/05 beta = "
+                         "0.20/0.30/0.40 wave-function band instead of at "
+                         "beta = 0.30 alone.  DEFAULT OFF, and the band "
+                         "run writes its own `_betaband` stem, so the "
+                         "published figure stays bit-for-bit.  The band is "
+                         "ONE-SIDED UPWARD -- see the module docstring")
     ap.add_argument("--outdir", default=".")
     args = ap.parse_args()
+    betas = BETA_BAND if args.beta_band else (BETA_CENTRAL,)
     outdir = pathlib.Path(args.outdir)
     outdir.mkdir(parents=True, exist_ok=True)
 
@@ -210,29 +256,58 @@ def main():
                         pts["tagging"] / max(pts["silicon"], 1e-300),
                         1.0 / top["lumi_fraction"]))
 
-        acc_a = alpha_acceptance(th, ty_a, pu_a, channel, n=args.n_spectator,
-                                 pot_config=key)
-        ax2.plot(1e3 * th, acc_a, "-", color=col, lw=1.6, label="%s" % name)
-        apts = {}
-        for akey, tx, mk, fill in (("silicon", meas_x, "o", "white"),
-                                   ("YR envelope", env_a_x, "s", col),
-                                   ("tagging", top_a["env_x"], "^", col)):
-            apts[akey] = alpha_acceptance(tx, ty_a, pu_a, channel,
-                                          n=args.n_spectator,
-                                          pot_config=key)[0]
-            ax2.plot([1e3 * tx], [apts[akey]], mk, color=col, ms=7, mfc=fill, mew=1.6)
-        lines.append("alpha %s %-9s silicon -> %.4f ; YR HA envelope -> %.4f (x%.3g) ; "
-                     "tagging optics -> %.4f (x%.3g at L/L_HA = 1/%.1f)"
-                     % (iso, name, apts["silicon"], apts["YR envelope"],
-                        apts["YR envelope"] / max(apts["silicon"], 1e-12),
-                        apts["tagging"], apts["tagging"] / max(apts["silicon"], 1e-12),
-                        1.0 / top_a["lumi_fraction"]))
+        # the beta band of panel (b).  With `--beta-band` off this loop
+        # runs once at BETA_CENTRAL and every call, style and printed line
+        # is what it was before the flag existed.
+        band_pts = {}
+        for beta in betas:
+            style, lw, alpha_l = BETA_STYLE[beta]
+            acc_a = alpha_acceptance(th, ty_a, pu_a, channel,
+                                     n=args.n_spectator, beta=beta,
+                                     pot_config=key)
+            ax2.plot(1e3 * th, acc_a, style, color=col, lw=lw,
+                     alpha=alpha_l,
+                     label=("%s" % name) if beta == BETA_CENTRAL
+                     else (r"%s, $\beta$ = %.2f" % (name, beta)))
+            apts = {}
+            for akey, tx, mk, fill in (("silicon", meas_x, "o", "white"),
+                                       ("YR envelope", env_a_x, "s", col),
+                                       ("tagging", top_a["env_x"], "^", col)):
+                apts[akey] = alpha_acceptance(tx, ty_a, pu_a, channel,
+                                              n=args.n_spectator, beta=beta,
+                                              pot_config=key)[0]
+                if beta == BETA_CENTRAL:
+                    ax2.plot([1e3 * tx], [apts[akey]], mk, color=col, ms=7,
+                             mfc=fill, mew=1.6)
+            band_pts[beta] = apts
+            suffix = "" if beta == BETA_CENTRAL else "  [beta = %.2f]" % beta
+            lines.append("alpha %s %-9s silicon -> %.4f ; YR HA envelope -> %.4f (x%.3g) ; "
+                         "tagging optics -> %.4f (x%.3g at L/L_HA = 1/%.1f)%s"
+                         % (iso, name, apts["silicon"], apts["YR envelope"],
+                            apts["YR envelope"] / max(apts["silicon"], 1e-12),
+                            apts["tagging"], apts["tagging"] / max(apts["silicon"], 1e-12),
+                            1.0 / top_a["lumi_fraction"], suffix))
+        if args.beta_band:
+            for akey in ("silicon", "YR envelope", "tagging"):
+                vals = [band_pts[b][akey] for b in betas]
+                lo, hi = min(vals), max(vals)
+                lines.append("  BAND alpha %s %-9s %-12s beta 0.20/0.30/0.40 "
+                             "-> %.4f / %.4f / %.4f ; span x%.2f (the band "
+                             "is one-sided in BETA -- the true scale is at "
+                             "or above 0.40, no beta reproducing BeAGLE's "
+                             "tail, 2026-08-26 e+d control -- so read the "
+                             "beta = 0.40 end, not the middle)"
+                             % (iso, name, akey, band_pts[0.20][akey],
+                                band_pts[0.30][akey], band_pts[0.40][akey],
+                                hi / lo if lo > 0 else float("nan")))
 
     for ax, ylab, title in (
             (ax1, "tagged fraction of the coherent recoil",
              "(a) coherent intact ⁶Li, exp(−B|t|), B = %g GeV$^{-2}$" % args.slope_b),
             (ax2, "%s α-tag, any far-forward system (routed)" % _SUP[iso],
-             "(b) %s α spectator, cluster model (β = 0.30)" % _SUP[iso])):
+             "(b) %s α spectator, cluster model (β = %s)"
+             % (_SUP[iso], "0.20/0.30/0.40 band" if args.beta_band
+                else "0.30"))):
         ax.set_xscale("log")
         # 7Li's alpha panel spans 0.96-0.99, not fourteen decades: a log
         # axis would render the whole B3 result as one flat line
@@ -255,7 +330,10 @@ def main():
                     "inside the momentum window and the aperture never "
                     "enters"), fontsize=9.5)
     fig.tight_layout()
-    out = outdir / ("nearbeam_aperture_%s.png" % iso)
+    # the band run never overwrites the published stem (the guard
+    # convention of money_tagged_azz.output_stem / fom.run_share_tag)
+    out = outdir / ("nearbeam_aperture_%s%s.png"
+                    % (iso, "_betaband" if args.beta_band else ""))
     fig.savefig(out, dpi=140)
     lines.append("wrote %s" % out)
     print("\n".join(lines))

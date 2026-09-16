@@ -24,6 +24,12 @@ spread bin by bin.  Delta is per nucleon with the 6Li counting dilution
 tensor RC unquantified (plans/06).
 
 Usage:  python3 scripts/money_delta_extraction.py
+        python3 scripts/money_delta_extraction.py --pzz-plus 0.6 --pzz-zero -1.2
+
+The second form reads the same super-bins with the two-fill spin-state
+ratio instead of the single-fill binned fit (money_cos2phi.py header;
+plans/07 WP3), which scales every dDelta by 0.67 and writes its own
+'_twofill' stem.
 """
 
 import argparse
@@ -41,12 +47,16 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 
 from money_cos2phi import (add_pdf_arg, add_tensor_leakage_args,  # noqa: E402
+                           add_two_fill_args,
                            b34_funcs, build_delta_model,
-                           check_tensor_leakage_args, describe_backends,
+                           check_tensor_leakage_args,
+                           check_two_fill_args, describe_backends,
                            leakage_amplitude,
-                           measure, output_stem_tag, pdf_backends,
+                           measure, measure_two_fill, output_stem_tag,
+                           pdf_backends,
                            pick_sweet_spots_banded, superbin_mask,
-                           truth_leakage_route)
+                           truth_leakage_route, two_fill_err_ratio,
+                           two_fill_plan, two_fill_pzz)
 
 from polligen import bookkeeping as bk  # noqa: E402
 from polligen.sample import InclusiveSampler  # noqa: E402
@@ -74,11 +84,13 @@ def main():
     ap.add_argument("--lumi-10yr", type=float, default=100.0)
     ap.add_argument("--pzz", type=float, default=0.60)
     add_pdf_arg(ap)
+    add_two_fill_args(ap)
     add_tensor_leakage_args(ap)
     ap.add_argument("--seed", type=int, default=20260811)
     ap.add_argument("--outdir", default=".")
     args = ap.parse_args()
     check_tensor_leakage_args(ap, args)
+    check_two_fill_args(ap, args)
 
     config = beams.default_configs("6Li")[args.config]
     lumi1_pb = args.lumi_1yr * 1e3
@@ -111,6 +123,19 @@ def main():
     cat = plan.categories[0]
     subtract = args.subtract_tensor_leakage != "none"
 
+    # the two-fill spin-state-sorted path (plans/07 WP3): same super-bins,
+    # same total luminosity, the ratio estimator in place of the
+    # single-fill binned fit
+    pzz_pair = two_fill_pzz(args)
+    two_fill = pzz_pair is not None
+    plan2 = two_fill_plan(pzz_pair) if two_fill else None
+
+    def do_measure(mask, lumi_pb):
+        if two_fill:
+            return measure_two_fill(sampler, plan2.categories, mask,
+                                    lumi_pb, pzz_pair, rng)
+        return measure(sampler, cat, mask, lumi_pb, plan.pzz_true, rng)
+
     alt = (dm.make("moment_B", variant=args.variant,
                    dilution=args.dilution)
            if args.delta_model != "moment_B" else
@@ -132,7 +157,7 @@ def main():
                                  q2s / 1.6, q2s * 1.6)
             if not mask.any():
                 continue
-            m1 = measure(sampler, cat, mask, lumi1_pb, plan.pzz_true, rng)
+            m1 = do_measure(mask, lumi1_pb)
             if m1["n"] < 1e3 or m1["err"] > 8e-3:
                 continue
             if subtract:
@@ -144,8 +169,7 @@ def main():
                 m1["truth"] -= leak
             if abs(m1["truth"]) < 1e-5:
                 continue
-            m10 = measure(sampler, cat, mask, lumi10_pb, plan.pzz_true,
-                          rng)
+            m10 = do_measure(mask, lumi10_pb)
             if subtract:
                 m10["amp"] -= leak
             # model bin-centering: K converts the bin-averaged amplitude
@@ -215,6 +239,12 @@ def main():
     fig.savefig(out, dpi=140)
     print("wrote", out)
     print("backend:", describe_backends(args, backends))
+    if two_fill:
+        print("estimator: two-fill spin-state ratio "
+              "(reco.harmonic_ratio_fit), P_zz = %+.3g / %+.3g at equal "
+              "luminosity; dA(two-fill)/dA(single-fill at P_zz = %.3g) "
+              "= %.4f" % (pzz_pair[0], pzz_pair[1], args.pzz,
+                          two_fill_err_ratio(args.pzz, pzz_pair)))
     print("delta model:", model.info())
     if args.tensor_gamma:
         print("tensor sector: EXACT finite-gamma kernel, b3 = %.3g b2, "

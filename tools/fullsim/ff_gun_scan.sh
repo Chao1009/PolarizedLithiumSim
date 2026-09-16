@@ -4,6 +4,19 @@
 # Shoots fragments along the ion axis (-25 mrad in x) with momenta chosen
 # so the rigidity ratio R (w.r.t. the 275-GeV-proton optics of the default
 # craterlake fields) matches the Li-fragment cases of plans/03 #2.2.
+#
+# THIS SCRIPT VARIES RIGIDITY, NOT THE PHASE-SPACE POINT.  Every config
+# below is shot at ONE direction and from the origin, so what it measures
+# is ROUTING -- which subsystem sees which fragment.  The scan that walks
+# the IP coordinates themselves is ff_transfer_scan.py (2026-09-15): the
+# angle x'/y' through the (p_T, phi) grid, the DISPLACEMENT x/y through a
+# HepMC3 vertex, and the rigidity through --delta, which between them fit
+# the full first-order transfer matrix R11/R12/R21/R22, R33/R34/R43/R44,
+# D and D'.  npsim's gun can do the angle (--gun.direction) but not the
+# vertex, which is why that scan feeds HepMC and this one does not.
+#
+# Read the output with ff_gun_hits.py; --b0-zdc prints the B0 and ZDC hit
+# positions that the counting table below reports only as a yes/no.
 set -uo pipefail
 OUT="${1:-/tmp/ff_gun}"; NEV="${2:-100}"
 mkdir -p "$OUT"

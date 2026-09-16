@@ -259,3 +259,155 @@ def test_acceptance_summary_forwards_the_pot_configuration():
         r = ff.route_charged(k["R"], k["theta"], k["pT"], cut, phi=k["phi"],
                              pot_config=key)
         assert right[label] == pytest.approx(float(np.mean(r == 6)))
+
+
+def test_the_second_row_of_the_pot_transfer_is_measured_and_symplectic():
+    """plans/03 2.2 (2), measured 2026-09-15.
+
+    Until this scan only the FIRST row of the IP6 -> Roman-Pot transfer
+    existed: R12, R34 and D are all `d(position at the pot)/d(something
+    at the IP)`.  `POT_SECOND_ROW` adds R11, R21, R22, D' and
+    `POT_SECOND_ROW_VERTICAL` adds R33, R43, R44, from the
+    `tools/fullsim/ff_transfer_scan.py` ladders through a zero-insertion
+    geometry.
+
+    The check that this is a MEASUREMENT and not four numbers is that the
+    2x2 blocks come out symplectic without having been fitted to be: a
+    linear transfer at fixed rigidity has determinant exactly 1, the
+    horizontal block is built out of R11/R21/R22 measured on the new legs
+    and R12 read off `POT_LEVERS` untouched, and the two halves close on
+    each other to 4 %.  Nothing above them moves -- the published triples
+    are asserted here bit-for-bit, because the whole addition is only
+    safe if they do not.
+    """
+    from polli_fastsim import farforward as ff
+
+    # (i) APPEND-ONLY.  The published levers are what they were.
+    assert ff.POT_LEVERS == {"5x41": (19.24, 4.56, 0.311),
+                             "10x100": (21.25, 3.35, 0.287),
+                             "18x275": (29.97, 2.93, 0.292)}
+    assert ff.POT_DISPERSION_2 == {"5x41": -0.190, "10x100": -0.206,
+                                   "18x275": -0.215}
+    assert (ff.POT_R12, ff.POT_R34, ff.POT_DISPERSION) == (29.97, 2.93, 0.292)
+
+    keys = ("5x41", "10x100", "18x275")
+    assert set(ff.POT_SECOND_ROW) == set(keys)
+    assert set(ff.POT_SECOND_ROW_VERTICAL) == set(keys)
+
+    for key in keys:
+        m = ff.pot_transfer_for(key)
+        # the first row IS POT_LEVERS, not a re-measurement of it
+        assert (m["R12"], m["R34"], m["D"]) == ff.POT_LEVERS[key]
+        assert m["D2"] == ff.POT_DISPERSION_2[key]
+        # (ii) SYMPLECTIC: |R| = 1 for a linear transfer at fixed rigidity
+        det_x = m["R11"] * m["R22"] - m["R12"] * m["R21"]
+        det_y = m["R33"] * m["R44"] - m["R34"] * m["R43"]
+        assert abs(det_x - 1.0) < 0.05, (key, det_x)
+        assert abs(det_y - 1.0) < 0.05, (key, det_y)
+
+    # (iii) the two physics facts the scan turned up, which are the
+    # reason the second row is not a formality.
+    # R22 CHANGES SIGN between 10 x 100 and 18 x 275: the horizontal
+    # phase advance to the pots crosses a node, so only at the top
+    # configuration is a positive IP angle still positive at the pot.
+    r22 = [ff.POT_SECOND_ROW[k][2] for k in keys]
+    assert r22[0] < 0 and r22[1] < 0 and r22[2] > 0
+    # R44 at 5 x 41 is ZERO to the measurement (0.0055 +- 0.0040): the
+    # vertical plane is point-to-parallel there and the outgoing angle
+    # carries no memory of the IP angle.  It is an order of magnitude
+    # below the other two.
+    r44 = [abs(ff.POT_SECOND_ROW_VERTICAL[k][2]) for k in keys]
+    assert r44[0] < 0.02
+    assert r44[0] < 0.2 * r44[1] < r44[2]
+    # D' is FLAT across a factor 6.7 in beam energy, where every other
+    # element moves by 2-4x
+    dp = [ff.POT_SECOND_ROW[k][3] for k in keys]
+    assert max(dp) / min(dp) < 1.10
+    # R11 and R21 move the OTHER way and monotonically: the point-to-point
+    # magnification grows with energy (1.15 -> 1.23 -> 1.85) while the
+    # angle a millimetre at the IP buys falls by 4x (84 -> 65 -> 21
+    # microrad/mm), which is the same stiffening R12/R34 shows
+    r11 = [ff.POT_SECOND_ROW[k][0] for k in keys]
+    r21 = [abs(ff.POT_SECOND_ROW[k][1]) for k in keys]
+    assert r11 == sorted(r11)
+    assert r21 == sorted(r21, reverse=True)
+    assert r21[0] / r21[2] > 3.0
+
+
+def test_the_pot_transfer_resolves_and_propagates_like_the_levers():
+    """`pot_transfer_for` takes what `pot_levers_for` takes -- a
+    BeamConfig of any species, a key, or a bare gamma-matched 6Li GeV/u
+    -- and `propagate_to_pot` is the first far-forward transport in this
+    repository that carries an ANGLE.  Its position row must reduce to
+    the published levers exactly, which is what keeps it from becoming a
+    second, disagreeing copy of `separation_at_pots`."""
+    import pytest
+    from polli_fastsim import beams
+    from polli_fastsim import farforward as ff
+
+    for pu, key in ((40.8, "5x41"), (99.5, "10x100"), (137.5, "18x275")):
+        assert ff.pot_transfer_for(pu) == ff.pot_transfer_for(key)
+    for cfg in beams.default_configs("6Li"):
+        assert ff.pot_transfer_for(cfg) == \
+            ff.pot_transfer_for(ff.yr_config_key(cfg))
+    for c6, c7 in zip(beams.default_configs("6Li"),
+                      beams.default_configs("7Li")):
+        assert ff.pot_transfer_for(c6) == ff.pot_transfer_for(c7)
+    # A BARE FLOAT is read as a 6Li GeV/u and nothing else, exactly as in
+    # `pot_levers_for`: 20.5 and 50 are the retired rigidity-scaled fill
+    # energies, and 117.9 is live but is 7Li's top setting -- pass the
+    # BeamConfig, not the number, and it resolves (asserted above).
+    for off_menu in (20.5, 50.0, 117.9):
+        with pytest.raises(KeyError):
+            ff.pot_transfer_for(off_menu)
+        with pytest.raises(KeyError):
+            ff.pot_levers_for(off_menu)
+
+    for key in ("5x41", "10x100", "18x275"):
+        r12, r34, d = ff.POT_LEVERS[key]
+        r11, r21, r22, dp = ff.POT_SECOND_ROW[key]
+        r33, r43, r44 = ff.POT_SECOND_ROW_VERTICAL[key]
+        # one unit at a time: each column of the matrix, read back
+        assert ff.propagate_to_pot(key, xp=1e-3) == \
+            pytest.approx((r12 * 1e-3, r22 * 1e-3, 0.0, 0.0))
+        assert ff.propagate_to_pot(key, x=1e-3) == \
+            pytest.approx((r11 * 1e-3, r21 * 1e-3, 0.0, 0.0))
+        assert ff.propagate_to_pot(key, yp=1e-3) == \
+            pytest.approx((0.0, 0.0, r34 * 1e-3, r44 * 1e-3))
+        assert ff.propagate_to_pot(key, y=1e-3) == \
+            pytest.approx((0.0, 0.0, r33 * 1e-3, r43 * 1e-3))
+        assert ff.propagate_to_pot(key, delta=0.01) == \
+            pytest.approx((d * 0.01, dp * 0.01, 0.0, 0.0))
+        # and the second-order dispersion is the SAME quadratic
+        # `over_rigid_route` uses, not a second fit
+        x2 = ff.propagate_to_pot(key, delta=0.2, second_order=True)[0]
+        assert x2 == pytest.approx(d * 0.2 + ff.POT_DISPERSION_2[key] * 0.04)
+
+    # the displacement row is not a rounding of the angle row: at
+    # 18 x 275 one millimetre at the IP is 1.85 mm at the pot and
+    # -21 microrad of outgoing angle, and the pot lever R12 turns that
+    # angle into nothing the position row already said
+    x, xp, _y, _yp = ff.propagate_to_pot("18x275", x=1e-3)
+    assert x == pytest.approx(1.852e-3)
+    assert xp == pytest.approx(-2.09e-5)
+
+
+def test_the_ip_to_b0_transport_is_a_pure_drift():
+    """The 6.0-20.0 mrad leg of the 2026-09-15 scan is the first ladder
+    in this repository to reach the B0 window at all, and what it found
+    is that IP6 -> B0 layer 1 is a DRIFT: dx/dtheta_x = 5.900 m and
+    dy/dtheta_y = 5.901 m at all three ring settings, to 0.02 %, and the
+    layer sits at z = 5896 mm.  A B0 hit therefore measures the IP angle
+    directly, with no per-configuration optics between -- which is why
+    `B0_DRIFT_M` is one number where `POT_LEVERS` needs three."""
+    import pytest
+    from polli_fastsim import farforward as ff
+
+    assert ff.B0_DRIFT_M == pytest.approx(ff.B0_LAYER_Z_MM[0] * 1e-3, rel=1e-3)
+    assert len(ff.B0_LAYER_Z_MM) == 4
+    assert ff.B0_LAYER_Z_MM == tuple(sorted(ff.B0_LAYER_Z_MM))
+    # the B0 window is where the routing already puts it, and the drift
+    # maps that window onto the tracker's own transverse size
+    assert 5.5e-3 == ff.THETA_B0_MIN and 20.0e-3 == ff.THETA_B0_MAX
+    assert 30.0 < ff.B0_DRIFT_M * ff.THETA_B0_MIN * 1e3 < 35.0
+    assert 115.0 < ff.B0_DRIFT_M * ff.THETA_B0_MAX * 1e3 < 120.0

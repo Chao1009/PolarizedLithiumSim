@@ -89,6 +89,57 @@ def measure_bin(resp, plan, mask, lumi_pb, rng, phi_eff, lumi_assumed):
                                 phi_eff=phi_eff, lumi_assumed=lumi_assumed)
 
 
+def _num_key(prefix, value):
+    """A filename-safe key for a numeric setting: 0.05 -> ymin0p05,
+    -0.05 -> eidtiltm0p05."""
+    return ("%s%g" % (prefix, float(value))).replace(".", "p").replace("-", "m")
+
+
+def reco_setting_keys(args):
+    """Filename keys for the settings that change what 5R and 7R measure
+    or what detector they are measured through, and that carried no key
+    before 2026-09-15: the beam configuration, the y method, the
+    reconstructed y floor, the Fermi switch, and the four detector
+    nuisances (electron energy scale, eps_eID eta tilt, the YR EMCal eta
+    table, the hadronic-y resolution of the Gaussian stand-in).
+
+    Every published 5R/7R number is the middle configuration
+    (e10 x 6Li99.5), the mixed (eSigma) method, y >= 0.01, no Fermi
+    smearing and every nuisance at its nominal value -- that is true of
+    the `--tag _hfscal` pair as well -- so at the defaults this returns []
+    and the published stems are untouched; the low-configuration and
+    electron-only panels of Report 2 5.1 write beside them.  Same guard as
+    `fom.run_share_tag` and `money_cos2phi.tensor_leakage_tag`, which the
+    caller appends after these.
+
+    What is deliberately NOT keyed: `--n-mc-per-cell` and `--seed`, which
+    move the Monte-Carlo noise and not the quantity drawn (the manual's
+    own quick-look command is `--n-mc-per-cell 60`), and the scan switches
+    that print tables without writing a figure."""
+    keys = []
+    if args.config != 1:
+        keys.append("cfg%d" % args.config)
+    if args.y_method != "mixed":
+        keys.append("eonly")
+    if abs(float(args.y_min) - 0.01) > 1e-12:
+        keys.append(_num_key("ymin", args.y_min))
+    if getattr(args, "fermi_smear", False):
+        keys.append("fermi" if abs(float(args.fermi_beta) - 0.30) < 1e-12
+                    else _num_key("fermib", args.fermi_beta))
+    # the detector nuisances: each of these moves the figure and each of
+    # them wrote the published stem until 2026-09-15 (review of the same
+    # day, the gap the three analysis keys above exposed)
+    if abs(float(args.e_scale) - 1.0) > 1e-12:
+        keys.append(_num_key("escale", args.e_scale))
+    if abs(float(args.eid_tilt)) > 1e-12:
+        keys.append(_num_key("eidtilt", args.eid_tilt))
+    if args.emcal_eta_table:
+        keys.append("emcaltab")
+    if abs(float(args.y_had_res) - 0.25) > 1e-12:
+        keys.append(_num_key("yhad", args.y_had_res))
+    return keys
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--config", type=int, default=1, choices=(0, 1, 2))
@@ -109,6 +160,14 @@ def main():
                          "which divides this measurement's own luminosity")
     ap.add_argument("--pzz", type=float, default=0.60)
     ap.add_argument("--y-method", default="mixed", choices=("mixed", "electron"))
+    ap.add_argument("--y-min", type=float, default=0.01, dest="y_min",
+                    help="reconstructed-level y floor of the analysis "
+                         "selection (default 0.01 = fom.Scenario, which "
+                         "every published 5R/7R number assumes).  The "
+                         "electron method alone is usable only above "
+                         "y ~ 0.05, so the e'-only panel of Report 2 5.1 "
+                         "raises this floor; a non-default value appends "
+                         "its own PNG key")
     ap.add_argument("--y-had-res", type=float, default=0.25,
                     help="hadronic-method dy/y: 0.25 = the ePIC kinematic-"
                          "fit study's smearing of delta_h and the ATHENA "
@@ -158,6 +217,22 @@ def main():
                     help="hadronic energy-scale calibration error "
                          "(--y-source hfs only): d ln x / d ln scale "
                          "= -(1 - y)")
+    ap.add_argument("--fermi-smear", action="store_true", dest="fermi_smear",
+                    help="give every pseudo-event's struck cluster an "
+                         "internal momentum drawn from the cluster momentum "
+                         "densities of polli_fastsim.spectator, so the "
+                         "vertex sits at ss = alpha s and the analysis, "
+                         "which has only the nominal per-nucleon beam, "
+                         "reports x_meas = alpha x_vertex (plans/03 2.3).  "
+                         "OFF by default -- every published number is on "
+                         "the collinear nominal-beam path -- and a run with "
+                         "it on writes its own PNG stem")
+    ap.add_argument("--fermi-beta", type=float, default=0.30,
+                    dest="fermi_beta",
+                    help="short-range scale of the cluster momentum "
+                         "density [GeV] (default 0.30; the 0.20-0.40 scan "
+                         "spans the high-k tail uncertainty, which is the "
+                         "dominant model error on anything read off it)")
     ap.add_argument("--eid-tilt", type=float, default=0.0,
                     help="linear eta slope on eps_eID.  A FLAT eps_eID "
                          "error is identically null in the ratio; only a "
@@ -249,7 +324,8 @@ def main():
     rng = np.random.default_rng(args.seed)
     analysis = fom.Scenario(lumi_fb_per_nucleon=args.lumi_1yr,
                             run_share=args.lumi_fraction,
-                            pol_ion_tensor=args.pzz)
+                            pol_ion_tensor=args.pzz,
+                            y_min=args.y_min)
     print("run plan: programme %g / %g fb^-1/u (1 yr / 10 yr) x share %g "
           "-> %g / %g fb^-1/u delivered to this observable; spin-state "
           "share 0.5 / 0.5 within it"
@@ -293,6 +369,8 @@ def main():
                           y_had_res=args.y_had_res, e_scale=args.e_scale,
                           eid_tilt=args.eid_tilt,
                           emcal_eta_table=args.emcal_eta_table,
+                          fermi_smear=args.fermi_smear,
+                          fermi_beta=args.fermi_beta,
                           q2_min=analysis.q2_min, y_min=analysis.y_min,
                           y_max=analysis.y_max, w2_min=analysis.w2_min,
                           eta_min=analysis.eta_min, eta_max=analysis.eta_max,
@@ -315,10 +393,26 @@ def main():
               % (src, args.hfs_method.upper(), hresp.describe(), lib.coverage()))
     resp = rp.RecoResponse(sampler, rmodel, n_mc_per_cell=args.n_mc_per_cell,
                            rng=rng, hfs=hfs_resp)
+    if args.fermi_smear:
+        k, a = resp.fermi_k, resp.fermi_alpha_drawn
+        m1, m2 = reco.fermi_k_moments(config.ion.A, config.ion.Z,
+                                      beta=args.fermi_beta)
+        print("Fermi motion ON (beta = %.2f GeV): drawn |k| mean %.5f GeV, "
+              "rms %.5f, against the density's %.5f and %.5f "
+              "(%.2f%% and %.2f%%); alpha = %.5f +- %.5f over %d "
+              "pseudo-events"
+              % (args.fermi_beta, k.mean(), np.sqrt((k ** 2).mean()), m1, m2,
+                 100.0 * (k.mean() / m1 - 1.0),
+                 100.0 * (np.sqrt((k ** 2).mean()) / m2 - 1.0),
+                 a.mean(), a.std(), a.size))
+        print("  %.3f%% of the pseudo-events fall at y > 1 at their own "
+              "alpha and carry no rate" % (100.0 * resp.fermi_reject,))
     suffix = (args.tag if args.tag is not None
               else ("_hfs" if args.y_source == "hfs" else ""))
-    # published PNGs are the --lumi-fraction 1 ones on the massless path
-    # with no subtraction: a non-default run share, and any of the
+    # published PNGs are the middle-configuration, mixed-method,
+    # y >= 0.01, --lumi-fraction 1 ones on the massless path with no
+    # subtraction: the three analysis settings of reco_setting_keys, a
+    # non-default run share, and any of the
     # tensor-leakage switches, append their key rather than overwriting
     # them (the same guard as money_tagged_azz.output_stem).  The keys ride
     # on a USER --tag too: the switches change the physics of the figure,
@@ -326,6 +420,8 @@ def main():
     # command passes --tag _hfscal, so a tag that swallowed them would put
     # exact-kernel, leakage-subtracted content under a published stem
     # (code review 2026-09-06).
+    for key in reco_setting_keys(args):
+        suffix = "%s_%s" % (suffix, key)
     share_key = fom.run_share_tag(args.lumi_fraction)
     if share_key:
         suffix = "%s_%s" % (suffix, share_key)

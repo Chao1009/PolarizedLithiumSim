@@ -4,7 +4,10 @@ detailed money plots bin them.
 
 Two (x, Q2) event-rate maps on the 40x30 log-log analysis grid at the
 1-year EIC program (10 fb^-1/u), with every bin used by the detailed
-cos 2phi / Delta plots drawn on top:
+cos 2phi / Delta plots drawn on top.  `--binning yr` runs the same two
+maps on the Yellow-Report five-bins-per-decade lattice instead (20 x 17,
+beams.YR_GRID; plans/02 Step 1.1 item 3) and writes its own '_yr' stem;
+the published figure is the 40 x 30 one.
 
 * LEFT -- inclusive DIS (scattered-electron acceptance applied): the
   rate map behind money plots 5/7.  Overlaid: the four sweet-spot
@@ -29,6 +32,7 @@ expected.  Conventions as everywhere else: per-nucleon luminosity, whole
 luminosity in the transverse-tensor fill, TOY structure functions.
 
 Usage:  python3 scripts/phase_space_bins.py
+        python3 scripts/phase_space_bins.py --binning yr
 """
 
 import argparse
@@ -49,7 +53,8 @@ from matplotlib.colors import LogNorm  # noqa: E402
 from matplotlib.lines import Line2D  # noqa: E402
 from matplotlib.patches import Rectangle  # noqa: E402
 
-from money_cos2phi import (add_pdf_arg, build_delta_model,  # noqa: E402
+from money_cos2phi import (add_binning_arg, add_pdf_arg,  # noqa: E402
+                           build_delta_model,
                            describe_backends, measure, output_stem_tag,
                            pdf_backends, pick_sweet_spots_banded,
                            superbin_edges, superbin_mask)
@@ -147,6 +152,7 @@ def main():
                     help="1-year EIC program [fb^-1/nucleon]")
     ap.add_argument("--pzz", type=float, default=0.60)
     add_pdf_arg(ap)
+    add_binning_arg(ap)
     ap.add_argument("--seed", type=int, default=20260817)
     ap.add_argument("--outdir", default=".")
     args = ap.parse_args()
@@ -157,7 +163,12 @@ def main():
 
     scenario = fom.Scenario(lumi_fb_per_nucleon=args.lumi_1yr,
                             pol_ion_tensor=args.pzz)
+    grid = beams.analysis_grid(args.binning)
     backends = pdf_backends(args, config.ion)
+    # the Delta model is built on the PUBLISHED grid whatever --binning
+    # asks for: its <Q2> is a property of the accepted phase space, not of
+    # the analysis binning, and holding it fixed is what makes the drift
+    # below a pure binning drift
     model, _q2_ref = build_delta_model(args, config, scenario,
                                        backends=backends)
     kern = InclusiveKernel(config.ion, b1_func=toy_b1, delta_func=model,
@@ -168,7 +179,7 @@ def main():
 
     # --- inclusive: rate map + the money-plot 5/7 bins -------------------
     proj = fom.project_rates(config, scenario,
-                             nuclear_f2=backends["nuclear"])
+                             nuclear_f2=backends["nuclear"], **grid)
     obs = fom.project_observables(config, scenario, proj,
                                   kern.g1_model, toy_b1, model)
     spots = pick_sweet_spots_banded(proj, obs["sig_a_cos2phi"])[:4]
@@ -204,7 +215,7 @@ def main():
     sc = coh.CoherentScenario()
     proj_c, n_coh, tagged = coh.project_coherent(
         config, scenario, sc, optics_list=(HIGH_ACCEPTANCE,),
-        nuclear_f2=backends["nuclear"])
+        nuclear_f2=backends["nuclear"], **grid)
     n_tag = tagged[HIGH_ACCEPTANCE.name]
     sel, txlo, txhi, tq2lo, tq2hi = best_superbin(proj_c, n_tag)
 
@@ -275,24 +286,34 @@ def main():
 
     fig.suptitle(
         r"$(x, Q^2)$ phase space and analysis binning — %s, 1-year EIC "
-        r"program (%g fb$^{-1}$/u), $40\times30$ log-log grid"
+        r"program (%g fb$^{-1}$/u), $%d\times%d$ %s grid"
         "\n"
         r"color: expected events per bin where $\geq 1$; $e'$ cuts "
         r"$|\eta|\leq%.1f$, $E'\geq%.1f$ GeV, $%.2f\leq y\leq%.2f$, "
         r"$W^2\geq%.0f$ GeV$^2$"
-        % (config.label(), args.lumi_1yr, scenario.eta_max,
+        % (config.label(), args.lumi_1yr, grid["nx"], grid["nq2"],
+           "log-log" if args.binning != "yr"
+           else r"Yellow-Report (5 bins/decade) log-log",
+           scenario.eta_max,
            scenario.e_prime_min, scenario.y_min, scenario.y_max,
            scenario.w2_min), fontsize=10)
     fig.tight_layout(rect=(0, 0, 1, 0.92))
     outdir = pathlib.Path(args.outdir)
     outdir.mkdir(parents=True, exist_ok=True)
-    # a non-default backend writes its own stem
+    # a non-default backend or binning writes its own stem
     tag = output_stem_tag(args)
     out = outdir / ("phase_space_bins_6Li%s.png" % ("_" + tag if tag else ""))
     fig.savefig(out, dpi=140)
     print("wrote", out)
 
     print("backend:", describe_backends(args, backends))
+    print("binning: %s -- %d x %d, %.3g x %.3g bins/decade in (x, Q2), "
+          "x [%.3g, %.3g], Q2 [%.3g, %.3g]"
+          % (args.binning, grid["nx"], grid["nq2"],
+             beams.bins_per_decade(proj.x_edges),
+             beams.bins_per_decade(proj.q2_edges),
+             grid["x_range"][0], grid["x_range"][1],
+             grid["q2_range"][0], grid["q2_range"][1]))
     print("N_DIS (1 yr) = %.3e   N_coh = %.3e   N_tag (HA) = %.3e"
           % (proj.n_events.sum(), n_coh.sum(), n_tag.sum()))
     for k, (xs, qs, i, j) in enumerate(spots):

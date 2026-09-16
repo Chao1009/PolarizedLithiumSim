@@ -486,8 +486,17 @@ def script_of_figure(rel):
     stem = pathlib.Path(rel).stem
     bare = stem.replace("_6Li", "").replace("_7Li", "")
     cands = [stem, bare]
-    if re.sub(r"_[a-z0-9]+$", "", bare) != bare:
-        cands.append(re.sub(r"_[a-z0-9]+$", "", bare))
+    # a stem can carry MORE THAN ONE setting key
+    # (money_cos2phi_reco_6Li_eonly_ymin0p05), so strip them repeatedly
+    # rather than once: resolving to None makes both staleness checks
+    # below skip the figure instead of guarding it.
+    trimmed = bare
+    while True:
+        shorter = re.sub(r"_[a-z0-9]+$", "", trimmed)
+        if shorter == trimmed:
+            break
+        cands.append(shorter)
+        trimmed = shorter
     bodies = _script_bodies()
     found = None
     for cand in cands:

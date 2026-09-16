@@ -57,7 +57,16 @@ brings to the EIC, in support of the ANL polarized ⁶,⁷Li ion-source program
 5. **Calendar anchor**: INT program on polarized ion beams at EIC,
    March 22 – April 2, 2027 — target for Phase-1 money plots.
 
-## Development run 19 (2026-09-15): the i^L phase of the tagged partial-wave amplitude, the AV18 control, and what money plot 4 reads now
+## Development run 19 (2026-09-15): the i^L phase of the tagged partial-wave amplitude, the AV18 control, what money plot 4 reads now, and fourteen items of the closable ledger
+
+Three commits (1066555, df32780, and the close-out), one day, three
+workflows and forty-odd agents.  The first half of the run is one sign; the
+second half is the ledger run 18 left — seven items landed from isolated
+worktrees as reviewed patches, five more in the main tree afterwards, with
+one integrator for the shared documents and a final verification of each
+half.  The sibling generator LiPolGen (`../LiPolGen`, the C++ port of
+`polligen`, under active development) is where the sign came from, and it
+is now the disposition of three plans/05 steps (below).
 
 One sign, inside the wave function rather than in the cross section.
 `TaggedModel._amp2_table` summed the cluster partial waves as ψ_L(k) where
@@ -159,17 +168,170 @@ Working record under the session scratchpad `run19/` (RESULTS.md per agent).
   tagging-optics sample below the lower one.  The headline k = 0.325 GeV/c
   bin is inside it.  Said where the model is defined (next to `P_D_LI6`),
   in Report 4 §2.1, in `plans/04` #15 and in `plans/05`.
+- ☑ **The closable ledger, first seven of the thirty-one** (df32780), each
+  implemented in its own git worktree at 2a27972, reviewed and repaired
+  there by a second agent, and merged as a patch on top of the sign fix;
+  every published stem stayed bit-for-bit, verified by regenerating every
+  registered figure at its published command after the merge.
+  - plans/07 WP1 — `NuclearF2FromGrid` is in `polli_fastsim.structure`
+    behind the `NuclearF2` signature, `inputs.get_backends(pdf, nuclear,
+    r_func)`, and money plots 5/6/7 and `phase_space_bins.py` take `--pdf
+    {toy,grid}` (the `--backend grid` the plan asked for never existed).
+    The drift table is in plans/07: the nuclear grid is an almost
+    x-independent ×0.83 that the re-solved bag amplitude absorbs (F₂ alone
+    0.829–0.831 on all four spots), R1998 is the x-dependent half
+    (0.855 / 0.848 / 0.936 / 1.046, the reciprocals of the ☑ R row's
+    +16.6 / +18.0 / +4.7 / −4.4%), and the rate is what moves — N_DIS
+    ×0.766, N_coh and N_tag ×0.697, the four significances 42.9 / 30.6 /
+    34.5 / 21.3σ → 27.7 / 18.4 / 27.1 / 19.4σ; LiPolGen's own selector
+    measures ×0.7985 / ×0.7934 on the accepted σ, within 4%.  The headline
+    is the Q₀ floor: EPPS21nlo_CT18Anlo_Li6 starts at Q² = 1.69 GeV², two
+    of the four published sweet spots and the whole coherent best super-bin
+    sit below it, and the grid column there is a frozen-Q₀ continuation
+    (8.7% of the accepted cells, 36.3% of the one-year rate).  Which column
+    leads §7.1 is plans/04 #25.
+  - plans/07 WP5 — `coherent.tag_acceptance` / `mean_t_tagged` /
+    `tag_acceptance_angular` take `t_min` and `a2_tagged` a `rate_weighted`
+    switch; the 2026-08-10 audit note is a test (exp(−B t_min) to 10⁻¹²,
+    the −14% at x_P = 0.01).  The suppression runs −2.5 … −47% across the
+    coherent window, so no scalar can be the central curve until a
+    diffractive model supplies an x_P spectrum: plans/04 #26.
+  - plans/05 §5.5 — `fom.Scenario.dilution` and `.acceptance` (1.0 by
+    default, refused at ≤ 0) divide all three δA paths, so the measured φ
+    dilution and the β band reach the analytic layer as numbers; the
+    one-way import discipline is asserted by an AST scan.
+  - plans/07 WP2 — the P_zz half of the δA scaling table
+    (`fastsim/scripts/wp2_pzz_table.py`): δA against 1/(P_zz √(fN)) at
+    1.000 in every cell.
+  - plans/03 §2.5 — the RECO campaign subtree listed live from the eic
+    container (`tools/analysis/list_campaign_tree.py`, dated 2026-09-15):
+    the three infrastructure claims are cited with their paths; no Li
+    compact exists; the BeAGLE e+d and e+³He RECO directories of 25.12.0
+    are empty.
+  - plans/02 §1.2 — Wang et al. Fig. 3 digitized, both panels
+    (`wbct_emc_nm_Q5.csv`, `wbct_polemc_nm_Q5.csv`): the polarized gluon
+    EMC trough 0.795 against 0.855 unpolarized; the step is ticked, its
+    residue the missing ⁷Li nuclear grid (external).  The sweep's CSV
+    dependency rule now names the tables `polarized.py` reads.
+  - plans/02 §1.3 — `money_delta.py --cl-band`, the 95% CL exclusion
+    contour re-solved from the per-bin σ² (L₉₅ = (1.645/5)² L₅σ to five
+    digits; the min-events floor grazes at 1.1 × 10⁻⁵), on its own stem;
+    the E12-14-001 overlay stays external.
+  - plans/05 §5.C — `polligen/reweight.py`, the Mode-W reweighter: the
+    kernel's (w_avg, a₁, a₂) at each external event's (x, Q², φ), exact to
+    4 × 10⁻¹⁶ against the density ratio; injected and recovered on the
+    official BeAGLE e+d 9 × 130 sample (20 000 events streamed through the
+    container) with pull means +0.005 / −0.040 and widths 0.992 / 1.007
+    over 1000 pseudo-experiments; 16 tests.  The reco-level half waits on a
+    HepMC3 writer.
+- ☑ **Five more, in the main tree** (this commit), each group with its own
+  files, then one integrator for the shared ones and a final verification
+  that re-ran every documented command.
+  - Tagged (plans/05 §5.4, §5.E, §5.B): the ⁷Li forward-limit row asserts
+    both halves and states the convention — the model's whole-nucleus
+    neutron polarization is −0.056 (per nucleon −0.014) against the ab
+    initio −0.037, a known α+t-versus-VMC difference recorded as a gap, not
+    a band; the triton target's −0.028 is per nucleon, the isospin mirror of
+    Bissey's ³He, so LiPolGen's "convention conflict" is its misreading.
+    `fastsim/scripts/tagged_fom_table.py` is step 5.E's ε × D table, one row
+    per channel, both purity columns deliberately empty (FLUKA-gated), the
+    ⁶Li dilution ⅓ × 0.921949 = 0.3073 asserted against
+    `b1_li6_from_deuteron`.  `--beta-band` (default off, own stems) exists
+    at the three call sites that carry a β — the fourth of the old box,
+    `nearbeam_reach_gain.py`, carries none — and Reports 3 and 4 no longer
+    publish the ⁶Li α tag bare: the band is one-sided upward, the β span
+    ×1.45 at 10 × 99.5, with LiPolGen's VMC α+d shift (0.0264 → 0.0348 at
+    the Yellow Report optics, 0.2551 → 0.2486 at the tagging one, opposite
+    directions) quoted as the independent evidence.  Steps 5.D and 5.E are
+    dispositioned: the HepMC3 writer, the ion-spin attribute convention
+    (plans/04 #17) and the abconv → npsim chain gate are delivered by
+    LiPolGen and will not be duplicated here; the EICrecon leg is open on
+    both sides.
+  - Money plots (plans/07 WP3, plans/02 §1.1): the three truth-level
+    drivers gained the two-fill footing behind `--pzz-plus/--pzz-zero`
+    (own stems; δÂ(two-fill)/δÂ(single) = 0.6668 = 2/3, as the published
+    estimator says); `beams.YR_GRID` is the Yellow Report inclusive lattice
+    (5 bins/decade, 20 × 17) behind `--binning {log40x30,yr}` on
+    `phase_space_bins.py` and `coverage_and_stat_maps.py`, priced in
+    plans/07 (accepted cells 461 → 124, N_DIS ×1.008, N_tag ×0.957); the
+    `eps_b0` scenario docstring and Report 1 §6.3 carry the arithmetic fact
+    that −0.08 is 11.6× the charge quadrupole (plans/04 #27).  Which footing
+    the paper quotes (#25 and A5) and which grid the published figures run
+    (A6) are the author's.
+  - Reconstructed level (plans/03 §2.3, §2.4; plans/07 WP3): before this
+    run six different flags of `money_cos2phi_reco.py` all wrote the
+    published bare stem — every setting that changes what 5R/7R measure now
+    carries a filename key (`cfg0`, `eonly`, `ymin…`, `fermi`, the four
+    detector nuisances), the most consequential correctness fix of the
+    half; Report 2 §5.1 grew the x ≈ 0.1 configuration and the e′-only
+    panels; `money_azz_reco.py` publishes reco-level A_zz and A_∥ with a
+    δP/P polarimetry band (`RunPlan.delta_p_over_p` reaches a money plot at
+    last); `reco.py`/`recopseudo.py` gained Fermi-momentum smearing
+    (default off, bit-for-bit guarded).  The Yellow Report has no (x, Q²)
+    electron-ID axis to digitize — evidenced (Table 11.29, Figs. 8.4,
+    11.48–49), so ε_eID stays η-only.  24 tests.
+  - Far-forward (plans/03 §2.0, §2.2): the first reconstructed lithium run
+    in the tree — the literal step-2.0 command in the nightly container
+    (npsim 1.8.0, EICrecon git.77d0cef8, epic 9aaa2969; 100 ⁶Li events,
+    6 min 10 s + 47 s, 1335 collections) and two traps the runbook did not
+    know: `eicrecon` does not inherit npsim's compact file, and EICrecon
+    returns nothing for a lithium ion.  `tools/fullsim/ff_transfer_scan.py`
+    measured the second row of the IP → pot transfer (R₁₁, R₂₁, R₂₂, D′) at
+    all three configurations with two closures, extended to B0 and the ZDC;
+    `farforward.py` gained the angle row without changing a published
+    number.  The 18 × 275 D₂ read −0.311 over |δ| ≤ 0.15 against the carried
+    −0.215 fitted over a wider range — a fitted-range difference (A4).
+  - Dispositions (plans/04): #15 records that the VMC α+d and α+t overlaps
+    are in hand in LiPolGen and that the β band brackets the VMC density at
+    neither end; #17 is answered by LiPolGen's `HEPMC3_CONVENTION.md`;
+    #25–#29 are the five author decisions this run's measurements opened
+    (the §7.1 column under the Q₀ floor, the coherent fold as central,
+    the coherent 8–11σ over the charge-sector band, Report 0's polarized-EMC
+    reach re-led with the grid leg — the toy g₁ⁿ carries the wrong sign over
+    ≈ 0.25 < x < 0.6 against NNPDFpol1.1, now said wherever the toy leg is
+    quoted — and the ⁶Li α-tag pair as a VMC band); `phase_space_map.py`
+    joined the `--pdf` scripts.
+- ☑ **For the LiPolGen side**, read back rather than edited there: its
+  `needs_survey.md` §6 still calls the tensor sign and the ⁶Li effective
+  polarization open author decisions here (both closed since 2026-08-29);
+  its `HfsModel` citation names a class that does not exist (the object is
+  `polligen.hfs.HadronResponse`); its "convention conflict" on the
+  ³He/triton polarizations is a misreading of a per-nucleon convention; and
+  its ⁷Li β-band moments were right — the three prose sites here that
+  quoted S-wave numbers as P-wave are corrected (0.2362 / 0.3059 / 0.3717
+  GeV/c and 0.2209 / 0.3630 / 0.4803, a factor 2.17 rather than 3.6).
 - ☐ **Left**: the α–d D sign itself, which only a VMC α+d overlap with
   m-dependence can settle (plans/04 #15, now the sharper half of that ask);
-  the author's D10 (the `tensor_gamma` default) and plans/04 #24 (the ×1.75
-  and the 30–60×), both carried over from run 18; the ⁷Li theory asks, the
-  lattice confirmation and the de-squeezed R₁₂, still external.
+  the author's D10 (the `tensor_gamma` default), plans/04 #24 (the ×1.75
+  and the 30–60×) and the new #25–#29; the smaller author calls of this
+  half — plans/03 §2.2 (2)'s glyph (A1), whether a report carries the
+  second-row transfer matrix and the EICrecon blocker (A2), whether the
+  routing functions use the angle row (A3), the D₂ re-anchor (A4), which
+  binning the published figures run (A6), the "(21–44σ)" in a superseded
+  plans/07 paragraph (A7), and the purity ≳ 0.8 gate (plans/02 §1.6); of
+  the ledger, the §7.1 union re-quote (T05, behind #25), the HepMC3 writer
+  (delivered by LiPolGen, not duplicated), the reco-level Mode-W closure it
+  gates, and the letter block (`paper/`, ≈ 60 h); the ⁷Li theory asks, the
+  lattice confirmation, the de-squeezed R₁₂ and EICrecon's lithium
+  reconstruction, external.  Four dated plan notes were restated in place
+  rather than appended to (plans/02 §1.1, plans/04's header, plans/05's
+  β-band box and ⁷Li row); each restatement carries the earlier text and
+  its date, and the originals are in the history of df32780.  One test is
+  intermittent: `test_recopseudo.py::test_fermi_smear_default_is_off_and_bit_for_bit`
+  failed in two of eighteen full-suite runs on 2026-09-15, both while the
+  machine carried a second heavy session, and passed twelve times alone,
+  within its file, in four further full runs and in three suites run
+  concurrently; no unseeded generator, pool or clock is in its path, and
+  no traceback was captured — the next failure should be kept.
 
-Tests: 121 fastsim + 336 evgen, 53 consistency checks (51 in the default
-sweep; the two that re-execute the producing scripts run with `--full`).
-Every registered figure was regenerated at its published command after the
-module edits; the two that moved are money plot 4, on the sign, and the b₁
-money plot, on the 7th digit of the transfer.
+Tests: 141 fastsim + 407 evgen (one skipped without the cached BeAGLE
+dump), 53 consistency checks (51 in the default sweep; the two that
+re-execute the producing scripts run with `--full`).  Every registered
+figure was regenerated at its published command after each half's module
+edits; the two that moved are money plot 4, on the sign, and the b₁ money
+plot, on the 7th digit of the transfer.  The sign fix agrees with
+LiPolGen's independently corrected C++ reference tables at 2 × 10⁻¹³ on
+every spin-1 tagged quantity, ⁷Li exactly.
 
 ## Development run 18 (2026-09-06): the open items — the sourcing pass, two author questions answered, the tensor-leakage subtraction, the open-box audit
 

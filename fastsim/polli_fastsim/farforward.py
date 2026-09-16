@@ -487,6 +487,93 @@ THETA_RP_OUTER_MEASURED = {"5x41": 2.85e-3, "10x100": 3.85e-3,
 #: positions of the September-2024 one.
 POT_R12, POT_R34, POT_DISPERSION = POT_LEVERS["18x275"]
 
+#: THE SECOND ROW OF THE TRANSFER MATRIX, measured 2026-09-15.
+#:
+#: Everything above is the FIRST row of the IP6 -> Roman-Pot transfer:
+#: R12, R34 and D are all `d(position at the pot)/d(something at the
+#: IP)`.  Writing the ion line to one pot plane in the usual form,
+#:
+#:     x_pot   =  R11 x_IP + R12 x'_IP + D  delta
+#:     x'_pot  =  R21 x_IP + R22 x'_IP + D' delta
+#:
+#: what was never measured was anything needing a DISPLACEMENT at the IP
+#: (R11, R21) or an ANGLE at the pot (R21, R22, D').  `POT_SECOND_ROW` is
+#: (R11, R21 [rad/m], R22, D' [rad]) and `POT_SECOND_ROW_VERTICAL` is
+#: (R33, R43 [rad/m], R44), at station 1 layer 1 -- the plane R12, R34
+#: and D are quoted at.
+#:
+#: HOW.  `tools/fullsim/ff_transfer_scan.py`, the same 6Li at each ring's
+#: reference rigidity and the same Theil-Sen-then-least-squares fit the
+#: published levers use, with two things August did not have.  The IP
+#: displacement: `ion_gun_hepmc.py` now writes a HepMC3 vertex, so
+#: (x0, y0) at the IP is a scan coordinate like (p_T, phi).  The angle at
+#: the pot: `ForwardRomanPotHits` is a SimTrackerHit collection and
+#: carries `momentum` as well as `position`, so x'_pot is READ at
+#: station 1 rather than differenced between stations -- and the same
+#: branch identifies the primary (|p| > 0.5 p_beam), which is a cleaner
+#: cut than the hit-count one the position-only fits needed.
+#:
+#: THROUGH A ZERO-INSERTION GEOMETRY (`tools/fullsim/ff_zero_insertion.sh`,
+#: the recipe the 5 x 41 vertical lever was read off on 2026-08-29): a
+#: transfer matrix is a property of the magnets, and the per-energy
+#: insertion holds the silicon 16 / 32 / 48 mm off the axis horizontally,
+#: so an ion at theta = 0 with a millimetre of IP offset is never seen.
+#: Every field is untouched.
+#:
+#: WHAT MAKES IT A MEASUREMENT.  Two independent closures, both printed
+#: by the script.  (i) The three PUBLISHED levers come out of the same
+#: files as controls and reproduce POT_LEVERS: R12 19.186 / 21.341 /
+#: 29.961 m against 19.24 / 21.25 / 29.97 (0.3 / 0.4 / 0.03 %), R34
+#: 4.617 / 3.255 / 3.081 against 4.56 / 3.35 / 2.93 (1.3 / 2.8 / 5.2 %),
+#: D 0.2845 / 0.2818 / 0.2875 m against 0.311 / 0.287 / 0.292 -- the
+#: 5 x 41 D is the one 8 % outlier and it is the expected one, the
+#: published number there being a STATION-2 fit (see POT_DISPERSION_2).
+#: (ii) The 2x2 blocks are SYMPLECTIC without having been fitted to be:
+#: R11 R22 - R12 R21 = 1.038 / 1.013 / 0.985 and R33 R44 - R34 R43 =
+#: 0.986 / 0.978 / 1.006, against the exact 1 a linear transfer at fixed
+#: rigidity must give.  The four new horizontal numbers carry 0.8-4.5 %
+#: standard errors on their slopes at every configuration.
+#:
+#: WHAT THE NUMBERS SAY.  R22 CHANGES SIGN between 10 x 100 and 18 x 275
+#: (-0.496, -0.306, +0.194): the horizontal phase advance to the pots
+#: crosses a node as the energy rises, so the top configuration is the
+#: only one where a positive angle at the IP is still a positive angle at
+#: the pot.  R44 at 5 x 41 is 0.0055 +- 0.0040, i.e. ZERO to the
+#: measurement -- the vertical plane there is point-to-parallel at the
+#: pots, and the outgoing vertical angle carries no memory of the IP
+#: angle at all.  D' is 0.0175-0.0182 rad across a factor 6.7 in beam
+#: energy, flat where every other element moves by 2-4x.
+#:
+#: NOTHING ABOVE MOVES.  These are new names; POT_LEVERS,
+#: POT_DISPERSION_2 and the scalar aliases are untouched, so every
+#: published figure and every acceptance number is bit-for-bit what it
+#: was.  The controls are what the new files say about the old numbers,
+#: not a re-measurement of them.
+POT_SECOND_ROW = {
+    "5x41":   (1.148, -0.0837, -0.4955, 0.0175),
+    "10x100": (1.227, -0.0651, -0.3060, 0.0179),
+    "18x275": (1.852, -0.0209,  0.1944, 0.0182),
+}
+
+#: (R33, R43 [rad/m], R44) at station 1 layer 1; see POT_SECOND_ROW.
+POT_SECOND_ROW_VERTICAL = {
+    "5x41":   (-4.199, -0.2186,  0.0055),
+    "10x100": (-3.711, -0.2028, -0.0856),
+    "18x275": (-3.031, -0.1778, -0.1512),
+}
+
+#: IP6 -> B0 tracker layer 1, measured on the same scan (the 6.0-20.0
+#: mrad leg, which is the first ladder in this repository to reach the
+#: B0 window at all).  dx/dtheta_x = 5.900 m and dy/dtheta_y = 5.901 m
+#: at ALL THREE configurations, to 0.02 % -- and the layer sits at
+#: z = 5896 mm.  The lever IS the distance: between IP6 and the first B0
+#: plane the ion line is a pure drift, the same at every ring setting,
+#: which is why a B0 hit measures the IP angle directly and needs no
+#: per-configuration optics.  (The B0 layers are at z = 5896, 6166, 6436
+#: and 6706 mm.)
+B0_DRIFT_M = 5.900
+B0_LAYER_Z_MM = (5896.0, 6166.0, 6436.0, 6706.0)
+
 
 def pot_levers_for(config):
     """(R12, R34, D) at a machine configuration.
@@ -511,6 +598,75 @@ def pot_levers_for(config):
     raise KeyError("no measured pot levers at %s GeV/u; the scan covers "
                    "the three 6Li configurations only "
                    "(tools/fullsim, plans/09 B1)" % config)
+
+
+def _config_key(config, what):
+    """The configuration key of a BeamConfig, a key, or a 6Li GeV/u.
+
+    The resolution `pot_levers_for` and `theta_rp_outer_for` have used
+    since 2026-08-28, written out once when the transfer-matrix tables
+    arrived so that the new lookups resolve a beam the same way.  Those
+    two keep their own copies: their KeyError text is asserted on, and
+    nothing about them should move under an addition.  `what` names the
+    table in the error.
+    """
+    if isinstance(config, str):
+        return config
+    if hasattr(config, "ion_momentum_per_nucleon"):
+        return yr_config_key(config)
+    from . import beams as _beams
+    for cfg, key in zip(_beams.default_configs("6Li"),
+                        ("5x41", "10x100", "18x275")):
+        if abs(float(config) - cfg.ion_momentum_per_nucleon) < 1e-3:
+            return key
+    raise KeyError("no measured %s at %s GeV/u; the scan covers the three "
+                   "6Li configurations only (tools/fullsim, plans/09 B1)"
+                   % (what, config))
+
+
+def pot_transfer_for(config):
+    """The measured IP6 -> pot-station-1 transfer, as a dict.
+
+    Keys R11, R12, R21, R22, R33, R34, R43, R44, D, D2, Dp.  The first
+    row (R12, R34, D, D2) is taken from `POT_LEVERS` and
+    `POT_DISPERSION_2` UNCHANGED -- the 2026-09-15 scan re-measured those
+    only as controls, and the published numbers are the published ones.
+    The second row is `POT_SECOND_ROW` / `POT_SECOND_ROW_VERTICAL`.
+
+    Units: lengths in m, R21/R43 in rad/m, D' in rad, the rest
+    dimensionless.  `config` resolves exactly as in `pot_levers_for`.
+    """
+    key = _config_key(config, "pot transfer matrix")
+    r12, r34, d = POT_LEVERS[key]
+    r11, r21, r22, dp = POT_SECOND_ROW[key]
+    r33, r43, r44 = POT_SECOND_ROW_VERTICAL[key]
+    return dict(R11=r11, R12=r12, R21=r21, R22=r22,
+                R33=r33, R34=r34, R43=r43, R44=r44,
+                D=d, D2=POT_DISPERSION_2[key], Dp=dp)
+
+
+def propagate_to_pot(config, x=0.0, xp=0.0, y=0.0, yp=0.0, delta=0.0,
+                     second_order=False):
+    """(x, x', y, y') at pot station 1 from (x, x', y, y', delta) at IP6.
+
+    Lengths in metres and angles in radians.  This is the first use in
+    the repository of a far-forward transfer that carries ANGLES: until
+    2026-09-15 only `separation_at_pots` and `over_rigid_route` existed
+    and both are position-only, first-row arithmetic.  Neither is
+    changed, and nothing published calls this.
+
+    `second_order` adds the measured D2 delta^2 to x, valid over
+    |delta| <= MEASURED_DELTA_MAX; the angle has no measured second-order
+    term and is left linear.
+    """
+    m = pot_transfer_for(config)
+    xo = m["R11"] * x + m["R12"] * xp + m["D"] * delta
+    if second_order:
+        xo += m["D2"] * delta ** 2
+    return (xo,
+            m["R21"] * x + m["R22"] * xp + m["Dp"] * delta,
+            m["R33"] * y + m["R34"] * yp,
+            m["R43"] * y + m["R44"] * yp)
 
 
 def theta_rp_outer_for(config):

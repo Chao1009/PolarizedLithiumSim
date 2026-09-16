@@ -31,6 +31,23 @@ The |t| binning is the published seven-bin window of
 is the linear-in-|t| deformation model extrapolated below the lowest
 digitized anchor point (coherent.MANTYSAARI_A2_DEUTERON starts at 0.05).
 
+NO WAVE-FUNCTION BETA REACHES THIS SCRIPT, AND THE plans/05 BAND RULE
+THEREFORE DOES NOT APPLY TO IT (measured 2026-09-15, run 19b).  The
+plans/05 step 5.B rule -- always run the beta = 0.20/0.30/0.40
+cluster-wave band -- was written for the four call sites that draw a
+SPECTATOR, and the run-17 ledger counted this script among them.  It is
+not one: the channel here is the COHERENT intact-6Li recoil, whose model
+input is the t-slope B and not a two-cluster short-range scale, and an
+AST walk over this file finds no `beta` attribute or keyword anywhere and
+no import of `polli_fastsim.spectator` or `polligen.tagged` (its imports
+are `polligen.{coherent, reco, recopseudo, bookkeeping}` and
+`polli_fastsim.{beams, fom, farforward}`).  A `--beta-band` flag here
+would be a no-op, so there is none; the model band this figure DOES carry
+is the 40-60 GeV^-2 band around B = 50, priced in Report 4's foot.  The
+three call sites that do draw a spectator -- `tagged_polarimetry_7li.py`,
+`nearbeam_aperture_scan.py` and `money_tagged_azz.py`'s folded panel --
+all took `--beta-band` on 2026-09-15.
+
 Panels: (a) delta a_t per |t| bin, 1 yr, both apertures, all three
 configurations; (b) the recovered a_t against the injected curve.
 `--fit likelihood` swaps the bin-wise ratio for the acceptance-profiled

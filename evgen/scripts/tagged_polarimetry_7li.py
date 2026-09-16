@@ -51,6 +51,20 @@ optics is the difference between a 1.5% tag and a 30% one.  6Li and 7Li
 therefore want different machine optics and are different runs, not one
 fill plan (plans/09 B3, Report 4 conclusion).
 
+THE WAVE-FUNCTION BAND, AND WHY IT BARELY MOVES THIS FIGURE TOO
+(2026-09-15, plans/05 step 5.B).  The alpha-t radial carries a short-range
+scale beta whose central value is 0.30 GeV, and plans/05 has required the
+beta = 0.20/0.30/0.40 band to be quoted with every tagged number since the
+e+d control; this script ran beta = 0.30 alone.  `--beta-band` adds the
+two edges, DEFAULT OFF, with `_betaband` appended to the stem so the
+published PNG stays bit-for-bit.  The band is one-sided IN BETA -- the
+2026-08-26 e+d control found that no beta in a two-parameter Hulthen form
+reproduces BeAGLE's p_T tail (2-13x), so the true scale is at or above
+0.40 and never below 0.20 -- and for 7Li that is worth very little,
+because the alpha is off rigidity at R = 0.856 and is caught by the
+Roman-Pot momentum window rather than by an angle: a harder spectrum only
+spills a little of it out.
+
 Output: `tagged_polarimetry_7Li.png` at the published configuration
 (--config 1) and `tagged_polarimetry_7Li_<key>.png` at the other two.
 
@@ -83,6 +97,13 @@ from polli_fastsim.farforward import route_charged  # noqa: E402
 PE, PZ = 0.7, 0.7
 C_HA, C_TAG, C_LEG, C_HD = "#1F4E79", "#C0392B", "#8A8A8A", "#B8860B"
 
+#: plans/05 step 5.B wave-function band, and the central value every
+#: published number of this script is at (`--beta-band` opts into the band).
+#: `BETA_EDGES` is the two EDGES alone: the central value is already in
+#: every published cell, so the band run adds only 0.20 and 0.40 to it.
+BETA_CENTRAL = 0.30
+BETA_EDGES = (0.20, 0.40)
+
 
 def optics_menu(config, which):
     """(label, Optics, colour, marker) per optics -- the same menu as
@@ -103,13 +124,14 @@ def optics_menu(config, which):
     return [(o.name, o, c, m) for o, c, m in table[which]]
 
 
-def output_stem(base, key, config, optics):
+def output_stem(base, key, config, optics, beta_band=False):
     """As in money_tagged_azz.py: the published artefact is the default
-    combination alone, so no `--optics` at the default `--config` can
-    overwrite it."""
-    if config == 1 and optics == "menu":
+    combination alone, so no `--optics` at the default `--config` -- and
+    no `--beta-band` run -- can overwrite it."""
+    if config == 1 and optics == "menu" and not beta_band:
         return base
-    return "%s_%s_%s" % (base, key, optics)
+    stem = "%s_%s_%s" % (base, key, optics)
+    return stem + "_betaband" if beta_band else stem
 
 
 def accepted(ev, optics, pot_config):
@@ -142,6 +164,15 @@ def main():
                          "high-acceptance optics of this configuration and "
                          "the tagging optics, 'legacy' the retired "
                          "proton-derived 73/164 microrad pair")
+    ap.add_argument("--beta-band", action="store_true", dest="beta_band",
+                    help="also run the plans/05 beta = 0.20/0.40 edges of "
+                         "the wave-function band beside the beta = 0.30 "
+                         "central value: faint <P2> markers on the left "
+                         "panel and a per-beta acceptance/slope block in "
+                         "the printed headline.  DEFAULT OFF, and the band "
+                         "run writes its own `_betaband` stem, so the "
+                         "published figure stays bit-for-bit.  The band is "
+                         "one-sided in beta -- see the module docstring")
     ap.add_argument("--seed", type=int, default=20260713)
     ap.add_argument("--outdir", default=".")
     args = ap.parse_args()
@@ -262,6 +293,42 @@ def main():
         head.append((name, optics, acc, acc_ff, fom_,
                      float(np.sqrt(ref / fom_))))
 
+    # --- the plans/05 beta band, default off ---------------------------------
+    # Everything above is untouched by the flag, which is what makes the
+    # default run bit-for-bit; the two edges are computed here, on their
+    # own RNG streams seeded exactly as the central one, so the beta = 0.30
+    # numbers of a band run reproduce the published run cell by cell.
+    band = []
+    if args.beta_band:
+        for beta in BETA_EDGES:
+            m_b = tagged.TaggedModel(tagged.li7_alpha_channel(beta=beta))
+            s_b = tagged.TaggedSampler(m_b, kern, config, fom.Scenario())
+            rng_b = np.random.default_rng(args.seed)
+            p2_b = {nm: [] for nm, _o, _c, _m in menu}
+            for t in t_scan:
+                pops_b = spin32_populations(0.0, t, 0.0)
+                cat_b = bk.SpinCategory("pol T=%.2f" % t, 1.5, pops_b)
+                ev_b = s_b.sample_category(cat_b, n=n_per_point, rng=rng_b)
+                for nm, optics, _c, _m in menu:
+                    cb = ev_b["cos_theta_k"][accepted(ev_b, optics, key)]
+                    p2_b[nm].append(float(np.mean(0.5 * (3 * cb * cb - 1.0))))
+            cat_b = bk.SpinCategory("acc", 1.5, (0.25, 0.25, 0.25, 0.25))
+            ev_ab = s_b.sample_category(cat_b, n=100_000, rng=rng_b)
+            for nm, optics, colour, marker in menu:
+                vals_b = np.array(p2_b[nm])
+                ax1.plot(t_scan, vals_b, marker, ms=3, color=colour,
+                         alpha=0.35, mfc="none",
+                         label=r"RP-folded, %s, $\beta$ = %.2f" % (nm, beta))
+                route_b = route_charged(ev_ab["R"], ev_ab["theta"],
+                                        ev_ab["pT"], optics,
+                                        phi=ev_ab["phi_spec"],
+                                        pot_config=key)
+                band.append((beta, nm,
+                             float(np.mean((route_b == 1) | (route_b == 4))),
+                             float(np.mean(route_b != 0)),
+                             float(np.polyfit(t_scan, vals_b, 1)[0])))
+        ax1.legend(fontsize=6.5)
+
     penalty = "x%s" % " / x".join("%.1f" % h[-1] for h in head[1:]) \
         if len(head) > 1 else "none"
     fig.suptitle(r"$^7$Li($e,e^\prime\alpha$)X, %s (TOY inputs): the "
@@ -275,7 +342,7 @@ def main():
     outdir = pathlib.Path(args.outdir)
     outdir.mkdir(parents=True, exist_ok=True)
     stem = output_stem("tagged_polarimetry_7Li", key, args.config,
-                       args.optics)
+                       args.optics, beta_band=args.beta_band)
     out = outdir / (stem + ".png")
     fig.savefig(out, dpi=140)
     print("wrote", out)
@@ -292,6 +359,27 @@ def main():
               "(at equal generated statistics)"
               % (name, acc, acc_ff, optics.lumi_fraction, fom_, mult,
                  slopes[name], float(np.median(errs[use]))))
+    if band:
+        print("beta band (plans/05 step 5.B; one-sided IN BETA -- the true "
+              "short-range scale is at or above 0.40, the 2026-08-26 e+d "
+              "control having found that no beta reproduces BeAGLE's tail, "
+              "so read the beta = 0.40 end and not the middle):")
+        for name, optics, _c, _m in menu:
+            central = next(h for h in head if h[0] == name)
+            rows = sorted([(b, acc_b, aff_b, sl_b)
+                           for b, nm, acc_b, aff_b, sl_b in band
+                           if nm == name]
+                          + [(BETA_CENTRAL, central[2], central[3],
+                              slopes[name])])
+            accs = [r[1] for r in rows]
+            print("  %-30s acc(RP) %s ; span x%.3f"
+                  % (name, " / ".join("beta %.2f: %.4f" % (r[0], r[1])
+                                      for r in rows),
+                     max(accs) / min(accs)))
+            print("  %-30s acc(any far-fwd) %s ; <P2> slope %s "
+                  "(analytic -0.2000)"
+                  % ("", " / ".join("%.4f" % r[2] for r in rows),
+                     " / ".join("%+.4f" % r[3] for r in rows)))
 
 
 if __name__ == "__main__":

@@ -185,15 +185,86 @@ def test_li7_p2_moments_and_polarimeter(li7):
 def test_li7_triton_polarization_forward_limit(li7):
     """P_t(M=3/2) = 1, P_t(M=1/2) = 1/3; with the triton's own effective
     proton polarization 0.86 this gives P_p(7Li) ~ 0.86 for a stretched
-    fill -- the plans/05 forward-limit gate (VMC: 0.866)."""
+    fill -- the PROTON half of the plans/05 SS5.4 forward-limit gate.
+
+    The gate's 0.866 is the WHOLE-NUCLEUS 7Li VMC sum (JLab PR12-14-001
+    Eq. 29, from Wiringa PRC 89 (2014) 024305 Table I's 0.868), and
+    TRITON.eff_pol_p is PER NUCLEON.  The two footings coincide here and
+    only here, because the triton has Z = 1; the neutron half, where
+    N = 2 makes them differ by a factor 2, is the test below."""
     p32 = li7.population_integrated(1.5)
     np.testing.assert_allclose(p32, [1.0, 0.0], atol=1e-12)
     p12 = li7.population_integrated(0.5)
     np.testing.assert_allclose(p12, [2.0 / 3.0, 1.0 / 3.0], atol=3e-4)
     p_t = (p12 * np.array([1.0, -1.0])).sum()
     assert p_t == pytest.approx(1.0 / 3.0, abs=6e-4)
-    p_p_7li = 1.0 * tagged.TRITON.eff_pol_p  # stretched fill
+    p_p_7li = 1.0 * tagged.TRITON.eff_pol_p  # stretched fill, Z_t = 1
     assert abs(p_p_7li - 0.866) < 0.02  # within the D-state band
+
+
+#: Whole-nucleus 7Li neutron polarization of the ab initio calculation the
+#: plans/05 SS5.4 gate quotes: JLab PR12-14-001 Eq. (29) rounds Wiringa
+#: PRC 89 (2014) 024305 Table I (1.981 up - 2.019 down = -0.038) to -0.037.
+VMC_P_N_7LI_WHOLE = -0.037
+VMC_P_N_7LI_WHOLE_TABLE_I = -0.038
+
+
+def test_li7_neutron_forward_limit_both_footings(li7, capsys):
+    """The NEUTRON half of the gate, on both footings, with the gap to the
+    ab initio value printed.
+
+    The model's 7Li neutron spin lives entirely on the struck triton: the
+    alpha spectator is spin-0 and contributes exactly zero, so with the
+    triton fully polarized in the stretched fill (P_t(M = 3/2) = 1, the
+    test above) the whole-nucleus sum is P_t x N_t x TRITON.eff_pol_n
+    = 1 x 2 x (-0.028) = -0.056, per-nucleon -0.014 over 7Li's N = 4 and
+    -0.028 over the triton's own two neutrons (which is TRITON's slot
+    back again, by construction).
+
+    -0.056 against -0.037 is a KNOWN MODEL DIFFERENCE, not a failure and
+    not a band: the alpha + t decomposition puts all the neutron spin on
+    two neutrons where VMC spreads it over four correlated ones, and this
+    channel is a lone L = 1 wave with no D-state admixture to widen a
+    tolerance around.  The tolerance below is therefore a PIN on the
+    model's own value, not an agreement criterion."""
+    p32 = li7.population_integrated(1.5)
+    p_t = float((p32 * np.array([1.0, -1.0])).sum())
+    n_t = tagged.TRITON.A - tagged.TRITON.Z          # 2 neutrons
+    whole = p_t * n_t * tagged.TRITON.eff_pol_n      # whole-nucleus 7Li
+    per_nucleon_a = whole / 4.0                      # over 7Li's N = 4
+    per_nucleon_t = whole / n_t                      # over the triton's 2
+
+    # the model's own values, pinned
+    assert whole == pytest.approx(-0.056, abs=1e-6)
+    assert per_nucleon_a == pytest.approx(-0.014, abs=1e-6)
+    assert per_nucleon_t == pytest.approx(tagged.TRITON.eff_pol_n, abs=1e-12)
+
+    # beams.LI7 holds the ab initio value on the SAME per-nucleon footing
+    # as TRITON, divided by N = 4, so N * P_n returns the whole-nucleus one
+    assert 4.0 * beams.LI7.eff_pol_n == pytest.approx(VMC_P_N_7LI_WHOLE,
+                                                      abs=1e-12)
+
+    gap = whole - VMC_P_N_7LI_WHOLE
+    gap_table_i = whole - VMC_P_N_7LI_WHOLE_TABLE_I
+    with capsys.disabled():
+        print("\n7Li forward limit, neutron half (plans/05 SS5.4):"
+              "\n  model, whole-nucleus   P_n = %+.6f"
+              "\n  model, per nucleon/N=4 P_n = %+.6f"
+              "\n  model, per triton n    P_n = %+.6f"
+              "\n  VMC, whole-nucleus     P_n = %+.6f (JLab PR12-14-001)"
+              "\n                             = %+.6f (Wiringa Table I)"
+              "\n  GAP (known model difference, no D-state band exists):"
+              " %+.6f (x%.4f) / %+.6f (x%.4f)"
+              % (whole, per_nucleon_a, per_nucleon_t,
+                 VMC_P_N_7LI_WHOLE, VMC_P_N_7LI_WHOLE_TABLE_I,
+                 gap, whole / VMC_P_N_7LI_WHOLE,
+                 gap_table_i, whole / VMC_P_N_7LI_WHOLE_TABLE_I))
+
+    # the gap is recorded, with a tolerance measured on it (2026-09-15:
+    # -0.019000, a factor 1.5135); it moves only if a channel constant or
+    # the cluster decomposition moves, and then this row must be restated
+    assert gap == pytest.approx(-0.019, abs=1e-6)
+    assert whole / VMC_P_N_7LI_WHOLE == pytest.approx(1.5135, abs=1e-3)
 
 
 def test_li7_khat_resolved_triton_polarization(li7):

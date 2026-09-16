@@ -29,6 +29,13 @@ python3 scripts/_check_reco_mask_invariants.py          # its S1–S6 static gua
 observable's share of the programme year; every figure and number here is
 the share-1 one, and a non-default share writes to its own file name.
 
+`coverage_and_stat_maps.py` takes `--binning {log40x30,yr}` under the same
+guard.  The default `log40x30` is the published 40 × 30 log grid, bit for
+bit; `yr` is the Yellow-Report five-bins-per-decade lattice of
+`beams.YR_GRID` (plans/02 Step 1.1 item 3) and appends `_yr` to all twelve
+file names.  The drift between the two is measured in the plans/07 §7.1
+addendum of 2026-09-15.
+
 The two dated `money_delta_*` scripts default to the R = σ_L/σ_T form
 their notes were written with, defect and all; `--r-model theta-log` and
 `--r-model r1998` re-run them with the corrected and the published fit

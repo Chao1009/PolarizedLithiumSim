@@ -17,15 +17,15 @@ reco-level leg and HepMC3 output (5.D) come next. Imports
 
 ```bash
 cd evgen
-python3 -m pytest tests/ -q            # 361 tests
+python3 -m pytest tests/ -q            # 407 tests
 python3 scripts/closure_fom.py --ion 6Li --events 200000 --trials 200
 python3 scripts/closure_fom.py --ion 7Li --events 200000 --trials 200
-python3 scripts/money_tagged_azz.py --events 400000       # money plot 4 (--config, --optics, --lumi-fraction)
-python3 scripts/tagged_polarimetry_7li.py --events 300000 # 7Li polarimetry + tagged EMC (--config, --optics)
-python3 scripts/money_cos2phi.py                          # money plot 5 (--tensor-gamma, --subtract-tensor-leakage {none,kappa,model}, --b3-frac, --b4-frac: all off by default)
-python3 scripts/money_cos2phi_coherent.py                 # money plot 6
-python3 scripts/money_delta_extraction.py                 # money plot 7 (the same four tensor-leakage flags)
-python3 scripts/phase_space_bins.py       # (x,Q2) rate maps + binning
+python3 scripts/money_tagged_azz.py --events 400000       # money plot 4 (--config, --optics, --lumi-fraction, --beta-band)
+python3 scripts/tagged_polarimetry_7li.py --events 300000 # 7Li polarimetry + tagged EMC (--config, --optics, --beta-band)
+python3 scripts/money_cos2phi.py                          # money plot 5 (--tensor-gamma, --subtract-tensor-leakage {none,kappa,model}, --b3-frac, --b4-frac: all off by default; --pzz-plus/--pzz-zero switches to the two-fill spin-state ratio, own '_twofill' stem)
+python3 scripts/money_cos2phi_coherent.py                 # money plot 6 (--pzz-plus/--pzz-zero as well)
+python3 scripts/money_delta_extraction.py                 # money plot 7 (the same four tensor-leakage flags, and --pzz-plus/--pzz-zero)
+python3 scripts/phase_space_bins.py       # (x,Q2) rate maps + binning (--binning {log40x30,yr}; the default is the published 40x30 grid, 'yr' is the Yellow-Report 5-bins-per-decade lattice on its own '_yr' stem)
 python3 scripts/reco_chain_figures.py     # reconstruction-chain figures
 python3 scripts/money_cos2phi_reco.py          # money plots 5R + 7R (reco level; --lumi-fraction; the four tensor-leakage flags and --leakage-scan)
 python3 scripts/money_cos2phi_coherent_reco.py --config 0 --optics tagging --n-mc 6000000 # money plot 6R (reco level, tagging optics; --lumi-fraction)
@@ -35,7 +35,7 @@ python3 scripts/hfs_acceptance.py --config 1 --sample samples/pythia8_e10_p99.5_
 python3 scripts/target_mass_bound.py       # how big is the γ² term A∥ now carries, and what g₂ leaves open (prints, no figure)
 python3 scripts/tensor_gamma_leakage.py   # the OTHER γ² term: how much of the b₁–b₄ sector reaches cos 2φ, and what a κ̂ subtraction of it leaves (--b3-frac, --b4-frac; prints, no figure)
 python3 scripts/eic_beam_figures.py       # report 3: the ion energy menu and the divergence
-python3 scripts/nearbeam_aperture_scan.py # plans/09: what every near-beam aperture is worth (--isotope 7Li for the 7Li alpha panel)
+python3 scripts/nearbeam_aperture_scan.py # plans/09: what every near-beam aperture is worth (--isotope 7Li for the 7Li alpha panel, --beta-band)
 python3 scripts/nearbeam_reach_gain.py    # plans/09: the coherent chain at both apertures (--lumi-fraction)
 python3 scripts/nearbeam_sensor_budget.py # plans/09: hot-spot Z-ID, sizing, channel count
 python3 scripts/nearbeam_zid_power.py     # plans/09: how much charge information Z-ID needs
@@ -123,6 +123,18 @@ the wave function (plans/09 B2).  The A_zz numbers themselves are the
 expansion, so the α–d S/D interference enters with the sign the momentum-
 space wave function actually has, and every A_zz^wf of this figure changed
 sign (the acceptance-weighted truths are −0.87 and +0.18; plans/00 run 19).
+**`--beta-band`** (2026-09-15, default off, own `_betaband` stem) extends
+the plans/05 β = 0.20/0.30/0.40 band from the analytic left panel, which
+has always carried it, to the acceptance-folded right one.  What it shows
+at 10 × 99.5: the tag runs 0.0120 / 0.0241 / 0.0369 at the Yellow Report
+optics (×3.08) and 0.1981 / 0.2542 / 0.2875 at the tagging optics (×1.45),
+while the acceptance-weighted truth at k = 0.325 GeV/c moves only −0.889 /
+−0.871 / −0.824 and +0.185 / +0.181 / +0.171 — a **rate** uncertainty of a
+factor three and a **signal** uncertainty under 0.07 absolute.  The band is
+one-sided *in β* (no β in a two-parameter Hulthén form reproduces the e+d
+control's p_T tail), so read the 0.40 end.  Each edge draws on its own RNG
+stream seeded like the central one, so a band run's β = 0.30 cells
+reproduce the published run marker by marker.
 
 `tagged_polarimetry_7li.py`: the ⁷Li α-tag pair — the in-situ alignment
 polarimeter ⟨P₂(cos θ_k)⟩ = −T/5 and the tagged polarized-EMC companion
@@ -134,10 +146,17 @@ window, so it never has to clear the near-beam envelope, and the folded
 programme statement: for ⁷Li the tagging optics buys ×1.02 in acceptance
 for ×1/7.9–1/14.8 in luminosity, a factor 7.7–14.5 net loss and the exact
 inverse of ⁶Li, so the two isotopes want different machine optics and are
-different runs (plans/09 B3).
+different runs (plans/09 B3).  **`--beta-band`** (2026-09-15, default off,
+own `_betaband` stem): the β = 0.20/0.30/0.40 band is worth ×1.04 on
+acc(RP) at the Yellow Report optics and ×1.01 at the tagging optics
+(0.9832 / 0.9678 / 0.9494 and 0.9956 / 0.9909 / 0.9852 at 10 × 99.5), with
+the ⟨P₂⟩ slope −0.1989 / −0.1947 / −0.1922 — ⁷Li is β-blind to a percent,
+and it moves the *other* way from ⁶Li because the α is caught by the
+momentum window and a harder spectrum only spills a little of it out.
 
 `phase_space_bins.py`: the companion phase-space figure — (x, Q²)
-event-rate maps on the 40×30 analysis grid (1-yr program) for the
+event-rate maps on the 40×30 analysis grid (1-yr program; `--binning yr`
+re-runs them on the Yellow-Report 5-bins-per-decade lattice) for the
 inclusive DIS and the RP-tagged coherent channel, with every bin of
 the detailed plots overlaid: the four sweet-spot φ′ super-bins
 (plot 5), the three Q² slices with their merged x-bin pairs (the
@@ -204,6 +223,13 @@ quantifies the findings with `polligen/reco.py`:
   1.2×10⁻⁵ for the silicon alone, on the aperture re-measured 2026-08-28
   (2.50 / 1.51 / 0.53 mrad against the September-2024 2.00 / 1.35 / 1.03;
   `scripts/nearbeam_aperture_scan.py`, Report 3 Table 6, plans/09 B1).
+  The α panel of that scan takes **`--beta-band`** since 2026-09-15
+  (default off, own `_betaband` stem): over β = 0.20/0.30/0.40 the ⁶Li α
+  tag spans ×3.35–3.44 at the Yellow Report envelope and ×1.35–1.52 at the
+  tagging optics, the ⁷Li α tag ×1.01–1.04 and downward.  Its sibling
+  `nearbeam_reach_gain.py` takes no such flag and needs none: an AST walk
+  finds no cluster β in it at all — it runs the coherent intact-⁶Li chain,
+  whose model band is the 40–60 GeV⁻² one around B = 50.
 
 ### Reconstructed-level closure (money plots 5R / 7R / 6R, same day)
 

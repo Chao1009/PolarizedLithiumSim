@@ -51,8 +51,11 @@ from dataclasses import dataclass, replace
 
 import numpy as np
 
+from polli_fastsim.asymmetries import err_a_parallel, err_azz
 from polli_fastsim.kinematics import w2
 
+from . import estimators as est
+from . import radiative as _rad
 from . import reco
 from .spin import m_values
 from .xsec import tensor_leakage_amplitude
@@ -90,6 +93,20 @@ class RecoModel:
     #   identically null (it cancels in every ratio the analysis forms);
     #   only an eta shape moves a number.
     eid: bool = True
+    # --- Fermi motion of the struck cluster (plans/03 2.3), DEFAULT OFF ---
+    fermi_smear: bool = False      # True: every pseudo-event's struck
+    #   cluster carries an internal momentum k drawn from the cluster
+    #   momentum densities of polli_fastsim.spectator, so the vertex sits
+    #   at the reduced ss = alpha s of reco.fermi_alpha and the analysis,
+    #   reconstructing with the nominal per-nucleon beam, reports
+    #   x_meas = alpha x_vertex at the same Q2.  OFF by default and
+    #   bit for bit inert when off: the alpha draw comes from its own
+    #   random stream, so nothing else in the response moves
+    fermi_beta: float = 0.30       # short-range scale of spectator.sample_k
+    #   (scan 0.20-0.40: the high-k tail is the dominant model uncertainty)
+    fermi_channel: str = ""        # "" = mix the beam's cluster channels by
+    #   nucleon share; otherwise one spectator.ClusterChannel name
+    fermi_seed: int = 20260915
     xing: float = reco.XING_IP6
     phi_s: float = np.pi / 2.0     # vertical alignment axis
     # reconstructed-level analysis selection
@@ -149,7 +166,20 @@ class RecoResponse:
         every other random number and their difference is the radiation
         alone (plans/07 WP4; see polligen/radiative.py).  With it on,
         `self.y` becomes the HARD y = y/(1 - z) and the drawn
-        q2/(s x) is kept as `self.y_nominal`."""
+        q2/(s x) is kept as `self.y_nominal`.
+
+        `model.fermi_smear` (default False = OFF, and inert when off for
+        the same reason: alpha comes from its own stream) does the same
+        thing on the ION side.  Every pseudo-event's struck cluster
+        carries an internal momentum k from the cluster momentum
+        densities of `polli_fastsim.spectator`, so its per-nucleon
+        light-cone fraction is alpha (`reco.fermi_alpha`) and the vertex
+        sits at ss = alpha s: the rate and the cos 2phi' amplitude are
+        rescaled by the same closed forms the ISR uses, the scattered
+        electron is the one that target makes, and the analysis -- which
+        has only the nominal per-nucleon beam -- reports
+        x_meas = alpha x_vertex at the same Q2.  `self.fermi_alpha` and
+        `self.fermi_k` keep the draw."""
         if hfs is not None:
             hfs.check_beams(sampler.config.electron_energy,
                             sampler.config.ion_momentum_per_nucleon)
@@ -158,6 +188,12 @@ class RecoResponse:
         self.n_mc_per_cell = n_mc_per_cell
         rng = rng or np.random.default_rng(20260824)
         m = self.model
+        if m.fermi_smear and m.y_source == "hfs":
+            raise ValueError(
+                "fermi_smear is defined on the electron side only; the HFS "
+                "library transfers a hadronic sum generated at the nominal "
+                "per-nucleon beam, so the combination would carry the shift "
+                "on one side of the event and not the other")
         if m.y_source == "hfs" and hfs is None:
             raise ValueError("y_source='hfs' needs an hfs.HFSResponse")
         self.hfs = hfs
@@ -198,17 +234,66 @@ class RecoResponse:
             self._amp_isr = isr.amplitude_scale(sampler.kernel, x, q2, y,
                                                 self.isr_z)
 
+        # 1c. Fermi motion of the struck cluster (plans/03 2.3) -----------
+        # The drawn cell (x, Q2) is the PHYSICAL vertex; the struck
+        # cluster's per-nucleon light-cone fraction alpha (reco.fermi_alpha)
+        # puts that vertex at the reduced ss = alpha s, exactly as a
+        # radiated photon puts it at (1 - z) s, so the two closed forms of
+        # radiative.py serve both: the rate is rescaled by
+        # dsigma(x, Q2, ss)/dsigma(x, Q2, s) and the cos 2phi' amplitude by
+        # a_2(y_vertex)/a_2(y).  The analysis reconstructs with the NOMINAL
+        # per-nucleon beam and therefore reports x_meas = alpha x_vertex at
+        # the same Q2 -- the migration this switch measures.
+        self.fermi_alpha = None
+        self.fermi_alpha_drawn = None
+        self.fermi_k = None
+        self.fermi_reject = 0.0
+        self._amp_fermi = None
+        if m.fermi_smear:
+            frng = np.random.default_rng(m.fermi_seed)
+            alpha, kmag = reco.fermi_alpha_sample(
+                cfg.ion.A, cfg.ion.Z, n, frng, beta=m.fermi_beta,
+                channel=(m.fermi_channel or None))
+            alpha = np.clip(alpha, 1e-6, None)
+            self.fermi_alpha_drawn, self.fermi_k = alpha, kmag
+            y_f = y_hard / alpha
+            # a vertex at ss = alpha s cannot hold an event at y > 1: deep
+            # in the density's low-alpha tail the drawn cell is simply not
+            # reachable, so that event carries no rate.  Its weight is
+            # zeroed and its kinematics replaced by a safe value, because a
+            # NaN multiplied by a zero weight is still a NaN.
+            ok = (y_f > 0.0) & (y_f < 1.0 - 1e-9)
+            self.fermi_reject = float(1.0 - ok.mean())
+            alpha_safe = np.where(ok, alpha, 1.0)
+            w = w * ok * _rad.rate_scale(sampler.kernel, x, q2, y_hard,
+                                         1.0 - alpha_safe)
+            self._amp_fermi = np.where(
+                ok, _rad.amplitude_scale(sampler.kernel, x, q2, y_hard,
+                                         1.0 - alpha_safe), 0.0)
+            # the alpha every SURVIVING event was actually built at
+            alpha = alpha_safe
+            self.fermi_alpha = alpha
+            y_hard = y_hard / alpha
+
         # 2. scattered electron: true -> lab -> smeared -> head-on ---------
         phi_e = rng.uniform(0.0, 2.0 * np.pi, size=n)
         k, p_ion = reco.beam_fourvectors(cfg)
         s_vec = reco.spin_fourvector(m.phi_s)
-        if isr is None:
+        # the ion side of s is reduced by alpha (Fermi) and the electron
+        # side by (1 - z) (ISR); with neither switch on this is the
+        # nominal `reco.electron_fourvector(x, y, s, e_e, phi_e)` call,
+        # which is why the default path is bit for bit what it was
+        s_eff, e_eff = s, e_e
+        if isr is not None:
+            s_eff, e_eff = s_eff * one_z, e_e * one_z
+        if self.fermi_alpha is not None:
+            s_eff = s_eff * self.fermi_alpha
+        if isr is None and self.fermi_alpha is None:
             kp = reco.electron_fourvector(x, y, s, e_e, phi_e)
         else:
             # the electron the REDUCED beam makes; Q2 = x y_hard ss = q2
             # is unchanged, which is why the cell and its tables are not
-            kp = reco.electron_fourvector(x, y_hard, s * one_z, e_e * one_z,
-                                          phi_e)
+            kp = reco.electron_fourvector(x, y_hard, s_eff, e_eff, phi_e)
         kp_lab = reco.head_on_to_lab(kp, m.xing)
         e_lab = kp_lab[..., 0]
         pmag = np.sqrt((kp_lab[..., 1:] ** 2).sum(axis=-1))
@@ -302,8 +387,9 @@ class RecoResponse:
             self.isr_dphi = np.angle(np.exp(1j * (phip_nominal - phip_true)))
 
         self.cell, self.w = cell, w
-        # NOTE `self.y` is the HARD y of the event, y/(1 - z): with ISR on
-        # it is NOT q2/(s x).  `self.y_nominal` is the drawn q2/(s x), the
+        # NOTE `self.y` is the HARD y of the event, y/((1 - z) alpha): with
+        # ISR or Fermi motion on it is NOT q2/(s x).  `self.y_nominal` is
+        # the drawn q2/(s x), the
         # y the bin sits at, which is what radiative.method_bias_table and
         # any other consumer of "the y of this bin" wants (with ISR off
         # the two are the same array).
@@ -349,12 +435,18 @@ class RecoResponse:
 
         With ISR on, the per-event factor a_2(y_hard)/a_2(y) of
         radiative.amplitude_scale corrects the cell-centre amplitude for
-        the (1 - z) shift of the hard y; it is 1 with ISR off."""
+        the (1 - z) shift of the hard y; it is 1 with ISR off.  With
+        Fermi motion on a second such factor corrects it for the
+        alpha shift of the same y, and the two multiply."""
         _den, num = self._fill_arrays(category)
         pzz = float(category.moments()[1])
-        if self._amp_isr is None:
+        if self._amp_isr is None and self._amp_fermi is None:
             return num[self.cell] / pzz
-        return num[self.cell] / pzz * self._amp_isr
+        amp = num[self.cell] / pzz
+        for factor in (self._amp_isr, self._amp_fermi):
+            if factor is not None:
+                amp = amp * factor
+        return amp
 
     def _dil_amp(self):
         """The per-event factor that multiplies a CELL amplitude on its
@@ -408,6 +500,7 @@ class RecoResponse:
         With ISR off this is the cell value at the event's cell, exactly
         as `amplitude_per_event` reads it.  With ISR on it carries the
         SAME radiative.amplitude_scale factor the Delta amplitude does
+        (and, with Fermi motion on, the same alpha factor beside it)
         (plans/08 D2 risk R5): that scale is derived from the massless
         Delta y-dependence and not from the leakage's own, which runs
         through theta_q and eps, so it is an approximation -- but it is
@@ -418,9 +511,10 @@ class RecoResponse:
         on a correction that is itself at most 0.11% of the amplitude.
         """
         leak = self.leakage_response(category)[self.cell]
-        if self._amp_isr is None:
-            return leak
-        return leak * self._amp_isr
+        for factor in (self._amp_isr, self._amp_fermi):
+            if factor is not None:
+                leak = leak * factor
+        return leak
 
     def fold_leakage(self, mask, category, constant=False):
         """Response-folded tensor leakage of one reco bin, per unit P_zz.
@@ -684,6 +778,115 @@ class RecoResponse:
             s_num = float((we * dil * num[cells]).sum())
             out[f] = lumi_pb * cat.lumi_fraction * (s_den * base + s_num * mod)
         return out
+
+    def expected_rates(self, categories, lumi_pb, mask, eff=None,
+                       with_eff=True):
+        """Exact expected COUNTS per category (F,) in a reco bin -- the
+        phi'-integrated `expected_counts`, which is what the RATE
+        estimators (A_zz thirds, A_parallel helicity flips) read.
+
+        It is the same object over one phi' bin covering the whole
+        circle: the cos 2phi' term integrates to zero there, so what is
+        left is the fill's phi-averaged rate factor
+        1 + sum_m p_m w_avg carried through the response weights.
+        `eff` is an optional phi' efficiency (one, or one per category),
+        exactly as in `expected_counts`; a phi'-independent one only
+        rescales every fill alike and cancels in either estimator.
+
+        `with_eff=False` drops the reconstructed-level selection and
+        eps_eID from the weights, which -- with a full-acceptance mask --
+        is the TRUE-bin reference a perfect detector would give."""
+        edges = np.array([0.0, 2.0 * np.pi])
+        if with_eff:
+            return self.expected_counts(categories, lumi_pb, mask, edges,
+                                        phi_eff=eff)[:, 0]
+        saved = self.eff
+        try:
+            self.eff = np.ones_like(self.eff)
+            return self.expected_counts(categories, lumi_pb, mask, edges,
+                                        phi_eff=eff)[:, 0]
+        finally:
+            self.eff = saved
+
+
+def measure_azz(resp, plan, lumi_pb, mask, rng=None, poisson=True,
+                lumi_assumed=None, eff=None, true_mask=None):
+    """One reconstructed-level A_zz pseudo-measurement of a reco bin.
+
+    `plan` is a `bookkeeping.tensor_thirds_plan`: three fills at
+    (P_z, +P_zz), (-P_z, +P_zz) and the m0-enriched (0, -2 P_zz), for
+    which the canonical thirds estimator of `estimators.azz_thirds` is
+    exact.  The exact expected COUNTS of each fill in the reconstructed
+    bin come from the same response the cos 2phi' chain uses -- the same
+    migration, the same reconstructed-level selection and the same
+    eps_eID -- are Poisson-fluctuated at `lumi_pb`, and the estimator is
+    applied to them.
+
+    `lumi_assumed`: the luminosity fractions the ANALYSIS believes.  As
+    in `measure_inclusive`, a plan built with `rel_lumi_offset != 0`
+    carries the offset in its own shares, and passing the nominal thirds
+    explicitly is what keeps the analysis from knowing the truth.
+
+    Returns the estimate, its analytic error at the drawn statistics, and
+    the two truth references an unbiased estimator must reproduce: the
+    same estimator on the NOISE-FREE expected counts of the reconstructed
+    bin (`truth_reco_bin` -- what this measurement can converge to) and,
+    when `true_mask` is given (`resp.mask_true(...)` of the same edges), on
+    that bin's TRUE-kinematics counts with neither the reconstructed-level
+    selection nor eps_eID (`truth_true_bin` -- what a perfect detector
+    would give, and so the migration the bin carries)."""
+    rng = rng or np.random.default_rng(20260915)
+    mu = resp.expected_rates(plan.categories, lumi_pb, mask, eff=eff)
+    counts = rng.poisson(mu) if poisson else mu
+    pzz = float(plan.pzz_true)
+    lum = ([c.lumi_fraction for c in plan.categories] if lumi_assumed is None
+           else list(lumi_assumed))
+    value = _azz_of(counts, pzz, lum)
+    n = float(counts.sum())
+    return {"value": value, "err": err_azz(n, pzz), "n": n,
+            "counts": counts, "expected": mu,
+            "truth_reco_bin": _azz_of(mu, pzz, lum),
+            "truth_true_bin": (np.nan if true_mask is None else _azz_of(
+                resp.expected_rates(plan.categories, lumi_pb, true_mask,
+                                    eff=eff, with_eff=False), pzz, lum)),
+            "pzz": pzz, "lumi_fractions": lum}
+
+
+def measure_apar(resp, plan, lumi_pb, mask, rng=None, poisson=True,
+                 lumi_assumed=None, eff=None, true_mask=None):
+    """One reconstructed-level A_parallel pseudo-measurement of a reco bin.
+
+    `plan` is a `bookkeeping.helicity_flip_plan`: one longitudinally
+    vector-polarized fill read with both electron helicities, for which
+    the helicity-flip estimator of `estimators.apar_flip` is exact.
+    Everything else is `measure_azz`, with (P_e P_z) in place of P_zz."""
+    rng = rng or np.random.default_rng(20260915)
+    mu = resp.expected_rates(plan.categories, lumi_pb, mask, eff=eff)
+    counts = rng.poisson(mu) if poisson else mu
+    pe = float(plan.categories[0].pe)
+    pz = float(plan.pz_true)
+    lum = ([c.lumi_fraction for c in plan.categories] if lumi_assumed is None
+           else list(lumi_assumed))
+    value = _apar_of(counts, pe, pz, lum)
+    n = float(counts.sum())
+    return {"value": value, "err": err_a_parallel(n, pe, pz), "n": n,
+            "counts": counts, "expected": mu,
+            "truth_reco_bin": _apar_of(mu, pe, pz, lum),
+            "truth_true_bin": (np.nan if true_mask is None else _apar_of(
+                resp.expected_rates(plan.categories, lumi_pb, true_mask,
+                                    eff=eff, with_eff=False), pe, pz, lum)),
+            "pe": pe, "pz": pz, "lumi_fractions": lum}
+
+
+def _azz_of(counts, pzz, lum):
+    c = np.asarray(counts, dtype=float)
+    return float(est.azz_thirds(c[0], c[1], c[2], pzz, lumis=lum))
+
+
+def _apar_of(counts, pe, pz, lum):
+    c = np.asarray(counts, dtype=float)
+    return float(est.apar_flip(c[0], c[1], pe, pz,
+                               l_plus=lum[0], l_minus=lum[1]))
 
 
 def measure_inclusive(resp, plan, lumi_pb, mask, rng=None, nbins=24,

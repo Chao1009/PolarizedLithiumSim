@@ -229,3 +229,67 @@ def test_polarimetry_bookkeeping():
     again = bk.RunPlan(plan.categories, pz_true=0.7, pzz_true=0.6,
                        delta_p_over_p=0.03, polarimetry_seed=5)
     assert smeared.measured["pzz"] == again.measured["pzz"]
+
+
+# --- the same two estimators at the RECONSTRUCTED level (plans/03 2.4) -------
+
+def _reco_response(sampler, **kw):
+    from polligen import recopseudo as rp  # noqa: PLC0415 (heavy import)
+    return rp.RecoResponse(sampler, rp.RecoModel(**kw), n_mc_per_cell=400,
+                           rng=np.random.default_rng(5))
+
+
+def test_reco_rate_path_reproduces_the_truth_level_asymmetries(tensor_setup,
+                                                               vector_setup):
+    """The reconstructed-level rate path, read at TRUE kinematics with
+    neither the selection nor eps_eID, must give back the sigma-weighted
+    analytic asymmetries -- otherwise the reconstruction chain is not
+    measuring the same observable the projections quote.
+
+    A_zz is an identity and is pinned as one: across the tensor-thirds
+    pattern the three fills' phi-averaged rate factors sum to exactly 3,
+    so the estimator's denominator is 3 sum_c sigma_c with no tensor term
+    at all and the ratio is the sigma-weighted `asymmetries.azz` to
+    floating-point.  A_par is not: the generator kernel carries the
+    finite-gamma longitudinal form by default, which is 1 + gamma^2 times
+    the massless `a_parallel` these fixtures build their reference from.
+    """
+    from polligen import recopseudo as rp  # noqa: PLC0415
+
+    sampler, truth_azz = tensor_setup
+    resp = _reco_response(sampler)
+    full = np.ones(resp.x.size, dtype=bool)
+    plan = bk.tensor_thirds_plan(0.7, 0.6)
+    mu = resp.expected_rates(plan.categories, 1e3, full, with_eff=False)
+    assert rp._azz_of(mu, 0.6, [1.0 / 3.0] * 3) == pytest.approx(
+        truth_azz, rel=1e-9)
+
+    sampler_v, truth_apar = vector_setup
+    resp_v = _reco_response(sampler_v)
+    full_v = np.ones(resp_v.x.size, dtype=bool)
+    vplan = bk.helicity_flip_plan(1.0, 0.7, 0.7)
+    mu_v = resp_v.expected_rates(vplan.categories, 1e3, full_v,
+                                 with_eff=False)
+    apar_reco = rp._apar_of(mu_v, 0.7, 0.7, [0.5, 0.5])
+    assert apar_reco == pytest.approx(truth_apar, rel=5e-3)
+    # the difference is the finite-gamma factor and has its sign: the
+    # exact A_par is (1 + gamma^2) times the massless one
+    assert 1.0 < apar_reco / truth_apar < 1.01
+
+
+def test_reco_rate_estimators_carry_the_same_analytic_errors(tensor_setup):
+    """The error each reconstructed-level measurement quotes is the same
+    fastsim formula the projections use, evaluated at the counts the
+    response actually delivers -- not a refitted spread."""
+    from polligen import recopseudo as rp  # noqa: PLC0415
+
+    sampler, _truth = tensor_setup
+    resp = _reco_response(sampler)
+    mask = resp.mask_reco(0.05, 0.2, 5.0, 40.0)
+    plan = bk.tensor_thirds_plan(0.7, 0.6)
+    r = rp.measure_azz(resp, plan, 50.0, mask, rng=np.random.default_rng(4))
+    assert r["err"] == pytest.approx(err_azz(r["n"], 0.6), rel=1e-12)
+    vplan = bk.helicity_flip_plan(1.0, 0.7, 0.7)
+    v = rp.measure_apar(resp, vplan, 50.0, mask, rng=np.random.default_rng(4))
+    assert v["err"] == pytest.approx(err_a_parallel(v["n"], 0.7, 0.7),
+                                     rel=1e-12)

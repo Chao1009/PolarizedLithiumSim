@@ -70,6 +70,15 @@ RECO_FIGS = {
     "__RC5__": "evgen/money_cos2phi_coherent_reco_6Li.png",
     "__RC6__": "evgen/hfs_resolution_6Li.png",
     "__RC7__": "evgen/hfs_acceptance_6Li.png",
+    # the two reconstructed-level variants of Report 2 5.1 (2026-09-15,
+    # plans/07 WP3 addendum): the low configuration at x ~ 0.1, and the
+    # electron method alone in the window where it is usable, y >= 0.05
+    "__RC8__": "evgen/money_cos2phi_reco_6Li_cfg0.png",
+    "__RC9__": "evgen/money_cos2phi_reco_6Li_eonly_ymin0p05.png",
+    # the two RATE asymmetries at the reconstructed level (Report 2 5.3,
+    # plans/03 2.4): money_azz_reco.py and its --observable apar variant
+    "__RC10__": "evgen/money_azz_reco_6Li.png",
+    "__RC11__": "evgen/money_apar_reco_6Li.png",
 }
 
 # Figures a report QUOTES numbers from without embedding them.  They are
@@ -90,6 +99,13 @@ UNEMBEDDED_FIGS = {
     "__NB5__": "evgen/nearbeam_two_hit_6Li.png",
     "__COS__": "evgen/coherent_optics_scan_6Li.png",
     "__NB1B__": "evgen/nearbeam_aperture_7Li.png",
+    # quoted by Report 2 5.3 and the manual's 4.3 row, embedded by no
+    # template: the A_zz money plot with the polarimetry-scale band on
+    # (2026-09-15)
+    "__MAZB__": "evgen/money_azz_reco_pol0p03_6Li.png",
+    # the Fermi-motion variant of 5R/7R, quoted by Report 2 7 (2026-09-15)
+    "__M5RF__": "evgen/money_cos2phi_reco_6Li_fermi.png",
+    "__M7RF__": "evgen/money_delta_extracted_reco_6Li_fermi.png",
 }
 
 # In report-number order, which is also the order reports/index.html lists

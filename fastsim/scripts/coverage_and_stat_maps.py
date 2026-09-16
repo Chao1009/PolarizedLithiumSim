@@ -39,6 +39,7 @@ CLI:
   --pdf          {toy, grid}  (default: toy)
   --lumi         float        integrated luminosity [fb^-1/nucleon] (default: 10.0)
   --pzz          float        tensor polarization for uncertainty maps (default: 0.80)
+  --binning      {log40x30,yr} (x, Q^2) analysis grid (default: log40x30)
   --n-theta-bins int          regular theta_e bins used in output (3) (default: 24)
   --outdir       path         output directory (created if missing)
   --debug-crosscheck          numerical assertion vs. phase_space_map reference
@@ -95,7 +96,7 @@ def _cfg_tag(cfg) -> str:
 # ── Helper: run full projection at a given luminosity ─────────────────────── #
 
 def _project_at_lumi(cfg, backends, pzz: float, lumi_fb: float,
-                     run_share: float = 1.0):
+                     run_share: float = 1.0, binning: str = "log40x30"):
     """Run fom.project_rates + project_observables and expose theta_e.
 
     Parameters
@@ -105,11 +106,17 @@ def _project_at_lumi(cfg, backends, pzz: float, lumi_fb: float,
     pzz      : float  ion tensor polarization
     lumi_fb  : float  programme integrated luminosity [fb^-1/nucleon]
     run_share: float  this observable's share of it (plans/07 WP2)
+    binning  : str    (x, Q^2) analysis grid, beams.analysis_grid key.
+               'log40x30' (the default) is the published 40 x 30 log grid
+               and is what every deliverable map here runs; 'yr' is the
+               Yellow-Report five-bins-per-decade lattice (plans/02
+               Step 1.1 item 3), which writes its own file names.
 
     Returns
     -------
     proj     : BinnedProjection
-               proj.x, proj.q2   shape (nx, nq2) = (40, 30)
+               proj.x, proj.q2   shape (nx, nq2) = (40, 30) on 'log40x30',
+                                 (20, 17) on 'yr'
                proj.x_edges      shape (nx+1,)
                proj.q2_edges     shape (nq2+1,)
                proj.accepted     shape (nx, nq2)  bool mask
@@ -127,7 +134,8 @@ def _project_at_lumi(cfg, backends, pzz: float, lumi_fb: float,
         pol_ion_tensor=pzz,
     )
     nf2_in = NuclearF2(cfg.ion, base=backends["base"])
-    proj = fom.project_rates(cfg, sc, nuclear_f2=nf2_in)
+    proj = fom.project_rates(cfg, sc, nuclear_f2=nf2_in,
+                             **beams.analysis_grid(binning))
     obs  = fom.project_observables(cfg, sc, proj,
                                    ToyG1(), toy_b1, toy_delta_gluon)
 
@@ -499,11 +507,14 @@ def _validate_sanitizer_parity(cfg):
     )
 
 
-def _validate_debug_crosscheck(cfg, backends, pzz, lumi_fb):
+def _validate_debug_crosscheck(cfg, backends, pzz, lumi_fb,
+                               binning="log40x30"):
     """Numerical cross-check: obs['err_a_cos2phi'] must match a reference
     re-run of fom.project_observables with identical inputs."""
-    proj_a, obs_a, _ = _project_at_lumi(cfg, backends, pzz, lumi_fb)
-    proj_b, obs_b, _ = _project_at_lumi(cfg, backends, pzz, lumi_fb)
+    proj_a, obs_a, _ = _project_at_lumi(cfg, backends, pzz, lumi_fb,
+                                        binning=binning)
+    proj_b, obs_b, _ = _project_at_lumi(cfg, backends, pzz, lumi_fb,
+                                        binning=binning)
     if not np.allclose(obs_a["err_a_cos2phi"], obs_b["err_a_cos2phi"]):
         raise RuntimeError(
             f"[{cfg.label()}] --debug-crosscheck: err_a_cos2phi not "
@@ -532,6 +543,16 @@ def main():
                          "which the deliverable figures assume)")
     ap.add_argument("--pzz", type=float, default=PZZ_DEFAULT,
                     help="tensor polarization Pzz (default: %(default)s)")
+    ap.add_argument("--binning", default="log40x30",
+                    choices=("log40x30", "generic", "yr"),
+                    help="(x, Q^2) analysis binning (plans/02 Step 1.1 "
+                         "item 3).  'log40x30' (default, and every "
+                         "deliverable map; 'generic' is the same grid) is "
+                         "the 40 x 30 log grid over x in [1e-4, 1], Q^2 in "
+                         "[1, 2e3]; 'yr' is the Yellow-Report five-bins-"
+                         "per-decade lattice, 20 x 17 over x in [1e-4, 1], "
+                         "Q^2 in [1, 2512], and writes its own '_yr' file "
+                         "names so it cannot overwrite them")
     ap.add_argument("--n-theta-bins", type=int, default=N_THETA_BINS,
                     dest="n_theta_bins",
                     help="number of regular theta_e bins in output (3) "
@@ -559,11 +580,15 @@ def main():
     # a non-default share writes its own files: the deliverable maps are
     # the share-1 ones
     share_key = fom.run_share_tag(run_share)
-    sfx = ("_" + share_key) if share_key else ""
+    bin_key = beams.binning_tag(args.binning)
+    sfx = "".join("_" + k for k in (share_key, bin_key) if k)
+    grid = beams.analysis_grid(args.binning)
 
     print(f"# coverage_and_stat_maps.py")
     print(f"# ion={ion_name}  pdf={args.pdf}  L={lumi_fb:g} fb^-1/u  "
           f"Pzz={pzz:g}  n_theta_bins={n_theta_bins}")
+    print(f"# binning={args.binning}  {grid['nx']} x {grid['nq2']}  "
+          f"x {grid['x_range']}  Q2 {grid['q2_range']}")
     print(f"# {fom.run_share_header(lumi_fb, run_share)}")
     print(f"# outdir={outdir}")
 
@@ -580,7 +605,8 @@ def main():
 
         # ── Full projection ──────────────────────────────────────────────── #
         proj, obs, theta_e = _project_at_lumi(cfg, backends, pzz, lumi_fb,
-                                              run_share=run_share)
+                                              run_share=run_share,
+                                              binning=args.binning)
 
         # ── Angle sanity check (plan validation item 4) ─────────────────── #
         _validate_angle_sanity(cfg, proj, theta_e)
@@ -601,7 +627,8 @@ def main():
 
         # ── Debug crosscheck (optional) ──────────────────────────────────── #
         if args.debug_crosscheck:
-            _validate_debug_crosscheck(cfg, backends, pzz, lumi_fb)
+            _validate_debug_crosscheck(cfg, backends, pzz, lumi_fb,
+                                       binning=args.binning)
 
         # ── Per-config summary (plan Phase D) ───────────────────────────── #
         n_dis = proj.n_events[proj.accepted].sum()
@@ -612,9 +639,14 @@ def main():
             th_range = f"{th_mrad.min():.1f}–{th_mrad.max():.1f}"
         else:
             th_range = "N/A"
+        n_per_bin = proj.n_events[proj.accepted]
         print(f"  {cfg.label():<30s}  N_DIS={n_dis:.3e}  "
               f"median δA_cos2phi={med_err:.3e}  "
               f"theta_e [mrad-from-backward]={th_range}")
+        print(f"      binning={args.binning}: {int(proj.accepted.sum())} "
+              f"accepted cells, median N/bin="
+              f"{float(np.median(n_per_bin)) if n_per_bin.size else float('nan'):.3e}, "
+              f"min δA_cos2phi={float(np.min(err_acc)) if err_acc.size else float('nan'):.3e}")
 
         # ── Write per-config PNGs ────────────────────────────────────────── #
         # Output (1): (x, Q^2) coverage
