@@ -151,6 +151,9 @@ Needed only for §5.2 (BeAGLE samples: `xrdcp`, `pyHepMC3`) and §5.3
 `epic-main` at git 5a7dd057, uproot 5.0.5 and a working
 `pyHepMC3.rootIO.ReaderRootTree`.  Fetch a current one with
 `eic-shell --upgrade`, and see §5.3 for why the geometry version matters.
+Since 2026-09-15 §5.2 names the newer
+`~/Projects/eic-2026/local/lib/eic_xl-nightly.sif` instead: it reads the
+same tree files once the `--pwd` of that section is supplied.
 
 ```bash
 export SIF=~/Projects/eic/local/lib/jug_xl-nightly.sif
@@ -175,15 +178,18 @@ automatically.
 ## 2 · The five-minute check: the test suites
 
 ```bash
-cd evgen   && python3 -m pytest tests/ -q     # 336 passed, ~70 s
-cd fastsim && python3 -m pytest tests/ -q     # 121 passed, ~19 s
+cd evgen   && python3 -m pytest tests/ -q     # 361 tests (360 passed, 1 skipped without a cached BeAGLE dump), ~70 s
+cd fastsim && python3 -m pytest tests/ -q     # 138 passed, ~28 s
 python3 tools/consistency_check.py --verbose  # 51 checks (53 with --full), whole repository
 ```
 
-457 tests, all of which run without the PDF grids except four of the five
-in `fastsim/tests/test_grids.py`, which skip.  These are not smoke tests:
-they pin physics identities against independent constructions — the
-spin-1 cross section against an explicit density-matrix trace, the
+499 tests, all of which run without the PDF grids except four of the five
+in `fastsim/tests/test_grids.py`, which skip, and the one streamed-sample
+test of `evgen/tests/test_reweight.py`, which skips unless
+`POLLIGEN_BEAGLE_CSV` names a cached BeAGLE dump (§5.2).  These are not
+smoke tests: they pin physics identities against independent
+constructions — the spin-1 cross section against an explicit
+density-matrix trace, the
 covariant azimuth against a boost-and-rotate construction of the
 collinear frame, R1998 against the published fit's own worked values, the
 nuclear masses against CODATA, the tensor sign against Cosyn Eq. (27).
@@ -239,9 +245,9 @@ manual gives for it (§3, §4).
 
 Analytic rates, figures of merit, tagging acceptance, and the dated
 money-Δ production line.  Run everything from `fastsim/`; every script
-that draws a figure takes `--outdir`; the three that only print
-(`validate_inputs`, `diag_sig2_grid`, `_check_reco_mask_invariants`) do
-not.
+that draws a figure takes `--outdir`; the four that only print
+(`validate_inputs`, `diag_sig2_grid`, `wp2_pzz_table`,
+`_check_reco_mask_invariants`) do not.
 
 ### 3.1 Phase space, rates, and the three early money plots
 
@@ -566,6 +572,23 @@ and are not current results (plans/10).  The current-energy toy reach
 is `scripts/money_delta.py`: L_5σ(Δ/F₁ = 10⁻³, P_zz = 0.8) = 16.7 /
 16.3 / 21.8 fb⁻¹/u at 5 × 40.8 / 10 × 99.5 / 18 × 137.5.
 
+The 95% CL exclusion contour asked for by plans/02 Step 1.3 item 3 is
+`--cl-band` (2026-09-15), off by default:
+
+```bash
+python3 scripts/money_delta.py --cl-band --outdir out   # -> *_cl95.png
+```
+
+It re-solves the same per-bin σ² at target = 1.645² instead of scaling the
+5σ answer, so a binding min-events floor would be visible; over the plotted
+Δ/F₁ range the floor only grazes and L_95% / L_5σ = (1.645/5)² = 0.10824 to
+five digits on all six curves — worst departure 1.1×10⁻⁵ relative, at the
+top of the scale range — giving 1.810 / 1.768 / 2.361 fb⁻¹/u at Δ/F₁ =
+10⁻³, P_zz = 0.8.
+The two-contour figure goes to its own `_cl95` stem — the published
+`money_delta_6Li_toy.png` is bit-for-bit the single-contour one until the
+author adopts the band.
+
 The six dated notes in `fastsim/notes/` carry a banner recording this;
 their numbers are still exactly reproducible with the default.
 
@@ -689,6 +712,26 @@ of Report 2 money plot 7R, which carry the shape fit, the response Monte
 Carlo and the unfolding prior spread, do not shrink with luminosity and
 their statistical part has to be separated first; the Table 4 bars of
 that report are statistical only and do obey the law.
+
+The share is one axis of the plans/07 WP2 scaling table; the other is
+the tensor polarization, and since 2026-09-15 it has its own driver,
+which writes no file at all:
+
+```bash
+cd fastsim
+python3 scripts/wp2_pzz_table.py          # under a second, prints only
+```
+
+It rebuilds the δA_zz of `money_b1.py` — the three ⁶Li configurations
+combined over Q², the five x bins plans/07 quotes — over P_zz = 0.30 …
+1.00 and the shares f = 1, ½, ⅓, and divides each cell by the analytic
+√2/(P_zz·D·A·√(fN)).  The ratio column is 1.0000 at every cell and the
+script exits non-zero if any cell misses `--tol` (default 0.002); the
+P_zz = 0.6 and 0.8 rows are `money_b1.py`'s published ones.  `D` and `A`
+are `fom.Scenario.dilution` and `.acceptance` (plans/05:370), both
+1.0 in every published figure and exposed here as `--dilution` /
+`--acceptance` so a diluted projection can be priced without editing a
+script.
 
 ---
 
@@ -1679,7 +1722,7 @@ calibrates the cluster model's p_T tail — the single most important
 model input to the ⁶Li α tag.
 
 ```bash
-export SIF=~/Projects/eic/local/lib/jug_xl-nightly.sif
+export SIF=~/Projects/eic-2026/local/lib/eic_xl-nightly.sif
 singularity exec $SIF xrdfs root://dtn-eic.jlab.org ls /volatile/eic/EPIC/EVGEN/DIS
 #   BeAGLE1.03.02-{1.0,1.2,1.3,2.0,2.1,3.0,3.1}, plus Djangoh/pythia6/pythia8 trees
 ```
@@ -1689,11 +1732,16 @@ sample anywhere, which is the gap FLUKA gates.
 
 ```bash
 B=root://dtn-eic.jlab.org//volatile/eic/EPIC/EVGEN/DIS/BeAGLE1.03.02-3.1/eH2/en/9x130/q2_1to1000
-singularity exec $SIF python3 tools/analysis/dump_spectators.py \
+singularity exec --pwd /opt/local/lib/root $SIF python3 \
+    $PWD/tools/analysis/dump_spectators.py \
     $B/BeAGLE1.03.02-3.1_DIS_eH2_en_9x130_q2_1to1000_ab_run001.hepmc3.tree.root \
-    ed.csv --nevents 20000                    # ~2 min, streamed, no download
+    $PWD/ed.csv --nevents 20000               # ~2 min, streamed, no download
 python3 tools/analysis/ed_control_analysis.py ed.csv --beta-scan --outdir out
 ```
+
+`--pwd` is not optional, and the two paths are absolute because of it —
+the reason is the paragraph below on the container.  `xrdfs` above needs
+neither.
 
 `en` means DIS on the neutron, so the proton is the spectator.  Expected:
 spectator protons in 100.0% of events, routed 93.1% to the off-momentum
@@ -1721,9 +1769,41 @@ own unrounded ratios are 2.46 / 7.01 / 28.0, while the four-decimal
 entries above divide to 2.46 / 7.05 / 28.8, the quantisation of the
 0.0037 and 0.0005 denominators.
 
-Reading the container's HepMC3 tree files needs the *legacy*
-`jug_xl-nightly` container; the newer `eic_xl-nightly` pyHepMC3
-`rootIO.ReaderRootTree` segfaults on the same files.
+The newer `eic_xl-nightly` container reads the same tree files, and the
+segfault this section reported for it until 2026-09-15 was ROOT's, not
+pyHepMC3's: cling resolves its module map through the *relative* path
+`../../include/root/ROOT.modulemap`, so it is found only when the
+process's working directory sits two levels below `$ROOTSYS`
+(`/opt/local`).  `singularity exec --pwd /opt/local/lib/root $SIF ...`
+reads the file; `--pwd /opt/local`, or the default (the host directory
+you launched from), prints *fatal error: module map file ... not found*
+and then dies in `libCling`.  Measured 2026-09-15 on
+`~/Projects/eic-2026/local/lib/eic_xl-nightly.sif`, 20 000 events of
+`run001` either way.
+
+#### Mode W: polarizing the streamed sample (plans/05 step 5.C)
+
+The CSV written just above is also the external pool of
+`polligen.reweight`, which multiplies each event by the doubly polarized
+density ratio of `xsec.InclusiveKernel` and hands the spin-labelled
+categories to the ordinary analysis estimators.  Cache it once and the
+gated closure runs offline:
+
+```bash
+POLLIGEN_BEAGLE_CSV=$PWD/ed.csv python3 -m pytest \
+    evgen/tests/test_reweight.py -q       # 16 passed; 15 with 1 skip without it
+```
+
+The loader forms Q², x and y from the per-event beam-ion row and the
+scattered-electron row against a supplied beam-electron four-vector
+(the dumper writes no status-4 lepton row), and takes φ from the
+scattered electron's lab azimuth.  Against BeAGLE's own `trueX`,
+`trueQ2`, `trueY` and `leptonphi` attributes on 20 000 `run001` events:
+median relative deviation −8.3 × 10⁻⁴ on x, +7.5 × 10⁻⁵ on Q², +5.9 ×
+10⁻⁴ on y, with the 68th percentile of |deviation| at 1.9 × 10⁻³,
+9.8 × 10⁻⁴ and 1.4 × 10⁻³; φ agrees to 1.3 mrad at the same percentile,
+and 0.27% of events miss it by more than 0.1 rad — the tail where the
+dumper's "highest-energy final-state electron" is not the scattered one.
 
 ### 5.3 ePIC full simulation — far-forward acceptance
 
@@ -1886,6 +1966,7 @@ trust anything downstream of it.
 | L₅σ (frozen R), any `--run-share` | `scripts/money_delta_realistic.py --configs low,mid,top` | 135.31 / 131.26 / 274.64 fb⁻¹/u (script-internal pre-2026-08-27 configs at 27.5 / 50 / 137.5 GeV/u, superseded by plans/10; only TOP is a machine configuration) |
 | L₅σ (published R), any `--run-share` | `… --r-model r1998 --configs low,mid,top` | 67.51 / 65.80 / 155.12 fb⁻¹/u (same caveat) |
 | L₅σ toy, current energies | `scripts/money_delta.py` | 16.7 / 16.3 / 21.8 fb⁻¹/u at Δ/F₁ = 10⁻³, P_zz = 0.8 (16.719 / 16.332 / 21.811 to the precision the 2026-08-28 min-events correction is pinned at, `tests/test_money_delta_mask.py`).  Unchanged at `--run-share 0.25`, where the error on the Δ/F₁ scale after one programme year doubles instead: 2.586 / 2.556 / 2.954 → 5.172 / 5.112 / 5.907 ×10⁻⁴ (§3.5) |
+| L₉₅% toy, current energies | `scripts/money_delta.py --cl-band` | 1.810 / 1.768 / 2.361 fb⁻¹/u at Δ/F₁ = 10⁻³, P_zz = 0.8 — the 5σ row × (1.645/5)² = 0.10824 to five digits (`tests/test_cl_band.py`); written to the `_cl95` stem, the published PNG is the 5σ contour alone |
 
 ### Event generator
 
@@ -2006,7 +2087,7 @@ Every entry below is an error we actually hit, with its cause.
 | npsim leaves `calibrations/`, `fieldmaps/`, `gdml/` in the working directory | `cd` to a scratch directory inside the `bash -lc` string; never run it from the repository (§5.3) |
 | the `--positions` output mixes the two Roman-Pot stations | both write into `ForwardRomanPotHits`; group by station plane, which `ff_gun_hits.py` has done since 2026-08-28 |
 | a far-out hit appears in BOTH layers of a station | the stations are tilted 45 mrad, so a plane is not a surface of constant z; assign in the rotated frame (§5.3) |
-| `pyHepMC3 rootIO.ReaderRootTree` segfaults | use the legacy `jug_xl-nightly` container for HepMC3 tree reading (§5.2) |
+| `pyHepMC3 rootIO.ReaderRootTree` segfaults after *fatal error: module map file `../../include/root/ROOT.modulemap` not found* | not the bindings: run the container with its working directory two levels below `$ROOTSYS`, `singularity exec --pwd /opt/local/lib/root`, and pass absolute paths (§5.2) |
 | `build_report.py` exits "no headless-capable browser" | install one into the user cache (§1.6) |
 | a money plot is missing when building a report | run the `evgen/scripts` that produces it first (§4); the builder refuses to use a stale figure |
 

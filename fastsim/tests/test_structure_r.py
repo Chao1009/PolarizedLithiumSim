@@ -410,3 +410,31 @@ def test_dated_script_monkey_patch_still_reaches_three_of_four():
     assert before[3] == after[3]   # ToyG1 does not: the missed consumer
     # ...and the hook is the way to move it
     assert float(polarized.ToyG1(r_func=const_r).g1p(x, q2)) != before[3]
+
+
+def test_get_backends_is_the_fourth_consumer_s_entry_point():
+    """`inputs.get_backends(..., r_func=)` reaches the g1 the dated
+    scripts' `r_override` never could (plans/08 C2, plans/07 WP1).
+
+    The point of widening the selector in run 19 is that R stops being a
+    per-call-site decision at the money-script level: one argument moves
+    the g1 model and the nuclear F2 together.  Toy-path only, so this
+    runs with no grids installed.
+    """
+    from polli_fastsim.inputs import get_backends
+
+    x, q2 = 0.05, 2.0
+    plain = get_backends("toy")
+    hooked = get_backends("toy", nuclear=beams.LI6, r_func=st.r1998)
+
+    assert plain["g1"].r_func is None
+    assert hooked["g1"].r_func is st.r1998
+    # the g1/F1 of the hooked backend has moved, and by the R ratio
+    ratio = ((1.0 + st.r_sigma_lt(x, q2)) / (1.0 + st.r1998(x, q2)))
+    assert float(hooked["g1"].g1p(x, q2)) != float(plain["g1"].g1p(x, q2))
+    assert (float(hooked["nuclear"].f1a(x, q2))
+            / float(st.NuclearF2(beams.LI6).f1a(x, q2))
+            == pytest.approx(float(ratio), rel=1e-14))
+    # F2 is untouched by R, on both sides
+    assert (float(hooked["nuclear"].f2a(x, q2))
+            == float(st.NuclearF2(beams.LI6).f2a(x, q2)))

@@ -8,7 +8,11 @@ and the diffractive momentum loss x_P < ~0.02 keeps it deep inside the
 |R-1| < 0.05 near-beam band), so at IP6 the ONLY far-forward handle is
 the Roman-Pot near-beam pT tail: the same beam-blindness that limits the
 6Li alpha-tag (plans/00).  Under the exponential coherent t-slope the
-tagging acceptance is analytic, acc = exp(-B pT_cut^2).
+tagging acceptance is analytic, acc = exp(-B pT_cut^2), times the
+exp(-B t_min) the minimum momentum transfer costs when it is folded in
+(`t_min_coherent`, the optional `t_min=` argument of the three tagging
+functions -- default None, i.e. the t_min-neglecting form every figure
+published before 2026-09-15 used).
 
 Everything here is a SCENARIO model in the sense of polarized.py: the
 coherent fraction and slope are placeholders with explicit bands, to be
@@ -52,6 +56,47 @@ def gaussian_slope(r_rms_fm):
     """Coherent |F(t)|^2 t-slope B [GeV^-2] for a Gaussian density:
     F(t) = exp(-R_rms^2 |t| / 6) -> |F|^2 = exp(-B |t|), B = R_rms^2/3."""
     return (r_rms_fm / GEV_PER_FM_INV) ** 2 / 3.0
+
+
+def t_min_coherent(x_pom, mass_a=M_LI6):
+    """Minimum |t| of coherent diffraction off a nucleus of mass M_A,
+
+        |t_min| = (x_P M_A)^2 / (1 - x_P),
+
+    i.e. the longitudinal cost of taking x_P of the beam momentum off an
+    intact nucleus.  The transverse momentum of the recoil is then
+    pT^2 = |t| - |t_min|, so a pT cut selects |t| > |t_min| + pT_cut^2
+    and the tagged fraction of the coherent yield carries an extra
+    exp(-B |t_min|) (`CoherentScenario.t_min_suppression`).
+
+    At x_P = 0.01, the coherence falloff scale x_coh (where f_coh is
+    already down by a factor 2) and the reference point of the
+    2026-08-10 audit note, |t_min| = 3.17e-3 GeV^2 with M_A = 5.6015 GeV.
+    The note quoted 3.1e-3, the leading-order (x_P M_A)^2 without the
+    1/(1 - x_P) -- the two differ by 1% of t_min and move the B = 50
+    suppression from -14.4% to -14.7%
+    (test_t_min_audit_note_minus_14_percent pins both).
+
+    x_P = 0.01 is NOT the top of the window.  |t_min| grows like x_P^2,
+    so at the coherence edge x_P ~ 0.02 (module docstring) it is
+    1.28e-2 GeV^2 and the B = 50 suppression is -47%, three times deeper
+    than at the note's point (test_t_min_grows_like_x_pom_squared).
+    """
+    x_pom = np.asarray(x_pom, dtype=float)
+    return (x_pom * float(mass_a)) ** 2 / (1.0 - x_pom)
+
+
+def _as_t_min(t_min):
+    """None -> None (the t_min-neglecting default); otherwise a
+    non-negative float.  |t_min| is a magnitude, so a negative value is
+    a caller error, not a boost of the acceptance above unity."""
+    if t_min is None:
+        return None
+    t_min = float(t_min)
+    if not t_min >= 0.0:
+        raise ValueError("t_min is the magnitude |t_min| >= 0, got %r"
+                         % (t_min,))
+    return t_min
 
 
 @dataclass(frozen=True)
@@ -120,17 +165,45 @@ class CoherentScenario:
         c = 1.0 - np.exp(-self.slope_b * t_max)
         return -np.log(1.0 - c * u) / self.slope_b
 
-    def tag_acceptance(self, pt_cut):
-        """Fraction of coherent recoils above the near-beam pT cut:
-        P(pT > cut) = exp(-B cut^2) for dsigma/dt ~ exp(-B pT^2)."""
-        return float(np.exp(-self.slope_b * pt_cut * pt_cut))
+    def t_min_suppression(self, t_min=None):
+        """exp(-B |t_min|): what folding in the minimum momentum transfer
+        costs the tagged yield, at THIS scenario's slope.
 
-    def mean_t_tagged(self, pt_cut):
-        """<|t|> of the TAGGED sample: pT_cut^2 + 1/B (exponential tail)."""
-        return pt_cut * pt_cut + 1.0 / self.slope_b
+        `t_min=None` returns exactly 1.0, so every caller written before
+        2026-09-15 is bit-for-bit unchanged.  Following the B band is the
+        point of having it here rather than in a plotting script: the
+        suppression is a function of B, and a hard-coded constant cannot
+        move with the {40, 60} band a panel draws (plans/07 WP5).
+        """
+        t_min = _as_t_min(t_min)
+        if t_min is None:
+            return 1.0
+        return float(np.exp(-self.slope_b * t_min))
+
+    def tag_acceptance(self, pt_cut, t_min=None):
+        """Fraction of coherent recoils above the near-beam pT cut:
+        P(pT > cut) = exp(-B cut^2) for dsigma/dt ~ exp(-B pT^2).
+
+        With `t_min` given the recoil carries |t| = |t_min| + pT^2 and the
+        fraction is quoted against the same nominal coherent yield (the
+        |t| -> 0 normalisation f_coh uses), so it picks up the factor
+        exp(-B |t_min|) -- see `t_min_coherent`.  Default None keeps the
+        neglecting form.
+        """
+        return float(np.exp(-self.slope_b * pt_cut * pt_cut)
+                     * self.t_min_suppression(t_min))
+
+    def mean_t_tagged(self, pt_cut, t_min=None):
+        """<|t|> of the TAGGED sample: pT_cut^2 + 1/B (exponential tail),
+        plus |t_min| when it is folded in (|t| = |t_min| + pT^2, and the
+        exponential tail of pT^2 above the cut is unchanged by the
+        shift)."""
+        t_min = _as_t_min(t_min)
+        mean_t = pt_cut * pt_cut + 1.0 / self.slope_b
+        return mean_t if t_min is None else mean_t + t_min
 
     def tag_acceptance_angular(self, sigma_theta, p_per_nucleon, a_beam=6,
-                               n_sigma=10.0):
+                               n_sigma=10.0, t_min=None):
         """Tag acceptance for an ANGULAR near-beam envelope: the pots see
         the recoil's angle, so the cut on the nucleus pT scales with the
         beam momentum, pT_cut = n_sigma sigma_theta A p_u
@@ -145,10 +218,14 @@ class CoherentScenario:
         at the two lower ones and sqrt(2) rigidity-capped at the top --
         so this scalar form is the isotropic stand-in and
         farforward.sigma_theta_for / yr_optics are the current numbers
-        (plans/10)."""
+        (plans/10).
+
+        `t_min` folds in exp(-B |t_min|) exactly as in `tag_acceptance`;
+        default None is the neglecting form."""
         cut = n_sigma * sigma_theta * a_beam * np.asarray(p_per_nucleon,
                                                           dtype=float)
-        return np.exp(-self.slope_b * cut * cut)
+        return (np.exp(-self.slope_b * cut * cut)
+                * self.t_min_suppression(t_min))
 
     # --- deformation-anchored modulation (arXiv:2408.13213 scaling) -----
 
@@ -193,13 +270,21 @@ class CoherentScenario:
         pseudo-experiments (recopseudo, money plot 6R) inject c_2."""
         return 2.0 * self.a2_deformation(t_abs, pzz)
 
-    def a2_tagged(self, pt_cut, pzz):
+    def a2_tagged(self, pt_cut, pzz, t_min=None, rate_weighted=False):
         """<a_2> of the RP-tagged sample in the equal-rate, linear-in-|t|
         approximation: a_2(<|t|>_tag) with <|t|>_tag = pT_cut^2 + 1/B.
-        Carries the one-sided rate-weighting model systematic
-        RATE_WEIGHT_SYST (multiply to get the anchor-scaled rate-weighted
-        estimate); quote both, the eps_b0 band covers the spread."""
-        return float(self.a2_deformation(self.mean_t_tagged(pt_cut), pzz))
+
+        `rate_weighted=True` applies the one-sided rate-weighting model
+        systematic RATE_WEIGHT_SYST in place of asking every caller to
+        multiply by hand; it is default-OFF, so the simple population
+        average stays the central value until the author adopts the fold
+        (plans/07 WP5, 2026-09-15).  Quote both -- the eps_b0 band covers
+        the spread.  `t_min` shifts <|t|>_tag by |t_min| and therefore
+        RAISES |a_2| slightly, the opposite sign from what it does to the
+        yield; default None is the neglecting form."""
+        a2 = float(self.a2_deformation(
+            self.mean_t_tagged(pt_cut, t_min=t_min), pzz))
+        return a2 * RATE_WEIGHT_SYST if rate_weighted else a2
 
 
 # One-sided rate-weighting model systematic on a2_tagged (2026-08-10
@@ -226,20 +311,26 @@ MANTYSAARI_A2_DEUTERON = {
 }
 
 
-def recoil_lab(t_abs, phi_t, p_per_nucleon, x_pom=0.0):
+def recoil_lab(t_abs, phi_t, p_per_nucleon, x_pom=0.0, t_min=None):
     """Lab kinematics of the intact 6Li recoil.
 
-    pT = sqrt(|t|), neglecting t_min ~ (x_P M_A)^2/(1-x_P).  Audit note
-    (2026-08-10): t_min = 3.1e-3 GeV^2 at x_P = 0.01 (M_A = 5.6 GeV), so
-    the tagged acceptance is overestimated by ~exp(-B t_min) - 1 ~ -14%
-    there (less below; rate-weighted over f_coh the effect is ~10%,
-    one-sided) -- subdominant to the x2 f0 band, but not < 1e-3 as the
-    x_P < 0.005 wording previously implied.  The longitudinal momentum
-    keeps (1 - x_pom) of the beam value, so R = p/Z over beam ~ 1.
+    `t_min=None` (default) reads `t_abs` as pT^2, the t_min-neglecting
+    convention of every caller written before 2026-09-15; given a t_min,
+    `t_abs` is the true Mandelstam |t| = |t_min| + pT^2 and the recoil
+    gets pT = sqrt(|t| - |t_min|), clipped at zero below threshold.  The
+    size of the neglect is no longer a prose claim in this docstring: it
+    is `t_min_coherent` plus `CoherentScenario.t_min_suppression`, pinned
+    by test_t_min_audit_note_minus_14_percent (the 2026-08-10 audit
+    note's -14% on the tagged acceptance at x_P = 0.01, B = 50) and by
+    test_t_min_rate_weighted_over_f_coh (its ~10% one-sided f_coh-
+    weighted average).  The longitudinal momentum keeps (1 - x_pom) of
+    the beam value, so R = p/Z over beam ~ 1.
     Returns dict with pT, theta, R, xL (per-nucleus fraction).
     """
     t_abs = np.asarray(t_abs, dtype=float)
-    pt = np.sqrt(t_abs)
+    t_min = _as_t_min(t_min)
+    pt = np.sqrt(t_abs if t_min is None
+                 else np.maximum(t_abs - t_min, 0.0))
     p_beam = 6.0 * p_per_nucleon
     pz = (1.0 - np.asarray(x_pom, dtype=float)) * p_beam
     p_lab = np.hypot(pt, pz)
@@ -274,7 +365,7 @@ def tag_acceptance_sampled(scenario, optics, p_per_nucleon, n=200000,
 
 def project_coherent(config, scenario_fom, coh, optics_list=(), nx=40,
                      nq2=30, x_range=(1e-4, 1.0), q2_range=(1.0, 2e3),
-                     nuclear_f2=None, sigma_theta_list=()):
+                     nuclear_f2=None, sigma_theta_list=(), t_min=None):
     """Coherent event counts per (x, Q2) bin.
 
     Returns (proj, n_coh, tagged) where proj is the underlying DIS
@@ -283,17 +374,31 @@ def project_coherent(config, scenario_fom, coh, optics_list=(), nx=40,
     (constant pT cut) and each sigma_theta [rad] of `sigma_theta_list`
     (key "sigma_theta=<microrad>urad") to the ANGULAR-cut acceptance at
     the configuration's beam momentum per nucleon.
+
+    `t_min` is passed through to both acceptances (default None = the
+    t_min-neglecting form); it is a single number, i.e. one x_P for the
+    whole (x, Q2) grid, because f_coh is written against Bjorken x and
+    carries no x_P of its own.  The suppression is therefore a one-point
+    stand-in for an x_P average this module cannot take, and it is steep:
+    -3.9% / -14.7% / -47% at x_P = 0.005 / 0.01 / 0.02 (B = 50).  Quote it
+    at the audit note's x_P = 0.01 for continuity, read it as ONE point on
+    that curve rather than as a bound, and note that the two weights
+    test_t_min_rate_weighted_over_f_coh measures both land ABOVE it
+    (-11.0% flat in x_P, -2.5% flat in ln x_P) because f_coh kills the
+    large-x_P end where the suppression bites.
     """
     proj = fom.project_rates(config, scenario_fom, nx=nx, nq2=nq2,
                              x_range=x_range, q2_range=q2_range,
                              nuclear_f2=nuclear_f2)
     n_coh = proj.n_events * coh.coherent_fraction(proj.x)
-    tagged = {opt.name: n_coh * coh.tag_acceptance(opt.pt_cut_near_beam)
+    tagged = {opt.name: n_coh * coh.tag_acceptance(opt.pt_cut_near_beam,
+                                                   t_min=t_min)
               for opt in optics_list}
     for sig in sigma_theta_list:
         tagged["sigma_theta=%.0furad" % (1e6 * sig)] = (
             n_coh * coh.tag_acceptance_angular(
-                sig, config.ion_momentum_per_nucleon, a_beam=config.ion.A))
+                sig, config.ion_momentum_per_nucleon, a_beam=config.ion.A,
+                t_min=t_min))
     return proj, n_coh, tagged
 
 

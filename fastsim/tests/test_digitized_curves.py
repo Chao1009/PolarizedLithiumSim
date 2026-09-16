@@ -30,8 +30,16 @@ def _have_grids():
 needs_grids = pytest.mark.skipif(
     not _have_grids(), reason="EPPS21nlo_CT18Anlo_Li6 / CT18NLO not installed")
 
+# Wang-Bentz-Cloet-Thomas Fig. 3, the two panels.  Named here rather than
+# in `polarized.py` because nothing in the library reads them yet: the
+# dg1/dlnQ2 observable they belong to has no money plot (plans/02 step
+# 1.2.2), so the tables are committed data with a test and no importer.
+WBCT_EMC_TABLE = "wbct_emc_nm_Q5"
+WBCT_POLEMC_TABLE = "wbct_polemc_nm_Q5"
+
 TABLES = (P.CBT_TABLE, P.TMT_TABLE, P.MILLER_TABLE, P.CDKS_TABLE,
-          "b1_cdks_q2set", "b1_miller_q2set")
+          "b1_cdks_q2set", "b1_miller_q2set",
+          WBCT_EMC_TABLE, WBCT_POLEMC_TABLE)
 
 
 def test_every_table_loads_with_a_strictly_increasing_x():
@@ -42,6 +50,57 @@ def test_every_table_loads_with_a_strictly_increasing_x():
         assert all(np.all(np.isfinite(v)) for v in t.values()), name
         lo, hi = P.curve_x_range(name)
         assert 0.0 < lo < hi, name
+
+
+def test_wbct_figure_3_range_and_monotonicity():
+    """WBCT J. Phys. G 49:03LT01 Fig. 3, nuclear matter at Q2 = 5 GeV2.
+
+    Both panels are plotted on the same frame, x = 0...1 and ratio
+    0.6...1.2, so every extracted value must lie inside that box: a
+    mis-set axis range would put values outside it at once.  Above
+    x = 0.6 all four gluon-sector curves are on the rise out of the EMC
+    trough towards the Fermi-motion shoulder, which is strictly monotone
+    in the published drawing -- that is what pins the curve -> column
+    assignment, since a solid/dashed swap would break it.
+    """
+    left = P._load_curve(WBCT_EMC_TABLE)
+    right = P._load_curve(WBCT_POLEMC_TABLE)
+
+    for t, name in ((left, "left"), (right, "right")):
+        for col, v in t.items():
+            assert np.all(v >= (0.0 if col == "x" else 0.6)), (name, col)
+            assert np.all(v <= (1.0 if col == "x" else 1.2)), (name, col)
+    # the digitized spans, as SOURCES.md records them
+    assert P.curve_x_range(WBCT_EMC_TABLE) == pytest.approx(
+        (0.0467, 0.8062), abs=5e-4)
+    assert P.curve_x_range(WBCT_POLEMC_TABLE) == pytest.approx(
+        (0.0500, 0.8259), abs=5e-4)
+
+    for t, col in ((left, "R_gluon_nlo"), (left, "R_gluon_nnlo"),
+                   (right, "R_deltag")):
+        rise = t[col][t["x"] >= 0.60]
+        assert np.all(np.diff(rise) > 0), col
+    assert np.all(np.diff(right["R_g1"][right["x"] >= 0.75]) > 0)
+
+    # the two statements the Letter makes about this figure: the polarized
+    # EMC effect is at least as large as the unpolarized one, and the
+    # polarized GLUON effect is larger than the unpolarized gluon one
+    assert right["R_g1"].min() < left["R_F2_nlo"].min()
+    assert right["R_deltag"].min() < left["R_gluon_nlo"].min()
+
+    def depth(t, col):
+        g = np.linspace(0.35, 0.70, 201)
+        return 1.0 - float(np.interp(g, t["x"], t[col]).mean())
+
+    assert depth(right, "R_deltag") > 1.4 * depth(left, "R_gluon_nlo")
+    assert depth(right, "R_g1") > depth(left, "R_F2_nlo")
+    # and the NLO/NNLO pair is the same curve to a couple of per cent
+    # (measured 0.023 for F2A/F2N and 0.018 for gA/gp) -- the paper's
+    # own argument that the low model scale is under control
+    g = np.linspace(0.10, 0.70, 61)
+    for a, b in (("R_F2_nlo", "R_F2_nnlo"), ("R_gluon_nlo", "R_gluon_nnlo")):
+        assert np.max(np.abs(np.interp(g, left["x"], left[a])
+                             - np.interp(g, left["x"], left[b]))) < 0.03
 
 
 def test_cbt_figure_6_values():

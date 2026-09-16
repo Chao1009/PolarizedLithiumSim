@@ -49,10 +49,11 @@ from polligen.xsec import (InclusiveKernel,  # noqa: E402
 
 from polli_fastsim import beams, delta_models as dm, fom  # noqa: E402
 PRETTY = {"moment_A": "moment-constrained $\\Delta$", "moment_B": "no-$F_1$ variant", "toy": "flat toy"}  # figure labels
+from polli_fastsim import structure  # noqa: E402
 from polli_fastsim.asymmetries import a_cos2phi  # noqa: E402
+from polli_fastsim.inputs import get_backends  # noqa: E402
 from polli_fastsim.kinematics import kinematic_mask, y_from_xq2  # noqa: E402
 from polli_fastsim.polarized import toy_b1  # noqa: E402
-from polli_fastsim.structure import NuclearF2  # noqa: E402
 
 # Okabe-Ito (colorblind-safe): blue = injected, vermillion = fit/1-yr,
 # green = alternative interpretation
@@ -173,6 +174,69 @@ def tensor_leakage_tag(args):
     return "_".join(keys)
 
 
+def add_pdf_arg(ap):
+    """`--pdf {toy,grid}` -- the structure-function backend.
+
+    The spelling is the one the six scripts that already take a
+    backend use -- five in `fastsim/scripts` (`money_delta_20260715.py`,
+    `money_b1.py`, `money_delta.py`, `coverage_and_stat_maps.py`,
+    `money_polemc.py`) and `evgen/scripts/target_mass_bound.py`;
+    plans/07 WP1 wrote `--backend grid`, a flag that has never existed
+    anywhere in this repository.
+    """
+    ap.add_argument("--pdf", default="toy", choices=("toy", "grid"),
+                    help="structure-function backend.  'toy' (the "
+                         "default, and every published PNG) is the toy F2 "
+                         "and the toy R; 'grid' is the published-input "
+                         "path -- F2A from the EPPS21nlo_CT18Anlo_Li6 "
+                         "NUCLEAR set, g1 from NNPDFpol11_100, and the "
+                         "SLAC/E143 R1998 fit in place of the toy R.  "
+                         "Needs `parton` with those grids installed, and "
+                         "writes its own '_grid' PNG stem")
+
+
+def pdf_backends(args, ion):
+    """The backend set `--pdf` names, for `ion`.
+
+    One call gives the three objects that have to move together -- the
+    free-nucleon F2 the g1 denominator is built on, the g1 model, and the
+    whole-nucleus F2A -- plus, on 'grid', the one R they all use.  On
+    'toy' with r_func None it is bit-for-bit the bare `NuclearF2(ion)` /
+    `ToyG1()` these scripts built inline before run 19.
+    """
+    pdf = getattr(args, "pdf", "toy")
+    return get_backends(pdf, nuclear=ion,
+                        r_func=structure.r1998 if pdf == "grid" else None)
+
+
+def pdf_tag(args):
+    """Filename key for a non-default `--pdf` ('' at the published toy)."""
+    return "grid" if getattr(args, "pdf", "toy") == "grid" else ""
+
+
+def describe_backends(args, backends):
+    """One line naming what `--pdf` actually loaded, for the run record."""
+    nf2 = backends["nuclear"]
+    r = "R1998" if getattr(nf2, "r_func", None) is not None else "toy R"
+    if getattr(args, "pdf", "toy") != "grid":
+        return "toy F2/g1, %s (published path)" % r
+    return ("F2A = %s, g1 = NNPDFpol11_100, F2p = CT18NLO, %s; F2A FROZEN "
+            "below Q2 = %.4g GeV^2 (the set's Q0^2 -- parton returns NaN "
+            "there, and the money maps start at Q2 = 1)"
+            % (nf2.setname, r, nf2.q2_min))
+
+
+def output_stem_tag(args):
+    """The whole non-default-settings key of a truth-level money PNG.
+
+    `--pdf grid` first, then the tensor-leakage keys, so that the
+    published toy massless-path stem stays the bare one and any other
+    run writes beside it rather than over it -- the guard convention of
+    `tensor_leakage_tag` below, extended to the backend.
+    """
+    return "_".join(k for k in (pdf_tag(args), tensor_leakage_tag(args)) if k)
+
+
 def truth_leakage_route(args):
     """How the TRUTH-LEVEL scripts should name the route they ran.
 
@@ -270,22 +334,29 @@ def measure(sampler, cat, mask, lumi_pb, pzz, rng, nbins=24):
             "sigma_pb": sigma_pb}
 
 
-def build_delta_model(args, config, scenario):
+def build_delta_model(args, config, scenario, backends=None):
     """Delta model from the unified registry; moment_A needs the
     rate-weighted <Q2> of the accepted phase space and a per-nucleon
-    F1 handle."""
+    F1 handle.
+
+    Both come off the `--pdf` backend since run 19: on `--pdf grid` the
+    sum rule is re-solved against the grid F1 at the GRID <Q2>, which is
+    the whole of what "re-solve moment_A at the grid <Q2>" means
+    (plans/07 WP1).  `backends` is the already-built set when the caller
+    has one, so the grids are opened once per run.
+    """
     if args.delta_model == "toy":
         return dm.make("toy", scale=args.scale), None
-    nf2 = NuclearF2(beams.LI6)
     if args.delta_model == "moment_B":
         return dm.make("moment_B", variant=args.variant,
                        dilution=args.dilution), None
-    proj0 = fom.project_rates(config, scenario)
+    nf2 = (backends or pdf_backends(args, config.ion))["nuclear"]
+    proj0 = fom.project_rates(config, scenario, nuclear_f2=nf2)
     acc = proj0.accepted
     q2_ref = float((proj0.n_events[acc] * proj0.q2[acc]).sum()
                    / proj0.n_events[acc].sum())
     model = dm.make(
-        "moment_A", f1_func=lambda x, q2: nf2.f1a(x, q2) / beams.LI6.A,
+        "moment_A", f1_func=lambda x, q2: nf2.f1a(x, q2) / config.ion.A,
         q2_ref=q2_ref, variant=args.variant, dilution=args.dilution)
     return model, q2_ref
 
@@ -309,6 +380,7 @@ def main():
                     help="10-year EIC program [fb^-1/nucleon]")
     ap.add_argument("--pzz", type=float, default=0.60)
     ap.add_argument("--nspots", type=int, default=4)
+    add_pdf_arg(ap)
     add_tensor_leakage_args(ap)
     ap.add_argument("--seed", type=int, default=20260810)
     ap.add_argument("--outdir", default=".")
@@ -322,15 +394,22 @@ def main():
 
     scenario = fom.Scenario(lumi_fb_per_nucleon=args.lumi_1yr,
                             pol_ion_tensor=args.pzz)
-    model, q2_ref = build_delta_model(args, config, scenario)
+    backends = pdf_backends(args, config.ion)
+    model, q2_ref = build_delta_model(args, config, scenario,
+                                      backends=backends)
     delta_func = model  # DeltaModel is (x, q2, f1)-callable
 
     # --- sweet spots from the analytic significance map -------------------
-    proj = fom.project_rates(config, scenario)
+    proj = fom.project_rates(config, scenario,
+                             nuclear_f2=backends["nuclear"])
     b3_func, b4_func = b34_funcs(args)
-    kern = InclusiveKernel(beams.LI6, b1_func=toy_b1, delta_func=delta_func,
+    kern = InclusiveKernel(config.ion, b1_func=toy_b1, delta_func=delta_func,
                            b3_func=b3_func, b4_func=b4_func,
-                           tensor_gamma=args.tensor_gamma)
+                           tensor_gamma=args.tensor_gamma,
+                           f2_source=backends["base"],
+                           g1_model=backends["g1"],
+                           nuclear_f2=backends["nuclear"],
+                           r_func=backends["nuclear"].r_func)
     obs = fom.project_observables(config, scenario, proj,
                                   kern.g1_model, toy_b1, delta_func)
     spots = pick_sweet_spots_banded(proj, obs["sig_a_cos2phi"])[:args.nspots]
@@ -490,12 +569,13 @@ def main():
     fig.subplots_adjust(top=0.86, bottom=0.09, left=0.06, right=0.985)
     outdir = pathlib.Path(args.outdir)
     outdir.mkdir(parents=True, exist_ok=True)
-    # a non-default tensor-leakage setting writes its own stem, so it
-    # cannot overwrite the published massless-path figure
-    tag = tensor_leakage_tag(args)
+    # a non-default backend or tensor-leakage setting writes its own
+    # stem, so it cannot overwrite the published massless-path figure
+    tag = output_stem_tag(args)
     out = outdir / ("money_cos2phi_6Li%s.png" % ("_" + tag if tag else ""))
     fig.savefig(out, dpi=140)
     print("wrote", out)
+    print("backend:", describe_backends(args, backends))
     print("delta model:", model.info(),
           "" if q2_ref is None else "(<Q2> = %.3g GeV^2)" % q2_ref)
     if args.tensor_gamma:

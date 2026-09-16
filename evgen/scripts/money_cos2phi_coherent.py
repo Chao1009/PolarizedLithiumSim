@@ -48,6 +48,9 @@ import matplotlib  # noqa: E402
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 
+from money_cos2phi import (add_pdf_arg, describe_backends,  # noqa: E402
+                           output_stem_tag, pdf_backends)
+
 from polligen import coherent as coh  # noqa: E402
 from polligen.recopseudo import T_EDGES_PUBLISHED  # noqa: E402
 from polligen.estimators import (cos2phi_fit_binned,  # noqa: E402
@@ -96,6 +99,7 @@ def main():
     ap.add_argument("--amp", type=float, default=0.01,
                     help="flat gluon-transversity scenario amplitude "
                          "at Pzz=1 (band 3e-3..1e-2)")
+    add_pdf_arg(ap)
     ap.add_argument("--seed", type=int, default=20260810)
     ap.add_argument("--outdir", default=".")
     args = ap.parse_args()
@@ -106,8 +110,14 @@ def main():
     scenario = fom.Scenario(lumi_fb_per_nucleon=args.lumi_1yr,
                             pol_ion_tensor=args.pzz)
     lumi_ratio = args.lumi_10yr / args.lumi_1yr
+    # --pdf reaches this figure through the DIS rate map alone: the
+    # coherent fraction and the t-slope are models, not structure
+    # functions, so what moves is N_coh, N_tag and the best super-bin
+    backends = pdf_backends(args, config.ion)
+    nf2 = backends["nuclear"]
     proj, n_coh, tagged = coh.project_coherent(
-        config, scenario, sc, optics_list=(HIGH_ACCEPTANCE, HIGH_DIVERGENCE))
+        config, scenario, sc, optics_list=(HIGH_ACCEPTANCE, HIGH_DIVERGENCE),
+        nuclear_f2=nf2)
     n_tag = tagged[HIGH_ACCEPTANCE.name]
     cut_ha = HIGH_ACCEPTANCE.pt_cut_near_beam
 
@@ -202,7 +212,8 @@ def main():
     for f0 in (0.02, 0.08):
         sc_b = coh.CoherentScenario(f0=f0)
         _, nb, tb = coh.project_coherent(
-            config, scenario, sc_b, optics_list=(HIGH_ACCEPTANCE,))
+            config, scenario, sc_b, optics_list=(HIGH_ACCEPTANCE,),
+            nuclear_f2=nf2)
         ax3.plot(xc[ok], np.maximum(
             tb[HIGH_ACCEPTANCE.name].sum(axis=1)[ok], 1e-1),
             "-", color=C_TRUTH, lw=0.8, alpha=0.45)
@@ -276,9 +287,14 @@ def main():
     fig.tight_layout(rect=(0, 0, 1, 0.91))
     outdir = pathlib.Path(args.outdir)
     outdir.mkdir(parents=True, exist_ok=True)
-    out = outdir / "money_cos2phi_coherent_6Li.png"
+    # a non-default backend writes its own stem, so it cannot overwrite
+    # the published figure
+    tag = output_stem_tag(args)
+    out = outdir / ("money_cos2phi_coherent_6Li%s.png"
+                    % ("_" + tag if tag else ""))
     fig.savefig(out, dpi=140)
     print("wrote", out)
+    print("backend:", describe_backends(args, backends))
     print("coherent produced: %.3g   RP-tagged (HA): %.3g   (HD): %.3g"
           % (n_coh.sum(), n_tag.sum(),
              tagged[HIGH_DIVERGENCE.name].sum()))

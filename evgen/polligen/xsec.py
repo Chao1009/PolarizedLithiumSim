@@ -393,6 +393,18 @@ class InclusiveKernel:
     EXPLICIT `g1_model` keeps whatever R it was built with: r_func only
     fills the default one.
 
+    `nuclear_f2` (DEFAULT None) replaces the whole-nucleus F2A object the
+    kernel would otherwise build as `NuclearF2(ion, base=f2_source)` --
+    the same hook `fom.project_rates` and `coherent.project_coherent`
+    already take, so that a run on a NUCLEAR grid
+    (`structure.NuclearF2FromGrid`, which has no free-nucleon `base` to
+    combine) reads its F2A off the nuclear set in all three places at
+    once instead of two of three.  Given one, `f2_source` no longer
+    builds F2A -- it still seeds the default g1 model's unpolarized
+    denominator -- and `emc_ratio` is REFUSED rather than silently
+    dropped, because a nuclear set already carries its own medium
+    modification.  None is bit-for-bit every published number.
+
     `g2_mode` chooses the g2 model ("ww", the default Wandzura-Wilczek
     table of the g1 backend, or "zero") and `g2_scale` multiplies it.
     Together they are the twist-3 handle on the finite-gamma A_par.  The
@@ -436,12 +448,25 @@ class InclusiveKernel:
                  b1_32_func=None, b2_32_func=None, delta_32_func=None,
                  g2_mode="ww", g2_scale=1.0, emc_ratio=None, r_func=None,
                  target_mass=True, b3_func=None, b4_func=None,
-                 tensor_gamma=False):
+                 tensor_gamma=False, nuclear_f2=None):
         self.ion = ion
         self.r_func = r_func
-        self.nf2 = NuclearF2(ion, base=f2_source or ToyF2(),
-                             emc_ratio=emc_ratio, r_func=r_func)
-        self.g1_model = g1_model or ToyG1(base=self.nf2.base, r_func=r_func)
+        if nuclear_f2 is None:
+            self.nf2 = NuclearF2(ion, base=f2_source or ToyF2(),
+                                 emc_ratio=emc_ratio, r_func=r_func)
+        else:
+            if emc_ratio is not None:
+                # the medium modification is already inside a nuclear-set
+                # F2A; applying it twice, or dropping it in silence, are
+                # both wrong, so the combination is refused outright
+                raise ValueError(
+                    "emc_ratio cannot be combined with nuclear_f2: the "
+                    "supplied F2A object owns its own medium modification")
+            self.nf2 = nuclear_f2
+        # `f2_source` still seeds the default g1 when the nuclear F2A is a
+        # nuclear-grid object with no free-nucleon `base` of its own
+        g1_base = getattr(self.nf2, "base", None) or f2_source or ToyF2()
+        self.g1_model = g1_model or ToyG1(base=g1_base, r_func=r_func)
         self.b1_func = b1_func
         self.b2_func = b2_func
         self.b3_func = b3_func

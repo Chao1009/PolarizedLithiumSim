@@ -49,9 +49,10 @@ from matplotlib.colors import LogNorm  # noqa: E402
 from matplotlib.lines import Line2D  # noqa: E402
 from matplotlib.patches import Rectangle  # noqa: E402
 
-from money_cos2phi import (build_delta_model, measure,  # noqa: E402
-                           pick_sweet_spots_banded, superbin_edges,
-                           superbin_mask)
+from money_cos2phi import (add_pdf_arg, build_delta_model,  # noqa: E402
+                           describe_backends, measure, output_stem_tag,
+                           pdf_backends, pick_sweet_spots_banded,
+                           superbin_edges, superbin_mask)
 from money_cos2phi_coherent import best_superbin  # noqa: E402
 
 from polligen import bookkeeping as bk  # noqa: E402
@@ -145,6 +146,7 @@ def main():
     ap.add_argument("--lumi-1yr", type=float, default=10.0,
                     help="1-year EIC program [fb^-1/nucleon]")
     ap.add_argument("--pzz", type=float, default=0.60)
+    add_pdf_arg(ap)
     ap.add_argument("--seed", type=int, default=20260817)
     ap.add_argument("--outdir", default=".")
     args = ap.parse_args()
@@ -155,11 +157,18 @@ def main():
 
     scenario = fom.Scenario(lumi_fb_per_nucleon=args.lumi_1yr,
                             pol_ion_tensor=args.pzz)
-    model, _q2_ref = build_delta_model(args, config, scenario)
-    kern = InclusiveKernel(beams.LI6, b1_func=toy_b1, delta_func=model)
+    backends = pdf_backends(args, config.ion)
+    model, _q2_ref = build_delta_model(args, config, scenario,
+                                       backends=backends)
+    kern = InclusiveKernel(config.ion, b1_func=toy_b1, delta_func=model,
+                           f2_source=backends["base"],
+                           g1_model=backends["g1"],
+                           nuclear_f2=backends["nuclear"],
+                           r_func=backends["nuclear"].r_func)
 
     # --- inclusive: rate map + the money-plot 5/7 bins -------------------
-    proj = fom.project_rates(config, scenario)
+    proj = fom.project_rates(config, scenario,
+                             nuclear_f2=backends["nuclear"])
     obs = fom.project_observables(config, scenario, proj,
                                   kern.g1_model, toy_b1, model)
     spots = pick_sweet_spots_banded(proj, obs["sig_a_cos2phi"])[:4]
@@ -194,7 +203,8 @@ def main():
     # --- tagged coherent: rate map + the money-plot 6(d) bin -------------
     sc = coh.CoherentScenario()
     proj_c, n_coh, tagged = coh.project_coherent(
-        config, scenario, sc, optics_list=(HIGH_ACCEPTANCE,))
+        config, scenario, sc, optics_list=(HIGH_ACCEPTANCE,),
+        nuclear_f2=backends["nuclear"])
     n_tag = tagged[HIGH_ACCEPTANCE.name]
     sel, txlo, txhi, tq2lo, tq2hi = best_superbin(proj_c, n_tag)
 
@@ -276,10 +286,13 @@ def main():
     fig.tight_layout(rect=(0, 0, 1, 0.92))
     outdir = pathlib.Path(args.outdir)
     outdir.mkdir(parents=True, exist_ok=True)
-    out = outdir / "phase_space_bins_6Li.png"
+    # a non-default backend writes its own stem
+    tag = output_stem_tag(args)
+    out = outdir / ("phase_space_bins_6Li%s.png" % ("_" + tag if tag else ""))
     fig.savefig(out, dpi=140)
     print("wrote", out)
 
+    print("backend:", describe_backends(args, backends))
     print("N_DIS (1 yr) = %.3e   N_coh = %.3e   N_tag (HA) = %.3e"
           % (proj.n_events.sum(), n_coh.sum(), n_tag.sum()))
     for k, (xs, qs, i, j) in enumerate(spots):

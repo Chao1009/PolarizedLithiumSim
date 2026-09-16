@@ -305,7 +305,7 @@ f₂/f₀ = −1/√2 crossing at 1.03 GeV/c.*
   high-acceptance envelope, with the tagging optics beside it (plans/09 B3);
   the retired legacy pair is reachable only by asking for it.*
 
-### Step 5.C ☐ Mode W reweighter + reco-level closure (1–2 weeks)
+### Step 5.C ◐ Mode W reweighter + reco-level closure (1–2 weeks)
 `reweight.py` driving the official BeAGLE e+d sample (xrootd, already
 streamed for the control study): inject A∥(g₁d) and A_zz(b₁d), extract with
 the analysis estimators through the existing conversion chain, verify pulls.
@@ -313,6 +313,41 @@ This is the ECCE-style pedigree demonstration on the nucleus where BeAGLE
 *is* right, and it exercises the identical machinery later pointed at e+Li
 BeAGLE samples for purity studies (evaporation background stays BeAGLE's
 job; plans/02 step 1.5.4).
+  ☑ *2026-09-15: the reweighter and the generator-level closure are in
+  `polligen/reweight.py`, gated by `tests/test_reweight.py` (16 tests).
+  `ModeWReweighter` evaluates the kernel's own (w_avg, a₁, a₂) triple at
+  each external event's (x, Q², φ) — not at a grid cell — and, because an
+  unpolarized sample has flat φ, resampling it with probability ∝ W
+  reproduces the polarized cross section including its φ modulation;
+  `bookkeeping`'s run plans and `estimators`' counting estimators then read
+  the spin-labelled categories unchanged. Injected and recovered on the
+  official `BeAGLE1.03.02-3.1/eH2/en/9x130` sample, 20 000 events streamed
+  through `tools/analysis/dump_spectators.py` (19 935 inside the
+  `fom.Scenario` window): over 1000 pseudo-experiments the pull mean is
+  +0.005 on A∥ and −0.040 on A_zz with widths 0.992 and 1.007, against the
+  gate |μ| < 0.15 and 1.00 ± 0.10; the same gate on the synthetic in-memory
+  pool the tests use gives −0.074 / +0.018 and 1.010 / 1.007, and it holds
+  with the events themselves resampled and not only their Poisson counts.
+  The φ channel is closed too: a cos 2φ′ amplitude injected into a flat
+  pool comes back through `estimators.cos2phi_fit` to 0.5% of itself. Two
+  by-products. The streamed sample's kinematics are re-formed from the
+  per-event beam and scattered-electron rows against a supplied
+  beam-electron four-vector — the dumper writes no status-4 lepton — and
+  agree with BeAGLE's own `trueX`/`trueQ2`/`trueY`/`leptonphi` to a median
+  −8.3×10⁻⁴ / +7.5×10⁻⁵ / +5.9×10⁻⁴ / 0 and a 68th percentile of
+  1.9×10⁻³ / 9.8×10⁻⁴ / 1.4×10⁻³ / 1.3 mrad, with a 0.27% tail where the
+  dumper's highest-energy electron is not the scattered one. And the
+  container note of docs/reproduction_manual.md §5.2 was wrong: the newer
+  `eic_xl-nightly` image reads these tree files, it is ROOT's relative
+  module-map path that needs `singularity exec --pwd /opt/local/lib/root`.*
+  ◐ *Not closed: the reco-level half of this step. The pulls above are
+  truth-level — the external sample supplies the kinematics and the
+  hadronic final state, but nothing between the generator and the
+  estimator. Putting a reweighted sample through abconv → npsim → EICrecon
+  needs the HepMC3 writer of step 5.D (`io_hepmc.py`), which does not
+  exist; `reco.py`/`recopseudo.py` fold resolutions analytically rather
+  than reading a reconstructed file. `draw_category` already returns the
+  Mode-G event-dict shape so that a writer can consume it unchanged.*
 
 ### Step 5.D ☐ Final states + HepMC3 + chain smoke test (2 weeks)
 Tier T1 (cluster-internal nucleon + partner spectators; t* remnant → d or
@@ -403,3 +438,16 @@ PYTHIA-backed response; 5.B is done, so what is left of the 7–9 weeks is
   does not — `fom.Scenario` and the three error functions take no dilution or
   acceptance argument, so `recopseudo`'s measured φ dilution and the β tail band
   never reach the analytic layer.*
+  ☑ *2026-09-15: the flow-back now has its channel. `fom.Scenario` carries
+  `dilution` (D) and `acceptance` (A), both defaulting to 1.0, both refused
+  at ≤ 0, and all three δA paths divide by D·A — so `bin_summary`'s
+  `dilution_phi` and `truth_reference`'s `dilution_beta` reach the analytic
+  layer as numbers, which is how the import discipline stays one-way
+  (fastsim still imports no `polligen`, now asserted by an AST scan in
+  `fastsim/tests/test_fom_dilution.py`). δA(D = 0.5) = 2 δA(D = 1) exactly,
+  and at the defaults every error is bit-for-bit what it was: the registered
+  figure `phase_space_bins_6Li.png` regenerates to the same md5
+  (b9a05445f26f2c1b7f89284133f1b2e4) across the change. What does NOT belong
+  in these two fields is anything that removes events rather than attenuating
+  the amplitude — that enters as 1/√ through the luminosity knobs, and the
+  two laws are pinned apart in the tests.*

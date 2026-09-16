@@ -18,6 +18,9 @@ from polligen.sample import InclusiveSampler, phi_histogram_pseudo  # noqa: E402
 from polligen.xsec import InclusiveKernel  # noqa: E402
 
 from polli_fastsim import beams, fom  # noqa: E402
+
+# NumPy compat: np.trapz removed in NumPy >= 2.4, np.trapezoid absent < 2.0
+_trapezoid = getattr(np, "trapezoid", None) or np.trapz
 from polli_fastsim.asymmetries import a_cos2phi  # noqa: E402
 from polli_fastsim.farforward import HIGH_ACCEPTANCE, HIGH_DIVERGENCE  # noqa: E402
 from polli_fastsim.polarized import toy_delta_gluon  # noqa: E402
@@ -248,3 +251,201 @@ def test_angular_cut_kills_the_upper_energies():
         st = reco.sigma_theta_tagging(c, slope_b=sc.slope_b)
         acc = float(sc.tag_acceptance_angular(st, c.ion_momentum_per_nucleon))
         assert acc == pytest.approx(math.exp(-1.0), rel=0.02)
+
+
+# --- t_min and the rate weighting (2026-09-15, plans/07 WP5) --------------
+#
+# These seven tests retire the prose audit note that used to sit in
+# `recoil_lab`'s docstring (2026-08-10): its numbers are now measured
+# here instead of asserted there.
+
+
+def test_t_min_defaults_are_bit_for_bit_and_validated():
+    """`t_min=None` is the published behaviour to the last bit, and so is
+    an explicit zero; a negative magnitude is a caller error."""
+    sc = coh.CoherentScenario(slope_b=50.0)
+    cut = HIGH_ACCEPTANCE.pt_cut_near_beam
+    p_u = beams.default_configs("6Li")[0].ion_momentum_per_nucleon
+    sig = HIGH_ACCEPTANCE.sigma_theta
+    assert sc.t_min_suppression() == 1.0
+    assert sc.t_min_suppression(0.0) == 1.0
+    assert sc.tag_acceptance(cut) == sc.tag_acceptance(cut, t_min=None)
+    assert sc.tag_acceptance(cut) == sc.tag_acceptance(cut, t_min=0.0)
+    assert sc.mean_t_tagged(cut) == sc.mean_t_tagged(cut, t_min=None)
+    assert sc.mean_t_tagged(cut) == sc.mean_t_tagged(cut, t_min=0.0)
+    assert (float(sc.tag_acceptance_angular(sig, p_u))
+            == float(sc.tag_acceptance_angular(sig, p_u, t_min=0.0)))
+    assert sc.a2_tagged(cut, 0.6) == sc.a2_tagged(cut, 0.6, t_min=None)
+    for bad in (-1e-9, -3.1e-3):
+        with pytest.raises(ValueError):
+            sc.tag_acceptance(cut, t_min=bad)
+        with pytest.raises(ValueError):
+            sc.mean_t_tagged(cut, t_min=bad)
+
+
+def test_t_min_folds_in_as_exp_minus_b_tmin():
+    """The fold is exactly exp(-B |t_min|) on the acceptance -- and it
+    follows the B band, which is why it lives here and not in a plotting
+    script (the panel-(b) constant of `coherent_optics_scan.py` cannot)."""
+    t_min = 3.1e-3
+    cut = HIGH_ACCEPTANCE.pt_cut_near_beam
+    for b in (40.0, 50.0, 60.0):
+        sc = coh.CoherentScenario(slope_b=b)
+        ratio = sc.tag_acceptance(cut, t_min=t_min) / sc.tag_acceptance(cut)
+        assert ratio == pytest.approx(math.exp(-b * t_min), rel=1e-12)
+        # the angular cut folds in the same factor
+        p_u = beams.default_configs("6Li")[0].ion_momentum_per_nucleon
+        sig = HIGH_ACCEPTANCE.sigma_theta
+        ang = (float(sc.tag_acceptance_angular(sig, p_u, t_min=t_min))
+               / float(sc.tag_acceptance_angular(sig, p_u)))
+        assert ang == pytest.approx(math.exp(-b * t_min), rel=1e-12)
+        # <|t|>_tag shifts by exactly |t_min| (|t| = |t_min| + pT^2)
+        assert (sc.mean_t_tagged(cut, t_min=t_min) - sc.mean_t_tagged(cut)
+                == pytest.approx(t_min, rel=1e-12))
+    # the two directions have OPPOSITE signs: fewer tagged recoils, but a
+    # larger <|t|> and therefore a larger deformation coefficient
+    sc = coh.CoherentScenario(slope_b=50.0)
+    assert sc.tag_acceptance(cut, t_min=t_min) < sc.tag_acceptance(cut)
+    assert abs(sc.a2_tagged(cut, 0.6, t_min=t_min)) > abs(
+        sc.a2_tagged(cut, 0.6))
+
+
+def test_t_min_audit_note_minus_14_percent():
+    """The 2026-08-10 audit note: t_min = 3.1e-3 GeV^2 at x_P = 0.01
+    (M_A = 5.6 GeV) overestimates the tagged acceptance by ~-14%.
+
+    Measured here: -14.4% at the note's 3.1e-3, which is the leading-order
+    (x_P M_A)^2; the note's own formula (x_P M_A)^2/(1 - x_P) gives
+    3.169e-3 and -14.7%.  Both round to the -14% the note quotes and to
+    the -15% the 2026-08-25 code review quotes -- the 1% difference in
+    t_min IS the whole spread between those two statements."""
+    sc = coh.CoherentScenario(slope_b=50.0)
+    cut = HIGH_ACCEPTANCE.pt_cut_near_beam
+    note = 3.1e-3
+    exact = float(coh.t_min_coherent(0.01))
+    assert exact == pytest.approx(3.169e-3, abs=1e-6)
+    assert note == pytest.approx((0.01 * coh.M_LI6) ** 2, abs=5e-5)
+    lost = sc.tag_acceptance(cut, t_min=note) / sc.tag_acceptance(cut) - 1.0
+    assert lost == pytest.approx(-0.1436, abs=1e-4)
+    assert round(100.0 * lost) == -14
+    lost_exact = (sc.tag_acceptance(cut, t_min=exact)
+                  / sc.tag_acceptance(cut) - 1.0)
+    assert lost_exact == pytest.approx(-0.1466, abs=1e-4)
+    assert round(100.0 * lost_exact) == -15
+    # and it is independent of the cut: a pure normalisation factor
+    for other in (0.10, 0.45, 0.60):
+        assert (sc.tag_acceptance(other, t_min=note)
+                / sc.tag_acceptance(other) - 1.0) == pytest.approx(
+                    lost, rel=1e-12)
+
+
+def test_t_min_rate_weighted_over_f_coh():
+    """The audit note's second number -- "rate-weighted over f_coh the
+    effect is ~10%, one-sided".
+
+    Measured: it is a statement about the x_P WEIGHT, not a robust
+    number.  With x_P flat over the coherent window 0 < x_P < 0.02 and
+    weight f_coh(x_P) the mean suppression is 0.890 (-11.0%, the note's
+    ~10%); with the DIS-like weight dN/dx_P ~ 1/x_P over
+    1e-4 < x_P < 0.02 -- flat in ln x_P, which is what the rate actually
+    does -- it is 0.975, only -2.5%.  What survives is the one-sidedness;
+    the bracket does NOT survive as a bound.  Both of these weights land
+    ABOVE the x_P = 0.01 value (-14.4%) because f_coh kills the large-x_P
+    end, but x_P = 0.01 is the coherence falloff scale, not the top of
+    the window: a weight that survived to x_P = 0.02 would see -47%
+    (test_t_min_grows_like_x_pom_squared).  So 0.01 is a reference point,
+    not an edge."""
+    sc = coh.CoherentScenario(slope_b=50.0)
+
+    def supp(x_pom):
+        return np.exp(-sc.slope_b * np.asarray(coh.t_min_coherent(x_pom)))
+
+    xp = np.linspace(0.0, 0.02, 400001)
+    w = sc.coherent_fraction(xp)
+    flat = float(_trapezoid(w * supp(xp), xp) / _trapezoid(w, xp))
+    lnx = np.linspace(math.log(1e-4), math.log(0.02), 400001)
+    xl = np.exp(lnx)
+    wl = sc.coherent_fraction(xl)
+    logw = float(_trapezoid(wl * supp(xl), lnx) / _trapezoid(wl, lnx))
+    assert flat == pytest.approx(0.890, abs=2e-3)
+    assert logw == pytest.approx(0.975, abs=2e-3)
+    assert round(100.0 * (flat - 1.0)) == -11
+    ref = float(supp(0.01))
+    for mean in (flat, logw):
+        assert ref < mean < 1.0     # one-sided, milder than the x_P=0.01 point
+
+
+def test_a2_tagged_rate_weighted_flag():
+    """`rate_weighted=` replaces the by-hand multiplication the docstring
+    used to ask for; default OFF, so the simple population average stays
+    the central value (plans/07 WP5, author call open)."""
+    sc = coh.CoherentScenario(slope_b=50.0, eps_b0=-0.08)
+    cut = HIGH_ACCEPTANCE.pt_cut_near_beam
+    plain = sc.a2_tagged(cut, 0.6)
+    assert sc.a2_tagged(cut, 0.6, rate_weighted=False) == plain
+    weighted = sc.a2_tagged(cut, 0.6, rate_weighted=True)
+    assert weighted == pytest.approx(plain * coh.RATE_WEIGHT_SYST, rel=1e-12)
+    # the pair plans/06 SS6.4b and the note quote at the defaults
+    assert sc.mean_t_tagged(cut) == pytest.approx(0.06, abs=1e-12)
+    assert plain == pytest.approx(0.036, abs=5e-4)
+    assert weighted == pytest.approx(0.026, abs=5e-4)
+    # -27%, the one-sided systematic
+    assert round(100.0 * (weighted / plain - 1.0)) == -27
+
+
+def test_recoil_lab_t_min_removes_the_neglect():
+    """With a t_min the first argument is the true Mandelstam |t| and the
+    recoil keeps pT^2 = |t| - |t_min|; below threshold pT is clipped to
+    zero rather than going NaN."""
+    t_min = float(coh.t_min_coherent(0.01))
+    t = np.array([t_min, 0.01, 0.05, 0.2])
+    lab = coh.recoil_lab(t, 0.0, 100.0, x_pom=0.01, t_min=t_min)
+    assert lab["pT"][0] == 0.0
+    assert np.all(lab["pT"] ** 2 == pytest.approx(t - t_min, abs=1e-15))
+    assert np.all(np.abs(lab["R"] - 1.0) < 0.05)
+    # below threshold: clipped, not NaN
+    assert float(coh.recoil_lab(0.5 * t_min, 0.0, 100.0,
+                                t_min=t_min)["pT"]) == 0.0
+    # default is unchanged, bit for bit
+    base = coh.recoil_lab(t, 0.0, 100.0, x_pom=0.01)
+    assert np.all(base["pT"] == np.sqrt(t))
+
+
+def test_project_coherent_t_min_scales_the_tagged_yield():
+    config = beams.default_configs("6Li")[0]
+    sc = coh.CoherentScenario()
+    t_min = float(coh.t_min_coherent(0.01))
+    args = dict(optics_list=(HIGH_ACCEPTANCE,),
+                sigma_theta_list=(HIGH_ACCEPTANCE.sigma_theta,))
+    _, n0, tag0 = coh.project_coherent(
+        config, fom.Scenario(lumi_fb_per_nucleon=100.0), sc, **args)
+    _, n1, tag1 = coh.project_coherent(
+        config, fom.Scenario(lumi_fb_per_nucleon=100.0), sc,
+        t_min=t_min, **args)
+    assert np.all(n1 == n0)               # the produced yield is untouched
+    for key in tag0:
+        ok = tag0[key] > 0
+        assert np.all(tag1[key][ok] / tag0[key][ok] == pytest.approx(
+            sc.t_min_suppression(t_min), rel=1e-12))
+
+
+def test_t_min_grows_like_x_pom_squared():
+    """|t_min| ~ x_P^2, so the suppression is steep across the coherent
+    window and x_P = 0.01 is a reference point, not a bound: it is the
+    coherence falloff scale x_coh, while the module's window runs to
+    x_P ~ 0.02, where the B = 50 suppression is -47%, not -15%."""
+    sc = coh.CoherentScenario(slope_b=50.0)
+    assert sc.x_coh == 0.01                    # the 'edge' is the half-point
+    assert float(sc.coherent_fraction(0.01)) == pytest.approx(
+        0.5 * float(sc.coherent_fraction(0.0)), rel=1e-12)
+    t = {x: float(coh.t_min_coherent(x)) for x in (0.005, 0.01, 0.02)}
+    assert t[0.005] == pytest.approx(7.884e-4, abs=1e-6)
+    assert t[0.01] == pytest.approx(3.169e-3, abs=1e-6)
+    assert t[0.02] == pytest.approx(1.281e-2, abs=1e-5)
+    # quadratic to the 1/(1 - x_P) correction: doubling x_P quadruples it
+    assert t[0.02] / t[0.01] == pytest.approx(4.0 * (1 - 0.01) / (1 - 0.02),
+                                              rel=1e-12)
+    lost = {x: 100.0 * (sc.t_min_suppression(v) - 1.0) for x, v in t.items()}
+    assert round(lost[0.005]) == -4
+    assert round(lost[0.01]) == -15
+    assert round(lost[0.02]) == -47

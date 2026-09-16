@@ -254,8 +254,14 @@ yet carries a polarimetry-scale band.*
    (verified on `root://dtn-eic.jlab.org//volatile/eic/EPIC/`, browsable
    with `xrdfs ls`): e+d BeAGLE 10×130 (tagging samples), e+³He BeAGLE
    5×41/10×110/18×110/10×166 (A₁ⁿ double-tagging), e+Au BeAGLE DIS.
-   Campaign infra: `eic/simulation_campaign_hepmc3` + condor; species enter
-   via geometry filename (`${DETECTOR_CONFIG}_${EBEAM}x${PBEAM}.xml`);
+   Campaign infra: `eic/simulation_campaign_hepmc3` + condor; the beam pair
+   and the species enter via the geometry filename
+   (`${DETECTOR_CONFIG}_${EBEAM}x${PBEAM}.xml`, the species riding inside
+   `PBEAM` — `100_Au197`, `110_He3`, `130_H2` — which is an inference from the
+   compact and RECO listings, not from a submit file; see the note below),
+   while the dataset path itself mirrors the generator sample's own path
+   (`RECO/<version>/<DETECTOR_CONFIG>/<class>/…/<generator>/<species>/<EBEAMxPBEAM>/<Q2 bin>/`,
+   with the middle depth varying by dataset);
    afterburning is done upstream of campaigns (`*_ABCONV` datasets).
 ☐ *2026-08-28: only the EVGEN e+d and e+³He (10×166) samples were streamed, for
 the plans/02 §1.5.3 control. The reconstructed campaign subtree was never listed,
@@ -263,6 +269,48 @@ e+Au never opened, no podio/edm4eic reader exists, and the campaign-infrastructu
 claims of this bullet (`simulation_campaign_hepmc3` + condor, geometry-filename
 species routing, the `*_ABCONV` convention) appear nowhere but here and have never
 been checked against the endpoint.*
+☑ *2026-09-15: checked against the live endpoint and the container. The RECO
+subtree is now on the record — `tools/analysis/list_campaign_tree.py` walks
+`xrdfs root://dtn-eic.jlab.org ls` to a fixed depth and writes a dated listing
+(`--path /volatile/eic/EPIC/RECO --depth 3`); `/volatile/eic/EPIC/RECO` holds 64
+entries, 56 versioned campaigns `22.10.0`…`26.07.2` plus `main`,
+`alternative-geometries-img-ecal`, `mktest`, four `25.10.{0,1,2,3}_manifest.txt`
+and `transfer_manifest.py`. **Claim 1 (`simulation_campaign_hepmc3` + condor) —
+cited**: the repository exists and is live (`scripts/run.sh`, pushed 2026-08-31),
+and that script is the campaign job, keying off `_CONDOR_CREDS`,
+`_CONDOR_SCRATCH_DIR`, `OSG_WN_TMP` and `GLIDEIN_Site` and writing its output with
+`xrdcp` to `RECO/${DETECTOR_VERSION}/${DETECTOR_CONFIG}/…`, which is exactly the
+tree listed above; the OSG half is visible from the endpoint alone in
+`RECO/transfer_manifest.py`, which pulls each manifest line to
+`/ospool/uc-shared/project/ePIC/RECO/` over Pelican/OSDF. **Claim 2
+(`${DETECTOR_CONFIG}_${EBEAM}x${PBEAM}.xml`) — cited, with the species half
+sharpened**: `run.sh:235` (npsim `--compactFile`) and `:275` (eicrecon
+`-Pdd4hep:xml_files`) both build
+`${DETECTOR_PATH}/${DETECTOR_CONFIG}${EBEAM:+${PBEAM:+_${EBEAM}x${PBEAM}}}.xml`,
+and the container ships 44 `epic_craterlake*` compacts, 36 of them carrying an
+`_${EBEAM}x${PBEAM}` tag and 25 of those a further species tag (`_H2`, `_He3`,
+`_Au197` and one bare `_Au`, `_Cu63`, `_Ru96`, `_Pb207/8`).
+The template has no separate species slot, and the 25.10.3 e+Au campaign ran at
+`10x100`/`5x41` under the RECO directory `epic_craterlake_without_zdc`, for which
+the only compacts that exist are `epic_craterlake_without_zdc_{10x100,5x41}_Au197.xml`
+(there is no `epic_craterlake_without_zdc.xml` and no `…_without_zdc_10x100.xml`)
+— so the species must travel inside `PBEAM`. That last step is an inference from
+the two lists, not a reading of a submit file; the submit files are not on the
+endpoint. **No `epic_craterlake_*_Li6/Li7*.xml` exists**, which is the
+beamline-XML artifact the risk table below already lists.
+**Claim 3 (`*_ABCONV` upstream) — cited**: the suffix is a dataset-level directory
+in EVGEN (`EVGEN/EXCLUSIVE/{DVCS,DIFFRACTIVE_RHO,MESON_SF,…}_ABCONV`) that the
+campaign mirrors into RECO (`RECO/25.12.0/epic_craterlake/EXCLUSIVE/DVCS_ABCONV`,
+and under `SIDIS/` 103 609 `D0_ABCONV` files in the 25.10.3 manifest, each named
+`…_q2_1to10000_ab_run368.0024.eicrecon.edm4eic.root` — that dataset's path,
+`…/epic_craterlake_without_zdc/SIDIS/D0_ABCONV/HFsim-BeAGLE/BeAGLE1.03.01-2.0/eAu/10x100/q2_1to10000/`,
+is the deeper shape the bullet's `…` stands for), and `run.sh` contains no
+afterburner step at all — the campaign never afterburns, it consumes afterburnt
+input. Two gaps from 2026-08-28 survive: no podio/edm4eic reader was written (a
+separate ~8 h, out of scope here), and the BeAGLE e+d (`eH2/10x130`) and e+³He
+(`eHe3/{5x41,10x110,18x110,10x166}`) RECO directories exist in 25.12.0 but their
+Q² bins list zero files — the volatile copies have been swept, so a reco-level
+e+d control would have to be re-produced or pulled from OSG.*
 2. Estimate compute (Geant4 e+A ~ min/event → 10⁷ events needs farm/OSG);
    prepare configs to campaign standards so an official e+Li request can go
    through ePIC once endorsed.

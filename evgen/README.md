@@ -8,14 +8,16 @@ Event-level Monte Carlo for the *doubly polarized* eA process (plans/05):
 polarized electrons on vector/tensor-polarized ⁶,⁷Li, spin-labeled events,
 run-plan bookkeeping. Step 5.A (physics kernel + inclusive sampler) and
 Step 5.B (tagged mode — spin ⊗ cluster-spectator correlation) are
-implemented; the BeAGLE reweighter (5.C) and HepMC3 output (5.D) come
-next. Imports `../fastsim/polli_fastsim` — nothing there is duplicated.
+implemented, and Step 5.C's Mode-W reweighter (`reweight.py`, which
+polarizes an external unpolarized sample) closes at generator level; its
+reco-level leg and HepMC3 output (5.D) come next. Imports
+`../fastsim/polli_fastsim` — nothing there is duplicated.
 
 ## Quick start
 
 ```bash
 cd evgen
-python3 -m pytest tests/ -q            # 336 tests
+python3 -m pytest tests/ -q            # 361 tests
 python3 scripts/closure_fom.py --ion 6Li --events 200000 --trials 200
 python3 scripts/closure_fom.py --ion 7Li --events 200000 --trials 200
 python3 scripts/money_tagged_azz.py --events 400000       # money plot 4 (--config, --optics, --lumi-fraction)

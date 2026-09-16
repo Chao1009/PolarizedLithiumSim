@@ -193,6 +193,58 @@ python3 tools/digitize_figure.py --pdf refs/1311.4561.pdf --page 11 \
   --grid 300 --out fastsim/polli_fastsim/data/b1_miller_q2set.csv
 ```
 
+## `wbct_emc_nm_Q5.csv` and `wbct_polemc_nm_Q5.csv`
+
+X. G. Wang, W. Bentz, I. C. Cloët, A. W. Thomas, *Polarized gluon EMC
+effect*, J. Phys. G 49 (2022) 03LT01, arXiv:2109.03591 — **page 8,
+Figure 3: isospin-symmetric nuclear matter at Q² = 5 GeV²**, the gluon
+sector of `plans/02` step 1.2.2.  The two panels sit on separate frames
+with identical axes, x = 0…1 and ratio = 0.6…1.2.  Each drawn curve stops
+where it leaves the top of the box, at a different x for each; the
+tabulated grid is the range the curves of a panel have in COMMON (the
+per-curve spans are in the CSV header comments, the solid ones running on
+to x = 0.911), so the last rows carry every column of the panel rather
+than one of them alone.  At the other end the paper does not draw the
+small-x region at all — "because of the neglect of shadowing effects …
+this region is not shown in Fig. 3", their p. 8 — so both tables start
+near x = 0.05, and a caller must treat anything below that as the paper's
+silence rather than extrapolate the tables into it.
+
+`wbct_emc_nm_Q5.csv` — the LEFT panel, frame (117.25, 92.06)–(287.23,
+202.45) pt.  Legend, read off the four handles: red solid *EMC effect,
+NLO*, red dashed *Gluon EMC effect, NLO*, blue solid *EMC effect, NNLO*,
+blue dashed *Gluon EMC effect, NNLO* — i.e. F_2A/F_2N and g_A/g_p of the
+caption at the two orders.  Columns `R_F2_nlo`, `R_gluon_nlo`,
+`R_F2_nnlo`, `R_gluon_nnlo`; covered range x = 0.0467–0.8062.  The black
+paths in this panel are the empirical nuclear-matter points of their
+Ref. [53] with their error bars, and are not extracted.
+
+`wbct_polemc_nm_Q5.csv` — the RIGHT panel, frame (319.30, 92.45)–(488.83,
+202.55) pt.  Two red handles: solid *Polarized EMC effect* = g_1A/g_1p,
+dashed *Polarized gluon EMC effect* = Δg_A/Δg_p.  Columns `R_g1`,
+`R_deltag`; covered range x = 0.0500–0.8259.  Read back, the trough of
+g_1A/g_1p is 0.763 at x = 0.73 against 0.803 for F_2A/F_2N, and that of
+Δg_A/Δg_p is 0.795 at x = 0.50 against 0.855 for g_A/g_p — the Letter's
+two claims about this figure, which
+`fastsim/tests/test_digitized_curves.py::test_wbct_figure_3_range_and_monotonicity`
+pins.
+
+```bash
+python3 tools/digitize_figure.py --pdf refs/2109.03591.pdf --page 8 \
+  --frame 117.25 92.06 287.23 202.45 --xrange 0 1 --yrange 0.6 1.2 \
+  --curve "R_F2_nlo:1.0,0.0,0.0:[] 0" \
+  --curve "R_gluon_nlo:1.0,0.0,0.0:[ 2.8176797 1.218456 ] 0" \
+  --curve "R_F2_nnlo:0.0,0.0,1.0:[] 0" \
+  --curve "R_gluon_nnlo:0.0,0.0,1.0:[ 2.8176797 1.218456 ] 0" \
+  --grid 300 --out fastsim/polli_fastsim/data/wbct_emc_nm_Q5.csv
+
+python3 tools/digitize_figure.py --pdf refs/2109.03591.pdf --page 8 \
+  --frame 319.30 92.45 488.83 202.55 --xrange 0 1 --yrange 0.6 1.2 \
+  --curve "R_g1:1.0,0.0,0.0:[] 0" \
+  --curve "R_deltag:1.0,0.0,0.0:[ 2.8102425 1.21524 ] 0" \
+  --grid 300 --out fastsim/polli_fastsim/data/wbct_polemc_nm_Q5.csv
+```
+
 ## `av18/fdeut.av18` — the one file here that is not a digitized curve
 
 R. B. Wiringa, Argonne National Laboratory, **the Argonne v18 deuteron wave
@@ -244,12 +296,6 @@ where n_{+1}/n_0 = 2.7×10⁻⁴ against 0.16 and 0.19 at k = 0.2 and
 0.4 GeV/c; +0.999 at the 90° cell; and +0.967 at the k = 1.0 GeV/c row.
 
 ## Not digitized
-
-Wang–Bentz–Cloët–Thomas, *Polarized gluon EMC effect*, J. Phys. G 49 (2022)
-03LT01, arXiv:2109.03591, Figure 3 (page 8) carries g₁A/g₁p and Δg_A/Δg_p —
-the dg₁/dlnQ² observable of `plans/02` step 1.2.2, which has no money plot
-yet.  The PDF is in `refs/` and the entry in `refs_dict.json` records where
-the curves are.
 
 Cosyn–Weiss arXiv:2603.23700 FIG. 13 (page 36) is the tagged tensor
 asymmetry A_T∥ in light-front variables (α_p, p_pT) the generator does not

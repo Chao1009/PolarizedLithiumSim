@@ -88,7 +88,7 @@ itself stays open, and no other open item's marker was moved.*
    ☑ *2026-08-28: adopted and propagated — plans/00, plans/04 #2 and the
    plans/07 milestone table all work back from this date.*
 
-## Step 1.2 ◐ Replace toy structure functions (1–2 weeks)
+## Step 1.2 ☑ Replace toy structure functions (1–2 weeks)
 
 *2026-06-12: grid backends wired and validated — `PartonF2` (CT18NLO) and
 `PartonG1` (NNPDFpol11_100) via the `parton` package; toy F2 certified to
@@ -102,6 +102,13 @@ curves — all four are digitized from the published figures into
 old shapes behind `--emc-mode constant` / `--transfer legacy`.  Item 1
 (EPPS21 for the unpolarized ratio) closed on 2026-08-29 — see step 1.2.1
 below — and the Wang gluon-spin curves are the remainder.*
+
+*2026-09-15: that remainder is closed and the step is ticked.  Wang et al.
+Fig. 3 is digitized, both panels, into `wbct_emc_nm_Q5.csv` and
+`wbct_polemc_nm_Q5.csv` (item 2).  What stays open under this step is the
+residue already recorded in item 1 — no nuclear PDF grid exists for ⁷Li, so
+the ⁷Li projection runs on the A = 6 baseline — which is an external
+availability limit, not work this step can do.*
 
 1. Unpolarized: LHAPDF inside eic-shell (container ships LHAPDF6) or the
    pure-python `parton` package locally; CT18NNLO + EPPS21/nNNPDF3.0 nuclear
@@ -150,9 +157,21 @@ below — and the Wang gluon-spin curves are the remainder.*
    the unrestricted scan returns at x = 0.141 is carried by the transfer,
    not by the calculations, and `money_polemc.py` prints both, together with
    the baseline spread that is now the leading uncertainty on the answer.*
-   Wang's Figure 3 is NOT digitized:
-   the dg₁/dlnQ² observable has no money plot (`refs/2109.03591.pdf` and
-   `data/SOURCES.md` record where the curves are).*
+   ☑ *2026-09-15 for the gluon-spin curves: Wang et al. Fig. 3 (page 8 of
+   `refs/2109.03591.pdf`, isospin-symmetric nuclear matter at Q² = 5 GeV²)
+   is digitized in both panels — `wbct_emc_nm_Q5.csv` carries F₂A/F₂N and
+   g_A/g_p at NLO and NNLO over x = 0.047–0.806, `wbct_polemc_nm_Q5.csv`
+   carries g₁A/g₁p and Δg_A/Δg_p over x = 0.050–0.826.  The figure prints
+   its tick labels as glyph outlines rather than text, so the calibration
+   is taken from the tick marks and cross-checked on the reference line
+   each panel draws at 1.0, which reads back as 1.00004 (left) and
+   1.00000 (right); `data/SOURCES.md` records both frames and the two
+   commands.  The tables read back the Letter's two claims: the trough of
+   g₁A/g₁p is 0.763 against 0.803 for F₂A/F₂N, and that of Δg_A/Δg_p is
+   0.795 against 0.855 for g_A/g_p, a valence-window depletion 0.192
+   against 0.131 — the polarized gluon EMC effect is the larger one.
+   This is the data file only: there is still no dg₁/dlnQ² money plot to
+   feed it, and none is claimed here.*
 3. b₁ model: deuteron convolution (Cosyn–Dong–Kumano–Sargsian PRD 95:074036,
    |b₁| < 10⁻³ at x ≳ 0.2) vs Miller pion+hidden-color (PRC 89:045203,
    reproduces HERMES b₁ ~ 0.1 at x ~ 0.01) as the two scenario curves,
@@ -212,6 +231,10 @@ For each observable, produce the "money plots":
    otherwise read as claiming a low-x discrimination the two published
    curves do not have — untransferred, TMT lies on top of CBT below
    x ≈ 0.3; the E12-14-001 projected errors are still not overlaid.*
+   *2026-09-15: the E12-14-001 overlay stays open and is classed EXTERNAL —
+   the projected errors of that experiment are not in this repository and
+   cannot be derived from anything in it; it needs the collaboration's
+   numbers. This is the only remainder of item 1.*
    demonstrate the order-of-magnitude x–Q² extension and Q²-lever arm
    (gluon-spin EMC via dg₁/dlnQ²). Quote vs P_z ∈ {0.5, 0.7, 0.9} and
    lumi ∈ {1, 10, 100} fb⁻¹/u.
@@ -231,6 +254,21 @@ For each observable, produce the "money plots":
    by `tagging_optics.py`'s 2.8/4.4/2.6 yr (Report 1) — and the flag is
    plans/04 #2. The 95% CL band was never drawn: it is the same curve shifted
    by (1.645/5)².*
+   *2026-09-15: the band is drawn — `money_delta.py --cl-band` adds the 95% CL
+   exclusion contour under each 5σ curve and shades between them at the spec
+   P_zz = 0.80. It is re-solved from the same per-bin σ² at target = 1.645²
+   rather than multiplied in, so a binding min-events floor would show as a
+   departure instead of inheriting the shift; over the plotted Δ/F₁ range it
+   only grazes: the ratio is (1.645/5)² = 0.10824 to five digits on all six
+   curves, the largest departure being 1.1×10⁻⁵ relative at the top of the
+   scale range (e(18), P_zz = 0.8). At Δ/F₁ =
+   10⁻³, P_zz = 0.8 the exclusion luminosities are 1.810 / 1.768 / 2.361
+   fb⁻¹/u for e(5)/e(10)/e(18) against 16.7 / 16.3 / 21.8 fb⁻¹/u at 5σ. The
+   flag is off by default and the two-contour figure carries its own `_cl95`
+   stem (`cl_band_tag`, the `fom.run_share_tag` guard), so the published
+   single-contour `money_delta_6Li_toy.png` is bit-for-bit unchanged and the
+   two-contour version is not adopted until the author says so. Pinned by
+   `fastsim/tests/test_cl_band.py`.*
 4. Cross-check δA estimators against a toy MC (generate Poisson counts in φ
    bins and spin states, fit, compare pulls) — validates the analytic FOM.
    ☑ *2026-08-28: done in `fastsim/tests/test_closure.py` and, through the full

@@ -425,9 +425,27 @@ FIG_RE = re.compile(r'"(__[A-Z0-9_]+__)":\s*"([^"]+\.png)"')
 PKG_ROOTS = (("polligen", ROOT / "evgen" / "polligen"),
              ("polli_fastsim", ROOT / "fastsim" / "polli_fastsim"))
 POLARIZED = ROOT / "fastsim" / "polli_fastsim" / "polarized.py"
-POLARIZED_DATA = tuple(sorted(
-    pathlib.Path(p) for p in
-    glob.glob(str(ROOT / "fastsim/polli_fastsim/data/*.csv"))))
+
+
+def _polarized_data():
+    """The digitized CSVs `polarized.py` actually names.
+
+    Not every table in `data/` is read: a figure can be digitized and
+    committed before the observable it belongs to has a money plot (WBCT
+    Fig. 3, plans/02 step 1.2.2).  Globbing the directory made such a
+    table a dependency of every registered figure, so adding one demanded
+    a bit-for-bit re-render of plots that cannot have moved.  The names
+    are read out of the module's own source, so a table the loader starts
+    using becomes a dependency the moment it is named.
+    """
+    src = POLARIZED.read_text()
+    return tuple(sorted(
+        f for f in (pathlib.Path(p) for p in
+                    glob.glob(str(ROOT / "fastsim/polli_fastsim/data/*.csv")))
+        if ('"%s"' % f.stem) in src or ("'%s'" % f.stem) in src))
+
+
+POLARIZED_DATA = _polarized_data()
 
 _BODIES = {}
 _FIG_SCRIPT = {}
@@ -610,7 +628,8 @@ def _():
     The import graph is read with ast and followed transitively through
     polligen and polli_fastsim (a package __init__ counts: importing a
     submodule runs it), with polarized.py carrying the digitized CSVs it
-    reads."""
+    names (`_polarized_data`: a committed table no loader reads yet is
+    not a dependency of anything)."""
     bad = []
     for _tag, rel in registered_figures():
         png = ROOT / rel
@@ -684,8 +703,8 @@ def _():
     txt = (ROOT / "docs/reproduction_manual.md").read_text()
     bad = []
     collected = {}
-    for pkg, pat in (("evgen", r"cd evgen\s+&& python3 -m pytest tests/ -q\s+# (\d+) passed"),
-                     ("fastsim", r"cd fastsim && python3 -m pytest tests/ -q\s+# (\d+) passed")):
+    for pkg, pat in (("evgen", r"cd evgen\s+&& python3 -m pytest tests/ -q\s+# (\d+) (?:passed|tests)"),
+                     ("fastsim", r"cd fastsim && python3 -m pytest tests/ -q\s+# (\d+) (?:passed|tests)")):
         r = subprocess.run([sys.executable, "-m", "pytest", "tests/",
                             "--collect-only", "-q"],
                            capture_output=True, text=True, cwd=str(ROOT / pkg))

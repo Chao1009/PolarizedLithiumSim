@@ -385,3 +385,46 @@ def test_r1998_moves_the_cos2phi_amplitude_by_the_expected_factor(setup6):
                 / (1.0 + eps * r1998(x, q2)))
     np.testing.assert_allclose(amps[1] / amps[0], expected, rtol=1e-12)
     assert np.any(np.abs(expected - 1.0) > 0.1)  # the swap is not cosmetic
+
+
+def test_nuclear_f2_hook_is_used_verbatim_and_refuses_a_second_emc_ratio():
+    """`InclusiveKernel(nuclear_f2=)` (run 19) is the third F2A hook.
+
+    `fom.project_rates` and `coherent.project_coherent` already took one;
+    without the same hook on the kernel a `--pdf grid` run would read its
+    F2A off the nuclear set in the rate map and off Z*F2p + N*F2n in the
+    kernel.  Three properties are pinned here, all on toy backends:
+
+    * None is bit-for-bit the pre-run-19 construction;
+    * a supplied object is used verbatim for F1A and F2A, while
+      `f2_source` still seeds the DEFAULT g1 model's denominator (a
+      nuclear-set F2A has no free-nucleon `base` to seed it with);
+    * `emc_ratio` together with `nuclear_f2` is refused, because the
+      medium modification is already inside a nuclear F2A and applying
+      it twice -- or dropping it in silence -- are both wrong.
+    """
+    from polli_fastsim.structure import NuclearF2, ToyF2
+
+    x, q2 = 0.05, 5.0
+    base = ToyF2()
+    plain = InclusiveKernel(beams.LI6, b1_func=toy_b1)
+
+    # (1) the default path is untouched
+    assert isinstance(plain.nf2, NuclearF2)
+
+    # (2) the supplied F2A is used verbatim -- 1.5x it and every F2A and
+    # F1A the kernel reports moves by exactly 1.5
+    scaled = NuclearF2(beams.LI6, base=base, emc_ratio=lambda xx: 1.5)
+    hooked = InclusiveKernel(beams.LI6, b1_func=toy_b1, f2_source=base,
+                             nuclear_f2=scaled)
+    assert hooked.nf2 is scaled
+    t0, t1 = plain.tables(x, q2), hooked.tables(x, q2)
+    np.testing.assert_allclose(t1["f2"] / t0["f2"], 1.5, rtol=1e-14)
+    np.testing.assert_allclose(t1["f1"] / t0["f1"], 1.5, rtol=1e-14)
+    # ...and the default g1, built off `f2_source`, does NOT move with it
+    np.testing.assert_allclose(t1["g1"], t0["g1"], rtol=1e-14, atol=0.0)
+
+    # (3) two medium modifications at once are refused
+    with pytest.raises(ValueError):
+        InclusiveKernel(beams.LI6, nuclear_f2=scaled,
+                        emc_ratio=lambda xx: 1.1)

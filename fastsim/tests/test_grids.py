@@ -159,3 +159,155 @@ def test_the_a6_grids_are_per_nucleon_and_give_the_documented_emc_ratio():
     # within 4% of 1 everywhere here, which a proton-over-proton ratio
     # would not be
     assert np.all(np.abs(unpolarized_emc_ratio(x, mode="epps21") - 1) < 0.04)
+
+
+# ---------------------------------------------------------------------------
+# The promotion of NuclearF2FromGrid out of the frozen dated scripts (run 19,
+# plans/07 WP1).  The dated scripts keep their local copy -- each carries
+# "# NuclearF2FromGrid - local class; do NOT modify polli_fastsim/structure.py"
+# -- so the only thing that can keep the promotion honest is a direct
+# new-against-frozen comparison, which is what this pair of tests is.
+# ---------------------------------------------------------------------------
+
+_GRID_POINTS = [(1e-3, 4.0), (1e-2, 10.0), (0.05, 25.0), (0.1, 10.0),
+                (0.3, 50.0), (0.5, 100.0), (0.7, 20.0)]
+
+
+def _frozen_class():
+    """`NuclearF2FromGrid` as it stands in the newest frozen dated script."""
+    import importlib
+    sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]
+                           / "scripts"))
+    return importlib.import_module("money_delta_20260729").NuclearF2FromGrid
+
+
+@pytest.mark.skipif(not _have("EPPS21nlo_CT18Anlo_Li6"),
+                    reason="EPPS21nlo_CT18Anlo_Li6 grid not installed")
+def test_promoted_nuclear_f2_from_grid_equals_the_frozen_copy():
+    """structure.NuclearF2FromGrid == money_delta_20260729's local class.
+
+    Seven (x, Q2) points spanning the sensitivity box, on both f2a and
+    f1a (the latter through the module-level r_sigma_lt both classes look
+    up at call time).  The tolerance is 1e-12 because the promotion is a
+    move, not a reimplementation: anything above float round-off would
+    mean the dated figures and the new production path disagree.
+    """
+    from polli_fastsim import beams
+    from polli_fastsim.structure import NuclearF2FromGrid
+
+    frozen = _frozen_class()(beams.LI6, "EPPS21nlo_CT18Anlo_Li6")
+    new = NuclearF2FromGrid(beams.LI6)          # default set from (Z, A)
+    assert new.setname == "EPPS21nlo_CT18Anlo_Li6"
+
+    worst = 0.0
+    for x, q2 in _GRID_POINTS:
+        for meth in ("f2a", "f1a"):
+            a = float(getattr(new, meth)(x, q2))
+            b = float(getattr(frozen, meth)(x, q2))
+            assert b != 0.0, (meth, x, q2)
+            worst = max(worst, abs(a / b - 1.0))
+    print("max |new/frozen - 1| over %d points = %.3g"
+          % (2 * len(_GRID_POINTS), worst))
+    assert worst < 1e-12
+
+    # arrays too, and the per-nucleon normalisation the callers rely on
+    xs = np.array([p[0] for p in _GRID_POINTS])
+    q2s = np.array([p[1] for p in _GRID_POINTS])
+    assert np.allclose(new.f2a(xs, q2s), frozen.f2a(xs, q2s), rtol=1e-12,
+                       atol=0.0)
+    assert np.all(new.f2a(xs, q2s) > 0)
+    # F2A/A is a per-nucleon F2, i.e. O(0.1-1) at DIS x
+    assert 0.05 < float(new.f2a(0.1, 10.0)) / beams.LI6.A < 1.0
+
+    # THE ONE PLACE THEY DIFFER, deliberately: below the set's Q0 the
+    # frozen copy hands back NaN (parton neither freezes nor
+    # extrapolates) and the promoted one freezes at Q0^2.  Q^2 = 1.14
+    # GeV^2 is not academic -- it is two of the four published money-plot
+    # sweet spots, and the money maps start at Q^2 = 1.
+    assert new.q2_min == pytest.approx(1.69, abs=1e-6)
+    assert np.isnan(float(frozen.f2a(0.02, 1.14)))
+    assert float(new.f2a(0.02, 1.14)) == float(new.f2a(0.02, new.q2_min))
+    assert np.isfinite(float(new.f2a(0.02, 1.14)))
+    assert new.q2_frozen_fraction(np.array([1.0, 1.14, 4.0, 100.0])) == 0.5
+    assert new.q2_frozen_fraction(np.array([1.0, 4.0]),
+                                  weights=np.array([3.0, 1.0])) == 0.75
+
+
+@pytest.mark.skipif(not _have("EPPS21nlo_CT18Anlo_Li6"),
+                    reason="EPPS21nlo_CT18Anlo_Li6 grid not installed")
+def test_nuclear_f2_from_grid_takes_the_r_func_hook_like_nuclear_f2():
+    """`r_func` moves f1a by exactly (1 + R_toy)/(1 + R_1998), no more."""
+    from polli_fastsim import beams
+    from polli_fastsim import structure as st
+
+    plain = st.NuclearF2FromGrid(beams.LI6)
+    hooked = st.NuclearF2FromGrid(beams.LI6, r_func=st.r1998)
+    for x, q2 in _GRID_POINTS:
+        expect = ((1.0 + st.r_sigma_lt(x, q2))
+                  / (1.0 + st.r1998(x, q2)))
+        assert (float(hooked.f1a(x, q2)) / float(plain.f1a(x, q2))
+                == pytest.approx(float(expect), rel=1e-12))
+        # F2 carries no R at all
+        assert float(hooked.f2a(x, q2)) == float(plain.f2a(x, q2))
+    # an unregistered nucleus is refused rather than silently given 6Li
+    with pytest.raises(ValueError):
+        st.NuclearF2FromGrid(beams.LI7)
+
+
+def test_get_backends_at_its_defaults_is_the_three_key_dict_it_always_was():
+    """The widened signature must not touch any of the nine call sites.
+
+    `nuclear` and `r_func` both default to None, and at None the dict is
+    the same three keys carrying the same classes with the same R.
+    """
+    from polli_fastsim.inputs import get_backends
+    from polli_fastsim.polarized import ToyG1
+    from polli_fastsim.structure import ToyF2
+
+    toy = get_backends("toy")
+    assert set(toy) == {"base", "g1", "tag"}
+    assert toy["tag"] == "toy"
+    assert isinstance(toy["base"], ToyF2) and isinstance(toy["g1"], ToyG1)
+    assert toy["g1"].base is toy["base"] and toy["g1"].r_func is None
+    # anything that is not "grid" is the toy path, as before
+    assert set(get_backends()) == {"base", "g1", "tag"}
+    assert get_backends("nonsense")["tag"] == "toy"
+
+    # and `nuclear=` on the toy path is bit-for-bit today's bare
+    # NuclearF2(ion), the object the four evgen money scripts built inline
+    from polli_fastsim import beams
+    from polli_fastsim.structure import NuclearF2
+    nf2 = get_backends("toy", nuclear=beams.LI6)["nuclear"]
+    ref = NuclearF2(beams.LI6)
+    for x, q2 in _GRID_POINTS:
+        assert float(nf2.f2a(x, q2)) == float(ref.f2a(x, q2))
+        assert float(nf2.f1a(x, q2)) == float(ref.f1a(x, q2))
+
+
+@pytest.mark.skipif(not (_have("CT18NLO") and _have("NNPDFpol11_100")
+                         and _have("EPPS21nlo_CT18Anlo_Li6")),
+                    reason="grids not installed")
+def test_get_backends_grid_is_unchanged_and_gains_only_the_nuclear_key():
+    from polli_fastsim import beams, structure as st
+    from polli_fastsim.inputs import get_backends
+    from polli_fastsim.polarized import PartonG1
+    from polli_fastsim.structure import NuclearF2FromGrid, PartonF2
+
+    grid = get_backends("grid")
+    assert set(grid) == {"base", "g1", "tag"}
+    assert grid["tag"] == "grid"
+    assert isinstance(grid["base"], PartonF2)
+    assert isinstance(grid["g1"], PartonG1) and grid["g1"].base is grid["base"]
+    assert grid["g1"].r_func is None
+
+    with_nuc = get_backends("grid", nuclear=beams.LI6, r_func=st.r1998)
+    assert set(with_nuc) == {"base", "g1", "tag", "nuclear"}
+    assert isinstance(with_nuc["nuclear"], NuclearF2FromGrid)
+    assert with_nuc["nuclear"].r_func is st.r1998
+    assert with_nuc["g1"].r_func is st.r1998
+    # the nuclear F2A is the nuclear set, NOT Z*F2p + N*F2n on CT18NLO:
+    # the EMC/shadowing difference is percent-level and must be visible
+    zn = st.NuclearF2(beams.LI6, base=with_nuc["base"], r_func=st.r1998)
+    ratio = float(with_nuc["nuclear"].f2a(0.01, 10.0)) / float(
+        zn.f2a(0.01, 10.0))
+    assert 0.80 < ratio < 1.00, ratio

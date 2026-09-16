@@ -19,11 +19,20 @@ the **September-2024 `epic-main`** geometry; the intact-⁶Li aperture
 measurement was repeated in the current container on 2026-08-28 and that
 section carries both.
 
-**Known issue (found 2026-06-12):** the `eic_xl-nightly` pyHepMC3
-`rootIO.ReaderRootTree` **segfaults** on files the legacy container reads
-fine — use `jug_xl-nightly.sif` for all HepMC3 tree.root *reading*
-(dump_spectators.py); npsim/eicrecon in the new container are unaffected.
-Consider reporting upstream (eic-shell / pyHepMC3 bindings).
+**Known issue (found 2026-06-12, diagnosed 2026-09-15):** the
+`eic_xl-nightly` pyHepMC3 `rootIO.ReaderRootTree` **segfaults** where the
+legacy container reads the same file — but the bindings are not at fault.
+The crash follows *fatal error: module map file
+`../../include/root/ROOT.modulemap` not found*: ROOT resolves its module
+map through that relative path, so cling finds it only when the process's
+working directory sits two levels below `$ROOTSYS = /opt/local`.
+`singularity exec --pwd /opt/local/lib/root $SIF python3 ...`, with
+absolute paths, reads the file; measured on the BeAGLE `eH2` xrootd tree
+of `tools/beagle/README.md` — 20 000 events through
+`tools/analysis/dump_spectators.py` — against a segfault from
+`--pwd /opt/local` and from the default host directory.  Nothing to
+report upstream beyond the ergonomics; npsim/eicrecon were never
+affected.
 
 Inside the legacy container, source the geometry with:
 ```bash

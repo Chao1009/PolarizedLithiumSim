@@ -110,25 +110,163 @@ into the letter's far-forward requirement.
   which reorders this work package.
 - ☑ The grids themselves are installed (CT18NLO, EPPS21nlo_CT18Anlo_Li6,
   NNPDFpol11_100 via `parton`); the fast-sim grid tests no longer skip.
-- ☐ Promote the money_delta script-local `NuclearF2FromGrid`
+- ☑ Promote the money_delta script-local `NuclearF2FromGrid`
   (EPPS21nlo_CT18Anlo_Li6) into `polli_fastsim/structure.py`
   behind the existing `NuclearF2` interface; wire through
   `inputs.get_backends` (pass `r_func=structure.r1998` there, not a
   monkey-patch).
-- ☐ Rerun money plots 5/6/7 and `phase_space_bins.py` with `--backend grid`;
+  ☑ *2026-09-15: `structure.NuclearF2FromGrid` carries the `NuclearF2`
+  signature `(ion, setname=None, member=0, r_func=None)` — the set
+  resolved off (Z, A) through `NUCLEAR_F2_SET_FOR_ION`, the module's own
+  `_safe_xfx`, and the call-time `r_sigma_lt` lookup that keeps the dated
+  scripts' `r_override` working. `get_backends(pdf="toy", nuclear=None,
+  r_func=None)` gains a `"nuclear"` key and threads R into the g1 model
+  as well; both new arguments default `None`, at which the dict is the
+  three keys it always was. `tests/test_grids.py` pins the promoted class
+  against the still-frozen copy in `money_delta_20260729.py` at seven
+  (x, Q²) points on both f2a and f1a: max |new/frozen − 1| = **0**
+  (tolerance 1e-12).*
+- ☑ Rerun money plots 5/6/7 and `phase_space_bins.py` with `--pdf grid`;
   re-solve moment_A at the grid ⟨Q²⟩; record sweet-spot drift and the
   toy-vs-grid ratio per headline number (expect ≲ ×1.5 by run-2/3 checks:
   toy-vs-CT18 F₂ within ±37%).
+  ☑ *2026-09-15: done and tabulated in the addendum below. The flag is
+  `--pdf {toy,grid}`, not the `--backend grid` this line asked for until
+  today: no `--backend` flag has ever existed in this repository, while
+  six scripts — five in `fastsim/scripts` and
+  `evgen/scripts/target_mass_bound.py` — already spell it `--pdf`. The
+  drift is inside the ≲ ×1.5 anticipated here: every level-quantity ratio
+  of the table below lies in 0.56–1.25, and the widest excursion anywhere
+  in it is the ×1.56 of a RELATIVE error (δΔ/Δ̂ at Q² = 1.14 GeV², where
+  the denominator itself falls by 0.564). But the drift's largest single
+  cause is not the one this work package expected.*
+
+#### WP1 addendum — the toy → grid drift table (2026-09-15)
+
+`--pdf grid` on the four truth-level drivers means: F₂ᴬ from the nuclear
+set EPPS21nlo_CT18Anlo_Li6 (not Z·F₂ᵖ + N·F₂ⁿ on a free proton), g₁ from
+NNPDFpol11_100, F₂ᵖ from CT18NLO for the g₁ denominator, and the SLAC/E143
+R1998 fit in place of the toy R — one flag moving all four R consumers at
+once, which is what `inputs.get_backends(pdf, nuclear, r_func)` is for.
+Commands (from `evgen/`, adding `--pdf grid` to the published ones of
+`docs/reproduction_manual.md` §4.1–4.2):
+
+```bash
+python3 scripts/phase_space_bins.py        --pdf grid --outdir .
+python3 scripts/money_cos2phi.py           --pdf grid --outdir .
+python3 scripts/money_cos2phi_coherent.py  --pdf grid --outdir .
+python3 scripts/money_delta_extraction.py  --pdf grid --outdir .
+```
+
+Each writes a `_grid` stem beside the published one, which is bit-for-bit
+unchanged (md5 before and after the run-19 edit: `ad907a83…`, `aae59967…`,
+`2d1eae23…`, `b9a05445…`). The bin selection does not move: all four
+super-bins, all three Q² slices and the tagged super-bin come out at the
+same edges on both backends, so the table below compares the same bins.
+
+**THE Q₀ FLOOR, and why it is the headline of this addendum.**
+EPPS21nlo_CT18Anlo_Li6 begins at Q = 1.3 GeV, i.e. **Q² = 1.69 GeV²**, and
+`parton` returns NaN below it rather than freezing or extrapolating. The
+money maps start at Q² = 1 GeV², and **two of the four published sweet
+spots sit at Q² = 1.14 GeV²** — below the set's support. `NuclearF2FromGrid`
+therefore freezes F₂ᴬ at Q₀² below the floor (the treatment `r1998` already
+gives its own fit support) and exposes `q2_min` and `q2_frozen_fraction`;
+a bare backend without that guard poisons the low-Q² half of the map with
+NaN and the sampler dies in `rng.poisson`. Measured at 10 × 99.5 GeV/u:
+**8.7% of the accepted cells but 36.3% of the accepted one-year rate** lie
+below Q₀². So the grid column at Q² = 1.14 — spots 1 and 2, the Q² = 1.14
+Δ slice, and the whole coherent best super-bin, which is Q² ∈ [1, 1.66] —
+is a **frozen-Q₀ continuation, not a grid evaluation**, and must be quoted
+as such. Closing that gap needs a nuclear set with a lower Q₀, or the
+sensitivity box raised to Q² > 1.69 GeV².
+
+| quantity (10 × ⁶Li 99.5 GeV/u, P_zz = 0.6, 10 fb⁻¹/u) | toy | grid | ratio |
+|---|---|---|---|
+| moment_A ⟨Q²⟩ [GeV²] | 4.474 | 5.069 | 1.133 |
+| moment_A bag amplitude A | −0.2924 | −0.2404 | 0.822 |
+| N_DIS accepted, 1 yr | 5.193×10⁹ | 3.980×10⁹ | 0.766 |
+| spot 1 (x 0.0282, Q² 1.14†) N | 1.903×10⁸ | 1.605×10⁸ | 0.843 |
+| … A_truth | 7.416×10⁻³ | 5.217×10⁻³ | 0.703 |
+| … δA 1 yr / 10 yr | 1.728 / 0.547 ×10⁻⁴ | 1.882 / 0.595 ×10⁻⁴ | 1.089 |
+| … significance, 1 yr | 42.9σ | 27.7σ | 0.646 |
+| spot 2 (x 0.0112, Q² 1.14†) N | 2.812×10⁸ | 2.080×10⁸ | 0.740 |
+| … A_truth | 4.346×10⁻³ | 3.040×10⁻³ | 0.699 |
+| … δA 1 yr / 10 yr | 1.422 / 0.450 ×10⁻⁴ | 1.653 / 0.523 ×10⁻⁴ | 1.163 |
+| … significance, 1 yr | 30.6σ | 18.4σ | 0.602 |
+| spot 3 (x 0.0708, Q² 3.13) N | 7.519×10⁷ | 7.798×10⁷ | 1.037 |
+| … A_truth | 9.491×10⁻³ | 7.320×10⁻³ | 0.771 |
+| … δA 1 yr / 10 yr | 2.750 / 0.869 ×10⁻⁴ | 2.700 / 0.854 ×10⁻⁴ | 0.982 |
+| … significance, 1 yr | 34.5σ | 27.1σ | 0.785 |
+| spot 4 (x 0.141, Q² 14.3) N | 2.852×10⁷ | 3.190×10⁷ | 1.119 |
+| … A_truth | 9.517×10⁻³ | 8.197×10⁻³ | 0.861 |
+| … δA 1 yr / 10 yr | 4.464 / 1.412 ×10⁻⁴ | 4.221 / 1.335 ×10⁻⁴ | 0.946 |
+| … significance, 1 yr | 21.3σ | 19.4σ | 0.911 |
+| Δ̂ at Q² 1.14†, x 0.02 | −0.1352 ± 0.0034 | −0.0763 ± 0.0030 | 0.564 / 0.88 |
+| Δ̂ at Q² 3.13, x 0.0501 | −0.0696 ± 0.0016 | −0.0519 ± 0.0016 | 0.746 / 1.00 |
+| Δ̂ at Q² 14.3, x 0.316 | −0.0047 ± 0.0004 | −0.0050 ± 0.0005 | 1.064 / 1.25 |
+| relative δΔ in the three best bins | 2.5 / 2.3 / 8.5 % | 3.9 / 3.1 / 10.0 % | 1.56 / 1.34 / 1.18 |
+| N_coh produced, 1 yr | 1.234×10⁸ | 8.604×10⁷ | 0.697 |
+| N_tag, 1 yr (0.20 GeV envelope) | 1.669×10⁷ | 1.164×10⁷ | 0.697 |
+| coherent best super-bin N† | 1.75×10⁶ | 1.14×10⁶ | 0.651 |
+| coherent best-bin δÂ, 1 yr / 10 yr† | 1.8 / 0.6 ×10⁻³ | 2.2 / 0.7 ×10⁻³ | 1.22 / 1.17 |
+| coherent 5σ floor† | 0.0090 | 0.0112 | 1.24 |
+| ⟨a₂⟩_tag; coherent tag acceptance | 0.036 | unchanged by construction (both are model numbers with no structure function in them) | 1.000 |
+
+† frozen-Q₀ rows: Q² < 1.69 GeV², where F₂ᴬ is held at Q₀².
+
+**Which half of the drift is F₂ and which is R.** A third run with the grid
+F₂ᴬ but the toy R (a scratch diagnostic, not a flag) separates them on the
+four sweet-spot amplitudes. F₂ alone: 0.829 / 0.831 / 0.829 / 0.829 —
+flat, because the moment constraint re-solves A against ∫x Δ dx and the
+whole amplitude follows the solved bag amplitude (−0.2924 → −0.242, 0.828),
+not the local F₂. R alone: 0.849 / 0.842 / 0.930 / 1.039, and after
+dividing out the residual 0.993 of the bag re-solve, 0.855 / 0.848 / 0.936 /
+1.046, against the reciprocals 0.858 / 0.847 / 0.955 / 1.046 of the
++16.6 / +18.0 / +4.7 / −4.4% Δ/F₁ shifts the ☑ R row above already
+measured: the same numbers to 0.02–2%, reached on a different backend and
+through the whole extraction rather than at the four points. **The ☑ R
+row's conclusion survives and sharpens:** the R swap is the x-dependent
+half of the drift and the one that moves the physics shape, while the
+nuclear grid contributes an almost x-independent overall 0.83 that a
+re-solved normalisation absorbs. What the grids do move on their own is
+the RATE — N_DIS ×0.766, N_coh and N_tag ×0.697 — and through it every δA
+and every significance.
+
+**Independent check.** The sibling generator `LiPolGen` measures the same
+switch in C++ on its own observables (`README.md` selector table,
+`--unpol-sf {toy,mstw,ct18nlo}` at ⁶Li config 1): accepted σ ×0.7985
+(ct18nlo) / ×0.7934 (mstw). This addendum's N_DIS ratio is **×0.766** on a
+nuclear set with R1998 folded in — the same direction and within 4% of an
+independently written generator's number.
+
 - Acceptance: all §7.1 numbers re-derived on grids; drift table in the plan
   addendum. Effort: 2–4 days.
+  ◐ *2026-09-15: the drift table is above and every §7.1 row it feeds is
+  measured on both backends. What is NOT done here is the re-quote itself:
+  §7.1 and Report 1 still carry the toy column, deliberately — which
+  column becomes the published one is an author call, and it is coupled to
+  the Q₀ floor above, since two of the four sweet spots cannot be
+  evaluated on the nuclear grid at all. The §7.1 rows the grid column
+  would change: amplitudes (0.44–0.95) → (0.30–0.82)×10⁻²; δA
+  (1.4–4.5) → (1.7–4.2)×10⁻⁴; significance 21–43σ → 18–28σ; relative δΔ in
+  the best bins 2–9% → 3–10%; N_tag 1.7×10⁷/1.7×10⁸ → 1.16×10⁷/1.16×10⁸;
+  coherent best-bin δÂ 1.8/0.6 → 2.2/0.7 ×10⁻³ with the 5σ floors 0.9%/0.3%
+  → 1.1%/0.4%. ⟨a₂⟩ and the tag acceptance are model numbers and do not
+  move.*
 
 ### WP2 — Polarization, run-plan, and dilution bands
-- ◐ δA scaling table vs P_zz and fill share (analytic 1/(P_zz√(fN)) checked
+- ☑ δA scaling table vs P_zz and fill share (analytic 1/(P_zz√(fN)) checked
   against one sampler rerun).
   ◐ *2026-08-28: the fill-share half is done and priced below — the share is a
   flag (`--run-share` / `--lumi-fraction`, default 1.0), the 1/√f law is verified
   against direct reruns rather than assumed, and Plans A, B and A×B are tabulated.
   The P_zz half of the same table is still to write.*
+  ☑ *2026-09-15: the P_zz half is written — `fastsim/scripts/wp2_pzz_table.py`,
+  tabulated below. It scans P_zz on the grid the fill-share half used (the three
+  ⁶Li configurations combined over Q², the five x bins Plan B quotes δA_zz at,
+  the shares f = 1, ½, ⅓) and divides each projected δA_zz by the analytic law;
+  the ratio is 1.0000 in all 120 cells, |ratio − 1| ≤ 2.2×10⁻¹⁶. The table is
+  a table, not a figure: the script writes no PNG and nothing published moves.*
 - ☑ Dilution paragraph: ⅓ baseline, no upside claimed.
   ☑ *2026-08-28: the paragraph is written (Report 1 §3.2 and assumption row 3)
   and ⅓ is the code default. 2026-08-29: the ×2.4 upside is withdrawn there and
@@ -138,6 +276,55 @@ into the letter's far-forward requirement.
   α–d wave function transfers 0.92 rather than 0.87 (plans/08 D9). No Δ
   amplitude moves.*
 - Acceptance: Table 1 of the letter exists. Effort: 1 day.
+
+#### The P_zz half of the table (2026-09-15)
+
+δA_zz per x bin, three ⁶Li configurations and every accepted Q² cell above
+the 100-event floor combined, 10 fb⁻¹/u at f = 1, toy inputs, statistical only
+(`python3 fastsim/scripts/wp2_pzz_table.py`):
+
+| P_zz | x = 0.0035 | 0.0089 | 0.0282 | 0.2818 | 0.5623 |
+|---|---|---|---|---|---|
+| 0.30 | 1.86×10⁻⁴ | 1.77×10⁻⁴ | 1.95×10⁻⁴ | 7.09×10⁻⁴ | 2.34×10⁻³ |
+| 0.40 | 1.40×10⁻⁴ | 1.33×10⁻⁴ | 1.46×10⁻⁴ | 5.32×10⁻⁴ | 1.75×10⁻³ |
+| 0.50 | 1.12×10⁻⁴ | 1.06×10⁻⁴ | 1.17×10⁻⁴ | 4.26×10⁻⁴ | 1.40×10⁻³ |
+| 0.60 | 9.31×10⁻⁵ | 8.84×10⁻⁵ | 9.73×10⁻⁵ | 3.55×10⁻⁴ | 1.17×10⁻³ |
+| 0.70 | 7.98×10⁻⁵ | 7.57×10⁻⁵ | 8.34×10⁻⁵ | 3.04×10⁻⁴ | 1.00×10⁻³ |
+| 0.80 | 6.98×10⁻⁵ | 6.63×10⁻⁵ | 7.30×10⁻⁵ | 2.66×10⁻⁴ | 8.77×10⁻⁴ |
+| 0.90 | 6.21×10⁻⁵ | 5.89×10⁻⁵ | 6.49×10⁻⁵ | 2.36×10⁻⁴ | 7.79×10⁻⁴ |
+| 1.00 | 5.59×10⁻⁵ | 5.30×10⁻⁵ | 5.84×10⁻⁵ | 2.13×10⁻⁴ | 7.02×10⁻⁴ |
+
+Any other share multiplies the whole table by 1/√f; the accepted counts the
+errors are built on are N = 6.41 / 7.12 / 5.86 ×10⁸, 4.42×10⁷ and 4.06×10⁶ in
+the five bins at f = 1.  The law the work package names is met exactly:
+writing D and A for the two amplitude attenuations of `fom.Scenario`
+(plans/05:370, both 1.0 here),
+
+δA_zz = √2 / (P_zz · D · A · √(f N)),
+
+and measured/analytic = 1.0000 at every one of the 120 cells, to 2.2×10⁻¹⁶
+— the ratio column the acceptance asks for, and it is exact rather than
+approximate because nothing in the projection except the three error
+functions sees P_zz at all.  Three things the table settles rather than
+assumes:
+
+* **The P_zz = 0.6 and 0.8 rows are the published ones.**  They reproduce
+  `money_b1.py`'s two δA_zz rows digit for digit at all five x, so the new
+  scan is the same projection the published figure is drawn from and not a
+  second implementation of it.
+* **One table serves both tensor observables.**  `err_azz` and
+  `err_cos2phi_amplitude` are the same function of (N, P_zz), √(2/N)/P_zz,
+  so the cos 2φ amplitude of this letter scales with P_zz exactly as A_zz
+  does; the script asserts the two agree cell by cell rather than trusting
+  it, and stops if they ever part.
+* **The min-events floor is not part of the law.**  A cell enters the
+  combination at ≥ 100 events, which at f < 1 is a different set of cells.
+  Over the grid here the floor is inert — `--floor cell` and the default
+  `--floor reference` agree to 2.2×10⁻¹⁶ down to f = ⅓ — but it does bite
+  eventually: at f = 10⁻³ the x = 0.5623 bin departs from the law by 15% and
+  x = 0.2818 by 0.75%, entirely through the selection.  A run-plan table that
+  went below a few percent of the year would have to quote the floor with the
+  share.
 
 #### The run plan, priced (2026-08-28)
 
@@ -596,6 +783,40 @@ cutout geometry as the assumption it is (#20).
   draws — `coherent.tag_acceptance`/`mean_t_tagged`/`tag_acceptance_angular` take
   no t_min, `a2_tagged` still asks the caller to apply `RATE_WEIGHT_SYST` by hand,
   and no test mentions it. Money plot 6 still quotes the unweighted value.*
+  ◐ *2026-09-15: the library half is done and the fold is OFF by default —
+  whether it becomes the central curve is an open author call, raised to the
+  supervisor in run 19 with the numbers below. `coherent.py`
+  gains `t_min_coherent(x_P, M_A) = (x_P M_A)²/(1 − x_P)` and
+  `CoherentScenario.t_min_suppression(t_min) = exp(−B t_min)`, and a `t_min=None`
+  keyword on `tag_acceptance`, `mean_t_tagged`, `tag_acceptance_angular`,
+  `a2_tagged`, `recoil_lab` and `project_coherent`; `a2_tagged` gains
+  `rate_weighted=False`, which applies `RATE_WEIGHT_SYST` in place of asking the
+  caller to multiply by hand. Because the suppression is now a method of the
+  scenario it follows the B band: at |t_min| = 3.1×10⁻³ GeV² it is −11.7% /
+  −14.4% / −17.0% at B = 40 / 50 / 60, where the script's hard-coded constant
+  gave one number. Every default is None/False, so money plot 6
+  (`money_cos2phi_coherent_6Li.png`, md5 aae59967…), the WP5 scan
+  (`coherent_optics_scan_6Li.png`, md5 e30729d5…) and `phase_space_bins_6Li.png`
+  regenerate bit-for-bit against the committed PNGs. The 2026-08-10 audit comment
+  in `recoil_lab` is now eight tests in `test_coherent.py` rather than prose
+  (evgen 334 → 342): its −14% is measured at −14.36% (and −14.66% with the
+  1/(1 − x_P) the note's own formula carries but its number dropped — that 1% of
+  t_min is the whole gap between this note's −14% and the 2026-08-25 code
+  review's −15%). Its second number does not survive as quoted: "rate-weighted
+  over f_coh ≈ 10%" is a statement about the x_P weight, not a number — f_coh with
+  x_P flat over 0 < x_P < 0.02 gives −11.0%, but the DIS-like dN/dx_P ~ 1/x_P
+  gives only −2.5%. What is robust is only the one-sidedness. Review added the
+  missing caveat: x_P = 0.01 is `x_coh`, the coherence half-point, not the top
+  of the window — |t_min| ∝ x_P², so at the x_P ≈ 0.02 edge this file's own
+  module docstring quotes, the B = 50 suppression is **−47%**, three times
+  deeper. Both measured weights land above the 0.01 value only because f_coh
+  kills the large-x_P end, so 0.01 is a reference point, not a bound, and the
+  docstrings of `t_min_coherent` and `project_coherent` now say so. Still open:
+  the script-side
+  `t_min = 3.2e-3` constant of `coherent_optics_scan.py:214` should call
+  `t_min_coherent(0.01)` (= 3.169×10⁻³) and `t_min_suppression` so panel (b)'s
+  suppression curve follows the band — not done here, the figure is bit-for-bit
+  and the re-quote belongs with money plot 6.*
 - ☑ IR-8 panel/inset: published efficiencies d 47% / ³He 32% / ⁴He 29% /
   ⁷Li 17.8% (no ⁶Li — interpolation labeled ours), pT ≈ 0 reach.
   ☑ *2026-08-28: delivered as an overlay on panel (b) rather than a separate

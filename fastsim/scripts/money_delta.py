@@ -7,6 +7,15 @@ Sather-Schmidt bag estimate). Assumes transversely tensor-polarized 6Li
 running with unpolarized electrons; significance combines all accepted
 (x, Q2) bins:  sig^2 = sum_bins A_bin^2 * P_zz^2 * N_bin / 2.
 
+`--cl-band` (default off) adds the 95% CL exclusion contour asked for by
+plans/02 Step 1.3 item 3.  sig^2 is linear in the delivered luminosity, so
+the exclusion curve is the discovery curve scaled by (1.645/5)^2 = 0.108241
+wherever the min-events floor does not bind; it is nevertheless re-solved
+from the same per-bin terms at target = 1.645^2 rather than multiplied in,
+so that a floor which DOES bind shows up instead of being papered over.
+The two-contour figure is written on its own stem (`_cl95`) -- the published
+single-contour PNG stays bit-for-bit.
+
 `--run-share` is this observable's share of the programme year (plans/07
 WP2), kept separate from the 10 fb^-1/u the year is worth.  L_5sigma is
 quoted as the luminosity THIS OBSERVABLE must accumulate, so it is exactly
@@ -37,6 +46,26 @@ import matplotlib.pyplot as plt
 # every published projection is quoted at (Report 0 section 6)
 L_PROGRAMME_FB = 10.0
 
+# significance targets as sig^2: 5 sigma for discovery, and the ONE-sided
+# Gaussian 95% point z = 1.645 for exclusion (5% in one tail; two-sided,
+# 1.645 is the 90% point and 95% would be 1.96).  The one-sided
+# convention is the one plans/02 Step 1.3 item 3 quotes, "the same curve
+# shifted by (1.645/5)^2"
+Z_95 = 1.645
+TARGET_5SIG = 25.0
+TARGET_95 = Z_95 ** 2               # 2.706025
+
+
+def cl_band_tag(cl_band):
+    """Filename key for the two-contour figure ('' at the published
+    default).
+
+    The published PNG carries the 5 sigma contour alone; a run that adds
+    the 95% CL contour appends this key so it cannot overwrite it -- the
+    same guard as `fom.run_share_tag`, `money_cos2phi.tensor_leakage_tag`
+    and `money_tagged_azz.output_stem`."""
+    return "cl95" if cl_band else ""
+
 
 def bin_terms(cfg, scale, pzz, base=None, run_share=1.0):
     """Per-bin (sig^2 contribution, event count), both at 1 fb^-1/nucleon
@@ -63,7 +92,7 @@ def bin_terms(cfg, scale, pzz, base=None, run_share=1.0):
     return terms[ok].ravel(), proj.n_events[ok].ravel()
 
 
-def reach_from_terms(terms, n_events, min_events=10, target=25.0):
+def reach_from_terms(terms, n_events, min_events=10, target=TARGET_5SIG):
     """L_5sigma [fb^-1/nucleon] from the per-bin sig^2 at 1 fb^-1/u, with
     the MIN-EVENTS floor applied at the luminosity the reach is quoted at.
 
@@ -115,7 +144,7 @@ def sig2_per_fb_at(cfg, scale, pzz, base=None, min_events=10, lumi_fb=None,
     return float(terms[n_events * lumi_fb >= min_events].sum())
 
 
-def reach_fb(cfg, scale, pzz, base=None, min_events=10, target=25.0,
+def reach_fb(cfg, scale, pzz, base=None, min_events=10, target=TARGET_5SIG,
              run_share=1.0):
     """L_5sigma [fb^-1/nucleon DELIVERED to this observable] at this
     Delta/F1 scale (target = 25 is 5 sigma), with the min-events floor at
@@ -144,6 +173,11 @@ def main():
                          "(plans/07 WP2; default 1.0 = the whole of the "
                          "10 fb^-1/u year, which is what every published "
                          "number assumes)")
+    ap.add_argument("--cl-band", action="store_true", dest="cl_band",
+                    help="also draw the 95%% CL exclusion contour "
+                         "(z = 1.645) under each 5-sigma curve; the "
+                         "figure then goes to its own '_cl95' stem so the "
+                         "published single-contour PNG is untouched")
     args = ap.parse_args()
     if not args.run_share > 0:
         ap.error("--run-share must be positive")
@@ -158,7 +192,7 @@ def main():
     scales = np.logspace(-3.3, -1.7, 15)
     s0 = 1e-3
     fig, ax = plt.subplots(figsize=(7, 5))
-    reach_ref = {}
+    reach_ref, reach_ref95 = {}, {}
     for cfg, color in zip(beams.default_configs(args.ion),
                           ("crimson", "seagreen", "navy")):
         for pzz, ls in ((0.60, "-"), (0.80, "--")):
@@ -176,6 +210,28 @@ def main():
                 terms, n_events)
             ax.plot(scales, reach, ls, color=color, lw=1.5,
                     label=f"{cfg.label()}, $P_{{zz}}$={pzz:g}")
+            if args.cl_band:
+                # re-solved at target = z^2, not scaled from `reach`, so a
+                # binding min-events floor would be visible as a departure
+                # from the flat (1.645/5)^2 offset
+                reach95 = args.run_share * np.array(
+                    [reach_from_terms(terms * (s / s0) ** 2, n_events,
+                                      target=TARGET_95)
+                     for s in scales])
+                reach_ref95[(cfg.label(), pzz)] = (
+                    args.run_share * reach_from_terms(terms, n_events,
+                                                      target=TARGET_95))
+                ax.plot(scales, reach95, ls, color=color, lw=0.9, alpha=0.75)
+                if pzz == 0.80:     # shade the band at the spec P_zz only:
+                    # six overlapping fills are a grey mass, and 0.80 is
+                    # the source requirement the reach is quoted at
+                    ax.fill_between(scales, reach95, reach, color=color,
+                                    alpha=0.10, lw=0)
+    if args.cl_band:
+        # one proxy entry for the six thin curves, so the legend keeps its
+        # published six rows plus one
+        ax.plot([], [], "-", color="0.35", lw=0.9, alpha=0.75,
+                label=r"95% CL exclusion ($z=1.645$)")
     ax.axhspan(1, 100, color="gold", alpha=0.12,
                label="1-100 fb$^{-1}$/u (plausible program)")
     ax.axvline(1e-3, color="gray", ls=":", lw=1)
@@ -184,18 +240,24 @@ def main():
     ax.set_xscale("log")
     ax.set_yscale("log")
     ax.set_xlabel(r"$\Delta/F_1$ scale (peak of scenario shape)")
-    ax.set_ylabel(r"$L_{5\sigma}$ [fb$^{-1}$/nucleon]")
+    ax.set_ylabel(r"$L_{5\sigma}$ (and $L_{95\%}$) [fb$^{-1}$/nucleon]"
+                  if args.cl_band else
+                  r"$L_{5\sigma}$ [fb$^{-1}$/nucleon]")
     share_note = ("" if args.run_share == 1.0
                   else f"; run share {args.run_share:g} of the programme year")
+    # kept short: the second title line is already at the figure width
+    cl_note = ("" if not args.cl_band
+               else "; thin: 95% CL, $z$ = 1.645")
     ax.set_title(f"Nuclear gluonometry reach, transversely polarized "
                  f"{args.ion}\n(cos 2$\\phi$ amplitude, all bins combined; "
-                 f"{backends['tag'].upper()} inputs{share_note})", fontsize=10)
+                 f"{backends['tag'].upper()} inputs{share_note}"
+                 f"{cl_note})", fontsize=10)
     ax.legend(fontsize=7, ncol=2)
     fig.tight_layout()
-    share_key = fom.run_share_tag(args.run_share)
     stem = f"money_delta_{args.ion}_{backends['tag']}"
-    if share_key:                       # never overwrite the published PNG
-        stem = f"{stem}_{share_key}"
+    for key in (fom.run_share_tag(args.run_share), cl_band_tag(args.cl_band)):
+        if key:                         # never overwrite the published PNG
+            stem = f"{stem}_{key}"
     path = outdir / f"{stem}.png"
     fig.savefig(path, dpi=150)
     print(f"wrote {path}")
@@ -217,6 +279,12 @@ def main():
               f"delta(Delta/F1) after {L_PROGRAMME_FB:g} fb^-1/u x share = "
               f"{d_scale:9.3e} ; programme years to 5 sigma = "
               f"{l5 / lumi_eff:8.2f}")
+        if args.cl_band:
+            l95 = reach_ref95[(cfg.label(), 0.8)]
+            ratio = l95 / l5 if np.isfinite(l5) and l5 > 0 else float("nan")
+            print(f"  {'':26s} L_95%(Delta/F1=1e-3, Pzz=0.8)  = "
+                  f"{l95:9.3f} fb^-1/u ; L_95%/L_5sig = {ratio:.5f} "
+                  f"(expected (1.645/5)^2 = {TARGET_95 / TARGET_5SIG:.5f})")
 
 
 if __name__ == "__main__":

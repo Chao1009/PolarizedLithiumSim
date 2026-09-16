@@ -1,6 +1,6 @@
 {
  "_about": "Reference dictionary of the PolarizedLithiumSim program: the paper copies committed in refs/ (PDFs tracked in git since 2026-08-25; the EIC Yellow Report as four parts) and the few references without a free copy. Each entry: identifiers, title, where the local file is (';'-separated list for multi-part files; null = no free copy), the important content with equation/figure/page pointers, and where the reference is used in the repository. Search it with `python refs/find_ref.py <keyword>`; `--check` lists the local-copy status, `--fetch` re-downloads missing arXiv PDFs. Facts marked (repo-verified) were checked against the primary source during the dated fact-check passes recorded in plans/01 section 6, plans/06 section 6.5 and the reconstruction-chain report.",
- "_updated": "2026-09-06",
+ "_updated": "2026-09-15",
  "entries": {
   "cosyn2025-tensor-polarization-options": {
    "file": "refs/2410.12764v1.pdf",
@@ -1291,9 +1291,10 @@
    ],
    "key_content": [
     "Figure 3 (page 8 of the arXiv PDF): left panel F_2A/F_2N and g_A/g_p, right panel g_1A/g_1p (solid) and Delta g_A/Delta g_p (dashed) -- the polarized GLUON EMC effect is larger than the unpolarized one, with 7Li named the most promising case.",
-    "Not digitized in this repository (the dg1/dlnQ2 observable has no money plot yet); the entry records where the curves are for plans/02 step 1.2.2."
+    "Digitized 2026-09-15 into fastsim/polli_fastsim/data/wbct_emc_nm_Q5.csv (left panel: F2A/F2N and gA/gp at NLO and NNLO) and wbct_polemc_nm_Q5.csv (right panel: g1A/g1p and Delta gA/Delta gp); see data/SOURCES.md. The dg1/dlnQ2 observable of plans/02 step 1.2.2 still has no money plot to feed them."
    ],
    "used_in": [
+    "fastsim/polli_fastsim/data/wbct_emc_nm_Q5.csv, wbct_polemc_nm_Q5.csv",
     "plans/01_findings_physics_case.md Sec. 2.3 (gluon sector)",
     "plans/02_phase1_event_generation.md step 1.2.2",
     "reports/polarized_li_primer.template.html Sec. 5.3 ref [22]"

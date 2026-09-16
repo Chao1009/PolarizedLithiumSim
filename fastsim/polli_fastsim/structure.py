@@ -415,6 +415,119 @@ class NuclearF2:
         return self.f2a(x, q2) / (2.0 * np.asarray(x, dtype=float) * (1.0 + r))
 
 
+NUCLEAR_F2_SET_FOR_ION = {(3, 6): NUCLEAR_F2_SETS["epps21"]}
+
+
+def _grid_q2_min(pdf):
+    """Q0^2 [GeV^2] of a `parton` PDF -- below it `xfxQ2` returns NaN.
+
+    Measured 2026-09-15 with this function: 1.69 for
+    EPPS21nlo_CT18Anlo_Li6 (Q0 = 1.3 GeV), 1.677 for CT18NLO and
+    CT18ANLO (1.295), 1.0 for NNPDFpol11_100.  Returns 0.0 for a backend
+    that does not expose its grid, which restores the unclamped
+    behaviour rather than inventing a floor.
+    """
+    try:
+        return float(min(g.Q.min() for g in pdf.pdfgrids)) ** 2
+    except Exception:
+        return 0.0
+
+
+class NuclearF2FromGrid:
+    """Whole-nucleus F2A read straight off a NUCLEAR PDF grid (`parton`).
+
+    Drop-in replacement for `NuclearF2` -- same `f2a`/`f1a`/`r_func`
+    surface, so the consumers that only ever call those two methods
+    (`xsec.InclusiveKernel`, `fom.project_rates`) cannot tell the two
+    apart -- for the case where the nucleus-integrated structure function
+    comes from a nuclear set rather than from Z*F2p + N*F2n on a free
+    proton.  Promoted (numerically verbatim) out of
+    `fastsim/scripts/money_delta_20260729.py:181`, the newest of the four
+    frozen dated copies; `tests/test_grids.py` pins this class against
+    that one at 1e-12 so the promotion stays a promotion.
+
+    NORMALISATION.  `parton` returns nuclear PDFs PER NUCLEON, so `f2a`
+    multiplies the charge-weighted sum by `ion.A` to hand back the
+    whole-nucleus F2A the callers divide by `ion.A` again.  The same
+    five-flavour `_E2` as `PartonF2` -- the asymmetry against the
+    three-flavour `polarized.PartonG1` is the documented physical one.
+
+    `setname` is a key of `NUCLEAR_F2_SETS` or a set name outright; the
+    default is looked up from (ion.Z, ion.A) in `NUCLEAR_F2_SET_FOR_ION`,
+    which today knows only 6Li, the one nucleus this project has a
+    nuclear set installed for.  `r_func(x, q2) -> R = sigma_L/sigma_T`
+    behaves exactly as in `NuclearF2`: None keeps the module-level
+    `r_sigma_lt`, looked up at call time so the dated scripts'
+    `r_override` monkey-patch still bites.
+
+    THE Q0 FLOOR (measured 2026-09-15).  EPPS21nlo_CT18Anlo_Li6 starts at
+    Q = 1.3 GeV, i.e. Q2 = 1.69 GeV2, and `parton` returns **NaN** below
+    it rather than freezing or extrapolating.  The money maps run from
+    Q2 = 1 GeV2 and two of the four published sweet spots sit at
+    Q2 = 1.14, so a bare grid backend silently poisons them.  `q2_min`
+    is therefore read off the grid at construction and `f2a` evaluates
+    at max(Q2, q2_min): F2A is FROZEN at Q0^2 below the set's support,
+    the same treatment `r1998` gives its own fit support, and never
+    extrapolated.  It is an honest floor, not a measurement -- anything
+    a caller reads below `q2_min` is the Q0^2 value, and a caller that
+    reports numbers from there has to say so.  `q2_frozen_fraction`
+    measures how much of a given (x, Q2) grid and rate weight falls in
+    that region.
+    """
+
+    _E2 = {1: 1 / 9, 2: 4 / 9, 3: 1 / 9, 4: 4 / 9, 5: 1 / 9}
+
+    def __init__(self, ion, setname=None, member=0, r_func=None):
+        from parton import mkPDF  # lazy: optional dependency
+        if setname is None:
+            key = (int(ion.Z), int(ion.A))
+            if key not in NUCLEAR_F2_SET_FOR_ION:
+                raise ValueError(
+                    "no nuclear F2 grid registered for Z=%d A=%d; pass "
+                    "`setname` explicitly or add it to "
+                    "NUCLEAR_F2_SET_FOR_ION" % key)
+            setname = NUCLEAR_F2_SET_FOR_ION[key]
+        self.ion = ion
+        self.setname = NUCLEAR_F2_SETS.get(setname, setname)
+        self.member = member
+        self.r_func = r_func
+        self._pdf = mkPDF(self.setname, member)
+        self.q2_min = _grid_q2_min(self._pdf)
+        self._f2a_vec = np.vectorize(self._f2a_scalar)
+
+    def _f2a_scalar(self, x, q2):
+        """Scalar worker: whole-nucleus F2A at one (x, Q2)."""
+        if not (0.0 < x < 1.0):
+            return 0.0
+        q2 = max(float(q2), self.q2_min)   # frozen at Q0^2, never extrapolated
+        tot = 0.0
+        for pid, e2 in self._E2.items():
+            tot += e2 * (_safe_xfx(self._pdf, pid, x, q2)
+                         + _safe_xfx(self._pdf, -pid, x, q2))
+        # `parton` returns per-nucleon xf_A; restore the whole nucleus
+        return max(tot, 0.0) * self.ion.A
+
+    def q2_frozen_fraction(self, q2, weights=None):
+        """Share of `q2` (optionally rate-weighted) below the Q0 floor."""
+        q2 = np.asarray(q2, dtype=float)
+        below = q2 < self.q2_min
+        if weights is None:
+            return float(below.mean()) if below.size else 0.0
+        w = np.asarray(weights, dtype=float)
+        tot = w.sum()
+        return float(w[below].sum() / tot) if tot > 0 else 0.0
+
+    def f2a(self, x, q2):
+        """Whole-nucleus F2A(x, Q2); accepts numpy arrays."""
+        return self._f2a_vec(np.asarray(x, dtype=float),
+                             np.asarray(q2, dtype=float))
+
+    def f1a(self, x, q2):
+        """Whole-nucleus F1A via Callan-Gross modified by R, as `NuclearF2`."""
+        r = (r_sigma_lt if self.r_func is None else self.r_func)(x, q2)
+        return self.f2a(x, q2) / (2.0 * np.asarray(x, dtype=float) * (1.0 + r))
+
+
 def dsigma_dx_dq2(x, q2, s, f2, fl=None, r_func=None):
     """NC DIS double-differential cross section [pb/GeV^2].
 

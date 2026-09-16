@@ -117,13 +117,22 @@ inside eic-shell) → HepMC3.
   — enough to develop the full analysis/conversion chain and do the e+d
   control study before any local BeAGLE run.  One command:
   ```bash
-  SIF=~/Projects/eic/local/lib/jug_xl-nightly.sif
+  SIF=~/Projects/eic-2026/local/lib/eic_xl-nightly.sif
   B=root://dtn-eic.jlab.org//volatile/eic/EPIC/EVGEN/DIS/BeAGLE1.03.02-3.1/eH2/en/9x130/q2_1to1000
-  singularity exec $SIF python3 tools/analysis/dump_spectators.py \
+  singularity exec --pwd /opt/local/lib/root $SIF python3 \
+      $PWD/tools/analysis/dump_spectators.py \
       $B/BeAGLE1.03.02-3.1_DIS_eH2_en_9x130_q2_1to1000_ab_run001.hepmc3.tree.root \
-      ed.csv --nevents 20000                       # ~2 min, streamed
+      $PWD/ed.csv --nevents 20000                  # ~2 min, streamed
   python3 tools/analysis/ed_control_analysis.py ed.csv --beta-scan
   ```
+  `--pwd` is not optional and the paths must be absolute because of it:
+  ROOT looks its module map up through the relative
+  `../../include/root/ROOT.modulemap`, which resolves only from two
+  levels below `$ROOTSYS = /opt/local`.  Without it cling dies before the
+  first event (measured 2026-09-15; docs/reproduction_manual.md §5.2).
+  The older `jug_xl-nightly.sif` at `~/Projects/eic/local/lib/` was the
+  image this recipe named until then.  The same CSV is the external pool
+  `polligen/reweight.py` polarizes (plans/05 step 5.C).
 - **BNL SDCC / JLab ifarm**: BeAGLE prebuilt; submit the e+Li cards there.
 
 ## Caveats for e+Li physics (from plans/02 step 1.5)

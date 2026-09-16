@@ -33,6 +33,35 @@ object:
                          fill states (evgen.polligen.bookkeeping; 0.5/0.5
                          for a tensor flip plan).  It sums to one within a
                          run plan and is not a programme decision.
+
+Dilution and acceptance: `Scenario.dilution` (D) and
+`Scenario.acceptance` (A) are the two measured attenuations of the
+AMPLITUDE that the reconstruction chain puts between the physics
+asymmetry and the fitted one, and they are NOT a third luminosity share.
+A measurement whose fitted amplitude is D*A times the physics one
+carries a statistical error 1/(D*A) times the ideal one, so the three
+delta-A paths of `project_observables` below divide by D*A while
+`project_rates` -- the event count -- is untouched by either.  Anything
+that removes EVENTS rather than attenuating the amplitude (optics, a
+spin share, a fiducial cut) belongs in the luminosity knobs above,
+where it enters as 1/sqrt and not as 1/x; putting it here would
+overstate the loss.
+
+Where the numbers come from: the generator measures D bin by bin and the
+fast-sim reads it off a run, it does NOT import it.  `polligen`'s
+`RecoResponse.bin_summary(xlo, xhi, q2lo, q2hi, category)` returns
+`dilution_phi` = <cos 2(phi'_reco - phi'_true)> over the reco bin -- the
+cos 2phi analyzing power of the smearing -- and
+`CoherentResponse.truth_reference` the same object in beta,
+`dilution_beta`, for the tagged channel; either goes straight into
+`dilution` for the bin it was measured in (`Scenario(dilution=0.83)`).
+`acceptance` is the second factor of the same product, for the part of
+the attenuation the fit does not undo (an azimuthal acceptance moment,
+a template-basis coverage): keeping them separate lets a projection
+quote the two sources apart and vary either alone.  The import goes one
+way only -- `evgen` imports `polli_fastsim`, never the reverse, and the
+discipline is test-guarded (plans/05:370) -- so a script that wants the
+measured value passes the NUMBER in.
 """
 
 from dataclasses import dataclass, field
@@ -63,6 +92,13 @@ class Scenario:
     pol_electron: float = 0.70
     pol_ion_vector: float = 0.70   # P_z in the ring (placeholder)
     pol_ion_tensor: float = 0.60   # P_zz in the ring (placeholder)
+    # Measured attenuations of the AMPLITUDE, not of the event count (see
+    # the module docstring): the statistical error on an asymmetry whose
+    # measured size is D*A times the physics one is 1/(D*A) times the
+    # ideal error.  Both default to 1.0, which is what every published
+    # figure assumes.
+    dilution: float = 1.0
+    acceptance: float = 1.0
     q2_min: float = 1.0
     y_min: float = 0.01
     y_max: float = 0.95
@@ -76,11 +112,24 @@ class Scenario:
         if not self.run_share > 0:
             raise ValueError("run_share must be positive (it multiplies the "
                              "luminosity); got %r" % (self.run_share,))
+        for name in ("dilution", "acceptance"):
+            value = getattr(self, name)
+            if not value > 0:
+                raise ValueError("%s must be positive (it divides the "
+                                 "statistical error); got %r"
+                                 % (name, value))
 
     @property
     def lumi_effective_fb_per_nucleon(self):
         """Luminosity this observable actually receives [fb^-1/nucleon]."""
         return self.lumi_fb_per_nucleon * self.run_share
+
+    @property
+    def analyzing_power(self):
+        """D*A: the factor by which a measured asymmetry falls short of
+        the physics one, and by which its statistical error therefore
+        exceeds the ideal one."""
+        return self.dilution * self.acceptance
 
 
 def run_share_tag(run_share):
@@ -181,6 +230,12 @@ def project_observables(config, scenario, proj, g1_model, b1_func, delta_func):
     r_func = getattr(nf2, "r_func", None)   # see project_rates
 
     out = {}
+    # Every statistical error below is the ideal one divided by D*A: the
+    # amplitude the fit returns is that much smaller than the physics
+    # one, and the error on the physics one is that much larger.  Both
+    # default to 1, so this factor is exactly 1.0 in every published
+    # figure (`tests/test_fom_dilution.py` asserts the identity).
+    analyzing_power = scenario.analyzing_power
     # (1) polarized EMC: A_par and delta(g1A/F1A)
     #
     # Both the asymmetry and its inversion carry the target mass, and they
@@ -203,7 +258,8 @@ def project_observables(config, scenario, proj, g1_model, b1_func, delta_func):
     g1 = g1_model.g1_nucleus(config.ion, X, Q2) / config.ion.A
     g2 = _g2_per_nucleon(g1_model, config.ion, X, Q2)
     apar = a_parallel(g1, f1, y, X, Q2, r_func=r_func, g2=g2)
-    dapar = err_a_parallel(N, scenario.pol_electron, scenario.pol_ion_vector)
+    dapar = err_a_parallel(N, scenario.pol_electron,
+                           scenario.pol_ion_vector) / analyzing_power
     rho = None if g2 is None else g2 / np.where(np.abs(g1) > 1e-300, g1,
                                                 1e-300)
     # D_eff = D_gamma [1 - gamma^2 rho + eta gamma (1 + rho)] CHANGES SIGN
@@ -223,12 +279,13 @@ def project_observables(config, scenario, proj, g1_model, b1_func, delta_func):
     # (2) tensor b1 via Azz (spin-1 only)
     b1 = b1_func(X, Q2, f1)
     out["azz"] = azz(b1, f1, f2, X, y)
-    out["err_azz"] = err_azz(N, scenario.pol_ion_tensor)
+    out["err_azz"] = err_azz(N, scenario.pol_ion_tensor) / analyzing_power
 
     # (3) gluonometry: cos(2phi) amplitude from Delta
     delta = delta_func(X, Q2, f1)
     out["a_cos2phi"] = a_cos2phi(delta, f1, f2, X, y)
-    out["err_a_cos2phi"] = err_cos2phi_amplitude(N, scenario.pol_ion_tensor)
+    out["err_a_cos2phi"] = (err_cos2phi_amplitude(N, scenario.pol_ion_tensor)
+                            / analyzing_power)
 
     # significance maps (|asym| / stat error), zeroed outside acceptance
     for key in ("a_par", "azz", "a_cos2phi"):
