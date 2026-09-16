@@ -67,6 +67,12 @@ envelope with best-bin δA = 1.8×10⁻³ / 0.6×10⁻³ — and the finding tha
 published IP6 optics delivers that envelope (plans/10), which turns claim 3
 into the letter's far-forward requirement.
 
+*Appended 2026-09-16 (author item A7); the dated paragraph above is left exactly
+as written:* [21–43σ in every current source. The 44 is the quotient of the
+printed digits — 0.74×10⁻² over 1.7×10⁻⁴ is 43.5 — where the exact ratio is
+42.9; the 2026-09-02 consistency review (F163) carried 21–43σ into every live
+site and left this paragraph, being dated history, as it stood.]
+
 #### §7.1 re-derived on the two-fill estimator (2026-09-15)
 
 The three truth-level drivers (`money_cos2phi.py`,
@@ -168,6 +174,16 @@ the grid on which this measurement has the fewest Δ(x) points. Adopting it
 for the published figures is therefore a separate call from providing it,
 which is why `--binning` defaults to the grid the figures were made on.
 
+☑ *2026-09-16 (author decision A6): the separate call is made — the published
+figures KEEP the 40 × 30 log grid and `--binning yr` stays the priced comparison
+option this addendum provides. The YR lattice is the grid a Yellow-Report
+projection can be read off bin for bin, and it is not the analysis grid, because
+on it the Δ-extraction combs fall from 10 / 9 / 10 merged x-bin pairs per Q²
+slice to 5 / 5 / 5 — the Δ(x) points are what the coarser lattice costs — while
+the apparent gains (max per-bin significance ×1.89, min per-bin δA ×0.55) are
+pooling of the same events. `log40x30` stays the default, every published stem
+stays bit-for-bit, and plans/02 Step 1.1 item 3 carries the same decision.*
+
 ## 7.2 Venue
 
 - **Primary: Physics Letters B.** Precedents for exactly this genre:
@@ -195,7 +211,7 @@ which is why `--binning` defaults to the grid the figures were made on.
 | 7 | far-forward geometry | RP z = 26/28 m (YR-era) in text; run-2 Geant4 scan found 32.5/34.3 m in epic-main | quote current ePIC geometry, windows unchanged in θ/R | WP5 | minor |
 | 8 | coherent fraction f₀ | scenario 0.04 [×2/÷2] | unchanged (no light-A prediction exists — stated); theory ask on record (IP-Glasma α–d, #18) | — | no |
 | 9 | BeAGLE incoherent shapes | blocked on FLUKA license | not blocking: |t|-fit purity argument stays band-level with e+Pb benchmark [80–99%] | WP7 | no |
-| 10 | bibliography | 40 entries, individually verified 2026-08-17 | BibTeX from INSPIRE keys; re-verify volume/pages at submission | WP6 | no |
+| 10 | bibliography | **done 2026-09-16**: `paper/refs.bib` carries the 35 records the letter cites (31 from INSPIRE, 4 hand-written) and `paper/refs_reserve.bib` the other 40 of the same fetch (38, 2), keyed by INSPIRE texkey, the hand-written ones being what INSPIRE has no record for (Reports 0/2/3/4, the ePIC seminar of Report 1 [17], the 2021 IAEA quadrupole report of Report 1 [39]) and each flagged in its `annote` field; `paper/refs_provenance.md` records the query behind every entry. The 40 of 2026-08-17 became 75 fetched because the walk covers both source lists (Report 1 [1]–[43] and the coherent note [1]–[50]) and splits their bundled entries | re-verify volume/pages at submission (6 entries are arXiv-only preprints with no journal field yet) | WP6 | no |
 
 ## 7.4 Work packages
 
@@ -943,6 +959,13 @@ cutout geometry as the assumption it is (#20).
   `t_min_coherent(0.01)` (= 3.169×10⁻³) and `t_min_suppression` so panel (b)'s
   suppression curve follows the band — not done here, the figure is bit-for-bit
   and the re-quote belongs with money plot 6.*
+  ☑ *2026-09-16 (author decision, plans/04 #26): the call above is decided —
+  the coherent tagged-yield curve stays UNSUPPRESSED by default and the two
+  folds are quoted as a BAND beside it, −2.5 … −47% across the window, until a
+  diffractive model supplies an x_P spectrum (plans/04 #18).  Both flags stay
+  default off, so money plot 6, the WP5 scan and `phase_space_bins_6Li.png`
+  stay bit-for-bit; the `coherent_optics_scan.py:214` re-quote is untouched by
+  the decision and still belongs with money plot 6.*
 - ☑ IR-8 panel/inset: published efficiencies d 47% / ³He 32% / ⁴He 29% /
   ⁷Li 17.8% (no ⁶Li — interpolation labeled ours), pT ≈ 0 reach.
   ☑ *2026-08-28: delivered as an overlay on panel (b) rather than a separate
@@ -961,18 +984,105 @@ cutout geometry as the assumption it is (#20).
 - Effort: 2–3 days.
 
 ### WP6 — Paper production
-- ☐ `paper/` directory: `main.tex` (elsarticle, two-column), `refs.bib`
+- ☑ `paper/` directory: `main.tex` (elsarticle, two-column), `refs.bib`
   (INSPIRE keys for the verified list), `figs/`, build script.
-- ☐ Letter-quality figure pass: a shared matplotlib style (column widths,
+  ☑ *2026-09-16: scaffolded. `paper/main.tex` is elsarticle
+  `[preprint,twocolumn,12pt]` with the title of candidate (a), the D3 author
+  line, the ANL affiliation, an abstract placeholder, the acknowledgment line
+  and seven `\section` stubs carrying this section's word budgets as comments
+  and no body text; `paper/refs.bib` and `paper/refs_provenance.md` are T27
+  below; `paper/figs/` holds only the register of the four letter figures
+  against the published figures they condense; `paper/build.sh` builds the
+  document and, until T23 exists, not the figures. **TeX engine:** no
+  `pdflatex`, `xelatex`, `lualatex` or `latexmk` exists on this machine, so
+  the engine is tectonic 0.17.0, which carries its own package bundle;
+  `build.sh` reads `$TECTONIC` and falls back to `PATH`, and the binary is
+  deliberately not committed. Verified: exit 0, 75 `\bibitem`, 0 BibTeX
+  errors.*
+- ☑ Letter-quality figure pass: a shared matplotlib style (column widths,
   8–9 pt fonts, consistent Okabe–Ito accents); condense money plot 5 →
   Fig. 2 (two φ′ panels + amplitude vs x), money plot 7 → Fig. 3 (two Q²
   slices), money plot 6 → Fig. 4 (a₂ anchor/band + tagged φ′, acceptance
   inset); phase space → Fig. 1 (single inclusive panel with bins, coherent
   support as contour or inset).
-- ☐ Text: draft from the fact-checked report + `docs/note_cos2phi_coherent_6Li.md`;
+  ☑ *2026-09-16: `paper/figstyle.py` is the shared style — one rcParams
+  context, 3.375 in and 7.0 in column widths, an 8 pt floor asserted in
+  `save()` together with the journal width, and the Okabe–Ito roles pinned to
+  the producing scripts' own `#0072B2 / #D55E00 / #009E73`. The four drivers
+  `paper/fig1_phase_space.py` … `fig4_coherent.py` condense exactly the four
+  figures named here. They import the producing scripts' machinery rather
+  than re-implementing it — `money_cos2phi`'s `measure`, `superbin_mask` and
+  `pick_sweet_spots_banded`, `phase_space_bins.draw_guides`,
+  `money_cos2phi_coherent.best_superbin`, `coherent_optics_scan.acceptance_curve`,
+  `polligen.coherent.CoherentScenario` — and run at the producing scripts'
+  published defaults, read off each script's own parser by entering its
+  `main()` and stopping at `argparse`, so a driver cannot hold a default the
+  script no longer has. Nothing is written into `evgen/` or `fastsim/`:
+  `git diff fe1e58e -- '*.png'` is empty. Verified against the published
+  PNGs: Fig. 3 reproduces money plot 7's first and third panels point for
+  point, Fig. 4 money plot 6's (b) and (d).*
+- ☑ Text: draft from the fact-checked report + `docs/note_cos2phi_coherent_6Li.md`;
   budget below. Cover letter: first-projection claims + the two verified
   literature gaps.
+  ☑ *2026-09-16: `paper/main.tex` carries the letter — seven sections, ~3,700
+  words of body text against the ~4,200 of §7.5 (§5 the only section over its
+  own budget), a 119-word abstract, four
+  figures, Table 1 and 35 references, marked "DRAFT v0, 2026-09-16, for the
+  authors' review" in its header comment and nowhere in its body. Every body
+  line that quotes a number ends with a `% src:` comment naming the report
+  section, plan section or figure-driver JSON it comes from, and every
+  displayed equation carries one on the line above: 139 lines, sourced 93% to
+  Report 1, the rest to Report 0 §2.2–2.3 and to the WP1 addendum of this
+  plan. The footing is the published one — single fill, toy structure
+  functions, a placeholder R — and §6 bounds the two alternatives rather than
+  adopting either: the R1998 swap (+18, +18, +8, −4% on Δ/F₁) and the nuclear
+  grid (rate ×0.77, N_tag ×0.70, 18–28σ), the latter with the Q₀ floor stated
+  outright, that EPPS21nlo_CT18Anlo_Li6 has no support below Q² = 1.69 GeV²,
+  where 8.7% of the accepted cells and 36.3% of the accepted rate lie, and
+  that no claim is made on that footing below it. The two-fill estimator is
+  quoted nowhere. `paper/cover_letter.md` states the two firsts with the fact
+  that makes each verified — the letter of intent that states no reach, and
+  the forward-citation sweep of PLB 858 (2024) 139053 — and labels the note's
+  other two claims as what the letter does rather than as verified firsts.
+  Built with tectonic: 8 pages after the review pass (7 before it, the extra
+  page being four lines of references), 0 TeX errors, 0 undefined citations or
+  references, one 1.9 pt overfull box in Table 1's generated tabular. The
+  class line is now `[final,5p,times,twocolumn]`, the journal's own layout,
+  with the scaffold's `[preprint,twocolumn,12pt]` kept commented beside it:
+  the text is identical between them, but the preprint layout defers every
+  double-column float to the end and runs 16 pages, four of them nothing but
+  floats.*
 - Effort: ~1 week drafting + iteration.
+- ☑ *2026-09-16, WP6 disposition (development run 19, W4). T22 scaffold,
+  T23/T24 figure style and the four drivers, T25 one build script, T26 text,
+  T27 bibliography, T28 assumptions section, T29 cover letter: all done and
+  in `paper/`, with a review pass over the result (R-PAPER) and a number
+  guard over Table 1 and the abstract. `bash paper/build.sh` regenerates the
+  four figures, their captions, Table 1 and `main.pdf` in one command (8.9 s
+  for the figures, 11.2 s with the document); `python3
+  tools/checks/paper_numbers.py` prints `0 unresolved` and nine groups ok,
+  and the same nine checks run inside `tools/consistency_check.py`.
+  `paper/refs.bib` is the 35 records the letter cites and nothing else — the
+  correspondence with its `\cite` commands is exact in both directions and is
+  checked — with the other 40 records of the same INSPIRE fetch in
+  `paper/refs_reserve.bib`. Every number in Table 1, in its caption and in
+  the abstract is declared against the string Report 1's template or the
+  manual's §7 table prints it in; five are declared against the driver that
+  measured them instead, with the reason, because neither document carries
+  them (the four inclusive per-bin counts and the coherent row's A/δÂ).*
+- ☐ *What stays the authors' (2026-09-16): the text is a **draft v0** and is
+  marked so in its header comment — D2 (generator- or reconstructed-level
+  main figures), D4 (circulation), the funding line and the people thanked,
+  the editor, address and date of the cover letter, the choice between
+  cutting a figure and accepting eight pages, and the ten judgement items of
+  the 2026-09-16 review (the "2–9%" against the caption's 9.5%, the coherent
+  A/δÂ cell, the abstract's IP6 verdict, citing the companion Report 1 as a
+  36th reference, length, acknowledgments, the re-run of the
+  forward-citation sweep, the single-fill footing, and the three cosmetic
+  hyperref warnings). **Submission itself is theirs**: the journal decision,
+  the submission, the arXiv posting and the arXiv number, the Zenodo DOIs
+  that replace "companion report, in preparation" in the four companion-report
+  entries, and the volume/page re-verification of §7.3 row 10.*
 
 ### WP7 — Non-blocking parallel items
 - ☐ FLUKA license → local BeAGLE incoherent ⁶Li shapes (upgrade the |t|-fit
@@ -1041,10 +1151,88 @@ draws on already fact-checked text.
 ## 7.8 Definition of done
 
 - ☐ All §7.1 numbers grid-based, reco-informed, with P_zz/dilution bands.
-- ☐ Four letter figures + Table 1 regenerated by one `paper/` build script.
-- ☐ Every citation BibTeX-verified against INSPIRE; the three "do not say"
+- ☑ Four letter figures + Table 1 regenerated by one `paper/` build script.
+  ☑ *2026-09-16: `bash paper/build.sh` regenerates `figs/fig1.pdf` …
+  `fig4.pdf` (with PNG previews), the four generated captions, `table1.tex`
+  and `main.pdf` in one command; `--figures` stops before the TeX engine.
+  Table 1 is not measured — `table1.py` reads `figs/fig2.json` and
+  `figs/fig4.json`, which the drivers wrote, so a cell of the table and the
+  number beside it in Figure 2 or 4 are one draw of one pseudo-experiment.
+  Its columns are Report 1 §5.1's (the four sweet spots: injected amplitude,
+  one- and ten-year errors, significance) and §6.2/§6.3's (the coherent best
+  super-bin and the deformation-anchored ⟨a₂⟩); every inclusive row agrees
+  with §5.1 at the precision §5.1 prints, and the coherent row with §6.2.
+  The captions are generated too, from the same arrays. Enforced by a new
+  `letter figures` group in `tools/checks/paper_numbers.py`: the build
+  products must exist, `table1.tex` must match cell for cell the cells the
+  driver wrote into `figs/table1.json`, and those cells' raw values must
+  match `figs/fig2.json` and `figs/fig4.json` to 1e-9 relative — so
+  hand-editing the table, or rebuilding the figures without rebuilding it,
+  fails the sweep. Two consecutive builds on an unchanged tree give identical
+  figures, captions and `table1.tex`; `main.pdf` is byte-identical only with
+  `SOURCE_DATE_EPOCH` pinned, tectonic embedding the build date otherwise.*
+- ◐ Every citation BibTeX-verified against INSPIRE; the three "do not say"
   lists from the 2026-08-17 fact checks enforced in the text.
-- ☐ Assumptions table of the report reduced to a §6 paragraph with no claim
+  ☑ *2026-09-16, the INSPIRE half: `tools/checks/paper_numbers.py` prints
+  `0 unresolved` over `paper/refs.bib` and runs inside
+  `tools/consistency_check.py` as nine checks. Both directions now carry
+  weight: `paper/refs.bib` holds the 35 records the letter cites and nothing
+  else, every `\cite` resolves there, every entry is reached by a `\cite`,
+  and the 40 records that cover the rest of the two source lists are in
+  `paper/refs_reserve.bib`, which the letter compiles only under
+  `\draftbibtrue`. The coverage leg is unchanged and now reads both files:
+  every numbered entry of Report 1 ([1]–[43]) and of
+  `docs/note_cos2phi_coherent_6Li.md` ([1]–[50]) is represented in
+  `refs.bib` or `refs_reserve.bib`, the map back being a
+  `% cited by R1[n]/N[m]` comment above every entry, and the two counts are
+  read out of the source documents at check time.*
+  ◐ *2026-09-16, the "do not say" half: the three lists are named here and
+  enumerated nowhere in this repository, and the 2026-08-17 fact checks are
+  not in the tree either, so they cannot be enforced as written — this stays
+  open and is the author's. What is enforced in their place, now that a text
+  exists, is the enumerable list: `tools/checks/paper_numbers.py` greps
+  `paper/main.tex` and `paper/cover_letter.md` against all 75 entries of
+  `tools/retired_numbers.json` and fails the sweep on any of them.
+  `tools/checks/retired_strings.py` could not do this: its corpus is
+  `reports/`, `plans/`, `docs/`, three READMEs and the module docstrings of
+  `evgen/` and `fastsim/`, and `paper/` is in none of them. The guard is
+  partial in one respect worth recording: the retired patterns are prose and
+  ASCII forms, and the LaTeX transcription of one of them — the polarimetry
+  entry F004 of `tools/retired_numbers.json`, whose retired form the sweep
+  itself will not let this line quote — does not match the stored pattern,
+  the macros and braces of `$\delta P_{zz}/\ldots$` falling between its
+  characters.*
+  ☑ *2026-09-16, review (R-PAPER): the withdrawn claims of Report 1
+  Appendix A and the exclusions of §7.0 were checked against the letter's
+  text and none is present; the one convention error found — Eq. (1)'s
+  tensor terms printed in the pre-2026-08-29 transcription, i.e.
+  A_zz = +(2/3) b₁/F₁ — is fixed to the HJM/HERMES sign the generator
+  carries, and the convention is now stated in the text. The three named
+  lists remain unenumerated.*
+- ☑ Assumptions table of the report reduced to a §6 paragraph with no claim
   the fact checks flagged as unsourceable.
-- ☐ Cover letter states the two verified literature firsts.
+  ☑ *2026-09-16: §6 of `paper/main.tex`, "Assumptions", 530 words. It carries
+  Report 1 Table 4's ten rows condensed to four paragraphs — the
+  structure-function footing with the R1998 correction and the nuclear-grid
+  column behind its Q₀ floor; the ⅓ dilution as a counting fraction with the
+  rank-2 0.92 left open as an −8%; polarimetry at ≤ 5% and the uncalculated
+  tensor radiative corrections against the bounded unpolarized ones; the
+  measured detector nuisances; the three scenario inputs of the coherent
+  channel; the impulse approximation; and the run-plan share that makes the
+  two reaches alternatives rather than a sum. Nothing in the section is
+  claimed that a report section does not carry, which is mechanical rather
+  than asserted: every numeric line names its source and
+  `tools/checks/paper_numbers.py` fails the sweep on one that does not.*
+- ☑ Cover letter states the two verified literature firsts.
+  ☑ *2026-09-16: `paper/cover_letter.md`. The two are the two claims of
+  `docs/note_cos2phi_coherent_6Li.md` §7 that carry a verification act — no
+  sensitivity projection of Δ exists for any target, the one prior
+  experimental document (arXiv:1803.11206) stating no reach; and the
+  polarized-nucleus coherent-diffraction programme of PLB 858 (2024) 139053
+  has not been extended beyond the deuteron, checked against all of that
+  paper's forward citations on 2026-08-10. The note's other two claims, the
+  first quantitative intact-A = 6 tag and the ⁶Li null test, are described as
+  what the letter does and not as verified firsts, because no equivalent
+  sweep stands behind them. Editor, address and date are placeholders.
+  `tools/checks/paper_numbers.py` asserts both identifiers are in the file.*
 - ☐ Submitted; arXiv number recorded here.

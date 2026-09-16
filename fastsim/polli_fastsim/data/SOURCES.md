@@ -295,6 +295,101 @@ cell nearest θ_k = 0 and −1.998 on a fine (n_c = 4001) near-axis grid,
 where n_{+1}/n_0 = 2.7×10⁻⁴ against 0.16 and 0.19 at k = 0.2 and
 0.4 GeV/c; +0.999 at the 90° cell; and +0.967 at the k = 1.0 GeV/c row.
 
+## `vmc/li6_ad1.momentum` and `vmc/li6.ad` — the ANL α+d overlap
+
+Two more files that are not digitized curves: R. B. Wiringa *et al.*'s
+variational Monte Carlo ⁶Li → α + d cluster overlap, the ab initio input
+the generator's two-parameter Hulthén pair stands in for. They are read by
+`polligen.tagged.li6_vmc_tables` and selected with
+`tagged.li6_alpha_channel(wave='vmc')` / `scripts/money_tagged_azz.py
+--cluster-wave vmc`; **nothing published reads them** — every shipped
+number is the Hulthén default, bit for bit.
+
+Provenance, quoted from `LiPolGen/data/vmc/README.md`, which fetched them
+on 2026-08-29 and is where the URLs live. The live pages
+`https://www.phy.anl.gov/theory/research/momenta/li6_ad1.momentum` and
+`…/theory/research/overlap_old/li6.ad` sit behind Cloudflare bot
+mitigation which answers `HTTP/2 403 cf-mitigated: challenge` to every
+non-interactive client, so both copies came through the Internet Archive,
+
+    web.archive.org/web/20250606203105id_/…/momenta/li6_ad1.momentum
+    web.archive.org/web/20250617050329/…/overlap_old/li6.ad
+
+the momentum file through the Wayback Machine's raw `id_` form, which
+serves the original bytes rather than a rendered page. README.md states the
+point explicitly: "Every file here is the **raw text table**, not a
+re-typed or figure-digitized copy — the Wayback Machine serves the
+original file bytes." The files here are those **raw served bytes**,
+copied byte for byte from `LiPolGen/data/vmc/momenta/li6_ad1.momentum`
+and `LiPolGen/data/vmc/li6_alpha_d/li6.ad` on 2026-09-16 — 5 167 bytes,
+md5 `d4cc62c13e142208e6ca6a36d500fdfb`, and 23 293 bytes, md5
+`452ddf07eef2e8751ff69850fc274bbe`.
+
+Physics provenance: AV18+UX (momentum file, 22-Mar-14, VMC 1M samples)
+and AV18+UIX (overlap file, Apr-2004, per its own banner) variational
+Monte Carlo wave functions. B. S. Pudliner, V. R. Pandharipande,
+J. Carlson, S. C. Pieper, R. B. Wiringa, *Quantum Monte Carlo calculations
+of nuclei with A ≤ 7*, Phys. Rev. C **56**, 1720 (1997) for the A = 6 wave
+function; J. L. Forest, V. R. Pandharipande, S. C. Pieper, R. B. Wiringa,
+R. Schiavilla, A. Arriaga, *Femtometer toroidal structures in nuclei*,
+Phys. Rev. C **54**, 646 (1996) for the cluster-overlap method.
+
+**Which block the loader reads, and why there are two files.** A momentum
+distribution is |ψ_L|² and carries no phase at all, so it cannot supply
+the relative S–D sign that the tensor observables read; a 2004 amplitude
+table can, but has 200 k samples against 1 M and no printed per-wave
+normalization. The loader therefore takes the **magnitude** from
+`li6_ad1.momentum`'s **second** block — the S/D split
+`K RHOKA0 DRHOKA0 RHOKA2 DRHOKA2`, 51 rows, K = 0.001 … 5 fm⁻¹ — as
+ψ̂_L = √ρ_L, and the **sign** from `li6.ad`'s k-space block
+`k(fm-1) Aad00(k) Aad22(k)`, 51 rows, k = 0 … 5 fm⁻¹, converted to GeV/c
+with ħc = 0.197327 GeV·fm. `li6.ad`'s r-space block, its `ndx / s-wave /
+d-wave` line and the momentum file's first (total) block are not read.
+Two of the three are cross-checked in `test_tagged.py` all the same: the
+total block against the file's own printed norm, and the k-block's own
+normalization against what the `ndx` line prints (0.856 / 0.838 / 0.017).
+The r-space block is not used at any point.
+
+The sign is taken from the reference's zero **crossings** below 3 fm⁻¹
+rather than point by point: past ~3 fm⁻¹ both overlap columns are at the
+Monte Carlo noise floor and wander while carrying ~10⁻⁴ of the norm. The
+phase is anchored where the reference is largest and stepped across the
+crossings from there.
+
+**Sign convention**, which is the whole reason `li6.ad` is here: the
+stored ψ̂_L are **plain** Bessel transforms — no i^L, no phase — in the
+file's own global phase, ψ̂₂ positive at low k, exactly the convention the
+AV18 deuteron's `u(k), w(k)` above are in. The unobservable global phase
+is fixed at load by ψ̂₀(k → 0) > 0 (`li6.ad` prints `Aad00 < 0` at low k,
+so both columns are negated), and the i^L phase of the momentum-space
+amplitude is applied in `TaggedModel._amp2_table`, for every wave alike,
+tabulated or analytic — the same treatment `av18_deuteron_channel` gets.
+
+Header cross-checks against the blocks actually read, all measured on
+these bytes by `evgen/tests/test_tagged.py` (2026-09-16). The file's own
+printed normalizations `4π∫ρK²dK/(2π)³` are 0.81971 (total), 0.80362 (S)
+and 0.015861 (D); the trapezoid of the tabulated columns reproduces them
+to 7.8×10⁻⁶, 1.6×10⁻⁵ and 1.9×10⁻⁴ relative. P_D is taken from the printed
+S/D pair, 0.015861 / (0.80362 + 0.015861) = **0.0193549**, against which
+the tabulated columns integrate to 0.0193516. The 2004 overlap file, on
+its own normalization S_ad = (2π)⁻³∫k²A²dk, gives 0.85463 and
+P_D = 0.0201 — a different Hamiltonian and a fifth of the samples, which
+is the size of the spread. The two sign-region boundaries come out of the
+signed columns: the α-d **S node at 0.6779 fm⁻¹ = 0.1338 GeV/c** and the
+α-d **D node at 2.2498 fm⁻¹ = 0.4439 GeV/c**, each confirmed in the same
+0.1 fm⁻¹ bin by a minimum of the momentum file's own ρ_L, so
+sign(ψ̂₂/ψ̂₀) = −1, +1, −1 across the three regions — a structure no
+node-free analytic form can carry.
+
+Every one of those numbers is also a check against an independent
+implementation: LiPolGen's C++ `ClusterWaveSource::VmcAV18` reads the same
+two files, and its published acceptance-weighted A_zz^tag at the Yellow
+Report high-acceptance optics of 10 × 99.5 GeV/u — −0.5191, −0.2899,
+−0.1993, −0.0822, +0.1170 at k = 0.1979, 0.2495, 0.3012, 0.4001,
+0.4990 GeV/c — is reproduced here to 3.7×10⁻⁵, its printed rounding, and
+its spin-blind accepted-fraction model integral 0.024675932148828
+(Hulthén) to every one of fifteen digits.
+
 ## Not digitized
 
 Cosyn–Weiss arXiv:2603.23700 FIG. 13 (page 36) is the tagged tensor

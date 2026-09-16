@@ -178,12 +178,12 @@ automatically.
 ## 2 · The five-minute check: the test suites
 
 ```bash
-cd evgen   && python3 -m pytest tests/ -q     # 407 tests (406 passed, 1 skipped without a cached BeAGLE dump), ~70 s
+cd evgen   && python3 -m pytest tests/ -q     # 413 tests (412 passed, 1 skipped without a cached BeAGLE dump), ~70 s
 cd fastsim && python3 -m pytest tests/ -q     # 141 passed, ~28 s
-python3 tools/consistency_check.py --verbose  # 51 checks (53 with --full), whole repository
+python3 tools/consistency_check.py --verbose  # 60 checks (62 with --full), whole repository
 ```
 
-548 tests, all of which run without the PDF grids except four of the five
+554 tests, all of which run without the PDF grids except four of the five
 in `fastsim/tests/test_grids.py`, which skip, and the one streamed-sample
 test of `evgen/tests/test_reweight.py`, which skips unless
 `POLLIGEN_BEAGLE_CSV` names a cached BeAGLE dump (§5.2).  These are not
@@ -196,29 +196,34 @@ nuclear masses against CODATA, the tensor sign against Cosyn Eq. (27).
 If these pass, the machinery is sound and the rest of this manual is
 about numbers, not correctness.
 
-The consistency sweep is the other half of those five minutes: 53 checks
-in eleven groups, 51 of them in the default run (the two that re-execute
+The consistency sweep is the other half of those five minutes: 62 checks
+in twelve groups, 60 of them in the default run (the two that re-execute
 the producing scripts are reported as skipped and run under `--full`).  Five groups are the original ones — PHYSICS invariants
 the simulation must satisfy, SOURCES against the Yellow Report tables,
 DRIFT (superseded values a correction should have removed, statements a
 rewrite must not drop), ARTEFACTS (figures, report numbering, the built
 pages against their templates, and the test counts quoted just above) and
-REFERENCES.  Twenty-eight of the checks, and six of the groups, live in
-the ten modules under `tools/checks/` that the consistency review of
-2026-09-02 specified and `consistency_check.py` loads: APPENDIX (the
+REFERENCES.  Thirty-seven of the checks, and seven of the groups, live in
+the eleven modules under `tools/checks/` that `consistency_check.py` loads,
+ten of them specified by the consistency review of 2026-09-02 and the
+eleventh, PAPER, added with the letter in run 20: APPENDIX (the
 newest Appendix A revision row names every table whose cells moved with
 it), CITATIONS (every marker, Report N pointer and plans item resolves),
 DERIVED (the canonical far-forward triples, Report 2's sweet-spot table
 and the manual's own expected numbers, re-derived from the code rather
 than re-read), FIGURES (captions against the scripts that draw them),
 FRONT PAGE (`index.html` and the README map against the report datelines)
-and SPECIFICATIONS (Report 2 §6 against Report 3 Table 9); two of the ten
+and SPECIFICATIONS (Report 2 §6 against Report 3 Table 9), and PAPER (the
+`paper/` scaffold, its bibliography against the source reference lists,
+and every number Table 1 and the abstract print, against the string Report 1
+or this manual prints it in); two of the eleven
 land in the older groups, the retired-strings list in DRIFT and the
 sign-convention guards in PHYSICS — the third and fourth of those, that
 the O(γ²) tensor-leakage correction reverses with `TENSOR_LL_SIGN` and that
 the tagged S–D interference carries the i^L partial-wave phase, are run 18's
-and run 19's, the only two of the twenty-eight that did not arrive with the
-review.  Two of the twenty-eight run only under `--full`: the re-derivation of the
+and run 19's, the only two of the review's own twenty-eight that did not
+arrive with it; PAPER's nine are run 20's and are described above.  Two of the
+thirty-seven run only under `--full`: the re-derivation of the
 manual's own expected numbers, which executes seventeen runs into a
 scratch directory outside the repository and costs about two minutes, and
 the title-extent measurement in FIGURES, which reads the published PNGs
@@ -1903,6 +1908,36 @@ median relative deviation −8.3 × 10⁻⁴ on x, +7.5 × 10⁻⁵ on Q², +5.9
 and 0.27% of events miss it by more than 0.1 rad — the tail where the
 dumper's "highest-energy final-state electron" is not the scattered one.
 
+**Mode W on disk: the weighted HepMC3 file** (2026-09-16).  The CSV path
+above stops at the generator level.  To put a Mode-W sample through the
+ePIC chain the weight has to travel ON the event, which is what
+`tools/analysis/modew_beagle_hepmc.py` does — it reads the tree directly
+(no CSV), takes the beam LEPTON from the event's own status-4 row, and
+writes HepMC3 ASCII with the weight named in the weights vector:
+
+    SIF=~/Projects/eic-2026/local/lib/eic_xl-nightly.sif
+    B=root://dtn-eic.jlab.org//volatile/eic/EPIC/EVGEN/DIS/BeAGLE1.03.02-3.1
+    singularity exec --pwd /opt/local/lib/root $SIF python3 \
+        $PWD/tools/analysis/modew_beagle_hepmc.py \
+        $B/eH2/en/9x130/q2_1to1000/<file>.hepmc3.tree.root \
+        $S/modew_100.hepmc --nevents 100 --csv $S/modew_100.csv
+
+Expected: `read 100 events, kept 100`, `s = 4688.07 GeV^2`, and for the
+default `azz0` tensor third of `tensor_thirds_plan(0.6, 0.6)` on
+`InclusiveKernel(beams.DEUTERON, b1_func=toy_b1)`, `<W> = 1.00077018` with
+W in [1.000024, 1.002809].  Because the beam lepton is per event, the
+invariants close on BeAGLE's own `trueX`/`trueQ2` to a **median 1.8 × 10⁻⁶
+and 5.6 × 10⁻⁷** — three orders of magnitude tighter than the 8 × 10⁻⁴ of
+the CSV path above, whose whole residual is its assumed (0, 0, −E, E) beam
+electron.
+
+Two things about writing weights from Python here.  `GenEvent::weights()`
+is bound BY COPY in this pyHepMC3 build, so `ev.weights().append(w)` is
+silently dropped and the only writable path is the `GenEventData` round
+trip; and `set_weight_names` needs a
+`pyHepMC3.pyHepMC3.std.vector_std_string`, not a Python list.  Both are in
+the script.  §5.3 has what the chain then does with the file.
+
 ### 5.3 ePIC full simulation — far-forward acceptance
 
 **npsim cannot shoot a nucleus.**  `--gun.particle Li6`, `ion(3,6)` and
@@ -2070,6 +2105,94 @@ symplectic one the script prints, R11R22 − R12R21 = 1.038 / 1.013 /
 0.985 against an exact 1.  ~7 min of npsim per configuration.
 `tools/fullsim/README.md` §"The transfer matrix" has the rest.
 
+**The Mode-W chain smoke** (2026-09-16).  The weighted HepMC3 file of §5.2
+through npsim and EICrecon, and back:
+
+    singularity exec --env G=$S --env R=$PWD $SIF bash -lc \
+      'source /opt/detector/epic-main/bin/thisepic.sh
+       bash $R/tools/fullsim/modew_chain.sh $G/modew_100.hepmc $G/sim 18x275 100'
+    python3 tools/analysis/modew_reco_readback.py $S/sim/reco.edm4eic.root \
+        --sim $S/sim/sim.edm4hep.root --csv $S/modew_100.csv
+
+The afterburner leg is a CHECK and not a transform: the official EVGEN
+files are already afterburned (`ab_afterburner_is_used = 1`, and the beam
+rows carry −25 mrad), `abconv -p ip6_hiacc_275x10 --exit-ca` exits 0
+saying so, and abconv's AUTO preset aborts on a 9 × 130 file — "9x130 is
+not a valid energy combination!!", SIGABRT — its own nearest being the
+approximate `eD 10x130 GeV/n`.  A 130 GeV/u deuteron fill is 260 GV
+against a 9 GeV electron and `epic-main` ships 5 × 41, 10 × 100 and
+18 × 275, so `epic_craterlake_18x275.xml` is the nearest configuration and
+is 6% off in ion rigidity and a factor two in electron energy.  Nothing
+here is an acceptance or a resolution.
+
+Expected: 100 events, 1335 collections, `sim.edm4hep.root` ~126 MB and
+`reco.edm4eic.root` ~67 MB; npsim 6–9 min for 100 BeAGLE DIS events and
+eicrecon 1.5–2.5 min, depending on what else is on the box.  Expected ALSO,
+and each of them is a fact about the chain rather than about this sample:
+
+* **npsim keeps only `weights()[0]`.**  `EventHeader.weight` carries the
+  NOMINAL HepMC3 weight on 100/100 events with 100 distinct values, and the
+  `EventHeader.weights` vector member stays empty, so a weight appended
+  after the file's own `default` arrives as a constant 1.0.
+  `modew_beagle_hepmc.py` writes the Mode-W weight first for this reason;
+  `--weight-placement append` reproduces the failure.
+* **The event order survives**, to a median 5.1 × 10⁻⁷ in x against
+  BeAGLE's `trueX` read in file order — which is what makes `--csv` a
+  legitimate way to re-attach a weight some other tool drops.
+* **Every reconstructed inclusive-kinematics collection is EMPTY** —
+  `InclusiveKinematicsElectron`, `Sigma`, `DA`, `JB`, `ESigma`, `ML`, all
+  0/100 — because `MCBeamProtons` is empty: the `eH2/en` sample records the
+  struck NEUTRON as the status-4 ion beam and EICrecon's beam finder wants
+  a proton.  `InclusiveKinematicsTruth` is filled 100/100 and
+  `ScatteredElectronsTruth` 100/100, so it is the beam row and not the
+  electron.  A ⁶Li beam row will fail the same test.  The reader forms the
+  electron method itself: median residual −0.052 in x and −0.0050 in Q²
+  over 99 events, the x residual being the 1/y tail (−0.44 below y = 0.1,
+  −0.013 above).
+* **Give it a seed.**  npsim without `--random.seed` seeds from the clock.
+  The same 100 primaries shot twice — files whose particle records are
+  md5-identical and which differ only in two HepMC3 `W` lines — gave 335
+  against 547 `ForwardRomanPotHits` and a reconstructed-x median residual
+  of −0.455 against −0.177 below y = 0.1.  `modew_chain.sh` takes the seed
+  as its fifth argument and defaults it to 20260916; two 10-event runs at
+  that seed agree to the last printed digit of every collection's summed
+  energy deposit, and a run at seed 777 does not.  Pass `0` for the old
+  clock behaviour.
+
+**And what the far forward does with a DEUTERON beam's spectator**, which
+is the counterpart of the lithium result two blocks above.  A deuteron at
+130 GeV/u puts its spectator proton at ~128 GeV, a rigidity ratio
+R ≈ 0.47 against the 275 GV lattice, which the 2026-06-12 routing scan
+placed in the OFF-MOMENTUM detector and not in the Roman Pots — and the
+reconstruction agrees:
+
+| collection | this sample | ⁶Li gun ladder (2026-09-15) |
+|---|---|---|
+| `ForwardOffMTrackerRecHits` | 630 hits, 98 events | — |
+| **`ForwardOffMRecParticles`** | **80 in 80 events** | 0 |
+| `ForwardRomanPotRecHits` | 420, 37 | 1031, 76 |
+| `ForwardRomanPotRecParticles` | 2, 2 | **0, 0** |
+
+So the far-forward reconstruction is not broken for a light ion — it is
+broken for a light ion that is not a proton.  `MatrixTransferStaticConfig.h`
+reconstructs every far-forward track as a proton, and a deuteron's
+spectator IS one: matched event by event to the leading truth forward
+proton, the 80 OMD particles come back at a weighted median |p| residual
+of −5.2% with a 68th percentile of 5.6%, and a polar-angle residual of
++0.05 mrad with a 68th percentile of 0.25 mrad.  The two Roman-Pot
+particles are at −52% and the eight `…StaticRecParticles` at +63% with a
+21 mrad angle bias — debris through a matrix anchored on the beam rigidity,
+and the `Static` count is the least stable number in the readback
+(5/2/8 across three runs of the same primaries, the two
+`ForwardRomanPotRecParticles` happening to recur in all three); read both
+as "the RP path returns nothing usable for this species", not as a
+resolution.  Two conventions to know before comparing anything to truth:
+the tracker-based far-forward reconstruction (RP, OMD) writes its momenta
+in the ROTATED beam frame, with the crossing angle taken out, while the
+calorimeter-based neutrals (ZDC, B0 ECal) write theirs in the LAB frame —
+`modew_reco_readback.py` tests each collection against both axes and names
+the one it is in.
+
 ---
 
 ## 6 · The reports
@@ -2159,6 +2282,7 @@ trust anything downstream of it.
 | ⁷Li α tag at the same three | `… --isotope 7Li` | 0.9668 / 0.9684 / 0.9878 (5 × 41), 0.9682 / 0.9672 / 0.9910 (10 × 100), 0.9812 / 0.9747 / 0.9943 (18 × 275) — flat to three points across the whole 0.05–3 mrad axis in angle (at 5 × 41 the measured per-band insertion leaves 57%, station 2 only — see the ⁷Li α-tag row of `tagging_acceptance.py` above), at 1/7.9 / 1/14.8 / 1/10.1 of the luminosity for the tagging point.  Panel (a) stays the coherent intact ⁶Li at either setting: `polligen.coherent` is ⁶Li-specific and a ⁷Li coherent channel is a different amplitude (plans/09 B3, open) |
 | money plot 4: ⁶Li α-tag reach, 10 × 99.5 | `scripts/money_tagged_azz.py --outdir . --events 400000` | acc 0.0241 (YR HA) vs 0.2542 (tagging, L/L_HA = 1/12.8) — acc × L 0.0241 vs 0.0198, an 18% cost — but median accepted k 0.323 vs 0.177 GeV/c and frac(k < 0.15) 0.000 vs 0.364.  At k ≈ 0.325 GeV/c A_zz = −0.843 (acceptance-weighted truth −0.871) and +0.215 (+0.181); the θ_k = 90° curve says +0.922 at both.  ⟨\|cos θ_k\|⟩ of the accepted sample is 0.80 (YR) against 0.39 (tagging) — not on the script's output line, but from the probe of §4.1, which gives 0.7086 / 0.4021, 0.7973 / 0.3946 and 0.7564 / 0.3990 at the three configurations — so the two optics read the S/D interference at opposite ends of θ_k; at `--events 8000000` the k = 0.325 bin closes on the weighted prediction at −0.8628 ± 0.0130 against −0.8711 (0.6σ) and +0.1755 ± 0.0070 against +0.1811 (0.8σ).  The four `acc` digits are category-averaged and their last digit is seed noise; the A_zz signs are post-2026-09-15 (the i^L phase of `TaggedModel._amp2_table`): before the i^L phase the same three read +0.491 / −0.066 / −0.482.  `acc` is the unbinned accepted fraction: 9–11% of the accepted α lie above the 0.6 GeV/c right edge of the panel.  The kernel forms b₁/F₁, and the digitized Miller b₁ that `polli_fastsim.polarized.toy_b1` returns by default is tapered above its last point (x = 0.9) with the (1 − x)³ falloff of F₁ (`polarized._interp_tapered`, 2026-08-29): frozen at its x = 0.9 value it made the ratio diverge at the generator grid's x = 0.9550 cell and raised `ValueError: negative phi-averaged density` (min(1 + w_avg) = −2.32 in 22 of 2750 cells).  b₁ enters this figure through w_avg alone, so the row's numbers do not depend on it at the digits quoted; a ⁶Li b₁ is read off `money_b1.py`, not off this generator |
 | … the β = 0.20/0.30/0.40 band behind it | `scripts/money_tagged_azz.py --outdir . --events 400000 --beta-band`, `scripts/tagged_polarimetry_7li.py --outdir . --beta-band`, `scripts/nearbeam_aperture_scan.py --beta-band --outdir .` | Default off, own `_betaband` stems; the published PNGs regenerate to `9f13e2ba…`, `c091b7c0…` and `a449a360…` across the change and the printed text is byte-identical.  Money plot 4 at 10 × 99.5: tag acceptance 0.0120 / 0.0241 / 0.0369 (YR HA, span ×3.08) and 0.1981 / 0.2542 / 0.2875 (tagging, ×1.45), against an acceptance-weighted truth at k = 0.325 GeV/c of only −0.889 / −0.871 / −0.824 and +0.185 / +0.181 / +0.171 and a median accepted k of 0.292 / 0.323 / 0.358 and 0.156 / 0.177 / 0.192 GeV/c — **a rate uncertainty, not a signal one**.  `tagged_polarimetry_7li.py`: acc(RP) 0.9832 / 0.9678 / 0.9494 (YR HA, ×1.036) and 0.9956 / 0.9909 / 0.9852 (tagging, ×1.010), ⟨P₂⟩ slope −0.1989 / −0.1947 / −0.1922 against the analytic −0.2000.  `nearbeam_aperture_scan.py`, ⁶Li α at the YR envelope: 0.0082 / 0.0177 / 0.0283 (5 × 41), 0.0076 / 0.0162 / 0.0254 (10 × 100) and 0.0114 / 0.0247 / 0.0391 (18 × 275), ×3.35–3.44, against ×1.35–1.52 at the tagging optics; ⁷Li α 0.9840 / 0.9684 / 0.9509 at 5 × 41 and ×1.01–1.04 everywhere, **falling** with β where ⁶Li rises.  The band is one-sided *in β* — read the 0.40 end |
+| … the ANL VMC α + d overlap behind it | `scripts/money_tagged_azz.py --outdir . --events 400000 --cluster-wave vmc` | Default off, own `_vmc` stem; the published PNG regenerates to `9f13e2ba…` and its printed text is byte-identical across the change.  VMC against the Hulthén default at 10 × 99.5: tag acceptance 0.0336 vs 0.0241 (YR HA, ×1.39) and 0.2476 vs 0.2542 (tagging, ×0.97); median accepted k 0.279 vs 0.323 and 0.228 vs 0.177 GeV/c with frac(k < 0.15) 0.000 / 0.121 vs 0.000 / 0.364; at k = 0.325 GeV/c A_zz = −0.172 vs −0.843 (acceptance-weighted truth −0.161 vs −0.871) and +0.016 vs +0.215 (+0.034 vs +0.181), the θ_k = 90° curve reading +0.171 vs +0.922.  **Same sign everywhere, a factor 5–13 in magnitude** — the β = 0.20–0.40 band is a rate band and does not contain this. |
 | … the same at the other two configurations | `… --config 0` / `--config 2` | acc 0.0279 / 0.0261 (YR HA) vs 0.3434 / 0.3123 (tagging); median accepted k 0.349 / 0.334 GeV/c (YR HA, frac below 0.15 GeV/c = 0.000) against 0.153 / 0.161 with 0.484 / 0.446 (tagging); acc × L/L_HA 0.0279 → 0.0504 and 0.0261 → 0.0330, i.e. the tagging optics gains reach *and* rate at both, and costs rate only at 10 × 100.  At k ≈ 0.325 GeV/c A_zz = −0.820 (truth −0.871) and +0.220 (+0.189) at 5 × 40.8, −0.864 (−0.871) and +0.235 (+0.189) at 18 × 137.5, against the same +0.922 on the 90° curve.  Neither is a published stem: both write `money_tagged_azz_6Li_<key>_menu.png` |
 | ⁷Li polarimetry and tagged EMC, 10 × 99.5 | `scripts/tagged_polarimetry_7li.py` | acc(RP) 0.9678 (YR HA) vs 0.9909 (tagging); acc(any far-fwd) 0.9690 vs 0.9921; ⟨P₂⟩ slope −0.1947 vs −0.1962 against the analytic −0.2000 (legacy 73 μrad: −0.1929); median δA_∥ 0.01152 vs 0.01141 *at equal generated statistics* — the plotted bars are drawn there, and the figure says so.  At `--config 0` and `--config 2` the tags are 0.9617 / 0.9728 (YR HA) against 0.9800 / 0.9919 (tagging).  At equal luminosity the tagging optics multiplies every ⁷Li error bar by 2.78 / 3.81 / 3.15 — a factor 7.7–14.5 net loss |
 | Cosyn–Weiss deuteron limit, the identity gate (`plans/05` §5.4) | `python3 -m pytest tests/test_tagged.py::test_cosyn_weiss_tensor_gate -q` | max \|A_zz^wf − Eq. (6.12)(f₀ = rad₀, f₂ = rad₂)\| = 8.9×10⁻¹⁶ (deuteron control) and 1.1×10⁻¹⁵ (⁶Li) over the whole (k, cos θ_k) grid, i.e. the map is A_T∥ = +1 × A_zz^wf; A_zz^wf / P₂(cos θ_k) depends on k alone (spread 6.0×10⁻¹⁴ and 4.4×10⁻¹⁴ over all k, cells with \|P₂\| ≤ 10⁻³ excluded) and equals −1.639538 / −1.793865 at k = 0.3012 GeV/c; ranges [−1.93188, +0.99661] and [−1.93782, +0.99967], both at the k = 1.2 GeV/c grid edge, inside Cosyn–Weiss's [−2, 1] but not attaining it, because the toy deuteron's f₂/f₀ peaks at 1.2866 and never reaches √2 (the toy ⁶Li crosses √2 at k = 0.7432 GeV/c) |
@@ -2249,6 +2373,11 @@ Every entry below is an error we actually hit, with its cause.
 | `pyHepMC3 rootIO.ReaderRootTree` segfaults after *fatal error: module map file `../../include/root/ROOT.modulemap` not found* | not the bindings: run the container with its working directory two levels below `$ROOTSYS`, `singularity exec --pwd /opt/local/lib/root`, and pass absolute paths (§5.2) |
 | `build_report.py` exits "no headless-capable browser" | install one into the user cache (§1.6) |
 | a money plot is missing when building a report | run the `evgen/scripts` that produces it first (§4); the builder refuses to use a stale figure |
+| a HepMC3 weight I set from Python is 1.0 in the file | `GenEvent::weights()` is bound BY COPY in this pyHepMC3 build — `ev.weights().append(w)` is dropped silently. Use the `GenEventData` round trip (`ev.write_data(d)`, assign `d.weights`, `ev.read_data(d)`), as `tools/analysis/modew_beagle_hepmc.py` does. |
+| my generator weight is 1.0 in `sim.edm4hep.root` | npsim copies only `weights()[0]` into `EventHeader.weight` and leaves `EventHeader.weights` empty; the weight NAMES do not survive at all. Write the weight you care about FIRST (`modew_beagle_hepmc.py --weight-placement first`, the default), or re-attach it by event index — the order survives the chain. |
+| `abconv` aborts with "9x130 is not a valid energy combination!!" | abconv's auto preset has no 9 × 130 setting; its nearest is the approximate `eD 10x130 GeV/n`. The official BeAGLE EVGEN files are afterburned already, so the leg is a check (`--exit-ca`) and not a transform. |
+| every `InclusiveKinematics*` collection is empty | `MCBeamProtons` is empty: EICrecon's beam finder wants a status-4 PROTON. The BeAGLE `eH2/en` files record the struck NEUTRON there, and a ⁶Li beam row will fail the same way. `InclusiveKinematicsTruth` is filled regardless. |
+| two npsim runs of the same file disagree | npsim seeds from the clock without `--random.seed`. At 100 events that moves every reconstructed far-forward count and the reco-level x residual by more than most smoke tests measure. `tools/fullsim/modew_chain.sh` fixes a seed by default (fifth argument; `0` restores the clock). |
 
 ---
 
@@ -2320,7 +2449,47 @@ The long poles are elsewhere:
 
 ---
 
-## 11 · Provenance
+## 11 · The letter
+
+`paper/` is the PLB letter of `plans/07` WP6: text, four figures, Table 1,
+35 references and a cover letter, all generated or built by one script. There
+is no `pdflatex`, `xelatex` or `latexmk` on these machines; the engine is
+tectonic, which fetches `elsarticle` from its own bundle on first use and
+caches it under `~/.cache/Tectonic`. The binary is not committed.
+
+```bash
+bash paper/build.sh --figures                    # figures, captions, Table 1
+TECTONIC=/path/to/tectonic bash paper/build.sh   # the above, then main.pdf
+python3 tools/checks/paper_numbers.py            # "0 unresolved", 9 groups ok
+```
+
+What the build regenerates, in order: `paper/figs/fig1.pdf` … `fig4.pdf` with
+PNG previews, `figs/figN.json` (every number the driver measured),
+`figs/figN_caption.tex` (each caption, written from the same arrays), then
+`table1.tex` from `figs/fig2.json` and `figs/fig4.json`, then `main.pdf`
+(8 pages). Runtime on the reference machine: **9 s and ~150 MB** for
+`--figures`, **11 s and ~190 MB** with the document. The figure drivers import
+the producing scripts of `evgen/scripts/` and draw new stems under
+`paper/figs/`; they never write into `evgen/` or `fastsim/`, so the published
+PNGs stay bit for bit.
+
+Two runs on an unchanged tree give identical figures, captions and
+`table1.tex`, byte for byte. `main.pdf` is the same length but not the same
+bytes — tectonic embeds the build date — and is reproducible byte for byte
+with `SOURCE_DATE_EPOCH` pinned.
+
+The nine checks of `tools/checks/paper_numbers.py` also run inside
+`python3 tools/consistency_check.py`. Two of them are about numbers: every
+number in the letter's *text* carries a `% src:` comment naming the report
+section it comes from, and every number in **Table 1, its caption and the
+abstract** is one Report 1's template or §7 of this manual already prints, in
+the string it prints it in. So editing §7's expected-numbers table, or Report
+1, can fail the letter's check — that is the point of it, and the message
+names the string that went missing.
+
+---
+
+## 12 · Provenance
 
 - What each result means, and its caveats: `reports/` (five pages,
   numbered 0–4 in reading order: the educational primer, the cos 2φ

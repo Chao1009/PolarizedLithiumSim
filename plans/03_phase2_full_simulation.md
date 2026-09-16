@@ -107,7 +107,7 @@ by absence in eic/afterburner, eic/epic, eic/BeAGLEsamples):
    tables; α/t/d primaries survive HepMC3 → npsim → Geant4 ion transport
    (100-event gun jobs).
 
-## Step 2.2 ☐ Far-forward acceptance for Li fragments (4–8 weeks, core)
+## Step 2.2 ◐ Far-forward acceptance for Li fragments (4–8 weeks, core)
 
 **This is the novel deliverable.** Verified far-forward suite (YR matrix;
 arXiv:2108.08314 Table I; arXiv:2409.02811; arXiv:2406.12877):
@@ -235,6 +235,20 @@ remains is the reco-level efficiency × purity × mis-tag matrix of work-plan it
 (3), which is externally gated — it needs BeAGLE A = 6,7 (FLUKA licence) and
 step 2.1's Li presets.*
 
+◐ *2026-09-16 (author decision A1, on (2) and on the step box): the step box
+moves ☐ → ◐. The transfer half of work-plan item (2) is measured rather than
+requested — R₁₁ = 1.148 / 1.227 / 1.852, R₂₁ = −0.0837 / −0.0651 / −0.0209
+rad m⁻¹, R₂₂ = −0.4955 / −0.3060 / +0.1944 and D′ = 0.0175 / 0.0179 / 0.0182 rad
+at 5 × 41 / 10 × 100 / 18 × 275, each to 0.8–4.5%, with the vertical block and
+the B0 pure drift beside them (the 2026-09-15 note above) — so this step now
+holds the whole first-order IP6 → pot transfer per configuration. What keeps it
+short of ☑ is named and unchanged: EICrecon reconstructs no lithium ion at all
+(zero `ForwardRomanPotRecParticles` where a 275 GeV proton control gives 72,
+Step 2.3's 2026-09-15 note), and the ⁷Li beamline field maps of Step 2.1 item 2
+do not exist, so item (3)'s reco-level efficiency × purity × mis-tag matrix
+cannot be built here whatever this repository measures. Items (1) and (4) are
+untouched by this decision.*
+
 ## Step 2.3 ☐ Central-detector physics performance (4 weeks)
 
 ☐ *2026-09-15: the residue Step 2.0 deferred here is closed — the literal
@@ -258,6 +272,9 @@ The central-detector items 1–4 below are untouched by this and stay ☐.*
    reconstruction) on e+Li with Fermi smearing.
 2. x–Q² migration matrices at reco level → re-derive per-bin FOM; confirm
    Phase-1 binning (purity ≳ 0.8) or rebin.
+   — *superseded (2026-09-16, author decision A8): the purity ≳ 0.8 gate is
+   retired with plans/02 Step 1.6's; the requirement in its place is that the
+   folded shape fit be unbiased at the measured purity. See the ☑ note below.*
 3. φ resolution & acceptance × crossing-angle correlations vs the cos 2φ
    gluonometry amplitude: inject known Δ-modulation by weighting, fit at
    reco level, quantify dilution + fake modulation. Make-or-break for the
@@ -292,6 +309,32 @@ constant is recorded as `reco.EPS_EID_YR_WORKING_POINT`, and the gap is written
 into the docstring, Report 2 Table 2 and Report 2 §7 rather than filled with
 invented numbers. The purity ≳ 0.8 half of item 2 is untouched; so is the npsim/
 EICrecon gate.*
+
+☑ *2026-09-16 (author decision A8, on item 2): the "purity ≳ 0.8 or rebin" gate
+is RETIRED here as it is in plans/02 Step 1.6 — superseded, not met. It was
+written for a bin-by-bin correction, where a bin whose reconstructed events are
+mostly migrants cannot be corrected by its own factor; the chain no longer works
+that way. `recopseudo.fold_shape_fit` (plans/08 A6) fits the Δ(x) shape through
+the response itself, so migration is folded rather than divided out and the
+per-bin purity enters as a statistical cost, not as a bias. The MEASURED
+purities stand as the state of the chain and are not a failure of it: 0.56–0.75
+calibrated and 0.42–0.68 uncalibrated at the published spots, 0.68–0.70 at the
+low configuration, and 0.73 / 0.80 / 0.76 / 0.77 for the electron method alone
+above y = 0.05 against 0.65 / 0.64 / 0.70 / 0.69 for the mixed method in the same
+bins. The requirement in their place is that THE FOLDED FIT IS UNBIASED AT THE
+MEASURED PURITY, which the closure tests already pin:
+`evgen/tests/test_recopseudo.py::test_folded_fit_recovers_the_truth_from_a_wrong_prior`
+(a prior with the wrong F₁ factor biases the bin-by-bin K by −22%/+16% and the
+folded fit by −6.3%/+3.5%, ~3.5× better on the worst bin),
+`::test_folded_fit_is_the_bin_by_bin_K_when_the_prior_is_the_truth` (χ² < 10⁻¹²
+and zero tilt when the prior is the truth, so opting in moves nothing),
+`::test_prior_spread_covers_the_residual_the_tilt_cannot_absorb`,
+`::test_folded_fit_does_not_oscillate` and
+`::test_fold_reproduces_the_reco_bin_amplitude_of_any_model`; and the
+pseudo-experiment pulls are unbiased in the runs themselves — the twenty pulls
+of the electron-method window, five response seeds at purities 0.73–0.80, have
+mean +0.10 and sd 0.99. Nothing is rebinned and no published number moves. The npsim/EICrecon gate on this step
+is untouched.*
 
 ## Step 2.4 ☐ Pseudo-experiment closure tests (4 weeks)
 
@@ -437,6 +480,6 @@ samples.
 | Li optics/afterburner configs don't exist | verified: 3 concrete artifacts to add (preset, beamline XML, runcard); ⁶Li can proxy d/He4 (same Z/A); engage FF WG early for ⁷Li |
 | ⁶Li α-tag fails at IP6 (R=1 beam-blind) | quantify pT-tail acceptance; document IR-8 secondary-focus case; pivot ⁶Li tagging to p/³He channels — *superseded (2026-08-28): the risk materialised (1.7–2.6% at every published optics) and was answered by a mitigation this row predates — the one-plane β\* de-squeeze of Report 1 §6.1, 22–31% at 1/6.8–1/12.8 of the luminosity, with IR-8 (≈20%) as the fallback; the p/³He fragments were evaluated and classified as vetoable breakup backgrounds, not tags (plans/06 §6.2)* |
 | Geant4/DD4hep mishandles light-ion or excited-ion primaries | gun tests in 2.1.4; sanitize PDG codes to ground states |
-| EICrecon FF matrices proton-tuned | derive Li-rigidity matrices with FF WG — *sharpened (2026-09-15): the "derive" half is done in this repository (`farforward.POT_LEVERS` + `POT_SECOND_ROW`, the full first-order IP6 → pot transfer per configuration), and the request half is now measured rather than read off the source: the reconstruction returns ZERO `ForwardRomanPotRecParticles` for a lithium ion where a 275 GeV proton control gives 72, so `MatrixTransferStaticConfig.h` drops the species rather than mislabelling it* |
+| EICrecon FF matrices proton-tuned | derive Li-rigidity matrices with FF WG — *sharpened (2026-09-15): the "derive" half is done in this repository (`farforward.POT_LEVERS` + `POT_SECOND_ROW`, the full first-order IP6 → pot transfer per configuration), and the request half is now measured rather than read off the source: the reconstruction returns ZERO `ForwardRomanPotRecParticles` for a lithium ion where a 275 GeV proton control gives 72, so `MatrixTransferStaticConfig.h` drops the species rather than mislabelling it.  **Sharpened again (2026-09-16)** on a BeAGLE e+d sample: the same assumption reaches the INCLUSIVE kinematics, where `MCBeamProtons` is empty for any status-4 beam row that is not a proton and every `InclusiveKinematics*` collection is therefore empty in 100/100 events; and where the species IS a proton — a deuteron beam's spectator, R ≈ 0.47 — the off-momentum detector reconstructs it in 80 of 100 events at a 5% momentum and a 0.25 mrad angle, so the matrices are proton-tuned rather than broken* |
 | Compute exceeds local resources | guns + small samples locally; campaign production via collaboration |
 | Container/geometry churn | pin container per study; record versions in every output dir |

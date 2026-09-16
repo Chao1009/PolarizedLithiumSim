@@ -718,6 +718,22 @@ def over_rigid_route(R, theta_x=0.0, config="18x275"):
     the triton after -1.50 mrad and recovers it at -2.50, i.e. -1.55 to
     -2.53 mrad; the 0.15-0.2 mrad difference is the triton's own R12
     being 8% stiffer than the beam's, which the model does not carry.
+
+    THE POSITION ROW STAYS (author decision A3, 2026-09-16).  This routing
+    is first-row arithmetic -- x at the pot plane from D, D2 and R12 --
+    and it keeps it.  The angle row measured on 2026-09-15 is available
+    to a caller who wants it, `POT_SECOND_ROW` /
+    `POT_SECOND_ROW_VERTICAL` and `pot_transfer_for` /
+    `propagate_to_pot`, and nothing here reads them.  The reason is
+    deliberate rather than provisional: the angle row is one day old and
+    its own second-order dispersion at 18 x 275, -0.311 m fitted over
+    |delta| <= 0.15, disagrees with the -0.215 m THIS function uses,
+    which is fitted across the delta range the off-rigidity fragments
+    actually occupy, delta in [-0.143, +0.286] (author decision A4: the
+    carried value stays, the restricted-range fit is a check beside it
+    and not a replacement).  Until the two are reconciled on one fitted
+    range, an acceptance that mixed the rows would be quoting two
+    dispersions at once.
     """
     r12, _r34, disp = POT_LEVERS[config]
     d2 = POT_DISPERSION_2[config]
@@ -794,6 +810,18 @@ def separation_at_pots(frag_a, frag_b, r12=POT_R12, r34=None,
     the other side (plans/04 #11: a near-beam fragment is taken to be
     dispersion-blind, though its own D (R - 1) is 0.6 mm for the alpha and
     1.4 mm for the deuteron) -- so this enters figures and tables only.
+
+    THE POSITION ROW STAYS HERE TOO (author decision A3, 2026-09-16).
+    The separation is R12 theta cos phi + D (R - 1) and R34 theta sin phi
+    -- first-row transport of a point source -- and it keeps that form.
+    The angle row is available for a caller that needs the ANGLE at the
+    pot plane rather than the position (`POT_SECOND_ROW`,
+    `pot_transfer_for`, `propagate_to_pot`), for instance to ask whether
+    two fragments are separable in slope where they overlap in position;
+    this function does not use it, for the reason given under
+    `over_rigid_route`: the row is one day old and its 18 x 275 D2
+    (-0.311 m over |delta| <= 0.15) disagrees with the carried -0.215 m
+    fitted over the wider range these fragments occupy (A4).
     """
     if config is not None:
         r12, r34_m, dispersion = pot_levers_for(config)

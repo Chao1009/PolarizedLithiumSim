@@ -17,7 +17,7 @@ reco-level leg and HepMC3 output (5.D) come next. Imports
 
 ```bash
 cd evgen
-python3 -m pytest tests/ -q            # 407 tests
+python3 -m pytest tests/ -q            # 413 tests
 python3 scripts/closure_fom.py --ion 6Li --events 200000 --trials 200
 python3 scripts/closure_fom.py --ion 7Li --events 200000 --trials 200
 python3 scripts/money_tagged_azz.py --events 400000       # money plot 4 (--config, --optics, --lumi-fraction, --beta-band)
@@ -41,7 +41,7 @@ python3 scripts/nearbeam_sensor_budget.py # plans/09: hot-spot Z-ID, sizing, cha
 python3 scripts/nearbeam_zid_power.py     # plans/09: how much charge information Z-ID needs
 python3 scripts/nearbeam_two_hit.py       # plans/09 B4: two-hit topology of 6Li -> alpha + d, and the partner-fragment veto
 python3 ../reports/build_report.py --pdf  # assemble reports/ pages
-python3 ../tools/consistency_check.py     # 51 checks (53 with --full): does everything still agree?
+python3 ../tools/consistency_check.py     # 60 checks (62 with --full): does everything still agree?
 #   reports are numbered in reading order:
 #   -> 0 polarized_li_primer.html/pdf (educational physics primer)
 #   -> 1 cos2phi_money_plots_report.html/pdf (the projected measurements)

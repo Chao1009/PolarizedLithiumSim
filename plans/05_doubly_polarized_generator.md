@@ -384,6 +384,43 @@ job; plans/02 step 1.5.4).
   left here is not a writer but a *reader* — `abconv → npsim → EICrecon` output
   fed back to `estimators.py` — and the EICrecon leg is open on both sides.
 
+  ◐ *2026-09-16: the reader exists and the leg has been RUN, once, bounded.
+  100 events of the official `BeAGLE1.03.02-3.1/eH2/en/9x130` sample carry a
+  Mode-W weight of `polligen.reweight` for the `azz0` tensor third
+  (`tools/analysis/modew_beagle_hepmc.py`, HepMC3 ASCII with the weight NAMED
+  in the weights vector), go through npsim and EICrecon
+  (`tools/fullsim/modew_chain.sh`, `epic_craterlake_18x275.xml` on both legs)
+  and come back as 100 reconstructed events read with uproot
+  (`tools/analysis/modew_reco_readback.py`); docs/reproduction_manual.md §5.2
+  and §5.3 carry the commands. Four things the leg taught, none of them a
+  number this repository publishes. **(a) npsim keeps only the NOMINAL HepMC3
+  weight.** A weight appended after the sample's own `default` reaches the
+  reconstructed file as a constant 1.0 and the weight NAMES do not survive at
+  all; written at index 0 it arrives on 100/100 events with 100 distinct
+  values in `EventHeader.weight`, to the generator table's own 10-digit
+  printing precision. The writer therefore makes the Mode-W weight the
+  nominal one by default — correct for a reweighted sample, the BeAGLE files
+  being unweighted. **(b) The event order survives the chain**, to a median
+  5.1×10⁻⁷ in x against BeAGLE's own `trueX` read in file order, so a weight
+  a tool drops can always be re-attached by index. **(c) EICrecon's inclusive
+  kinematics need a status-4 PROTON.** Every reconstructed method —
+  `InclusiveKinematicsElectron`, `Sigma`, `DA`, `JB`, `ESigma`, `ML` — is
+  empty in 100/100 events because `MCBeamProtons` is empty: the `eH2/en`
+  files record the struck NEUTRON as the status-4 ion beam.
+  `InclusiveKinematicsTruth`, which does not use it, is filled in 100/100,
+  and the scattered electron itself is found (`ScatteredElectronsTruth`
+  100/100), so the reco-level x and Q² have to be formed by the reader, which
+  they are — weighted, and at a median residual of −0.052 in x and −0.0050 in
+  Q² over 99 events, the x residual being the electron method's 1/y tail
+  (−0.44 below y = 0.1 against −0.013 above it). This is the
+  inclusive-kinematics counterpart of the far-forward species blocker and it
+  will bite a ⁶Li beam row the same way. **(d) npsim seeds from the clock
+  unless told otherwise**, and at 100 events the shower seed moves every
+  reconstructed number by more than the smoke measures, so the chain script
+  fixes a seed by default. What is still NOT closed is the pull closure at
+  the reconstructed level: 100 events is a smoke test, the estimators want
+  O(10⁴–10⁵), and `estimators.py` has not been run on a reconstructed file.*
+
 ### Step 5.D ☑-by-sibling Final states + HepMC3 + chain smoke test (2 weeks)
 Tier T1 (cluster-internal nucleon + partner spectators; t* remnant → d or
 nn per the triton wave function — crude, flagged), `io_hepmc.py` (ASCII
@@ -417,6 +454,22 @@ plans/03 step 2.1.2).
   reco-level half waits on. The T1 remnant tier and the tagged-final-state half
   of T2 are a separate question from the writer and stay where §5.5's risk row
   puts them.*
+
+  ☑ *2026-09-16 on the "100-event abconv → npsim → EICrecon smoke" this box
+  names: it has been run, from THIS repository, on an external sample rather
+  than on a generated one — 100 official BeAGLE e+d events with a Mode-W
+  weight attached, through npsim and EICrecon, read back (step 5.C's
+  2026-09-16 clause, docs/reproduction_manual.md §5.3). Two notes on the
+  abconv leg, which is the one this box is explicit about. The official EVGEN
+  files are ALREADY afterburned — `GenRunInfo ab_afterburner_is_used = 1`,
+  `ab_crossing_angle = 0.025`, and the beam rows carry −25 mrad — so abconv is
+  a CHECK there (`abconv -p <preset> --exit-ca` exits 0 saying so) and not a
+  transform; and abconv's auto preset ABORTS on a 9 × 130 file ("9x130 is not
+  a valid energy combination!!", SIGABRT), its own nearest being the
+  approximate `eD 10x130 GeV/n`. A `--ab-off` pass-through does preserve the
+  named weight, 100 events in and 100 out. The remaining gap in this box is
+  unchanged: the smoke ran on a BeAGLE sample, not on the sibling generator's
+  own HepMC3 output.*
 
 ### Step 5.E ◐ Physics production + write-up (2 weeks + ongoing)
 Regenerate all money plots from generator pseudo-experiments (statistical

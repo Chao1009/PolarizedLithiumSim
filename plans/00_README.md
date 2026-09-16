@@ -16,7 +16,7 @@ brings to the EIC, in support of the ANL polarized ⁶,⁷Li ion-source program
 | [06_cos2phi_coherent_backgrounds.md](06_cos2phi_coherent_backgrounds.md) | cos 2φ money plots as projected data points (sweet-spot bins); the coherent intact-⁶Li channel (RP tag, 13.5% HA acceptance) and its full background budget (α+d beam-blindness, T=1 veto pattern, Z-ID question #19) |
 | [07_plb_letter_gluonometry.md](07_plb_letter_gluonometry.md) | The PLB-class simulation letter: scope decision (gluonometry, inclusive + coherent), gap analysis vs referees, work packages WP1–WP7 (grid SFs, reco closure, RC bound, coherent curves, paper production), skeleton, risk register, timeline to the INT program (submit Jan 2027) |
 | [../docs/reproduction_manual.md](../docs/reproduction_manual.md) | **How to reproduce any of it**: environment (Python, PDF grids, PYTHIA 8, eic-shell, a headless browser), every command with its measured runtime and expected output, the third-party generators (PYTHIA 8, BeAGLE over xrootd, ePIC/npsim), the numbers to check against, and what cannot be reproduced here and why |
-| [../docs/consistency_review_2026-09-02.md](../docs/consistency_review_2026-09-02.md) | **The consistency review of Reports 0–4** (2026-09-02, on the run-16 state): the five reports read against each other and against the code, the scripts, the manual and the plans — 260 findings, the 193 contradictions and defects fixed in run 17 along with the 53 wording suggestions of §3b, and the ten mechanical checks of §5.2 built as modules under `tools/checks/` (the sweep is 53 checks with them today, 51 in the default run); its three author decisions are registered as plans/04 #22–24, of which #22 and #23 were answered by their sources in run 18 and #24 remains |
+| [../docs/consistency_review_2026-09-02.md](../docs/consistency_review_2026-09-02.md) | **The consistency review of Reports 0–4** (2026-09-02, on the run-16 state): the five reports read against each other and against the code, the scripts, the manual and the plans — 260 findings, the 193 contradictions and defects fixed in run 17 along with the 53 wording suggestions of §3b, and the ten mechanical checks of §5.2 built as modules under `tools/checks/` (the sweep is 62 checks with them today, 60 in the default run, 2026-09-16); its three author decisions are registered as plans/04 #22–24, of which #22 and #23 were answered by their sources in run 18 and #24 remains |
 | [08_simulation_chain_completion.md](08_simulation_chain_completion.md) | Completing the simulation chain (2026-08-25): the 23 gaps that survived an adversarial audit of the reconstruction chain, the kernel, the hadronic final state and the fast simulation — ordered, with the convention items reserved for the author (D1, D7, D9) and the externally blocked tail (D2–D8) separated out |
 | [09_nearbeam_nanowire_far_forward.md](09_nearbeam_nanowire_far_forward.md) | A near-beam layer for the far-forward lithium tags (2026-08-26; §9.0 re-derived 2026-08-28 on the Yellow Report divergences and restated 2026-08-29 on the per-configuration transport — at the published optics the machine binds at 10 × 100 and 18 × 275, where a closer approach buys nothing, and the silicon re-measured on 2026-08-28 binds at 5 × 41, where it is worth a factor 77; at the tagging optics a layer that follows the 0.12–0.36 mrad envelope is the difference between no tag and a 25–37% tag), whether a superconducting nanowire can deliver it, the hot-spot firing-threshold answer to open question #19, the obstacle table, and the correction that the ePIC pot geometry has moved since the snapshot `tools/fullsim` measured — report in `reports/nanowire_far_forward.html` |
 | [10_beam_divergence_light_ions.md](10_beam_divergence_light_ions.md) | **The beam energies and the divergence the whole far-forward programme rests on** (2026-08-27): every far-forward acceptance is exp(−B(10σ_θ·A·p_u)²). Two corrections. **The energies**: EIC ions are γ-matched, not rigidity-scaled — the rings must share a revolution period, so ⁶Li sits at **40.8 / 99.5 / 137.5 GeV/u**, not 20.5 / 50 / 137.5. **The divergence**: σ_θ was one energy-independent, isotropic, proton-derived 72.7 µrad; YR Tables 10.1/10.2 give it per configuration and optics, and the species step applies *only* where rigidity binds — so ⁶Li carries the proton's **220/380 and 180/180 µrad** at the two lower configurations and pays √2 only at the top (**92/92**). Together these cost the coherent tag six to twenty-four orders of magnitude, and the recovery needs a two-ring β* de-squeeze the machine may not have |
@@ -56,6 +56,111 @@ brings to the EIC, in support of the ANL polarized ⁶,⁷Li ion-source program
    with partial snakes; ~138/~117 GeV/u top energies.
 5. **Calendar anchor**: INT program on polarized ion beams at EIC,
    March 22 – April 2, 2027 — target for Phase-1 money plots.
+
+## Development run 20 (2026-09-16): the letter draft, the VMC α+d waves in the generator, the simple calls taken, and a Mode-W chain smoke
+
+"Go ahead with closable; for the simple decisions, go with your
+suggestions."  One workflow, fifteen agents: the decisions half, the VMC
+waves, the chain smoke and the test diagnostic in parallel with a five-stage
+letter chain (scaffold and INSPIRE bibliography, figures and Table 1, the
+text, a review, the number guard), then one integrator for the shared
+documents and a final verification that rebuilt the letter from an empty
+figure directory.  Working record `run19/W4/` (RESULTS.md per agent).
+
+- ☑ **The letter exists** (plans/07 WP6, `paper/`): an elsarticle two-column
+  letter, `main.tex` (draft v0 for the authors, 8 pages), `refs.bib` with the
+  35 cited entries and 40 in reserve, every one fetched from INSPIRE by its
+  arXiv id or DOI with the query recorded in `refs_provenance.md`;
+  `figstyle.py` and four drivers that import the machinery of the four
+  published scripts and re-plot from the arrays they produce, so Fig. 1–4
+  and Table 1 (`table1.py`) carry the published numbers by construction;
+  `build.sh` regenerates all four figures, the table and the PDF with one
+  command (the engine is tectonic, fetched into the session scratch and
+  honoured through `$TECTONIC` — there is no TeX on this machine).  From an
+  empty `figs/` the 18 generated artefacts come back byte-identical.  A
+  ninth check group, PAPER (`tools/checks/paper_numbers.py`, nine checks),
+  pins every number Table 1 and the abstract print to the string Report 1 or
+  the manual prints it in, and the bibliography to the source lists; the
+  sweep is 62 checks.  `main.pdf` is ignored; the letter ships as sources.
+- ☑ **The ⁶Li α+d VMC waves are in the generator** (plans/04 #15's adoption
+  half, and the in-house evidence for #29): R. B. Wiringa's α+d overlap
+  tables (`momenta/li6_ad1.momentum`, the 2024 S/D split, and `li6.ad` as
+  the cross-check) under `fastsim/polli_fastsim/data/vmc/` with their
+  provenance, `tagged.li6_alpha_channel(wave="vmc")` on the tabulated wave,
+  and `money_tagged_azz.py --cluster-wave {hulthen,vmc}` (default Hulthén,
+  bit-for-bit; `_vmc` on its own stem).  Measured: P_D = 0.019355; the
+  three sign regions of ψ₂/ψ₀ that LiPolGen reported reproduce, and the
+  acceptance-weighted A_zz^tag agrees with its columns; at 10 × 99.5 the VMC
+  wave gives an α tag of 0.0336 at the Yellow Report optics and 0.2476 at
+  the tagging optics (Hulthén 0.0241 / 0.2542), a median accepted momentum
+  0.279 / 0.228 GeV/c, and at k = 0.325 GeV/c a folded asymmetry of −0.172
+  and +0.016 against +0.171 on the 90° curve — the same signs as the toy at
+  the headline bin, four to five times smaller.  Reports 0 and 4 now carry
+  the pair as a band (2.4–3.4% and 24.8–25%).  Making VMC the default is not
+  proposed: two seams would have to close first (the inclusive
+  `beams.LI6_CLUSTER_POLARIZATION` does not follow the flag, and the embedded
+  deuteron's effective polarization is the scenario one).
+- ☑ **The simple calls, taken and applied.**  plans/03 §2.2 (2) ☐ → ◐ with
+  the measured angle row (R₁₁ 1.148 / 1.227 / 1.852, R₂₁ −0.0837 / −0.0651 /
+  −0.0209 rad/m, R₂₂ −0.4955 / −0.3060 / +0.1944, D′ 0.0175 / 0.0179 /
+  0.0182 rad at the three configurations); Report 3 §6.1 publishes it beside
+  R₁₂/R₃₄/D with both closures and the one sentence that EICrecon of the
+  nightly container reconstructs no lithium ion npsim transports (zero
+  `ForwardRomanPotRecParticles` against 72 for the proton control); the
+  routing functions keep the position row (the angle row is one day old and
+  its 18 × 275 D₂, −0.311 over |δ| ≤ 0.15, disagrees with the carried −0.215
+  fitted over the range the off-rigidity fragments occupy — a fitted-range
+  check, recorded, not a replacement); the published figures keep the
+  40 × 30 grid; plans/07's superseded "(21–44σ)" gets a dated bracket, not a
+  rewrite; the purity ≳ 0.8 gate of plans/02 §1.6 and plans/03 §2.3 is
+  retired as superseded by the folded shape fit, the measured purities
+  (0.56–0.75 calibrated, 0.42–0.68 uncalibrated) recorded as the state and
+  the closure tests cited as the replacement requirement; plans/04 #26 is
+  decided (the coherent tagged-yield curve stays unsuppressed; the fold is
+  quoted as the −2.5 … −47% band).  #24, #25, #27, #28, #29 and plans/08
+  D10 carry one dated recommendation each, defaults and statuses intact.
+- ☑ **Mode W through the chain, bounded to 100 events** (plans/05 §5.C/§5.D,
+  plans/03 §2.4): `tools/analysis/modew_beagle_hepmc.py` reweights the
+  official BeAGLE e+d 9 × 130 events and writes HepMC3 with the weight in
+  the event's weights vector; `tools/fullsim/modew_chain.sh` (seed 20260916)
+  runs abconv → npsim → eicrecon in the nightly container;
+  `modew_reco_readback.py` reads the edm4eic output.  Four facts measured:
+  npsim keeps `weights()[0]` only; the event order survives to 5.1 × 10⁻⁷;
+  every `InclusiveKinematics*` collection is empty because `MCBeamProtons`
+  is empty for a deuteron beam; npsim needs an explicit seed.  The species
+  blocker stays in plans/03's risk row.
+- ☑ **The intermittent test keeps its evidence now**: on failure
+  `test_fermi_smear_default_is_off_and_bit_for_bit` dumps the compared
+  arrays, the per-field differences, the BLAS configuration, the RSS and the
+  load average to `evgen/tests/_failures/` (ignored).  The assertion was
+  split — exact on the seven vertex fields, 10⁻⁹ on the three reconstructed
+  ones — because the reconstructed-level response is what differs, at the
+  last bit (≈ 10⁻¹³); whether to chase that below this repository, and
+  whether the bit-for-bit rule should be restated for figures built on a
+  reconstructed-level response, is the author's.
+- ☑ **Not ours, noted**: `refs/` gained 151 PDFs and 184 dictionary entries
+  from the concurrent LiPolGen reference pass (its `docs/references/`),
+  written into this tree by that session; they are left uncommitted for the
+  author, and the two bare `docs/references/…` links in the new
+  `refs/README.md` section resolve only under LiPolGen.
+- ☐ **Left**: the letter's own list — the three "do not say" lists of
+  plans/07 §7.8 are named and enumerated nowhere; the class line and the
+  page count (8 against the brief's ≈ 4); the footing (single fill, toy
+  inputs, generator level, with the two-fill and grid columns bounded in §6
+  but not adopted — A5/T05 behind #25); the placeholder acknowledgments,
+  funding line and cover-letter fields; how many claims are called firsts;
+  the coherent factor-two conservatism stated and not applied; LaTeX
+  spellings for the retired-forms guard; Report 1's 4.4 against Table 1's
+  4.35; a 36th reference for the companion report; "2–9%" against 9.5% at
+  six sites; submission itself.  Then #24, #25, #27, #28, #29 and D10 with
+  their recommendations; the VMC default; the ⁷Li theory asks, the lattice
+  confirmation, the de-squeezed R₁₂ and EICrecon's lithium reconstruction,
+  external.
+
+Tests: 141 fastsim + 413 evgen (one skipped without the cached BeAGLE
+dump), 62 consistency checks (60 in the default sweep).  No published
+figure moved; the 31 registered figures were regenerated after the module
+edits and are byte-identical.
 
 ## Development run 19 (2026-09-15): the i^L phase of the tagged partial-wave amplitude, the AV18 control, what money plot 4 reads now, and fourteen items of the closable ledger
 
@@ -308,7 +413,7 @@ Working record under the session scratchpad `run19/` (RESULTS.md per agent).
   second-row transfer matrix and the EICrecon blocker (A2), whether the
   routing functions use the angle row (A3), the D₂ re-anchor (A4), which
   binning the published figures run (A6), the "(21–44σ)" in a superseded
-  plans/07 paragraph (A7), and the purity ≳ 0.8 gate (plans/02 §1.6); of
+  plans/07 paragraph (A7), and the purity ≳ 0.8 gate (plans/02 §1.6) — *2026-09-16: A1–A4 and A6–A8 are decided and applied (plans/02 §1.1 item 3 and §1.6, plans/03 §2.2 and §2.3 item 2, plans/07 §7.1, plans/09 B1 and D3, the `over_rigid_route` / `separation_at_pots` docstrings, Report 3 §6.1 and Table 9 rows 6 and 13); A5 (T05) is the one still the author's.  plans/04 #26 is decided the same day, and #24, #25, #27, #28, #29 and plans/08 D10 carry one dated recommendation each, their defaults and ☐ statuses intact*; of
   the ledger, the §7.1 union re-quote (T05, behind #25), the HepMC3 writer
   (delivered by LiPolGen, not duplicated), the reco-level Mode-W closure it
   gates, and the letter block (`paper/`, ≈ 60 h); the ⁷Li theory asks, the
@@ -316,13 +421,31 @@ Working record under the session scratchpad `run19/` (RESULTS.md per agent).
   reconstruction, external.  Four dated plan notes were restated in place
   rather than appended to (plans/02 §1.1, plans/04's header, plans/05's
   β-band box and ⁷Li row); each restatement carries the earlier text and
-  its date, and the originals are in the history of df32780.  One test is
+  its date, and the originals are in the history of df32780.  One test was
   intermittent: `test_recopseudo.py::test_fermi_smear_default_is_off_and_bit_for_bit`
   failed in two of eighteen full-suite runs on 2026-09-15, both while the
   machine carried a second heavy session, and passed twelve times alone,
   within its file, in four further full runs and in three suites run
-  concurrently; no unseeded generator, pool or clock is in its path, and
-  no traceback was captured — the next failure should be kept.
+  concurrently; no unseeded generator, pool or clock is in its path.
+  *2026-09-16: an evidence guard was added to the test — on an
+  AssertionError it writes the compared arrays and the machine state to
+  `evgen/tests/_failures/` (gitignored) and re-raises — and four failures
+  were then captured.  They say the test was wrong rather than the code.
+  Two identically seeded default responses agree bit for bit at the vertex
+  (`x`, `q2`, `y`, `y_reco`, `eff`, `w`, `phi_true`: zero difference in
+  every dump) and differ in the last bits through the smeared electron:
+  `x_reco` and `q2_reco` by at most 3.6e-14 relative, `dil` by 1.7e-12,
+  against the 0.128 the Fermi switch itself moves `x_reco` by.  The entry
+  point is the azimuth of the smeared electron — `e_m`, `th_m` and the
+  energy resolution are bit identical in the same failure, the azimuth is
+  not — and the amplification is the `1 + cos theta ~ 1e-2` of
+  `reco.electron_method`.  It is not the Fermi switch, the BLAS thread
+  count, `np.linalg` or a first-build cache; the mechanism is below this
+  repository and is not identified.  The assertion was split accordingly:
+  exact equality on the seven vertex-carried fields, `rtol = atol = 1e-9`
+  on the three reconstructed ones, five orders above the measured noise and
+  eight below the signal.  Replayed against all four captured failures, the
+  new assertions pass.*
 
 Tests: 141 fastsim + 407 evgen (one skipped without the cached BeAGLE
 dump), 53 consistency checks (51 in the default sweep; the two that
@@ -331,7 +454,11 @@ figure was regenerated at its published command after each half's module
 edits; the two that moved are money plot 4, on the sign, and the b₁ money
 plot, on the 7th digit of the transfer.  The sign fix agrees with
 LiPolGen's independently corrected C++ reference tables at 2 × 10⁻¹³ on
-every spin-1 tagged quantity, ⁷Li exactly.
+every spin-1 tagged quantity, ⁷Li exactly.  *2026-09-16 (W4): 141 fastsim + 413
+evgen (the six new ones are the VMC α + d channel's), 62 consistency checks
+(60 in the default sweep), every registered figure regenerated at its
+published command after the module edits of this wave and all 31 of them
+byte-identical, and the five reports rebuilt with their PDFs.*
 
 ## Development run 18 (2026-09-06): the open items — the sourcing pass, two author questions answered, the tensor-leakage subtraction, the open-box audit
 

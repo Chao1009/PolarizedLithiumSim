@@ -66,6 +66,9 @@ Verified consequences implemented here (tested in test_tagged.py):
   (default P_D chosen to reproduce the 0.87 of
   `polarized.b1_li6_from_deuteron`); S-wave limit reduces exactly to the
   inclusive polarized-deuteron master formula;
+  `li6_alpha_channel(wave='vmc')` swaps the analytic alpha-d pair for the
+  ANL variational Monte Carlo tables (P_D = 0.019355, and the only source
+  of the S-D relative SIGN) -- opt in, and nothing published reads it;
 * deuteron control: the S/D interference tensor structure of n_m(k, theta)
   (the Cosyn-Weiss tagged-Azz mechanism), O(1) at k ~ 300 MeV/c.
 
@@ -88,6 +91,7 @@ acceptance table on the S-wave one, with the 1.5 vs 2.5% gap stated
 wherever both appear (plans/09 B2, docs/reproduction_manual SS7).
 """
 
+import re
 from dataclasses import dataclass
 from typing import Tuple
 
@@ -205,8 +209,26 @@ class TabulatedWave:
     Same duck type as `Wave` -- `l`, `prob`, `radial(k, kappa)` -- but the
     table already is the wave function, so `kappa` is accepted and
     ignored.  `k_table` is in GeV/c and must be increasing; values are
-    linearly interpolated and ZERO beyond the table's last point (the AV18
-    table runs to 20 fm^-1 = 3.95 GeV/c, far outside any grid used here).
+    linearly interpolated, held FLAT below the table's first abscissa and
+    ZERO beyond its last.  The AV18 deuteron table runs to 20 fm^-1 =
+    3.95 GeV/c, far outside any grid used here, but the ANL alpha-d VMC
+    pair (`li6_vmc_waves`) stops at 5 fm^-1 = 0.9866 GeV/c, INSIDE the
+    default k_max = 1.2, so the top 50 cells of that grid are zeroed --
+    and the far-forward acceptance there is not zero (eps -> 1), so this
+    is a convention and not a free choice.  At the TOP it is LiPolGen's:
+    `VmcRadial` returns zero above the same native extent, which is why
+    the two implementations may be compared at 5e-5 at all.  At the
+    BOTTOM they differ by one grid cell -- LiPolGen zeroes there too and
+    this class holds flat -- which is measured and priced in
+    `test_vmc_li6_tensor_dilution_and_accepted_fraction`.  What the top
+    is worth,
+    measured 2026-09-16 as an UPPER bound by continuing the last
+    tabulated point flat to 1.3 GeV/c (the last points are at the Monte
+    Carlo noise floor, so the true tail is far smaller): the spin-blind
+    accepted fraction at the Yellow Report optics moves 0.0338102252 ->
+    0.0338118147, 4.7e-5 relative, and the acceptance-weighted A_zz^tag
+    cells by less than 4e-5 absolute.
+
     Signs are the table's own: no phase is applied at load, because the
     i^L phase of the momentum-space amplitude belongs to
     `TaggedModel._amp2_table` and is applied there for every wave alike.
@@ -269,43 +291,142 @@ class TaggedChannel:
 # wave function seen in two experiments, and cannot drift apart.  The
 # names, values and meanings are unchanged -- alpha-d D state chosen so
 # the embedded-deuteron vector dilution 1 - (3/2) P_D reproduces the 0.87
-# of b1_li6_from_deuteron (SCENARIO -- VMC overlaps are the scheduled
-# replacement, plans/04 #15), and the deuteron's own AV18-like D state.
+# of b1_li6_from_deuteron (SCENARIO; the ANL VMC alpha-d tables, whose own
+# P_D is 0.019355, now ship beside it and are selectable with
+# `li6_alpha_channel(wave='vmc')` -- plans/04 #15), and the deuteron's own
+# AV18-like D state.
 P_D_LI6 = beams.P_D_LI6
 P_D_DEUTERON = beams.P_D_DEUTERON
 
 # SIGN of the alpha-d D wave -- a live physics input, not a convention.
 # P_D_LI6 is a probability and fixes only the magnitude; since the i^L
 # phase was restored (run 19) the SIGN of the alpha-d D radial relative to
-# the S wave sets the sign of the 6Li tagged A_zz, and this model takes it
-# deuteron-like (psihat_2/psihat_0 > 0, both Hulthen-type forms positive).
-# LiPolGen's VMC alpha+d overlap measures THREE sign regions, not one:
-# sign(psi_2/psi_0) = -1 below the alpha-d S node at 0.134 GeV/c, +1
-# between the nodes, and -1 again above the alpha-d D node at 0.444 GeV/c.
-# The Hulthen-type forms used here are node-free and positive-definite and
-# can represent NEITHER reversal, so the adopted sign is the VMC's
-# measurement over 0.134-0.444 GeV/c only and the model's assumption
-# outside it -- and the accepted sample is not confined to that window.
-# Acceptance-weighted over this model's density at the three 6Li
-# configurations (5x40.8 / 10x99.5 / 18x137.5 GeV/u): 27 / 21 / 26 % of
-# the Yellow-Report-accepted alpha lie ABOVE 0.444 GeV/c, where LiPolGen's
-# own acceptance-weighted VMC A_zz^tag changes sign between k = 0.40 and
-# 0.50 (-0.08 -> +0.12) while its Hulthen channel stays at -0.73 / -0.59;
-# and 41 / 28 / 37 % of the tagging-optics sample lies BELOW 0.134 GeV/c.
-# The k = 0.325 GeV/c headline bin of money plot 4 is inside the supported
-# window; the tails on either side of it are not.  VMC overlaps are the
-# scheduled replacement of this whole radial input (plans/04 #15).
+# the S wave sets the sign of the 6Li tagged A_zz, and the Hulthen pair
+# takes it deuteron-like (psihat_2/psihat_0 > 0, both forms positive).
+#
+# THAT SIGN IS NOW MEASURED HERE, on the ANL alpha-d VMC tables committed
+# under `polli_fastsim/data/vmc` and read by `li6_vmc_tables`, and no
+# longer quoted from elsewhere.  Fixing the unobservable global phase by
+# psihat_0(k -> 0) > 0, the measurement is THREE sign regions, not one:
+#
+#     sign(psihat_2/psihat_0) = -1   k < 0.1338 GeV/c   (alpha-d S node,
+#                                                        0.6779 fm^-1)
+#                              +1   0.1338 < k < 0.4439 GeV/c
+#                              -1   k > 0.4439 GeV/c    (alpha-d D node,
+#                                                        2.2498 fm^-1)
+#
+# Both node positions come out of `li6.ad`'s own signed k-space columns
+# (test_vmc_li6_sign_regions) and are confirmed, in the same 0.1 fm^-1
+# bin, by minima of the momentum file's rho_0 and rho_2.  The
+# Hulthen-type forms used here are node-free and positive-definite and
+# can represent NEITHER reversal, so their adopted sign is the VMC's over
+# 0.1338-0.4439 GeV/c and the model's own assumption outside it.
+#
+# HOW MUCH OF THE ACCEPTED SAMPLE THAT COSTS depends on which density is
+# asked, and the two answers differ by an order of magnitude in the upper
+# tail.  Acceptance-weighted (uniform-M mixture, `acceptance_weights`) at
+# the three 6Li configurations 5x40.8 / 10x99.5 / 18x137.5 GeV/u, as
+# below / between / above the two nodes:
+#
+#   Hulthen beta = 0.30  YR high-acc.  .000/.732/.268  .000/.787/.213
+#                                      .000/.741/.259
+#                        tagging       .405/.566/.029  .281/.680/.039
+#                                      .367/.600/.033
+#   VMC alpha-d          YR high-acc.  .000/.971/.029  .000/.981/.019
+#                                      .000/.980/.020
+#                        tagging       .255/.740/.005  .113/.881/.006
+#                                      .206/.789/.005
+#
+# i.e. the unsupported UPPER tail is 27 / 21 / 26 % of the
+# Yellow-Report-accepted alpha ON THE HULTHEN DENSITY and 2-3 % on the VMC
+# one, which falls far faster there (P(k > 0.45) = 0.0019 against 0.0157
+# on this grid -- LiPolGen's own pair, same trapezoid, same normalization);
+# the unsupported LOWER tail is 41 / 28 / 37 % of the tagging-optics
+# sample on the Hulthen density and 26 / 11 / 21 % on the VMC one.  Read
+# on its own wave function the VMC sign structure is therefore a small
+# correction at the published optics and a real one only at the tagging
+# optics' low-k end.  Nothing at all is accepted below k = 0.189 GeV/c at
+# the Yellow Report optics, which is why its lower cell is empty.
+#
+# THE k = 0.325 GeV/c HEADLINE BIN of money plot 4 is inside the
+# supported window and ITS SIGN IS THE SAME ON BOTH WAVE FUNCTIONS:
+# measured on the table, psihat_2/psihat_0 = +0.121 at the nearest
+# tabulated k (0.3157 GeV/c), and A_zz^wf(theta_k = 90 deg) is +0.170 on
+# the VMC pair against +0.924 on the Hulthen one -- same sign, magnitude
+# smaller by 5.4.  Acceptance-weighted at that cell, at money plot 4's
+# own configuration (10 x 99.5 GeV/u), the pair reads -0.157 (VMC)
+# against -0.854 (Hulthen) at the Yellow Report optics and +0.034
+# against +0.183 at the tagging optics.  Only the tagging pair depends on
+# the configuration: the Yellow Report envelope is the same three times,
+# while the tagging pair reads +0.035 against +0.189 at 5 x 40.8 and
+# 18 x 137.5.  What the tables move at the published bin is the MAGNITUDE
+# of the tagged asymmetry, not its sign.
+#
+# The tables are selectable (`li6_alpha_channel(wave='vmc')`) and are NOT
+# the default: every published number is the Hulthen pair, bit for bit
+# (plans/04 #15, #29).
 
 
-def li6_alpha_channel(beta=0.30, p_d=P_D_LI6):
-    """6Li: DIS on the embedded deuteron, alpha spectator (S+D waves)."""
+def li6_alpha_channel(beta=0.30, p_d=P_D_LI6, wave="hulthen"):
+    """6Li: DIS on the embedded deuteron, alpha spectator (S+D waves).
+
+    `wave` selects the RADIAL input and nothing else -- same kinematics,
+    same spin structure, same DIS target:
+
+      'hulthen' (default)  the two-parameter analytic pair at `beta` and
+          `p_d`, which is what every published number of this repository
+          is computed on, bit for bit;
+      'vmc'  the ANL alpha-d variational Monte Carlo tables
+          (`li6_vmc_waves`), at the momentum file's own P_D = 0.019355.
+          `beta` and `p_d` have no meaning for a table and passing either
+          is an error rather than a silent no-op.
+
+    What the switch does NOT carry with it is the EMBEDDED deuteron:
+    `dis_target` stays `beams.DEUTERON`, whose `eff_pol` is built from
+    the scenario `P_D_DEUTERON` = 0.045 and not from the AV18 deuteron
+    that belongs to this overlap.  Nothing computed here reads it --
+    `eff_pol` enters the inclusive g1A of `polli_fastsim.polarized`, and
+    the tagged tensor observable does not -- so no number moves; it is
+    recorded because the sibling generator found the same seam on its
+    VECTOR tagged observables (LiPolGen open item C5.5b, +2.1 %) and an
+    author call is what closes it, not this switch.
+    """
+    if wave == "vmc":
+        if beta != 0.30 or p_d != P_D_LI6:
+            raise ValueError("wave='vmc' takes its shape and its P_D from "
+                             "the ANL table; beta and p_d do not apply")
+        return TaggedChannel(spectator.LI6_ALPHA_TAG, 1.0, 1.0, 0.0, 1.0,
+                             li6_vmc_waves(), beams.DEUTERON,
+                             "6Li alpha-tag (embedded d, VMC alpha-d)")
+    if wave != "hulthen":
+        raise ValueError("wave must be 'hulthen' or 'vmc', got %r" % (wave,))
     return TaggedChannel(spectator.LI6_ALPHA_TAG, 1.0, 1.0, 0.0, 1.0,
                          (Wave(0, 1.0 - p_d, beta), Wave(2, p_d, beta)),
                          beams.DEUTERON, "6Li alpha-tag (embedded d)")
 
 
-def li7_alpha_channel(beta=0.30):
-    """7Li: DIS on the quasi-free triton, alpha spectator (pure P-wave)."""
+def li7_alpha_channel(beta=0.30, wave="hulthen"):
+    """7Li: DIS on the quasi-free triton, alpha spectator (pure P-wave).
+
+    `wave='vmc'` is REFUSED here.  Two reasons, and the first alone is
+    enough: no 7Li table is committed to this repository -- only the
+    alpha-d pair the 6Li channel reads is -- so there is nothing to load.
+    The second is why none is wanted: alpha + t is a lone L = 1 wave, so
+    there is no second wave to interfere with and no observable relative
+    phase, and the ONE thing the ANL tables carry that the analytic forms
+    cannot is exactly that phase.  A tabulated 7Li radial would change the
+    accepted alpha SPECTRUM (the VMC alpha-t distribution is much softer
+    than any beta in the band), which is a separate question and belongs
+    to a separate switch.
+    """
+    if wave == "vmc":
+        raise ValueError(
+            "no VMC table is committed for the 7Li alpha-t channel: it is a "
+            "lone L = 1 wave with no interference and no observable phase, "
+            "which is the one thing the ANL overlaps supply.  Only the 6Li "
+            "alpha-d pair is shipped (polli_fastsim/data/vmc)")
+    if wave != "hulthen":
+        raise ValueError("wave must be 'hulthen', got %r" % (wave,))
     return TaggedChannel(spectator.LI7_ALPHA_TAG, 1.5, 0.5, 0.0, 0.5,
                          (Wave(1, 1.0, beta),), TRITON,
                          "7Li alpha-tag (quasi-free t)")
@@ -388,6 +509,235 @@ def av18_deuteron_channel():
         (TabulatedWave(0, 1.0 - p_d, tuple(k), tuple(u), "AV18 u(k)"),
          TabulatedWave(2, p_d, tuple(k), tuple(w), "AV18 w(k)")),
         NEUTRON, "d control (AV18 u(k), w(k))")
+
+
+# --- 6Li alpha+d VMC waves (ANL, R. B. Wiringa et al.) -----------------
+
+# `fastsim/polli_fastsim/data/vmc/li6_ad1.momentum` and `li6.ad`, the raw
+# served bytes (provenance in `data/SOURCES.md`).  Two files because the
+# alpha-d wave needs two things a single one cannot give:
+#
+#   MAGNITUDE from `li6_ad1.momentum` (AV18+UX, 1M VMC samples, 22-Mar-14):
+#     an explicit S/D split of the alpha-d relative momentum density,
+#     `K RHOKA0 DRHOKA0 RHOKA2 DRHOKA2`, 51 rows at K = 0.001 and then
+#     0.1 .. 5 fm^-1 in steps of 0.1, with the file's own printed
+#     normalizations.  psihat_L = sqrt(rho_L).
+#   SIGN from `li6.ad` (AV18+UIX, 2004), whose k-space block prints the
+#     SIGNED amplitudes `Aad00(k)`, `Aad22(k)`: a momentum density is
+#     |psi_L|^2 and carries no phase at all, and the relative S-D phase is
+#     exactly what the tensor observables read.
+#
+# The sign is taken from the reference's zero CROSSINGS below 3 fm^-1
+# rather than point by point: past ~3 fm^-1 both overlap columns are at
+# the Monte Carlo noise floor and wander while carrying ~1e-4 of the norm,
+# so a noise-driven flip would be all cost and no signal.  The phase is
+# anchored where the reference is LARGEST, the one point where its sign is
+# beyond doubt, and stepped across the crossings from there.  Measured
+# here on the committed bytes (test_vmc_li6_sign_regions):
+#     S wave  one node at 0.6779 fm^-1 = 0.1338 GeV/c
+#     D wave  one node at 2.2498 fm^-1 = 0.4439 GeV/c
+# The global phase is unobservable and is fixed by psihat_0(k -> 0) > 0
+# (`li6.ad` happens to print Aad00 < 0 at low k, so both tables are
+# negated), after which sign(psihat_2/psihat_0) reads off the D column.
+#
+# CONVENTION.  The stored tables are PLAIN Bessel transforms, psihat_2
+# positive at low k in the file's own global phase -- the same convention
+# as the AV18 deuteron's u(k), w(k) above -- so no phase is applied at
+# load: the i^L phase of the momentum-space amplitude belongs to
+# `TaggedModel._amp2_table` and is applied there for every wave alike,
+# tabulated or analytic.
+VMC_LI6_MOMENTUM = "li6_ad1.momentum"
+VMC_LI6_OVERLAP = "li6.ad"
+#: nodes of the SIGNED reference amplitude are looked for below this k
+#: [fm^-1] only (above it the overlap columns are MC noise).
+VMC_NODE_SEARCH_MAX_FM = 3.0
+_VMC_CACHE = {}
+
+_VMC_NUM = r"[-+]?(?:\d+\.\d*|\.\d+|\d+)(?:[Ee][-+]?\d+)?"
+_VMC_KROW = re.compile(
+    r"^\s*(%s)\s*(%s)\s*\(\s*(%s)\s*\)\s*(%s)\s*\(\s*(%s)\s*\)"
+    % ((_VMC_NUM,) * 5))
+
+
+def _vmc_data_text(name):
+    """The bytes of one committed VMC table, as text.
+
+    Read with `importlib.resources` from `polli_fastsim/data/vmc`, the
+    same way `_av18_deuteron_tables` reads the AV18 deuteron.
+    """
+    try:
+        from importlib.resources import files
+        return (files("polli_fastsim") / "data" / "vmc" / name).read_text()
+    except Exception:                      # pragma: no cover - fallback
+        import os
+        here = os.path.join(os.path.dirname(
+            os.path.abspath(beams.__file__)), "data", "vmc", name)
+        with open(here, encoding="utf-8") as fh:
+            return fh.read()
+
+
+def _parse_anl_overlap_k(text):
+    """(k [fm^-1], A_0(k), A_2(k)) of `li6.ad`'s k-space block.
+
+    Rows are `k  A00 (dA00) A22 (dA22)`, and the Fortran writer runs the
+    value into the preceding `)` when it is negative, so the separators
+    are optional.  Returns the SIGNED amplitudes; the errors are not used
+    here (this file supplies the phase, the momentum file the magnitude).
+    """
+    lines = text.splitlines()
+    i = next(j for j, ln in enumerate(lines)
+             if ln.strip().startswith("k(fm-1)"))
+    rows = []
+    for ln in lines[i + 1:]:
+        m = _VMC_KROW.match(ln)
+        if not m:
+            if rows:
+                break
+            continue
+        rows.append([float(g) for g in m.groups()])
+    tab = np.array(rows)
+    if tab.shape != (51, 5):
+        raise ValueError("unexpected li6.ad k-block shape %s" % (tab.shape,))
+    return tab[:, 0], tab[:, 1], tab[:, 3]
+
+
+def _parse_anl_momentum(text):
+    """The `K RHO DRHO [RHO2 DRHO2 ...]` blocks of a `.momentum` file.
+
+    Each block is introduced by a rule of asterisks, `****  ***** ...`;
+    returns a list of (K [fm^-1], [column, ...], [error, ...]).
+    """
+    lines = text.splitlines()
+    out = []
+    i = 0
+    while i < len(lines):
+        bare = "".join(lines[i].split())
+        if len(bare) >= 5 and bare.strip("*") == "":
+            x, cols, errs = [], None, None
+            for ln in lines[i + 1:]:
+                vals, ok = [], True
+                for tok in ln.split():
+                    try:
+                        vals.append(float(tok))
+                    except ValueError:
+                        ok = False
+                        break
+                if not ok or len(vals) < 3:
+                    break
+                ncol = (len(vals) - 1) // 2
+                if cols is None:
+                    cols = [[] for _ in range(ncol)]
+                    errs = [[] for _ in range(ncol)]
+                if ncol < len(cols):
+                    break
+                x.append(vals[0])
+                for c in range(len(cols)):
+                    cols[c].append(vals[1 + 2 * c])
+                    errs[c].append(vals[2 + 2 * c])
+            if x:
+                out.append((np.array(x), [np.array(c) for c in cols],
+                            [np.array(e) for e in errs]))
+                i += len(x)
+        i += 1
+    if not out:
+        raise ValueError("no momentum block found")
+    return out
+
+
+def _parse_anl_momentum_norms(text):
+    """The file's own printed `4*PI*TOTINT(RHO*K**2:K)/(2*PI)**3 = ...`
+    normalizations, in the order printed (total, then S, then D)."""
+    out = []
+    for ln in text.splitlines():
+        at = ln.find("/(2*PI)**3")
+        if at < 0:
+            continue
+        eq = ln.find("=", at)
+        if eq < 0:
+            continue
+        out.append(float(ln[eq + 1:].split()[0]))
+    return out
+
+
+def _vmc_sign_steps(x, amp, x_max):
+    """Zero crossings of `amp` below `x_max`, linearly interpolated."""
+    nodes = []
+    for i in range(1, len(x)):
+        if x[i] > x_max:
+            break
+        a, b = amp[i - 1], amp[i]
+        if a == 0.0 or b == 0.0 or (a > 0.0) == (b > 0.0):
+            continue
+        nodes.append(x[i - 1] - a * (x[i] - x[i - 1]) / (b - a))
+    return nodes
+
+
+def _vmc_psi_from_rho(x_fm, rho, ref_x, ref_amp):
+    """psihat_L = s(k) sqrt(rho_L), with s(k) the step function built from
+    `ref_amp`'s zero crossings and anchored at its largest |value|.
+
+    Returns (psi, nodes [fm^-1]).
+    """
+    nodes = _vmc_sign_steps(ref_x, ref_amp, VMC_NODE_SEARCH_MAX_FM)
+    best = 0
+    for i in range(len(ref_x)):
+        if ref_x[i] > VMC_NODE_SEARCH_MAX_FM:
+            break
+        if abs(ref_amp[i]) > abs(ref_amp[best]):
+            best = i
+    anchor_sign = -1.0 if ref_amp[best] < 0.0 else 1.0
+    anchor_below = sum(1 for n in nodes if ref_x[best] > n)
+    psi = np.empty(x_fm.size)
+    for i in range(x_fm.size):
+        below = sum(1 for n in nodes if x_fm[i] > n)
+        flips = abs(below - anchor_below)
+        s = anchor_sign * (1.0 if flips % 2 == 0 else -1.0)
+        psi[i] = s * np.sqrt(max(rho[i], 0.0))
+    return psi, nodes
+
+
+def li6_vmc_tables():
+    """(k [GeV/c], psihat_0, psihat_2, P_D, nodes) of the ANL alpha-d VMC
+    overlap, in the global phase psihat_0(k -> 0) > 0.
+
+    `P_D` is the FILE'S OWN printed S/D normalization split,
+    0.015861 / (0.80362 + 0.015861), not a re-integration of the table:
+    the printed pair is the number ANL quotes and the trapezoid of the
+    tabulated columns reproduces it to 1.7e-4 relative
+    (test_vmc_li6_normalization).  `nodes` are the two sign-region
+    boundaries in GeV/c.  Cached.
+    """
+    if "li6" not in _VMC_CACHE:
+        ov = _vmc_data_text(VMC_LI6_OVERLAP)
+        mo = _vmc_data_text(VMC_LI6_MOMENTUM)
+        k_ref, a0, a2 = _parse_anl_overlap_k(ov)
+        blocks = _parse_anl_momentum(mo)
+        if len(blocks) != 2 or len(blocks[1][1]) != 2:
+            raise ValueError("li6_ad1.momentum: expected a total block and "
+                             "a two-column S/D block")
+        x_fm, cols, _errs = blocks[1]
+        psi_s, nodes_s = _vmc_psi_from_rho(x_fm, cols[0], k_ref, a0)
+        psi_d, nodes_d = _vmc_psi_from_rho(x_fm, cols[1], k_ref, a2)
+        if psi_s[0] < 0.0:                 # fix the unobservable global phase
+            psi_s, psi_d = -psi_s, -psi_d
+        norms = _parse_anl_momentum_norms(mo)
+        if len(norms) != 3:
+            raise ValueError("li6_ad1.momentum: expected 3 printed norms, "
+                             "got %d" % len(norms))
+        p_d = norms[2] / (norms[1] + norms[2])
+        _VMC_CACHE["li6"] = (x_fm * HBARC_GEV_FM, psi_s, psi_d, p_d,
+                             tuple(n * HBARC_GEV_FM
+                                   for n in sorted(nodes_s + nodes_d)))
+    return _VMC_CACHE["li6"]
+
+
+def li6_vmc_waves():
+    """The two `TabulatedWave`s of the ANL alpha-d VMC overlap."""
+    k, psi_s, psi_d, p_d, _nodes = li6_vmc_tables()
+    return (TabulatedWave(0, 1.0 - p_d, tuple(k), tuple(psi_s),
+                          "VMC alpha-d S (li6_ad1.momentum x li6.ad sign)"),
+            TabulatedWave(2, p_d, tuple(k), tuple(psi_d),
+                          "VMC alpha-d D (li6_ad1.momentum x li6.ad sign)"))
 
 
 class TaggedModel:

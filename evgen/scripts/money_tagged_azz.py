@@ -83,13 +83,17 @@ what makes the model reproduce Cosyn-Weiss II Eq. (6.12) identically and
 their TABLE II on AV18 (test_cosyn_weiss_tensor_gate,
 test_cosyn_weiss_table_ii_on_av18); the remaining sign input is the sign
 of the alpha-d D radial itself, taken deuteron-like and supported by the
-VMC alpha+d overlap over 0.134-0.444 GeV/c ONLY -- that overlap reads the
-opposite sign below the alpha-d S node at 0.134 and again above the
-alpha-d D node at 0.444, neither of which a node-free Hulthen form can
-carry, and 27 / 21 / 26 % of the Yellow-Report-accepted sample sits above
-the upper node with 41 / 28 / 37 % of the tagging-optics sample below the
-lower one.  The k = 0.325 GeV/c bin quoted above is inside the supported
-window; the tails on either side of it are not (see `tagged.P_D_LI6`).
+ANL VMC alpha+d overlap over 0.134-0.444 GeV/c ONLY -- since 2026-09-16
+that overlap is in this tree and the sign is measured here, not quoted
+(`tagged.li6_vmc_tables`): it reads the opposite sign below the alpha-d S
+node at 0.134 and again above the alpha-d D node at 0.444, neither of
+which a node-free Hulthen form can carry, and 27 / 21 / 26 % of the
+Yellow-Report-accepted sample sits above the upper node with 41 / 28 / 37
+% of the tagging-optics sample below the lower one -- both fractions on
+the Hulthen density this script draws by default; on the VMC density,
+whose far tail is eight times softer, they are 2-3 % and 11-26 %.  The
+k = 0.325 GeV/c bin quoted above is inside the supported window on either
+density; the tails on either side of it are not (see `tagged.P_D_LI6`).
 
 The INCLUSIVE tensor sign, `asymmetries.TENSOR_LL_SIGN`, which since
 2026-08-29 is the literature's (A_zz = -(2/3) b1/F1, Cosyn et al. Eq. 27
@@ -102,11 +106,35 @@ anyway, at the published `--events 400000`, and every printed digit is
 unchanged (re-verified 2026-09-15 on the corrected wave function: the two
 summary blocks are character-identical).
 
+`--cluster-wave vmc` REPLACES THE ALPHA-D RADIAL PAIR with the ANL
+variational Monte Carlo alpha-d overlap (R. B. Wiringa et al.,
+`polli_fastsim/data/vmc`, at the momentum file's own P_D = 0.019355),
+which is the ab initio input the Hulthen pair stands in for and the only
+one that carries the S-D relative SIGN.  It is off by default, writes its
+own `_vmc` stem and leaves the published run byte-identical in both its
+PNG and its printed text; `--beta-band` does not apply to it, a table
+having no beta.  Measured at the published settings (--config 1 --events
+400000 --seed 20260713), VMC against the Hulthen default: tag acceptance
+0.0336 against 0.0241 at the Yellow Report high-acceptance optics (x1.39)
+and 0.2476 against 0.2542 at the tagging optics (x0.97); median accepted
+k 0.279 against 0.323 and 0.228 against 0.177 GeV/c, frac(k < 0.15)
+0.000 / 0.121 against 0.000 / 0.364; and at the k = 0.325 GeV/c bin
+A_zz = -0.172 against -0.843 (acceptance-weighted truth -0.161 against
+-0.871) and +0.016 against +0.215 (+0.034 against +0.181), with the
+90 degree curve at +0.171 against +0.922.  THE SIGN IS THE SAME AT EVERY
+ONE OF THOSE CELLS and the magnitude is smaller by 4-14: the ab initio
+wave function does not move the observable's sign, it moves its size, and
+the plans/05 beta band -- which is a RATE band, spanning x3.08 in tag
+acceptance and only -0.889 to -0.824 in the asymmetry -- does not contain
+the difference.  This is the in-house evidence for plans/04 #29.
+
 Output: `money_tagged_azz_6Li.png` for the published combination
 (--config 1 --optics menu) and `money_tagged_azz_6Li_<key>_<optics>.png`
 otherwise, so no exploratory run can overwrite the published artefact.
 
 Usage:  python3 scripts/money_tagged_azz.py --events 400000
+        python3 scripts/money_tagged_azz.py --events 400000 \
+                --cluster-wave vmc          # own `_vmc` stem
 """
 
 import argparse
@@ -167,23 +195,29 @@ BETA_EDGES = (0.20, 0.40)
 
 
 def output_stem(base, key, config, optics, lumi_fraction=1.0,
-                beta_band=False):
+                beta_band=False, cluster_wave="hulthen"):
     """File stem for one run.  The published artefact is the DEFAULT
     combination alone -- `--config 1 --optics menu` at the full programme
-    share and beta = 0.30 on the folded panel.  Keying the guard on the
-    configuration alone would let `--optics legacy` at the default
-    configuration overwrite the published PNG with the retired 73/164
-    microrad figure, which is exactly the run the manual documents; keying
-    it on the optics alone would let a run-plan share do the same with
-    smaller error bars; and `--beta-band` redraws the right panel, so it
-    takes a key of its own."""
+    share, beta = 0.30 on the folded panel and the Hulthen alpha-d pair.
+    Keying the guard on the configuration alone would let `--optics
+    legacy` at the default configuration overwrite the published PNG with
+    the retired 73/164 microrad figure, which is exactly the run the
+    manual documents; keying it on the optics alone would let a run-plan
+    share do the same with smaller error bars; `--beta-band` redraws the
+    right panel, so it takes a key of its own; and `--cluster-wave vmc`
+    redraws BOTH panels off a different wave function, so it takes the
+    `_vmc` suffix and can never land on the published stem."""
     share_key = fom.run_share_tag(lumi_fraction)
-    if config == 1 and optics == "menu" and not share_key and not beta_band:
+    wave_key = "" if cluster_wave == "hulthen" else "_" + cluster_wave
+    if (config == 1 and optics == "menu" and not share_key
+            and not beta_band and not wave_key):
         return base
     stem = "%s_%s_%s" % (base, key, optics)
     if share_key:
         stem = "%s_%s" % (stem, share_key)
-    return stem + "_betaband" if beta_band else stem
+    if beta_band:
+        stem += "_betaband"
+    return stem + wave_key
 
 
 # the two live in polligen.tagged so a test can pin them (and so Report 4
@@ -271,11 +305,28 @@ def main():
                          "two-parameter Hulthen form reproduces BeAGLE's "
                          "p_T tail (2-13x), so the true short-range scale "
                          "is at or above 0.40")
+    ap.add_argument("--cluster-wave", default="hulthen",
+                    choices=("hulthen", "vmc"), dest="cluster_wave",
+                    help="alpha-d RADIAL input.  'hulthen' (default) is "
+                         "the two-parameter analytic pair every published "
+                         "number of this repository is computed on, bit "
+                         "for bit.  'vmc' swaps in the ANL variational "
+                         "Monte Carlo alpha-d tables (R. B. Wiringa et "
+                         "al., `polli_fastsim/data/vmc`) at their own "
+                         "P_D = 0.019355 -- the only input that carries "
+                         "the S-D relative SIGN, which no positive-"
+                         "definite analytic form can.  It writes its own "
+                         "`_vmc` stem and is the in-house evidence for "
+                         "plans/04 #29; --beta-band does not apply to it, "
+                         "a table having no beta")
     ap.add_argument("--seed", type=int, default=20260713)
     ap.add_argument("--outdir", default=".")
     args = ap.parse_args()
     if not args.lumi_fraction > 0:
         ap.error("--lumi-fraction must be positive")
+    if args.beta_band and args.cluster_wave != "hulthen":
+        ap.error("--beta-band scans the Hulthen short-range scale; a "
+                 "tabulated wave function has no beta")
 
     config = beams.default_configs("6Li")[args.config]
     key = ff.yr_config_key(config)
@@ -288,18 +339,31 @@ def main():
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4.6))
 
     # --- left: analytic band ------------------------------------------------
-    central = tagged.TaggedModel(tagged.li6_alpha_channel())
+    # On `--cluster-wave vmc` the SOLID curve is the ANL table and the
+    # Hulthen central value is kept as the labelled reference: the beta
+    # and P_D scans around it are the analytic model's band and mean
+    # nothing for a table, so they are not drawn there.
+    vmc = args.cluster_wave == "vmc"
+    central = tagged.TaggedModel(
+        tagged.li6_alpha_channel(wave=args.cluster_wave))
     ic = np.argmin(np.abs(central.c))
     ax1.plot(central.k, azz_wf_curve(central, ic), "k-", lw=2,
-             label=r"$\beta=0.3$, $P_D=%.3f$" % tagged.P_D_LI6)
-    for beta in (0.20, 0.40):
-        m = tagged.TaggedModel(tagged.li6_alpha_channel(beta=beta))
+             label=(r"VMC $\alpha$-$d$, $P_D=%.5f$"
+                    % central.channel.waves[1].prob) if vmc else
+                   (r"$\beta=0.3$, $P_D=%.3f$" % tagged.P_D_LI6))
+    if vmc:
+        m = tagged.TaggedModel(tagged.li6_alpha_channel())
         ax1.plot(m.k, azz_wf_curve(m, np.argmin(np.abs(m.c))), "--", lw=1,
-                 label=r"$\beta=%.2f$" % beta)
-    for p_d in (0.04, 0.13):
-        m = tagged.TaggedModel(tagged.li6_alpha_channel(p_d=p_d))
-        ax1.plot(m.k, azz_wf_curve(m, np.argmin(np.abs(m.c))), ":", lw=1,
-                 label=r"$P_D=%.2f$" % p_d)
+                 label=u"Hulthén " + r"$\beta=0.30$ (default)")
+    else:
+        for beta in (0.20, 0.40):
+            m = tagged.TaggedModel(tagged.li6_alpha_channel(beta=beta))
+            ax1.plot(m.k, azz_wf_curve(m, np.argmin(np.abs(m.c))), "--",
+                     lw=1, label=r"$\beta=%.2f$" % beta)
+        for p_d in (0.04, 0.13):
+            m = tagged.TaggedModel(tagged.li6_alpha_channel(p_d=p_d))
+            ax1.plot(m.k, azz_wf_curve(m, np.argmin(np.abs(m.c))), ":",
+                     lw=1, label=r"$P_D=%.2f$" % p_d)
     ax1.set_xlabel(r"$k$ [GeV/$c$]")
     ax1.set_ylabel(r"$A_{zz}^{\rm tag}(k,\ \theta_k=90^\circ)$")
     ax1.set_title(r"analytic: $\alpha$-$d$ S/D interference")
@@ -328,8 +392,12 @@ def main():
                                      menu, rng, key)
     sigma_pb = sum(sampler.sigma_tot_pb(c) * c.lumi_fraction
                    for c in plan.categories)
-    summary = ["configuration %s (%s), %d events generated"
-               % (args.config, config.label(), n_gen)]
+    # the wave is named only when it is NOT the default, so the published
+    # run's stdout stays byte-identical alongside its byte-identical PNG
+    summary = ["configuration %s (%s), %d events generated%s"
+               % (args.config, config.label(), n_gen,
+                  ", alpha-d wave VMC (P_D = %.6f)"
+                  % central.channel.waves[1].prob if vmc else "")]
     ax2.plot(central.k, azz_wf_curve(central, ic), "k-", lw=1, alpha=0.45,
              label=r"unfolded, $\theta_k=90^\circ$")
     for name, optics, colour, marker in menu:
@@ -414,7 +482,10 @@ def main():
     ax2.axhline(0, color="0.6", lw=0.5)
 
     fig.suptitle(r"$^6$Li($e,e^\prime\alpha$)X: tagged tensor asymmetry of the "
-                 r"embedded deuteron, %s (TOY/scenario inputs)" % config.label()
+                 r"embedded deuteron, %s (%s)"
+                 % (config.label(),
+                    r"ANL VMC $\alpha$-$d$ overlap" if vmc
+                    else "TOY/scenario inputs")
                  + "\n" + r"coloured curves: the truth weighted by each "
                  r"optics' own $\theta_k$ acceptance -- what the markers "
                  r"measure", fontsize=9.5)
@@ -423,7 +494,8 @@ def main():
     outdir.mkdir(parents=True, exist_ok=True)
     stem = output_stem("money_tagged_azz_6Li", key, args.config, args.optics,
                        lumi_fraction=args.lumi_fraction,
-                       beta_band=args.beta_band)
+                       beta_band=args.beta_band,
+                       cluster_wave=args.cluster_wave)
     out = outdir / (stem + ".png")
     fig.savefig(out, dpi=140)
     print("wrote", out)

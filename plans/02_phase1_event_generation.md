@@ -111,6 +111,16 @@ itself stays open, and no other open item's marker was moved.*
    five-per-decade x bin and evaluated at its centre — which is why
    `--binning` is a comparison convention and defaults to the grid the
    published figures were made on (`W3b/G-MONEY`, this run).*
+   ☑ *2026-09-16 (author decision A6): decided — the PUBLISHED figures keep the
+   40 × 30 log grid, and `--binning yr` stays the priced comparison option it is
+   here. The YR lattice is adopted as this item asks, for reading a Yellow-Report
+   projection off bin for bin; it is not adopted as the analysis grid, because on
+   it the Δ-extraction combs fall from 10 / 9 / 10 merged x-bin pairs per Q²
+   slice to 5 / 5 / 5 — the measurement's Δ(x) points are what the coarser
+   lattice costs, and the apparent gains (best per-bin δA 2.978 → 1.624 ×10⁻⁴,
+   significance ×1.89) are pooling of the same events. `log40x30` therefore stays
+   the default and every published stem stays bit-for-bit. plans/07 §7.1's
+   addendum carries the same decision.*
 4. Calendar anchor: aim Phase-1 money plots at the INT program "Towards
    Realizing the Program with Polarized Ion Beams at EIC",
    **March 22 – April 2, 2027**.
@@ -519,6 +529,11 @@ FOM and on the cos 2φ amplitude (φ resolution). Verify YR-style binning
 keeps purity ≳ 0.8 per bin; else rebin. Real far-forward acceptances come
 only from Phase-2 full sim — keep the FF parameterization swappable.
 
+— *superseded (2026-09-16, author decision A8): the "purity ≳ 0.8 per bin, else
+rebin" gate. It is retired, not met — see the dated clause at the end of this
+step; the requirement in its place is that the folded shape fit be unbiased at
+the measured purity, and nothing is rebinned.*
+
 ☑ *2026-08-28: the smearing itself is delivered, by a home-grown chain rather
 than eic-smear — `polligen/reco.py` (η-dependent EMCal, tracking σ_p/p and σ_θ,
 ε_eID, `smear_electron`) on the electron side and `polligen/hfs.py` on an 8 M-event
@@ -548,6 +563,31 @@ tool choice is superseded above, and the far-forward parameterization stayed
 swappable (`farforward.Optics`). The one live residue is the purity gate
 immediately above, which is an author decision (retire or re-decide the ≳ 0.8
 gate that plans/03 §2.3 also carries); that ☐ stays open.*
+
+☑ *2026-09-16 (author decision A8): the purity gate is RETIRED, and the ☐ note
+above closes with it. The gate was written for a bin-by-bin correction, where a
+bin whose reconstructed events are mostly migrants cannot be corrected by its own
+factor. The chain no longer works that way: `recopseudo.fold_shape_fit`
+(plans/08 A6) fits the Δ(x) shape through the response, so migration is folded
+rather than divided out and the per-bin purity enters as a statistical cost and
+not as a bias. The measured purities are recorded as the STATE of the chain —
+0.56–0.75 calibrated, 0.42–0.68 uncalibrated at the published sweet spots,
+0.68–0.70 at the low configuration, and 0.73 / 0.80 / 0.76 / 0.77 for the
+electron method alone above y = 0.05 against 0.65 / 0.64 / 0.70 / 0.69 for the
+mixed method in the same bins — and the requirement in their place is that THE
+FOLDED FIT IS UNBIASED AT THE MEASURED PURITY. That is already pinned:
+`evgen/tests/test_recopseudo.py::test_folded_fit_recovers_the_truth_from_a_wrong_prior`
+(the bin-by-bin K biased by −22%/+16% from a prior with the wrong F₁ factor, the
+folded fit by −6.3%/+3.5%, ~3.5× better on the worst bin and ~2.2× at the
+median), `::test_folded_fit_is_the_bin_by_bin_K_when_the_prior_is_the_truth`
+(χ² < 10⁻¹² and zero tilt when the prior is the truth, so opting in moves
+nothing), `::test_prior_spread_covers_the_residual_the_tilt_cannot_absorb`,
+`::test_folded_fit_does_not_oscillate` and
+`::test_fold_reproduces_the_reco_bin_amplitude_of_any_model`; and the
+pseudo-experiment pulls are unbiased where they have been run at these purities
+— the twenty pulls of the electron-method window, five response seeds at
+purities 0.73–0.80, have mean +0.10 and sd 0.99. No binning changes, no
+published number moves, and plans/03 §2.3 item 2 carries the same retirement.*
 
 ## Step 1.7 ☑ Synthesis & write-up (2 weeks)
 

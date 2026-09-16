@@ -477,6 +477,28 @@ slot although the pots insert vertically, and R₃₄ is not measurable through 
 5 × 41 — a result, not a gap; the 4.56 m is the zero-insertion reading of 2026-08-29 (`tools/fullsim/README.md`). D confirms the repository's 0.30 m to 4% at
 every configuration.
 
+*2026-09-16 (author decisions A3 and A4): the angle row of the same transfer is
+now measured — R₁₁ = 1.148 / 1.227 / 1.852, R₂₁ = −0.0837 / −0.0651 / −0.0209
+rad m⁻¹, R₂₂ = −0.4955 / −0.3060 / +0.1944 and D′ = 0.0175 / 0.0179 / 0.0182 rad
+at station 1, each to 0.8–4.5%, with R₃₃ / R₄₃ / R₄₄ beside them and a pure
+IP6 → B0 drift of 5.900 m (`farforward.POT_SECOND_ROW`,
+`POT_SECOND_ROW_VERTICAL`, `B0_DRIFT_M`, measured 2026-09-15 through the same
+zero-insertion geometry; the published levers come back out of those files at
+R₁₂ = 19.186 / 21.341 / 29.961 m and both 2 × 2 blocks are symplectic to 4%
+unfitted). The ROUTING FUNCTIONS KEEP THE POSITION ROW:
+`farforward.over_rigid_route` and `separation_at_pots` go on using
+(R₁₂, R₃₄, D, D₂) alone, and the angle row is exposed for a caller rather than
+folded into them (`pot_transfer_for`, `propagate_to_pot`). The reason is the one
+disagreement in the set: the angle-row scan's own second-order dispersion at
+18 × 275 is −0.311 m fitted over |δ| ≤ 0.15, against the −0.215 m carried here,
+which is fitted across the δ range the off-rigidity fragments occupy,
+δ ∈ [−0.143, +0.286] and three species. The CARRIED value stays — it is the fit
+over the range this section's arithmetic is applied in, and it is the one that
+reproduces the triton's +66 mm to a tenth of a millimetre — and the −0.311 m is
+recorded here as a fitted-range check, not a replacement. Mixing the rows before
+those two fits are reconciled on one range would put two dispersions in one
+number. No number in this section moves.*
+
 **The outer edge** (`farforward.THETA_RP_OUTER_MEASURED`): the debris-free
 contiguous primary track stops at 2.85 / 3.85 / 4.00 mrad, not the 5 mrad
 the acceptance tables assume nor the 144 mm / R₁₂ = 7.5 / 6.8 / 4.8 mrad
@@ -954,7 +976,13 @@ repository's envelope implies 10σ_x ≈ 22 mm (0.73 mrad) while Jentsch's
 R₁₂, R₃₄ and D are measured at all three configurations since 2026-08-28
 — 19.24 / 21.25 / 29.97 m, 4.56 / 3.35 / 2.93 m and 0.311 / 0.287 / 0.292 m, the 5 × 41 R₃₄ since 2026-08-29 on a zero-insertion scratch geometry
 (`farforward.POT_LEVERS`, `tools/fullsim`) — so this plan quotes
-millimetres everywhere; R₁₁, R₂₁, R₂₂ and D′ are still unmeasured. The
+millimetres everywhere; R₁₁, R₂₁, R₂₂ and D′ are still unmeasured
+— *superseded 2026-09-16: the angle row is measured too, on 2026-09-15 through
+the same zero-insertion geometry, and carried in §B1's clause of this date —
+R₁₁ = 1.148 / 1.227 / 1.852, R₂₁ = −0.0837 / −0.0651 / −0.0209 rad m⁻¹,
+R₂₂ = −0.4955 / −0.3060 / +0.1944 and D′ = 0.0175 / 0.0179 / 0.0182 rad
+(`farforward.POT_SECOND_ROW`) — so what this item puts to the FF WG is the
+lattice question alone.* The
 10σ offsets in `beamline_*.xml` exist only for proton optics and are
 marked *"rough extrapolation"* at 5 × 41, and what that turns into is the
 **lattice question** this item now puts to the FF WG: `beamline_5x41.xml`

@@ -29,6 +29,7 @@ on polarized ion beams at the EIC, March 22 – April 2, 2027.
 | `docs/` | the **[reproduction manual](docs/reproduction_manual.md)** — environment, every command, expected numbers, and the third-party generators — plus source documents, the self-contained physics notes [docs/note_cos2phi_coherent_6Li.md](docs/note_cos2phi_coherent_6Li.md) (verified 50-entry bibliography; the state of 2026-08-10 — its projections are superseded by Report 1 §6–7) and [docs/note_7li_theory_questions.md](docs/note_7li_theory_questions.md) (the six theory inputs a ⁷Li program waits on and the two ⁶Li asks that travel with them, each with its ask and its interim assumption), and the audit the current state was built against, [docs/code_review_2026-08-28.md](docs/code_review_2026-08-28.md) (nine readings of the reconstruction chain, 65 findings, the code-level ones re-verified by hand and the documentation ones by rewriting); its predecessor [docs/code_review_2026-08-25.md](docs/code_review_2026-08-25.md) (measurability audit of 5R/7R/6R, findings F1-F13) is kept as the dated record, and the consistency review of Reports 0–4 [docs/consistency_review_2026-09-02.md](docs/consistency_review_2026-09-02.md) (2026-09-02; 260 findings — the fixes and the 53 wording suggestions applied in run 17, the ten mechanical checks it specifies now modules under `tools/checks/`, and its three author decisions registered as items 22–24 of [plans/04_open_questions.md](plans/04_open_questions.md)) |
 | `reports/` | the five circulate-able reports (self-contained HTML + rendered PDF), numbered 0–4 in reading order: **0** the educational primer, **1** the cos 2φ money-plot report, **2** the reconstruction-chain analysis note (what is measured, how the azimuth and Δ are reconstructed, audit of the simulation), **3** the EIC/ePIC machine-and-detector reference, **4** the near-beam far-forward study — all restated 2026-08-29 on the per-configuration transport and corrected 2026-09-02 on the cross-report consistency review, with Reports 0, 2, 3 and 4 re-sourced 2026-09-06; served as a website by the GitHub Pages workflow (`.github/workflows/pages.yml` + `reports/index.html`) — activate once via Settings → Pages → Source: "GitHub Actions" (public repo required on free plans) |
 | `tools/` | PYTHIA 8 hadronic-final-state generation (`tools/pythia8`), the BeAGLE route and the e+d control that calibrates the cluster model's tail (`tools/beagle`, `tools/analysis`), and the full ePIC chain — including the ion gun that shoots an intact ⁶Li at the far-forward detectors (`tools/fullsim`) |
+| `paper/` | the PLB letter of [plans/07](plans/07_plb_letter_gluonometry.md) WP6 — `main.tex` (draft v0, 2026-09-16), the four letter figures and Table 1 generated from the producing scripts of `evgen/scripts/` by one build script, 35 references and a cover letter; `bash paper/build.sh` rebuilds all of it and `python3 tools/checks/paper_numbers.py` checks that every number in Table 1 and the abstract is one the reports already print |
 
 ## Quick start
 
@@ -44,7 +45,7 @@ here and why.
 # and NNPDFpol11_100 installed)
 cd fastsim && python -m pytest tests/ -q
 
-# event generator (407 tests)
+# event generator (413 tests)
 cd evgen && python -m pytest tests/ -q
 
 # money plots (outputs land next to the scripts' working directory)

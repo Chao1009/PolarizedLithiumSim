@@ -347,7 +347,11 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
     configuration is 2.4% and 25% — 2.5% before this run's S–D phase
     correction, which is the value LiPolGen's 0.0264 corresponds to — so on
     the VMC density it reads 3.2% and 24.4%; whether it is re-quoted as a
-    band is #29.  The band
+    band is #29.  *Superseded 2026-09-16: the ratios above are the
+    sibling's, and the α + d tables are now read by this generator
+    (`tagged.li6_alpha_channel(wave='vmc')`), so the pair is measured
+    rather than transferred — ×1.394 and ×0.974, i.e. 3.4% and 24.8%.*
+    The band
     clause of plans/05 §169–182 reads "until VMC lands"; it has landed,
     and what remains of this item is the adoption, not the ask — with the
     **sign** of ψ₂/ψ₀ above the live half of it.
@@ -424,7 +428,13 @@ A4. **BeAGLE status for light nuclei** — runs any (A,Z) but A>4 uses the
     R₁₂, R₃₄ and the pot dispersion D were measured at all three
     configurations on 2026-08-28 (`farforward.POT_LEVERS`: 19.24 / 21.25 /
     29.97 m, 4.56 / 3.35 / 2.93 m and 0.311 / 0.287 / 0.292 m, the 5 × 41 vertical lever read off a zero-insertion scratch geometry on 2026-08-29), so plans/09
-    quotes millimetres everywhere; R₁₁, R₂₁, R₂₂ and D′ remain unmeasured,
+    quotes millimetres everywhere; R₁₁, R₂₁, R₂₂ and D′ remain unmeasured
+    — *superseded 2026-09-16: the angle row is measured in the same
+    zero-insertion geometry, R₁₁ = 1.148 / 1.227 / 1.852, R₂₁ = −0.0837 /
+    −0.0651 / −0.0209 rad m⁻¹, R₂₂ = −0.4955 / −0.3060 / +0.1944 and
+    D′ = 0.0175 / 0.0179 / 0.0182 rad (`farforward.POT_SECOND_ROW`,
+    plans/09 B1 and D3), so what stays with the FF WG is the lattice
+    question alone* —
     the 10σ offsets in `beamline_*.xml` are still marked a *"rough
     extrapolation"* at 5 × 41, and what the FF WG is now asked is the
     lattice question: `beamline_5x41.xml` (41 GeV proton) and
@@ -837,6 +847,14 @@ author decision.
     1.28, 10σ envelope over silicon at 18 × 275 0.92/0.53 = 1.74; the ×230
     and ×77 neighbours reproduce). Both numbers stand as written until the
     authors decide.
+    *Recommendation (2026-09-16):* drop the ×1.75 relocation lever from Report 4
+    §7 rather than give it a producer — no quantity in the repository produces
+    it as a relocation lever (the nearest arithmetic match, the 18 × 275
+    10σ-envelope-over-silicon ratio 0.92/0.53 = 1.74, is an aperture ratio and
+    not a lever), and read as a tagged-fraction factor it contradicts §2's ×77
+    for the same move at 5 × 41 — and replace the 30–60× by the sourced 10–33× band,
+    which is what Table 1 of arXiv:2105.13564 supports (0.1 at IR 1 against
+    0.003–0.01 at IR 2). The neighbouring ×230 and ×77 reproduce and stay.
 
 ## Still open — author decisions raised by run 19 (2026-09-15)
 
@@ -845,6 +863,11 @@ is a published number that is *not wrong* — every one of them is labelled
 with the footing it stands on — but whose footing the run has now priced, so
 the authors can choose the lead.  Each carries the question, whom to engage,
 and the default the repository proceeds on meanwhile.
+
+*2026-09-16: dispositioned. One of the five is DECIDED (#26); the other four
+carry a Recommendation line of their own below, as does #24 of the section
+above. A recommendation is not a decision — the defaults still stand and no
+published number moves on one.*
 
 25. **Which column of §7.1 leads: toy or grid.**  Run 19 put the nuclear
     grid into production (`inputs.get_backends(pdf, nuclear, r_func)`,
@@ -870,6 +893,12 @@ and the default the repository proceeds on meanwhile.
     would close the gap rather than label it.
     *Default:* the toy column leads, the grid column is published beside it
     with its frozen-Q₀ rows daggered, as the addendum table has them.
+    *Recommendation (2026-09-16):* lead with the toy column and restrict any
+    statement made on the grid to Q² > 1.69 GeV², until a nuclear set with a
+    lower Q₀ for A = 6 exists — the frozen-Q₀ continuation is a labelled
+    extrapolation and should not carry a claim, and 36.3% of the accepted
+    one-year rate, both low-Q² sweet spots and the whole coherent best
+    super-bin sit under the floor.
 26. **Whether the coherent tagged-yield curve is suppressed by default.**
     `polligen/coherent.py` gained `t_min_coherent(x_P, M_A)` and
     `CoherentScenario.t_min_suppression` this run, so exp(−B t_min) now
@@ -899,6 +928,23 @@ and the default the repository proceeds on meanwhile.
     re-quote belongs with money plot 6 and is not done.)
     *Default:* both folds stay off and the published curves are the
     unsuppressed ones, as they are today.
+    ☑ **Decided (2026-09-16).** The coherent tagged-yield curve stays
+    UNSUPPRESSED by default, and exp(−B t_min) and the ×0.73 rate weighting are
+    quoted as a BAND beside it — −2.5 … −47% across the window — rather than
+    folded into the central value. The reason is the one the item establishes:
+    the suppression is not a scalar, |t_min| ∝ x_P² running it from
+    −11.7 … −17.0% at the x_P = 0.01 coherence half-point to −47% at the
+    x_P ≈ 0.02 edge of the window, while rate-weighting is a statement about the
+    x_P spectrum (−11.0% with x_P flat, −2.5% for a DIS-like 1/x_P) and not a
+    number. Until a diffractive model supplies that x_P spectrum — #18, the same
+    ask — a central curve folded with either factor would publish an assumed
+    spectrum as a measurement, where the band publishes what is robust: the true
+    yield is below the unsuppressed one everywhere. Both flags therefore stay
+    default off, money plot 6 and the WP5 scan stay bit-for-bit, and the band is
+    what the text quotes beside the curve. The one re-quote this does not settle
+    stands as the item records it: `coherent_optics_scan.py:214`'s hard-coded
+    `t_min = 3.2e-3` should call `t_min_coherent(0.01)` = 3.169×10⁻³, which
+    belongs with money plot 6.
 27. **Whether the coherent 8–11σ is re-quoted over the charge-sector
     band.**  `coherent.CoherentScenario` ships `eps_b0` = −0.08 with the
     band −(0.04 … 0.13), anchored on Mäntysaari et al.'s deuteron
@@ -941,6 +987,13 @@ and the default the repository proceeds on meanwhile.
     §6.3, where the band it prices is stated, so the distance from the
     charge sector is a number rather than an adjective wherever the band
     appears.  What is left is the σ re-quote itself.
+    *Recommendation (2026-09-16):* keep the 8–11σ as the SCENARIO's number, on
+    the no-cancellation premise stated where it appears, and state the charge
+    sector's counterpart beside it — that if the gluonic deformation tracked the
+    measured charge quadrupole the same year would be an UNDER-1σ measurement:
+    the a₂ amplitude is linear in `eps_b0` and the measured value is 11.6× below
+    the scenario, so 8–11σ becomes 0.7–0.9σ at the same luminosity. The pair is
+    the honest span of what is known, and neither number replaces the other.
 28. **Whether Report 0's polarized-EMC reach is re-led with the grid leg.**
     `polli_fastsim.polarized.ToyG1.a1n(x) = −0.07(1 − x)² + 0.8x^2.2`
     crosses zero near x ≈ 0.25 and is positive above it, while
@@ -968,6 +1021,14 @@ and the default the repository proceeds on meanwhile.
     *Engage:* none needed; both legs exist and both are cheap to run.
     *Default:* the toy leads and the grid is quoted beside it, as today,
     with the sign caveat now stated at every toy-input site.
+    *Recommendation (2026-09-16):* re-lead Report 0 Table 3's polarized-EMC row
+    with the GRID leg and keep the toy leg published beside it, labelled. The
+    toy neutron carries the wrong sign of g₁ⁿ over roughly 0.25 < x < 0.6 and two
+    of the four x points sit inside that window, so the grid leg is the one whose
+    inputs are right where the row is read; the flavour-mixing argument for the
+    toy lead is about a standard and measured treatment, not a defect. The
+    published `money_polemc` PNG follows the lead under its own `_grid` stem, and
+    the toy stem is not overwritten.
     *Note:* the exposure is isotope-dependent and Report 0's row is the
     small case — ⁷Li weights the neutron 23× less than the proton, ⁶Li
     weights the two equally.  On a ⁶Li map the swap moves the rate-weighted
@@ -982,16 +1043,40 @@ and the default the repository proceeds on meanwhile.
     (×0.975) — in **opposite directions**, because the VMC density is
     harder than the Hulthén form where the Roman Pots look and softer in
     the far tail.
+    *Measured in this tree (2026-09-16):* the ×1.32 above is the sibling
+    generator's ratio applied to the published point.  The ANL α + d tables
+    are now read by this generator (`fastsim/polli_fastsim/data/vmc`,
+    `tagged.li6_alpha_channel(wave='vmc')`, `money_tagged_azz.py
+    --cluster-wave vmc`), so the other end of the pair is measured rather
+    than transferred: at `--config 1 --events 400000 --seed 20260713` the
+    α-tag fraction reads **0.0336** against 0.0241 at the Yellow Report
+    optics (**×1.394**) and **0.2476** against 0.2542 at the tagging optics
+    (**×0.974**), and the sample-free model integrals move 0.024675 →
+    0.033810 (×1.370) and 0.254028 → 0.247701 (×0.975).  Quoted as the
+    published pair is quoted, that is **3.4%** and **24.8%**, not the 3.2%
+    and 24.4% of the transfer — the tagging end moves because 24.4% was the
+    ratio applied to the rounded 25%, where 24.8% is the measured point
+    itself (0.2476 against the published 0.2542 = 25.4%, quoted as 25%).
     *The question:* are the two published tags re-quoted as bands with the
     VMC values as their other end, and if so, is the band written as the
-    two-sided 2.4–3.2% / 24.4–25% pair, or does §5.4 adopt the VMC
+    two-sided pair measured above, or does §5.4 adopt the VMC
     point?  The plans/05 rule as written — "always run the
     β = 0.20/0.30/0.40 band until VMC lands" — cannot be the answer here,
     since the β band brackets the VMC density at neither end.
     *Engage:* R.B. Wiringa (ANL, local), as #15; the tables themselves are
     already obtainable.
     *Default:* the point values stand, as published, with #15's dated
-    clause carrying the measured transfer.
+    clause carrying the in-house measurement.
+    *Recommendation (2026-09-16, measured):* quote the pair as a two-sided
+    band — **2.4–3.4% and 24.8–25%** — on the in-house measurement above,
+    not on the transfer.  The two optics move in opposite directions, so
+    neither the VMC point nor the β = 0.20–0.40 band can stand for both:
+    the β band spans ×3.08 in tag acceptance and holds the k = 0.325 GeV/c
+    asymmetry inside −0.889 … −0.824, where the VMC wave function leaves
+    the sign alone and divides the magnitude by five.  A band whose other
+    end is a different wave function is the only honest form, and the
+    condition the earlier wording attached to it — that the waves be in
+    this tree rather than reached through the sibling — is now met.
 
 ## Tracking
 
@@ -1005,7 +1090,7 @@ and the default the repository proceeds on meanwhile.
 | 8–10 | theory inputs | open | Cloët/Cosyn/Miller engagement |
 | 11 | FF transfer matrices + optics at Li rigidities | **split** | optics half → plans/10 D1–D3 (C-AD, provisionally answered in §10.3); transfer matrices → plans/09 D3 (ePIC FF WG) |
 | 12–13 | software checks | scheduled | inside Phase-1/2 steps |
-| 14–16 | generator theory inputs (plans/05) | open; **15 delivered 2026-09-15** | Cloët/Cosyn (14), Wiringa (15), Cosyn/Sargsian (16).  #15's ANL VMC α + d / α + t overlaps exist and ship in `LiPolGen/data/vmc` (ANL's own tables): the β = 0.20–0.40 band brackets the VMC α–d density at neither end and the tagged fractions move in opposite directions on the two optics — adoption, and the sign of ψ₂/ψ₀, are what is left (#29) |
+| 14–16 | generator theory inputs (plans/05) | open; **15 delivered 2026-09-15, α + d adopted 2026-09-16** | Cloët/Cosyn (14), Wiringa (15), Cosyn/Sargsian (16).  #15's ANL VMC α + d / α + t overlaps exist and ship in `LiPolGen/data/vmc` (ANL's own tables); **2026-09-16: the α + d pair is adopted into this tree** — `fastsim/polli_fastsim/data/vmc/li6_ad1.momentum` and `li6.ad`, the same raw served bytes, read by `tagged.li6_vmc_tables` and selected with `tagged.li6_alpha_channel(wave='vmc')` or `money_tagged_azz.py --cluster-wave vmc`, opt-in and with every published number still on the Hulthén default, bit for bit.  The sign of ψ₂/ψ₀ is now MEASURED here and no longer quoted: −1 below the α–d S node at 0.1338 GeV/c, +1 between, −1 above the α–d D node at 0.4439 GeV/c, both nodes from `li6.ad`'s own signed columns.  The β = 0.20–0.40 band still brackets the VMC α–d density at neither end and the tagged fractions still move in opposite directions on the two optics, now measured in-house (×1.394 and ×0.974) — the quoting call is #29.  No α + t table is committed: that channel is a lone L = 1 wave with no observable relative phase, and `li7_alpha_channel(wave='vmc')` refuses |
 | 17 | HepMC3 ion-spin convention | **schema delivered 2026-09-15**; proposal outstanding | the attribute schema is written and implemented in `LiPolGen/docs/HEPMC3_CONVENTION.md` (GenEvent-level `spin_*` / `P_z` / `P_zz` / `lam_e` / `spin_axis_*` attributes, per-particle `pol`, Asciiv3 GeV/mm, 10-digit nuclear PDG on a status-4 beam particle); plans/05 step 5.D → ePIC MC group is now the ask |
 | 18 | coherent-⁶Li diffractive model (plans/06) | open | small-x theory engagement; scenario bands until then |
 | 19 | RP Z-ID for A/Z = 2 (plans/06) | **redirected** | ask the incumbent: EICROC's 8-bit charge over 4 AC-LGAD planes, where one bit costs only ×1.4 in α fake rate (3.1 vs 2.3 × 10⁻⁵ at 95% ⁶Li efficiency) and the nanowire loses on fill factor instead (plans/09 D1, §9.2); and α + d is two hits 30–77 pixels apart whose second fragment vetoes 84% of the α fakes at the tagging optics (plans/09 B4) |
@@ -1013,9 +1098,9 @@ and the default the repository proceeds on meanwhile.
 | 21 | hadronic-method δy/y at y ≈ 0.01–0.05 (reco note) | open | ePIC inclusive WG; e+Li sample through eic-smear |
 | 22 | ξ_p ≤ 0.015: published beam-beam limit or our own bound? (2026-09-02 review, F226) | ☑ **closed 2026-09-06** | cited (Report 3 [11], Report 4 [15]) — the EIC CDR's hadron beam-beam design limit, conservative for Z/A = ½ |
 | 23 | the 0.6% end of the ePIC σ_p/p at 1 GeV/c (2026-09-02 review, F237) | ☑ **closed 2026-09-06** | restated (Report 3 Table 8, reco.py) on the ePIC Preliminary Design Report Fig. 8.9; the 0.6% was a 2023 non-ePIC design |
-| 24 | the ×1.75 relocation lever and the 30–60× band (2026-09-02 review, F254) | **author decision** | name the quantity each factor multiplies and what produced it, or withdraw them; the text stands as written until then; 2026-09-06: Table 1 of the source supports 10–33×, the ×1.75 has no producer — see the item |
-| 25 | toy vs grid as the lead of §7.1, and the EPPS21 Q₀² = 1.69 GeV² floor (run 19, plans/07 WP1 addendum) | **author decision** | pick the lead; 36.3% of the accepted one-year rate and the whole coherent best super-bin are a frozen-Q₀ continuation and must be quoted as such either way |
-| 26 | exp(−B t_min) and the ×0.73 rate weighting as the CENTRAL coherent tagged yield (run 19, plans/07 WP5) | **author decision** | both folds default off and the published curves are unsuppressed; the suppression runs −2.5 … −47% across the window, so a scalar cannot stand for it |
-| 27 | `eps_b0` = −0.08 is 11.6× the ⁶Li charge quadrupole; re-quote the coherent 8–11σ (Report 1's abstract, Report 0 §5.2) over the charge-sector band −(0.0069…0.0527)? | **author decision** | the default stays, as in the sibling tree; the arithmetic (−0.08 ⇒ Q_charge = −0.93 fm²) is stated in `coherent.py` and Report 1 §6.3 since 2026-09-15, the σ re-quote is the open half |
-| 28 | the toy g₁ⁿ's wrong sign over ≈ 0.25 < x < 0.6; re-lead Report 0 Table 3 and the `money_polemc` PNG with the grid leg? | **author decision** | labelling applied 2026-09-15 at every toy-input site in Report 0; both legs published, toy still the lead |
-| 29 | Report 0 §5.4 / Table 3's ⁶Li α-tag pair (2.4% / 25%) as a VMC band? | **author decision** | the VMC transfer gives 3.2% and 24.4% — opposite directions on the two optics; the point values stand until the authors choose |
+| 24 | the ×1.75 relocation lever and the 30–60× band (2026-09-02 review, F254) | **author decision** | name the quantity each factor multiplies and what produced it, or withdraw them; the text stands as written until then; 2026-09-06: Table 1 of the source supports 10–33×, the ×1.75 has no producer — see the item; **recommendation 2026-09-16**: drop the ×1.75 from Report 4 §7 and replace the 30–60× by the sourced 10–33× band |
+| 25 | toy vs grid as the lead of §7.1, and the EPPS21 Q₀² = 1.69 GeV² floor (run 19, plans/07 WP1 addendum) | **author decision** | pick the lead; 36.3% of the accepted one-year rate and the whole coherent best super-bin are a frozen-Q₀ continuation and must be quoted as such either way; **recommendation 2026-09-16**: lead with the toy column and restrict any grid statement to Q² > 1.69 GeV² until a nuclear set with a lower Q₀ exists |
+| 26 | exp(−B t_min) and the ×0.73 rate weighting as the CENTRAL coherent tagged yield (run 19, plans/07 WP5) | ☑ **decided 2026-09-16** | the curve stays UNSUPPRESSED by default and the two folds are quoted as a band beside it, −2.5 … −47% across the window, until a diffractive model supplies an x_P spectrum (#18); both flags stay default off and every published curve is bit-for-bit. Residue: `coherent_optics_scan.py:214`'s `t_min = 3.2e-3` should call `t_min_coherent(0.01)` = 3.169×10⁻³, with money plot 6 |
+| 27 | `eps_b0` = −0.08 is 11.6× the ⁶Li charge quadrupole; re-quote the coherent 8–11σ (Report 1's abstract, Report 0 §5.2) over the charge-sector band −(0.0069…0.0527)? | **author decision** | the default stays, as in the sibling tree; the arithmetic (−0.08 ⇒ Q_charge = −0.93 fm²) is stated in `coherent.py` and Report 1 §6.3 since 2026-09-15, the σ re-quote is the open half; **recommendation 2026-09-16**: keep the 8–11σ as the scenario's number and state the charge-sector band's 1σ-level counterpart beside it |
+| 28 | the toy g₁ⁿ's wrong sign over ≈ 0.25 < x < 0.6; re-lead Report 0 Table 3 and the `money_polemc` PNG with the grid leg? | **author decision** | labelling applied 2026-09-15 at every toy-input site in Report 0; both legs published, toy still the lead; **recommendation 2026-09-16**: re-lead Report 0 Table 3 with the grid leg and keep the toy leg labelled beside it |
+| 29 | Report 0 §5.4 / Table 3's ⁶Li α-tag pair (2.4% / 25%) as a VMC band? | **author decision** | **2026-09-16: measured in this tree**, the α + d tables having landed here — 3.4% and 24.8% (×1.394 and ×0.974), opposite directions on the two optics, against the 3.2% / 24.4% the sibling transfer estimated; the point values stand until the authors choose; **recommendation 2026-09-16**: quote the pair as the two-sided band 2.4–3.4% and 24.8–25% |

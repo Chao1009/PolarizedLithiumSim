@@ -105,7 +105,11 @@ This is `MatrixTransferStaticConfig.h`'s `partMass = 0.938272, partCharge = 1`
 (plans/03 §2.2 (2)) with a measured consequence rather than a code reading: the
 ePIC far-forward Roman-Pot reconstruction returns **nothing at all** for a
 lithium ion, so `fastsim`'s own transport is not an interim stand-in for an
-EICrecon path that exists — it is the only path there is. The ZDC neutral chain,
+EICrecon path that exists — it is the only path there is.  *Bounded from the
+other side on 2026-09-16* (§"The Mode-W chain" below): where the far-forward
+species IS a proton — a deuteron beam's spectator, R ≈ 0.47 — the
+off-momentum detector reconstructs it in 80 of 100 events at a 5% momentum
+and a 0.25 mrad angle, so the matrices are proton-tuned rather than broken. The ZDC neutral chain,
 by contrast, reconstructs in every event that reaches it, and the B0 tracker
 digitises but seeds no track at these angles.
 
@@ -902,7 +906,8 @@ acceptance number is bit-for-bit what it was.
 
 One event per scan point, no beam divergence and no vertex spread; hit level,
 not reconstruction (the section above shows why reconstruction is not available
-for a lithium ion). The IP offsets run to ±32 mm, far outside any real beam —
+for a lithium ion, and §"The Mode-W chain" shows the same matrices returning a
+deuteron beam's spectator proton at a 5% momentum). The IP offsets run to ±32 mm, far outside any real beam —
 they are a lever for a linear coefficient, not a beam condition, and the
 outermost rows drop out of the fit because the displaced ion no longer reaches
 station-1 silicon — two of the nineteen horizontal rows at 5 × 41 (|x₀| = 32 mm)
@@ -912,6 +917,78 @@ are fitted on 7–10 rows because the vertical top-up rows land outside the
 silicon; their standard errors are nonetheless the smallest in the table. Every
 element is quoted at **station 1 layer 1** and the station-to-station spread of
 the first row (up to 8% in D, 2% in R₁₂) should be assumed for the second.
+
+## The Mode-W chain (2026-09-16) — a weighted BeAGLE sample through EICrecon
+
+The counterpart of the gun scans above on a physics sample, and the first
+time a polarized weight of `polligen.reweight` reaches a reconstructed
+file.  `../analysis/modew_beagle_hepmc.py` puts a NAMED Mode-W weight on
+official BeAGLE `eH2/en/9x130` events and writes HepMC3 ASCII;
+`modew_chain.sh` runs npsim → eicrecon on it at a FIXED SEED;
+`../analysis/modew_reco_readback.py` reads the weight, the reco-level x and
+Q², and the far forward back out.  docs/reproduction_manual.md §5.2 and
+§5.3 carry the commands and the expected output.
+
+```bash
+singularity exec --env G=$S --env R=$R $SIF bash -lc \
+  'source /opt/detector/epic-main/bin/thisepic.sh
+   bash $R/tools/fullsim/modew_chain.sh $G/modew_100.hepmc $G/sim 18x275 100'
+python3 ../analysis/modew_reco_readback.py $S/sim/reco.edm4eic.root \
+    --sim $S/sim/sim.edm4hep.root --csv $S/modew_100.csv
+```
+
+Four things it measured, on 100 events, `epic_craterlake_18x275.xml` on
+both legs (the nearest configuration to a 130 GeV/u × 9 GeV fill: 6% off in
+ion rigidity, a factor two in electron energy — so nothing here is an
+acceptance or a resolution).
+
+* **npsim keeps only `weights()[0]`.**  It copies the nominal HepMC3 weight
+  into the scalar `EventHeader.weight`, leaves the `EventHeader.weights`
+  vector member empty and drops the weight NAMES entirely.  A weight
+  appended after the sample's own `default` therefore arrives as a constant
+  1.0; written first it arrives on 100/100 events with 100 distinct values,
+  to the generator table's own 10-digit printing precision.
+* **The event order survives** to a median 5.1 × 10⁻⁷ in x against BeAGLE's
+  `trueX` read in file order, so a weight some tool drops can always be
+  re-attached by index.
+* **Every `InclusiveKinematics*` collection is empty** — Electron, Sigma,
+  DA, JB, ESigma, ML all 0/100 — because `MCBeamProtons` is empty: the
+  `eH2/en` files record the struck NEUTRON as the status-4 ion beam and
+  EICrecon's beam finder wants a proton.  `InclusiveKinematicsTruth` is
+  100/100 and `ScatteredElectronsTruth` 100/100, so it is the beam row and
+  not the electron.  This is the inclusive-kinematics counterpart of the
+  species blocker the section above measures in the far forward, and a ⁶Li
+  beam row will fail it the same way.
+* **Give npsim a seed.**  Without `--random.seed` it seeds from the clock,
+  and the same 100 primaries shot twice gave 335 against 547
+  `ForwardRomanPotHits`.  `modew_chain.sh` takes the seed as its fifth
+  argument and defaults it to 20260916; `0` restores the clock.  The npsim
+  recipes elsewhere in this file predate that and do not fix a seed.
+
+**And the far forward, for a species that IS a proton.**  A deuteron at
+130 GeV/u puts its spectator proton at ~128 GeV, R ≈ 0.47 against the
+275 GV lattice — the OFF-MOMENTUM detector by the 2026-06-12 routing scan,
+and the reconstruction agrees:
+
+| collection | e+d spectator proton | ⁶Li gun ladder (2026-09-15) |
+|---|---|---|
+| `ForwardOffMTrackerRecHits` | 630 hits, 98 events | — |
+| **`ForwardOffMRecParticles`** | **80 in 80 events** | 0 |
+| `ForwardRomanPotRecHits` | 420, 37 | 1031, 76 |
+| `ForwardRomanPotRecParticles` | 2, 2 | **0, 0** |
+
+Matched event by event to the leading truth forward proton, the 80 OMD
+particles come back at a weighted median |p| residual of −5.2% (68th
+percentile 5.6%) and +0.05 mrad in polar angle (0.25 mrad).  So the
+far-forward reconstruction is **not broken for a light ion — it is broken
+for a light ion that is not a proton**: `MatrixTransferStaticConfig.h`'s
+`partMass = 0.938272, partCharge = 1` is the right species here, at the
+wrong rigidity.  *Labelled inference, untested:* the −5.2% is within 0.1%
+of 260.4/275 = 0.9469, the fill's ion rigidity over the lattice's.  One
+convention before comparing anything to truth: the tracker-based
+far-forward reconstruction (RP, OMD) writes momenta in the ROTATED BEAM
+frame, with the crossing angle taken out, while the calorimeter-based
+neutrals (ZDC, B0 ECal) write theirs in the LAB frame.
 
 ## e+d control inputs (plan 1.5.3)
 

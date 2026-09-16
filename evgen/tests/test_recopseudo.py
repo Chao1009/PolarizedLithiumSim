@@ -2,8 +2,14 @@
 normalization, migration, exact expected counts, ratio-fit closure,
 Delta bin-centering, and the coherent two-azimuth closure."""
 
+import contextlib
+import datetime
+import io
+import os
 import pathlib
+import resource
 import sys
+import traceback
 
 import numpy as np
 import pytest
@@ -1244,6 +1250,182 @@ def test_relative_luminosity_bias_is_one_third_per_unit_ratio_error():
     assert abs(t / base - 1.0) < 0.005
 
 
+# --- failure evidence for the reproducibility check -------------------------
+# test_fermi_smear_default_is_off_and_bit_for_bit failed intermittently
+# (2 of 18 full-suite runs on 2026-09-15, again on 2026-09-16) because it
+# asserted EXACT equality on the reconstructed fields, which this chain does
+# not in fact reproduce call to call; the assertion has since been split
+# (see the test).  The guard below survives that repair: on any AssertionError
+# it writes the arrays the assertions compared and the machine state that
+# produced them to tests/_failures/ (gitignored) and re-raises the failure
+# unchanged.  A passing run writes nothing and creates no directory.
+
+_FAILURE_DIR = pathlib.Path(__file__).resolve().parent / "_failures"
+
+# the fields the bit-for-bit assertions name, plus the Fermi bookkeeping that
+# says which draw produced them
+_EVIDENCE_FIELDS = ("x", "q2", "y", "x_reco", "q2_reco", "y_reco", "eff",
+                    "dil", "w", "phi_true", "fermi_alpha", "fermi_k",
+                    "fermi_alpha_drawn",
+                    # not asserted on, but they say whether a difference in
+                    # the reconstructed kinematics was already present in the
+                    # smeared electron or was made by the (1 + cos theta)
+                    # cancellation of reco.electron_method
+                    "e_prime_reco", "theta_reco", "eta_reco")
+
+
+def _exact_diff(a, b):
+    """(n_differing, differing indices, max |diff|) under the EXACT comparison
+    np.array_equal(..., equal_nan=True) makes: NaN equals NaN, everything
+    else must match bit for bit."""
+    a, b = np.asarray(a, dtype=float), np.asarray(b, dtype=float)
+    if a.shape != b.shape:
+        return -1, np.array([], dtype=np.int64), float("nan")
+    neq = ~((a == b) | (np.isnan(a) & np.isnan(b)))
+    idx = np.flatnonzero(neq).astype(np.int64)
+    if idx.size == 0:
+        return 0, idx, 0.0
+    d = np.abs(a[idx] - b[idx])
+    finite = d[np.isfinite(d)]
+    mx = float(finite.max()) if finite.size else float("nan")
+    return int(idx.size), idx, mx
+
+
+def _machine_state_lines():
+    """Thread, load and memory state -- the quantities the 2026-09-15
+    failures pointed at (they happened only under a loaded machine).
+    threadpoolctl is not installed, so the BLAS identity comes from
+    numpy.show_config() and from the environment's thread caps."""
+    out = []
+    out.append("timestamp      = %s" % datetime.datetime.now().isoformat())
+    out.append("python         = %s" % sys.version.replace("\n", " "))
+    out.append("numpy          = %s" % np.__version__)
+    out.append("pid            = %d" % os.getpid())
+    out.append("os.cpu_count() = %r" % (os.cpu_count(),))
+    try:
+        out.append("sched_affinity = %d cpus"
+                   % len(os.sched_getaffinity(0)))
+    except (AttributeError, OSError) as exc:      # not Linux / not permitted
+        out.append("sched_affinity = unavailable (%s)" % exc)
+    try:
+        out.append("loadavg        = %.2f %.2f %.2f" % os.getloadavg())
+    except (AttributeError, OSError) as exc:
+        out.append("loadavg        = unavailable (%s)" % exc)
+    for var in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS",
+                "NUMEXPR_NUM_THREADS", "VECLIB_MAXIMUM_THREADS",
+                "OPENBLAS_MAIN_FREE", "PYTHONHASHSEED"):
+        out.append("env %-22s = %r" % (var, os.environ.get(var)))
+    rss = "unavailable"
+    try:
+        with open("/proc/self/status") as fh:
+            for line in fh:
+                if line.startswith("VmRSS:"):
+                    rss = line.split(":", 1)[1].strip()
+                    break
+    except OSError as exc:
+        rss = "unavailable (%s)" % exc
+    out.append("VmRSS          = %s" % rss)
+    out.append("ru_maxrss      = %d kB"
+               % resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
+    try:
+        with open("/proc/loadavg") as fh:
+            out.append("/proc/loadavg  = %s" % fh.read().strip())
+    except OSError:
+        pass
+    buf = io.StringIO()
+    try:
+        with contextlib.redirect_stdout(buf):
+            np.show_config()
+        cfg = buf.getvalue().strip()
+    except Exception as exc:                      # pragma: no cover
+        cfg = "numpy.show_config() failed: %r" % (exc,)
+    out.append("")
+    out.append("numpy.show_config():")
+    out.extend("    " + line for line in cfg.splitlines())
+    return out
+
+
+@contextlib.contextmanager
+def _evidence_on_failure(test_name, **responses):
+    """Run the assertions; on failure dump `responses` and the machine state
+    under tests/_failures/<test>_<timestamp>.{npz,txt}, then re-raise."""
+    try:
+        yield
+    except AssertionError:
+        tb = traceback.format_exc()
+        try:
+            _write_evidence(test_name, responses, tb)
+        except Exception as exc:                  # pragma: no cover
+            print("evidence dump failed: %r" % (exc,), file=sys.stderr)
+        raise
+
+
+def _write_evidence(test_name, responses, tb):
+    stamp = datetime.datetime.now().strftime("%Y%m%dT%H%M%S_%f")
+    _FAILURE_DIR.mkdir(parents=True, exist_ok=True)
+    stem = _FAILURE_DIR / ("%s_%s" % (test_name, stamp))
+
+    arrays, notes = {}, []
+    labels = list(responses)
+    for label in labels:
+        resp = responses[label]
+        for field in _EVIDENCE_FIELDS:
+            val = getattr(resp, field, None)
+            key = "%s__%s" % (label, field)
+            if val is None:
+                notes.append("%-28s is None" % key)
+            else:
+                arrays[key] = np.asarray(val)
+        rej = getattr(resp, "fermi_reject", None)
+        notes.append("%-28s = %r" % (label + "__fermi_reject", rej))
+
+    notes.append("")
+    notes.append("per-field exact comparison (NaN == NaN), all label pairs:")
+    for i, la in enumerate(labels):
+        for lb in labels[i + 1:]:
+            for field in _EVIDENCE_FIELDS:
+                ka, kb = "%s__%s" % (la, field), "%s__%s" % (lb, field)
+                if ka not in arrays or kb not in arrays:
+                    continue
+                n, idx, mx = _exact_diff(arrays[ka], arrays[kb])
+                notes.append("  %s vs %s  %-18s n_diff=%-8d max|diff|=%.17g"
+                             % (la, lb, field, n, mx))
+                if n:
+                    # the text shows the first few; the .npz keeps every
+                    # differing index, which is what a post-mortem needs
+                    notes.append("      first indices: %s"
+                                 % (idx[:16].tolist(),))
+                    arrays["diff_idx__%s__%s__%s" % (la, lb, field)] = idx
+                    a, b = arrays[ka], arrays[kb]
+                    notes.append("      a[idx] = %s" % (a.ravel()[idx][:8],))
+                    notes.append("      b[idx] = %s" % (b.ravel()[idx][:8],))
+
+    # the azimuth comparison the tolerance assertions are written on
+    if "on" in responses and "off" in responses:
+        try:
+            dphi = np.angle(np.exp(1j * (responses["on"].phi_true
+                                         - responses["off"].phi_true)))
+            arrays["dphi_on_off"] = dphi
+            notes.append("")
+            notes.append("dphi(on, off): max|dphi| = %.6g  rms = %.6g"
+                         % (np.max(np.abs(dphi)),
+                            np.sqrt((dphi ** 2).mean())))
+        except Exception as exc:                  # pragma: no cover
+            notes.append("dphi unavailable: %r" % (exc,))
+
+    np.savez_compressed(str(stem) + ".npz", **arrays)
+    text = ["evidence for %s" % test_name, ""]
+    text += _machine_state_lines()
+    text += ["", "arrays in %s.npz:" % stem.name]
+    text += ["    %-40s %-10s %s" % (k, v.dtype, v.shape)
+             for k, v in sorted(arrays.items())]
+    text += [""] + notes
+    text += ["", "traceback:", tb]
+    pathlib.Path(str(stem) + ".txt").write_text("\n".join(text) + "\n")
+    print("\nfailure evidence written to %s.{npz,txt}" % stem,
+          file=sys.stderr)
+
+
 # --- Fermi motion of the struck cluster (plans/03 2.3) -----------------------
 
 def _fermi_pair(sampler, **kw):
@@ -1258,32 +1440,60 @@ def _fermi_pair(sampler, **kw):
 
 def test_fermi_smear_default_is_off_and_bit_for_bit(response):
     """The switch must be inert when off: alpha is drawn from its own
-    stream, so an off response is bit for bit the one that existed before
-    the hook and an on/off pair shares every other random number."""
+    stream, so an off response is the one that existed before the hook and
+    an on/off pair shares every other random number.  "Bit for bit" holds
+    at the vertex; the reconstructed fields are pinned to 1e-9 instead, for
+    the reason set out at the tolerance below."""
     sampler, _resp = response
     off, on = _fermi_pair(sampler)
     ref = rp.RecoResponse(sampler, rp.RecoModel(), n_mc_per_cell=200,
                           rng=np.random.default_rng(7))
-    for name in ("x", "q2", "y", "x_reco", "q2_reco", "y_reco", "eff",
-                 "dil", "w", "phi_true"):
-        a, b = getattr(off, name), getattr(ref, name)
-        assert np.array_equal(a, b, equal_nan=True), name
-    assert off.fermi_alpha is None and off.fermi_reject == 0.0
-    # the on/off pair shares the cell draw exactly (alpha comes from its
-    # own stream); the physics azimuth is a property of the scattered
-    # electron and so moves with the vertex, but by at most a few mrad --
-    # it is defined against the NUCLEAR momentum and spin axis, which the
-    # internal momentum of one cluster does not touch
-    assert np.array_equal(on.x, off.x) and np.array_equal(on.q2, off.q2)
-    dphi = np.angle(np.exp(1j * (on.phi_true - off.phi_true)))
-    # the rms is the meaningful bound (1.3e-4 rad on the production
-    # response, 2.2e-5 rate-weighted, against its 3 mrad angular
-    # resolution); the worst single event reaches 12 mrad there
-    assert np.max(np.abs(dphi)) < 5.0e-2
-    assert np.sqrt((dphi ** 2).mean()) < 1.0e-3
-    # and differs where it must
-    assert on.fermi_alpha is not None
-    assert not np.array_equal(on.x_reco, off.x_reco, equal_nan=True)
+    name_ = "test_fermi_smear_default_is_off_and_bit_for_bit"
+    with _evidence_on_failure(name_, off=off, ref=ref, on=on):
+        # The VERTEX and everything the analysis carries straight from it are
+        # reproduced exactly: two identically seeded default responses agree
+        # bit for bit.
+        for name in ("x", "q2", "y", "y_reco", "eff", "w", "phi_true"):
+            a, b = getattr(off, name), getattr(ref, name)
+            assert np.array_equal(a, b, equal_nan=True), name
+        # Everything read off the SMEARED electron is reproduced only to the
+        # last few bits.  Two identically seeded builds of the same default
+        # response, in one process, occasionally differ by ~1 ulp in the
+        # azimuth of the smeared electron; reco.electron_method then forms
+        # Q2 = 2 E_e E'(1 + cos theta) with 1 + cos theta ~ 1e-2 for these
+        # backward electrons, so that ulp is amplified about tenfold into
+        # q2_reco and x_reco, and dil = cos 2(phi_reco - phi_true) sits near
+        # its maximum.  Measured on the captured failures of 2026-09-16:
+        # x_reco and q2_reco differ by at most 3.6e-14 relative, dil by
+        # 1.7e-12 absolute, in ~1% of events, on ~2% of builds.  The
+        # mechanism is below this code -- e_m and th_m are bit identical in
+        # the same failure, ph_m is not -- and is not the Fermi switch, the
+        # BLAS thread count or np.linalg (run 19, W4/G-TEST).  The tolerance
+        # below is five orders above that noise and eight below the effect
+        # the switch itself makes (x_reco moves by 0.13 when it is on), so it
+        # costs the check nothing.
+        for name in ("x_reco", "q2_reco", "dil"):
+            a, b = getattr(off, name), getattr(ref, name)
+            assert np.array_equal(np.isnan(a), np.isnan(b)), name
+            np.testing.assert_allclose(a, b, rtol=1e-9, atol=1e-9,
+                                       equal_nan=True, err_msg=name)
+        assert off.fermi_alpha is None and off.fermi_reject == 0.0
+        # the on/off pair shares the cell draw exactly (alpha comes from its
+        # own stream); the physics azimuth is a property of the scattered
+        # electron and so moves with the vertex, but by at most a few mrad --
+        # it is defined against the NUCLEAR momentum and spin axis, which the
+        # internal momentum of one cluster does not touch
+        assert np.array_equal(on.x, off.x) and np.array_equal(on.q2, off.q2)
+        dphi = np.angle(np.exp(1j * (on.phi_true - off.phi_true)))
+        # the rms is the meaningful bound (1.3e-4 rad on the production
+        # response, 2.2e-5 rate-weighted, against its 3 mrad angular
+        # resolution); the worst single event reaches 12 mrad there
+        assert np.max(np.abs(dphi)) < 5.0e-2
+        assert np.sqrt((dphi ** 2).mean()) < 1.0e-3
+        # and differs where it must, by far more than the tolerance above
+        assert on.fermi_alpha is not None
+        assert not np.array_equal(on.x_reco, off.x_reco, equal_nan=True)
+        assert np.nanmax(np.abs(on.x_reco - off.x_reco)) > 1.0e-3
 
 
 def test_fermi_smear_draws_the_spectator_density(response):

@@ -1,0 +1,601 @@
+%% paper/refs_reserve.bib -- the records the letter's sources cite and the
+%% letter itself does not.
+%%
+%% paper/refs.bib is the letter's own bibliography and is kept in exact
+%% correspondence with the \cite commands of paper/main.tex.  The coverage
+%% plans/07 WP6 asks for is wider than that: every numbered reference of
+%% Report 1 (reports/cos2phi_money_plots_report.template.html, [1]-[43]) and
+%% of docs/note_cos2phi_coherent_6Li.md ([1]-[50]) was walked entry by entry
+%% and fetched.  The records that walk produced and the letter's text does not
+%% stand on are held here, in the same format, with the same provenance
+%% (paper/refs_provenance.md) and the same "% cited by" mapping comments.
+%%
+%% Nothing in this file is compiled into the letter: main.tex says
+%% \bibliography{refs}, and only draft mode (\draftbibtrue) adds this file so
+%% that `bash build.sh` can check that every record parses and prints.  To
+%% cite one of these works, move its block into refs.bib; the consistency
+%% sweep will otherwise fail it as an entry nothing cites.
+%%
+%% Fetched 2026-09-16 against https://inspirehep.net/api/literature, in the
+%% same pass as refs.bib.  Volumes and page numbers must be re-verified at
+%% submission for any record promoted into refs.bib (plans/07 SS 7.3 row 10).
+
+
+% --- INSPIRE entries (38), the reserve ---------------------------------------
+
+% cited by N[46]
+@article{Accardi:2012qut,
+    author = "Accardi, A. and others",
+    editor = "Deshpande, A. and Meziani, Z. E. and Qiu, J. W.",
+    title = "{Electron Ion Collider: The Next QCD Frontier}: {Understanding the glue that binds us all}",
+    eprint = "1212.1701",
+    archivePrefix = "arXiv",
+    primaryClass = "nucl-ex",
+    reportNumber = "BNL-98815-2012-JA, JLAB-PHY-12-1652",
+    doi = "10.1140/epja/i2016-16268-9",
+    journal = "Eur. Phys. J. A",
+    volume = "52",
+    number = "9",
+    pages = "268",
+    year = "2016"
+}
+
+% cited by N[35]
+@article{Angeli:2013epw,
+    author = "Angeli, I. and Marinova, K. P.",
+    title = "{Table of experimental nuclear ground state charge radii: An update}",
+    doi = "10.1016/j.adt.2011.12.006",
+    journal = "Atom. Data Nucl. Data Tabl.",
+    volume = "99",
+    number = "1",
+    pages = "69--95",
+    year = "2013"
+}
+
+% cited by R1[17]
+@article{Arratia:2021tsq,
+    author = "Arratia, Miguel and Britzger, Daniel and Long, Owen and Nachman, Benjamin",
+    title = "{Reconstructing the kinematics of deep inelastic scattering with deep learning}",
+    eprint = "2110.05505",
+    archivePrefix = "arXiv",
+    primaryClass = "hep-ex",
+    reportNumber = "MPP-2021-174",
+    doi = "10.1016/j.nima.2021.166164",
+    journal = "Nucl. Instrum. Meth. A",
+    volume = "1025",
+    pages = "166164",
+    year = "2022"
+}
+
+% cited by R1[20]/N[9]
+@article{Aschenauer:2025cdq,
+    author = "Aschenauer, E. C. and others",
+    title = "{Study of deeply virtual Compton scattering at the future electron-ion collider}",
+    eprint = "2503.05908",
+    archivePrefix = "arXiv",
+    primaryClass = "hep-ph",
+    doi = "10.1103/fy8y-bjc9",
+    journal = "Phys. Rev. D",
+    volume = "112",
+    number = "3",
+    pages = "036010",
+    year = "2025"
+}
+
+% cited by N[32]
+@article{Berger:2001zb,
+    author = "Berger, Edgar R. and Cano, F. and Diehl, M. and Pire, B.",
+    title = "{Generalized parton distributions in the deuteron}",
+    eprint = "hep-ph/0106192",
+    archivePrefix = "arXiv",
+    reportNumber = "CPHT-S029-0601, DESY-01-082",
+    doi = "10.1103/PhysRevLett.87.142302",
+    journal = "Phys. Rev. Lett.",
+    volume = "87",
+    pages = "142302",
+    year = "2001"
+}
+
+% cited by N[31]
+@article{Boer:2016xqr,
+    author = {Boer, Dani{\"e}l and Cotogno, Sabrina and van Daal, Tom and Mulders, Piet J. and Signori, Andrea and Zhou, Ya-Jin},
+    title = "{Gluon and Wilson loop TMDs for hadrons of spin $\leq$ 1}",
+    eprint = "1607.01654",
+    archivePrefix = "arXiv",
+    primaryClass = "hep-ph",
+    reportNumber = "NIKHEF-2016-030",
+    doi = "10.1007/JHEP10(2016)013",
+    journal = "JHEP",
+    volume = "10",
+    pages = "013",
+    year = "2016"
+}
+
+% cited by N[9]
+@article{Boer:2025ixc,
+    author = {Bo{\"e}r, M. and others},
+    title = "{Three-dimensional imaging of hadrons with hard exclusive reactions: advances in experiment, theory, phenomenology, and lattice QCD}",
+    eprint = "2512.15064",
+    archivePrefix = "arXiv",
+    primaryClass = "hep-ph",
+    month = "12",
+    year = "2025"
+}
+
+% cited by R1[36]/N[22]
+@article{Bora:1997pi,
+    author = "Bora, K. and Jaffe, R. L.",
+    title = "{The Double scattering contribution to b(1) (x, Q**2) in the deuteron}",
+    eprint = "hep-ph/9711323",
+    archivePrefix = "arXiv",
+    reportNumber = "MIT-CTP-2692",
+    doi = "10.1103/PhysRevD.57.6906",
+    journal = "Phys. Rev. D",
+    volume = "57",
+    pages = "6906--6911",
+    year = "1998"
+}
+
+% cited by R1[33]/N[19]
+@article{Bouwhuis:1998jj,
+    author = "Bouwhuis, M. and others",
+    title = "{Measurement of T(20) in elastic electron deuteron scattering}",
+    eprint = "nucl-ex/9810004",
+    archivePrefix = "arXiv",
+    reportNumber = "JLAB-PHY-99-02",
+    doi = "10.1103/PhysRevLett.82.3755",
+    journal = "Phys. Rev. Lett.",
+    volume = "82",
+    pages = "3755--3758",
+    year = "1999"
+}
+
+% cited by R1[19]/N[8]/N[40]
+@article{Burkert:2022hjz,
+    author = "Burkert, V. D. and others",
+    title = "{Precision studies of QCD in the low energy domain of the EIC}",
+    eprint = "2211.15746",
+    archivePrefix = "arXiv",
+    primaryClass = "nucl-ex",
+    doi = "10.1016/j.ppnp.2023.104032",
+    journal = "Prog. Part. Nucl. Phys.",
+    volume = "131",
+    pages = "104032",
+    year = "2023"
+}
+
+% cited by N[48]
+@article{Bylinkin:2022rxd,
+    author = "Bylinkin, A. and others",
+    title = "{Detector requirements and simulation results for the EIC exclusive, diffractive and tagging physics program using the ECCE detector concept}",
+    eprint = "2208.14575",
+    archivePrefix = "arXiv",
+    primaryClass = "physics.ins-det",
+    doi = "10.1016/j.nima.2023.168238",
+    journal = "Nucl. Instrum. Meth. A",
+    volume = "1052",
+    pages = "168238",
+    year = "2023"
+}
+
+% cited by N[33]
+@article{Cano:2003ju,
+    author = "Cano, F. and Pire, B.",
+    title = "{Deep electroproduction of photons and mesons on the deuteron}",
+    eprint = "hep-ph/0307231",
+    archivePrefix = "arXiv",
+    doi = "10.1140/epja/i2003-10127-x",
+    journal = "Eur. Phys. J. A",
+    volume = "19",
+    pages = "423--438",
+    year = "2004"
+}
+
+% cited by N[30]
+@article{Cosyn:2018rdm,
+    author = "Cosyn, W. and Pire, B.",
+    title = "{Transversity generalized parton distributions for the deuteron}",
+    eprint = "1806.01177",
+    archivePrefix = "arXiv",
+    primaryClass = "hep-ph",
+    reportNumber = "CPHT-RR032.052018",
+    doi = "10.1103/PhysRevD.98.074020",
+    journal = "Phys. Rev. D",
+    volume = "98",
+    number = "7",
+    pages = "074020",
+    year = "2018"
+}
+
+% cited by N[30]
+@article{Cosyn:2018thq,
+    author = "Cosyn, W. and Freese, A. and Pire, B.",
+    title = "{Polynomiality sum rules for generalized parton distributions of spin-1 targets}",
+    eprint = "1812.01511",
+    archivePrefix = "arXiv",
+    primaryClass = "hep-ph",
+    reportNumber = "CPHT-RR112.122018",
+    doi = "10.1103/PhysRevD.99.094035",
+    journal = "Phys. Rev. D",
+    volume = "99",
+    number = "9",
+    pages = "094035",
+    year = "2019"
+}
+
+% cited by N[30]
+@article{Cosyn:2019eeg,
+    author = "Cosyn, W. and Pire, B. and Szymanowski, L.",
+    title = "{Probing quark transversity GPDs in diffractive photo- and electroproduction on the deuteron}",
+    eprint = "1907.08662",
+    archivePrefix = "arXiv",
+    primaryClass = "hep-ph",
+    reportNumber = "CPHT-PC049.072019",
+    doi = "10.22323/1.352.0254",
+    journal = "PoS",
+    volume = "DIS2019",
+    pages = "254",
+    year = "2019"
+}
+
+% cited by N[31]
+@article{Cotogno:2017puy,
+    author = "Cotogno, Sabrina and van Daal, Tom and Mulders, Piet J.",
+    title = "{Positivity bounds on gluon TMDs for hadrons of spin $\le$ 1}",
+    eprint = "1709.07827",
+    archivePrefix = "arXiv",
+    primaryClass = "hep-ph",
+    doi = "10.1007/JHEP11(2017)185",
+    journal = "JHEP",
+    volume = "11",
+    pages = "185",
+    year = "2017"
+}
+
+% cited by N[38]
+@article{Dalton:2025fbh,
+    author = "Dalton, Mark M. and Deur, Alexandre and Keith, Chris D. and Fomin, Nadia and Sargsian, Misak",
+    title = "{High precision measurement of phi-nucleon cross section using a tensor polarized deuteron target}",
+    eprint = "2508.06481",
+    archivePrefix = "arXiv",
+    primaryClass = "nucl-ex",
+    reportNumber = "Proposal number: PR12-25-012",
+    month = "8",
+    year = "2025"
+}
+
+% cited by N[37]
+@article{Dalton:2025jzt,
+    author = "Dalton, Mark M. and Deur, Alexandre and Keith, Christopher D. and Keith, Chris",
+    title = "{Potential for tensor polarized deuterons in Hall D at Jefferson lab}",
+    eprint = "2504.21177",
+    archivePrefix = "arXiv",
+    primaryClass = "nucl-ex",
+    reportNumber = "JLAB-PHY-25-4250",
+    doi = "10.1140/epja/s10050-025-01580-y",
+    journal = "Eur. Phys. J. A",
+    volume = "61",
+    number = "5",
+    pages = "111",
+    year = "2025"
+}
+
+% cited by R1[6]/N[26]
+@article{Detmold:2017oqb,
+    author = "Detmold, W. and Pefkou, D. and Shanahan, P. E.",
+    title = "{Off-forward gluonic structure of vector mesons}",
+    eprint = "1703.08220",
+    archivePrefix = "arXiv",
+    primaryClass = "hep-lat",
+    reportNumber = "MIT-CTP-4894, MIT-CTP/4894",
+    doi = "10.1103/PhysRevD.95.114515",
+    journal = "Phys. Rev. D",
+    volume = "95",
+    number = "11",
+    pages = "114515",
+    year = "2017"
+}
+
+% cited by R1[37]/N[23]
+@article{Edelmann:1997ik,
+    author = "Edelmann, J. and Piller, G. and Weise, W.",
+    title = "{Deuteron spin structure functions at small Bjorken x}",
+    eprint = "hep-ph/9709455",
+    archivePrefix = "arXiv",
+    reportNumber = "TUM-T39-97-15",
+    doi = "10.1103/PhysRevC.57.3392",
+    journal = "Phys. Rev. C",
+    volume = "57",
+    pages = "3392--3405",
+    year = "1998"
+}
+
+% cited by N[18]
+@article{Garcon:2001sz,
+    author = "Garcon, M. and Van Orden, J. W.",
+    title = "{The Deuteron: Structure and form-factors}",
+    eprint = "nucl-th/0102049",
+    archivePrefix = "arXiv",
+    reportNumber = "DAPNIA-SPHN-01-02, JLAB-THY-01-06, JLAB-THY-01-6",
+    doi = "10.1007/0-306-47915-X_4",
+    journal = "Adv. Nucl. Phys.",
+    volume = "26",
+    pages = "293",
+    year = "2001"
+}
+
+% cited by N[35]
+@article{Guan:2024oyp,
+    author = "Guan, Hua and others",
+    title = "{Direct extraction of nuclear structure information using precision lithium-ion spectroscopy}",
+    eprint = "2403.06384",
+    archivePrefix = "arXiv",
+    primaryClass = "physics.atom-ph",
+    doi = "10.1103/s61z-b1t5",
+    journal = "Phys. Rev. A",
+    volume = "112",
+    number = "1",
+    pages = "L010801",
+    year = "2025"
+}
+
+% cited by N[24]
+@article{HERMES:2010hnl,
+    author = "Airapetian, A. and others",
+    collaboration = "HERMES",
+    title = "{Measurement of azimuthal asymmetries associated with deeply virtual Compton scattering on a longitudinally polarized deuterium target}",
+    eprint = "1008.3996",
+    archivePrefix = "arXiv",
+    primaryClass = "hep-ex",
+    reportNumber = "DESY-10-136",
+    doi = "10.1016/j.nuclphysb.2010.09.010",
+    journal = "Nucl. Phys. B",
+    volume = "842",
+    pages = "265--298",
+    year = "2011"
+}
+
+% cited by R1[33]/N[19]
+@article{JLABt20:2000uor,
+    author = "Abbott, D. and others",
+    collaboration = "JLAB t(20)",
+    title = "{Measurement of tensor polarization in elastic electron deuteron scattering at large momentum transfer}",
+    eprint = "nucl-ex/0001006",
+    archivePrefix = "arXiv",
+    reportNumber = "ISN-2000-01, JLAB-PHY-00-76, ISN-2000.01",
+    doi = "10.1103/PhysRevLett.84.5053",
+    journal = "Phys. Rev. Lett.",
+    volume = "84",
+    pages = "5053--5057",
+    year = "2000"
+}
+
+% cited by R1[19]/N[8]/N[40]
+@article{Kim:2026ytt,
+    author = "Kim, Jihee and others",
+    title = "{A Second EIC Detector: Physics Case and Conceptual Design}",
+    eprint = "2602.04636",
+    archivePrefix = "arXiv",
+    primaryClass = "nucl-ex",
+    reportNumber = "BNL LDRD 23-050",
+    month = "2",
+    year = "2026"
+}
+
+% cited by N[33]
+@article{Kirchner:2003wt,
+    author = "Kirchner, A. and Mueller, Dieter",
+    title = "{Deeply virtual Compton scattering off nuclei}",
+    eprint = "hep-ph/0302007",
+    archivePrefix = "arXiv",
+    doi = "10.1140/epjc/s2003-01415-x",
+    journal = "Eur. Phys. J. C",
+    volume = "32",
+    pages = "347--375",
+    year = "2003"
+}
+
+% cited by R1[5]/N[28]
+@article{Kumano:2020gfk,
+    author = "Kumano, S. and Song, Qin-Tao",
+    title = "{Deuteron polarizations in the proton-deuteron Drell-Yan process for finding the gluon transversity}",
+    eprint = "2003.06623",
+    archivePrefix = "arXiv",
+    primaryClass = "hep-ph",
+    reportNumber = "KEK-TH-2192, J-PARC-TH-0215",
+    doi = "10.1103/PhysRevD.101.094013",
+    journal = "Phys. Rev. D",
+    volume = "101",
+    number = "9",
+    pages = "094013",
+    year = "2020"
+}
+
+% cited by R1[24]/N[45]
+@article{Lappi:2009wz,
+    author = "Lappi, T.",
+    editor = "Stankus, Paul and Silvermyr, David and Sorensen, Soren and Greene, Victoria",
+    title = "{Understanding saturation and AA collisions with an eA collider}",
+    eprint = "0907.4588",
+    archivePrefix = "arXiv",
+    primaryClass = "hep-ph",
+    doi = "10.1016/j.nuclphysa.2009.10.034",
+    journal = "Nucl. Phys. A",
+    volume = "830",
+    pages = "403C--410C",
+    year = "2009"
+}
+
+% cited by R1[41]/N[41]
+@article{LEPS:2017nqz,
+    author = "Hiraiwa, T. and others",
+    collaboration = "LEPS",
+    title = "{First measurement of coherent $\phi$-meson photoproduction from $^4He$ near threshold}",
+    eprint = "1711.01095",
+    archivePrefix = "arXiv",
+    primaryClass = "nucl-ex",
+    doi = "10.1103/PhysRevC.97.035208",
+    journal = "Phys. Rev. C",
+    volume = "97",
+    number = "3",
+    pages = "035208",
+    year = "2018"
+}
+
+% cited by R1[28]/N[12]
+@article{Li:1971tk,
+    author = "Li, G. C. and Sick, I. and Whitney, R. R. and Yearian, M. R.",
+    title = "{High-energy electron scattering from li-6}",
+    doi = "10.1016/0375-9474(71)90257-0",
+    journal = "Nucl. Phys. A",
+    volume = "162",
+    pages = "583--592",
+    year = "1971"
+}
+
+% cited by R1[30]/N[15]
+@article{Mantysaari:2024qmt,
+    author = {M{\"a}ntysaari, Heikki and Singh, Pragya},
+    title = "{Energy dependence of the deformed nuclear structure at small-x}",
+    eprint = "2411.14934",
+    archivePrefix = "arXiv",
+    primaryClass = "nucl-th",
+    doi = "10.1140/epjc/s10052-025-15179-6",
+    journal = "Eur. Phys. J. C",
+    volume = "85",
+    number = "12",
+    pages = "1449",
+    year = "2025"
+}
+
+% cited by R1[33]/N[19]
+@article{Nikolenko:2003zq,
+    author = "Nikolenko, D. M. and others",
+    title = "{Measurement of the tensor analyzing powers T(20) and T(21) in elastic electron deuteron scattering}",
+    reportNumber = "JLAB-PHY-03-64",
+    doi = "10.1103/PhysRevLett.90.072501",
+    journal = "Phys. Rev. Lett.",
+    volume = "90",
+    pages = "072501",
+    year = "2003"
+}
+
+% cited by R1[20]/N[9]
+@article{Pitt:2024utg,
+    author = "Pitt, Michael",
+    title = "{Physics Perspectives with the ePIC Far-Forward and Far-Backward detectors}",
+    eprint = "2409.02811",
+    archivePrefix = "arXiv",
+    primaryClass = "physics.ins-det",
+    reportNumber = "PoS-DIS2024-259",
+    doi = "10.22323/1.469.0259",
+    journal = "PoS",
+    volume = "DIS2024",
+    pages = "259",
+    year = "2025"
+}
+
+% cited by N[49]
+@article{Pybus:2026udh,
+    author = "Pybus, Jackson R. and Li, Xuan and Calero-Diaz, Liliet",
+    title = "{Polarized Nuclear DVCS at the EIC}",
+    eprint = "2606.11491",
+    archivePrefix = "arXiv",
+    primaryClass = "nucl-ex",
+    month = "6",
+    year = "2026"
+}
+
+% cited by R1[26]/N[42]
+@article{STAR:2021wwq,
+    author = "Abdallah, Mohamed and others",
+    collaboration = "STAR",
+    title = "{Probing the Gluonic Structure of the Deuteron with $J/\psi$ Photoproduction in d+Au Ultraperipheral Collisions}",
+    eprint = "2109.07625",
+    archivePrefix = "arXiv",
+    primaryClass = "nucl-ex",
+    doi = "10.1103/PhysRevLett.128.122303",
+    journal = "Phys. Rev. Lett.",
+    volume = "128",
+    number = "12",
+    pages = "122303",
+    year = "2022"
+}
+
+% cited by N[36]
+@article{Wojtsekhowski:2024lzg,
+    author = "Wojtsekhowski, Bogdan",
+    title = "{Polarized internal target experiments based on EIC beams}",
+    eprint = "2406.11480",
+    archivePrefix = "arXiv",
+    primaryClass = "nucl-ex",
+    doi = "10.22323/1.456.0146",
+    journal = "PoS",
+    volume = "SPIN2023",
+    pages = "146",
+    year = "2024"
+}
+
+% cited by R1[43]
+@article{ZEUS:2008xhs,
+    author = "Chekanov, S. and others",
+    collaboration = "ZEUS",
+    title = "{Deep inelastic scattering with leading protons or large rapidity gaps at HERA}",
+    eprint = "0812.2003",
+    archivePrefix = "arXiv",
+    primaryClass = "hep-ex",
+    reportNumber = "DESY-08-175",
+    doi = "10.1016/j.nuclphysb.2009.03.003",
+    journal = "Nucl. Phys. B",
+    volume = "816",
+    pages = "1--61",
+    year = "2009"
+}
+
+% cited by N[29]
+@article{Zhao:2025vol,
+    author = "Zhao, Jing and Bacchetta, Alessandro and Kumano, Shunzo and Liu, Tianbo and Zhou, Ya-jin",
+    title = "{Semi-inclusive deep inelastic scattering off a tensor-polarized spin-1 target}",
+    eprint = "2508.06134",
+    archivePrefix = "arXiv",
+    primaryClass = "hep-ph",
+    doi = "10.1007/JHEP12(2025)067",
+    journal = "JHEP",
+    volume = "12",
+    pages = "067",
+    year = "2025"
+}
+
+% ---------------------------------------------------------------------------
+% Hand-written entries.  INSPIRE has no record for any of these (the query that
+% was tried and came back empty is recorded in refs_provenance.md).  Every one
+% of them is flagged here so that the submission pass knows which entries were
+% never machine-verified.
+% ---------------------------------------------------------------------------
+
+% ---------------------------------------------------------------------------
+% Hand-written records (2), the reserve.  INSPIRE has no entry for
+% these; each carries an annote field saying so and a note field
+% that the reference list prints.
+% ---------------------------------------------------------------------------
+
+% cited by R1[17]
+@misc{Maple:2024sem,
+    author       = "Maple, Simon",
+    collaboration = "ePIC",
+    title        = "{Tracking and inclusive DIS reconstruction with the ePIC detector at the EIC}",
+    howpublished = "Seminar, University of Birmingham, 11 December 2024 (Indico Global 4787)",
+    year         = "2024",
+    note         = "seminar slides",
+    annote       = "HAND-WRITTEN: seminar slides, not on INSPIRE"
+}
+
+% cited by R1[39]
+@misc{Stone:2021indc,
+    author       = "Stone, N. J.",
+    title        = "{Table of recommended nuclear electric quadrupole moments}",
+    howpublished = "IAEA report INDC(NDS)-0833",
+    year         = "2021",
+    note         = "IAEA nuclear-data report",
+    annote       = "HAND-WRITTEN: IAEA nuclear-data report, not on INSPIRE"
+}

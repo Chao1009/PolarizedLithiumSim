@@ -717,6 +717,19 @@ def test_the_published_figure_stems_are_guarded_by_config_AND_optics():
         assert coh(_A(**kw)) != "money_cos2phi_coherent_reco_6Li", kw
     assert len({coh(_A(**kw)) for kw in variants}) == len(variants)
 
+    # `--cluster-wave vmc` redraws BOTH panels off a different wave
+    # function, so it takes the `_vmc` suffix and can never land on the
+    # published stem (2026-09-16, plans/04 #29)
+    mta = importlib.import_module("money_tagged_azz").output_stem
+    mb = "money_tagged_azz_6Li"
+    assert mta(mb, "10x100", 1, "menu", cluster_wave="hulthen") == mb
+    assert (mta(mb, "10x100", 1, "menu", cluster_wave="vmc")
+            == mb + "_10x100_menu_vmc")
+    assert (mta(mb, "10x100", 1, "menu", beta_band=True, cluster_wave="vmc")
+            == mb + "_10x100_menu_betaband_vmc")
+    assert (mta(mb, "5x41", 0, "tagging", cluster_wave="vmc")
+            == mb + "_5x41_tagging_vmc")
+
     reach = importlib.import_module("nearbeam_reach_gain").output_stem
     assert reach(_A(fit="ratio", t_edges=None)) == "nearbeam_reach_gain_6Li"
     for kw in (dict(fit="likelihood", t_edges=None),
@@ -1031,3 +1044,340 @@ def test_mixed_parity_channel_is_rejected():
     for ch in (tagged.li6_alpha_channel(), tagged.li7_alpha_channel(),
                tagged.deuteron_channel(), tagged.av18_deuteron_channel()):
         assert len({w.l % 2 for w in ch.waves}) == 1
+
+
+# --- the ANL alpha-d VMC tables (plans/04 #15, #29) --------------------
+#
+# The two files under `polli_fastsim/data/vmc` are the raw served bytes of
+# R. B. Wiringa et al.'s ANL VMC output (provenance in `data/SOURCES.md`).
+# They are also what LiPolGen reads for its own `ClusterWaveSource::VmcAV18`
+# 6Li channel, so every number below is a two-implementation check: the
+# reference values are LiPolGen's, quoted from its
+# `docs/open_items/vmc_reconciliation.md`, and reproduced here by an
+# independent Python loader over the same bytes.
+
+#: `docs/open_items/vmc_reconciliation.md`, "Tagged tensor asymmetry
+#: A_zz^tag(k), 6Li, YR high-acceptance", the VMC AV18 column -- printed to
+#: four decimals, which is the tolerance below.
+LIPOLGEN_AZZ_TAG_VMC = ((0.1979, -0.5191), (0.2495, -0.2899),
+                        (0.3012, -0.1993), (0.4001, -0.0822),
+                        (0.4990, +0.1170))
+#: the same table's Hulthen beta = 0.30 column, the pin that the default
+#: path did not move when the VMC one was added.
+LIPOLGEN_AZZ_TAG_HULTHEN = ((0.1979, -1.2069), (0.2495, -1.0639),
+                            (0.3012, -0.9533), (0.4001, -0.7267),
+                            (0.4990, -0.5851))
+
+
+@pytest.fixture(scope="module")
+def li6_vmc():
+    return tagged.TaggedModel(tagged.li6_alpha_channel(wave="vmc"))
+
+
+def test_vmc_li6_normalization_and_p_d():
+    """The S/D split block reproduces the file's OWN printed norms, and
+    P_D comes out where LiPolGen documents it.
+
+    `li6_ad1.momentum` prints `4*PI*TOTINT(RHO*K**2:K)/(2*PI)**3` for the
+    total block and for each of the S and D blocks; the loader takes P_D
+    from the printed S/D pair rather than from a re-integration, and this
+    checks that the tabulated columns carry the same content.  The 2004
+    `li6.ad` overlap file, committed beside it as the sign reference, is
+    also the independent cross-check on the norm: a different Hamiltonian
+    (AV18+UIX vs AV18+UX) and 200k samples instead of 1M, which is why the
+    two P_D's differ in the third decimal.
+    """
+    mo = tagged._vmc_data_text(tagged.VMC_LI6_MOMENTUM)
+    norms = tagged._parse_anl_momentum_norms(mo)
+    assert norms == [0.81971, 0.80362, 0.015861]        # the printed lines
+
+    blocks = tagged._parse_anl_momentum(mo)
+    assert len(blocks) == 2
+    x_tot, c_tot, _e = blocks[0]
+    x_sd, c_sd, e_sd = blocks[1]
+    assert len(c_tot) == 1 and len(c_sd) == 2 and len(e_sd) == 2
+    assert x_sd.size == 51 and x_sd[0] == 0.001 and x_sd[-1] == 5.0
+    fac = 4.0 * np.pi / (2.0 * np.pi) ** 3
+    # the file's quadrature is not stated; the trapezoid reproduces every
+    # printed norm to 2e-5 relative (measured 7e-6, 1.6e-5, 1.9e-4)
+    assert fac * _trapezoid(c_tot[0] * x_tot**2, x_tot) == pytest.approx(
+        norms[0], rel=2e-5)
+    assert fac * _trapezoid(c_sd[0] * x_sd**2, x_sd) == pytest.approx(
+        norms[1], rel=2e-5)
+    assert fac * _trapezoid(c_sd[1] * x_sd**2, x_sd) == pytest.approx(
+        norms[2], rel=2e-4)
+
+    k, psi_s, psi_d, p_d, nodes = tagged.li6_vmc_tables()
+    assert p_d == pytest.approx(0.015861 / (0.80362 + 0.015861), rel=0, abs=0)
+    assert p_d == pytest.approx(0.0193549, abs=1e-7)    # LiPolGen VMC_P_D_LI6
+    # LiPolGen's documented spread over its three estimators of the SAME
+    # quantity (momentum file, overlap k-block, overlap r-block FT)
+    assert 0.0193 <= p_d <= 0.0207
+    n0 = _trapezoid(k**2 * psi_s**2, k)
+    n2 = _trapezoid(k**2 * psi_d**2, k)
+    # the table's own trapezoid against the printed split: 0.0193516 vs
+    # 0.0193549, the same 1.7e-4 relative LiPolGen measures
+    assert n2 / (n0 + n2) == pytest.approx(0.0193516, abs=1e-7)
+    assert n2 / (n0 + n2) == pytest.approx(p_d, rel=2e-4)
+
+    # the 2004 overlap file, the sign reference, on its own normalization
+    # S_ad = (2 pi)^-3 int k^2 A^2 dk -- LiPolGen reports 0.85463 / 0.0201
+    k_ov, a0, a2 = tagged._parse_anl_overlap_k(
+        tagged._vmc_data_text(tagged.VMC_LI6_OVERLAP))
+    assert k_ov.size == 51 and k_ov[0] == 0.0 and k_ov[-1] == 5.0
+    s0 = _trapezoid(k_ov**2 * a0**2, k_ov) / (2.0 * np.pi) ** 3
+    s2 = _trapezoid(k_ov**2 * a2**2, k_ov) / (2.0 * np.pi) ** 3
+    assert s0 + s2 == pytest.approx(0.85463, abs=5e-5)
+    assert s2 / (s0 + s2) == pytest.approx(0.0201, abs=5e-5)
+
+    # and the channel carries the file's P_D, not P_D_LI6
+    ch = tagged.li6_alpha_channel(wave="vmc")
+    assert [w.l for w in ch.waves] == [0, 2]
+    assert ch.waves[1].prob == p_d
+    assert ch.waves[0].prob == 1.0 - p_d
+    assert nodes == pytest.approx((0.13376, 0.44394), abs=1e-5)
+
+
+def test_vmc_li6_sign_regions():
+    """THE measurement the tables exist for: the relative S-D phase.
+
+    A momentum density is |psi_L|^2 and carries no phase, so the sign
+    comes from `li6.ad`'s signed k-space columns.  With the global phase
+    fixed by psihat_0(k -> 0) > 0 there are exactly two zero crossings
+    below the noise floor at 3 fm^-1 and three sign regions, and this pins
+    both crossings within 0.01 GeV/c of the alpha-d S node at 0.134 and
+    the alpha-d D node at 0.444 GeV/c.  Each is confirmed independently,
+    in the same 0.1 fm^-1 bin, by a minimum of the momentum file's own
+    rho_L -- a density does not know the phase but it does know where the
+    amplitude vanishes.
+    """
+    k, psi_s, psi_d, _p_d, nodes = tagged.li6_vmc_tables()
+    assert psi_s[0] > 0.0                       # the global-phase convention
+
+    # psihat_L = s(k) sqrt(rho_L) with s a STEP function, so the ratio
+    # jumps across a node rather than passing through zero: the crossings
+    # are the signed reference amplitude's own, which is what the loader
+    # returns, and the table can only bracket them to its 0.1 fm^-1 =
+    # 0.0197 GeV/c spacing.
+    ratio = psi_d / psi_s
+    brackets = [i for i in range(k.size - 1)
+                if ratio[i] * ratio[i + 1] < 0.0 and k[i + 1] < 0.6]
+    assert len(brackets) == 2
+    assert len(nodes) == 2
+    assert nodes[0] == pytest.approx(0.134, abs=0.01)       # 0.13376
+    assert nodes[1] == pytest.approx(0.444, abs=0.01)       # 0.44394
+    for node, i in zip(nodes, brackets):
+        assert k[i] < node < k[i + 1]
+    crossings = nodes
+
+    # the three regions, sampled away from the crossings
+    assert np.all(ratio[k < crossings[0] - 0.01] < 0.0)
+    mid = (k > crossings[0] + 0.01) & (k < crossings[1] - 0.01)
+    assert np.all(ratio[mid] > 0.0)
+    upper = (k > crossings[1] + 0.01) & (k < 0.59)
+    assert np.all(ratio[upper] < 0.0)
+
+    # each crossing is a node of ONE wave, confirmed by a minimum of the
+    # momentum file's own |psi_L| in the same 0.1 fm^-1 = 0.0197 GeV bin
+    for cross, psi in ((crossings[0], psi_s), (crossings[1], psi_d)):
+        win = np.flatnonzero(np.abs(k - cross) < 0.06)   # +-3 table bins
+        j = win[int(np.argmin(np.abs(psi[win])))]
+        assert abs(k[j] - cross) < 0.0198
+
+    # the Hulthen pair can carry none of this: it is positive-definite
+    hul = tagged.li6_alpha_channel()
+    kk = np.linspace(0.01, 0.6, 200)
+    kappa = hul.base.kappa
+    assert np.all(hul.waves[0].radial(kk, kappa) > 0.0)
+    assert np.all(hul.waves[1].radial(kk, kappa) > 0.0)
+
+
+def test_vmc_li6_azz_tag_matches_lipolgen(li6_vmc, li6):
+    """The acceptance-weighted tagged tensor asymmetry, against the
+    independent C++ implementation reading the same bytes.
+
+    LiPolGen's table (`docs/open_items/vmc_reconciliation.md`) is
+    40000-event-independent -- it is a MODEL integral, not a sample -- and
+    is printed to four decimals at the YR high-acceptance optics of
+    e x ion = 10 x 99.5 GeV/u, on the same (k, cos theta_k) grid this
+    module uses.  Measured agreement is 3.7e-5 at worst, i.e. their
+    printed rounding; the pin is 5e-5.
+
+    THEIR n_phi IS 32 AND THIS MODULE'S DEFAULT IS 64, and at these cells
+    that makes no difference AT ALL -- not a small one.  Measured: the two
+    azimuthal grids give bit-identical curves for every k < 0.718 GeV/c,
+    because at the Yellow Report optics the only alpha that survive are
+    the off-rigidity R < 0.95 window slice and the R cut does not depend
+    on the azimuth, so eps(k, c) is exactly 0 or 1 there (asserted below).
+    n_phi first matters at k = 0.718 GeV/c, where the accepted sample has
+    0.08 % of its weight in total.
+    """
+    from polli_fastsim import farforward as ff
+
+    cfg = beams.default_configs("6Li")[1]
+    assert "99.5" in cfg.label() and cfg.label().startswith("e(10)")
+    optics = ff.yr_optics(cfg, "high-acceptance")
+
+    eps64 = tagged.acceptance_weights(li6_vmc, cfg, optics)
+    eps32 = tagged.acceptance_weights(li6_vmc, cfg, optics, n_phi=32)
+    low = li6_vmc.k < 0.6
+    assert set(np.unique(eps64[low])) == {0.0, 1.0}
+    assert np.array_equal(eps64[low], eps32[low])
+
+    a64 = tagged.azz_tensor_curve(li6_vmc, weights=eps64)
+    a32 = tagged.azz_tensor_curve(li6_vmc, weights=eps32)
+    for k_ref, azz_ref in LIPOLGEN_AZZ_TAG_VMC:
+        i = int(np.argmin(np.abs(li6_vmc.k - k_ref)))
+        assert li6_vmc.k[i] == pytest.approx(k_ref, abs=5e-4)
+        assert a64[i] == pytest.approx(azz_ref, abs=5e-5)
+        assert a32[i] == a64[i]                  # exactly, see the docstring
+
+    # the same table's Hulthen column, on the DEFAULT channel: the pin
+    # that adding the `wave` switch moved nothing
+    a_hul = tagged.azz_tensor_curve(
+        li6, weights=tagged.acceptance_weights(li6, cfg, optics))
+    for k_ref, azz_ref in LIPOLGEN_AZZ_TAG_HULTHEN:
+        i = int(np.argmin(np.abs(li6.k - k_ref)))
+        assert a_hul[i] == pytest.approx(azz_ref, abs=5e-5)
+
+    # nothing at all is accepted below k = 0.189 GeV/c at this optics
+    assert np.isnan(a64[li6_vmc.k < 0.189]).all()
+
+
+def test_vmc_li6_tensor_dilution_and_accepted_fraction(li6_vmc, li6):
+    """khat,k-integrated <3 m_S^2 - 2> of the embedded deuteron, and the
+    spin-blind accepted fraction, both against LiPolGen.
+
+    LiPolGen prints 0.9825758723 for its VMC alpha-d channel and this
+    module gives 0.9825758755.  The 3.2e-9 is not quadrature noise and it
+    is worth naming, because it is ONE GRID POINT: the model grid starts
+    at k = 1e-4 GeV/c and the S/D momentum table's first abscissa is
+    K = 0.001 fm^-1 = 1.97e-4 GeV/c, so exactly one cell falls below the
+    table.  `TabulatedWave` extrapolates it flat and LiPolGen's
+    `VmcRadial` returns zero there.  Flat is the better reading -- the
+    file's own total block prints rho(K = 0) = 1041.5, the same value as
+    rho_0(K = 0.001), so the density really is flat there -- and adopting
+    LiPolGen's rule instead reproduces its ten printed digits exactly
+    (0.982575872345, measured).  Nothing else moves appreciably with it:
+    the five A_zz^tag cells above shift by at most 4.7e-8 absolute
+    between the two rules (largest at k = 0.1979: -0.519129029686 flat
+    against -0.519128982429 zeroed), three orders below the 5e-5 at which
+    they are pinned against LiPolGen.
+
+    The Hulthen default is 0.9219 -- its P_D is 4.5x the VMC one, so its
+    tensor dilution is correspondingly further from 1.
+    """
+    from polli_fastsim import farforward as ff
+
+    assert li6_vmc.tensor_dilution() == pytest.approx(0.9825758723, abs=1e-8)
+    assert li6_vmc.vector_dilution() == pytest.approx(
+        1.0 - 1.5 * li6_vmc.channel.waves[1].prob, abs=2e-5)
+    assert li6.tensor_dilution() == pytest.approx(0.9219489770, abs=1e-8)
+    for m in (1.0, 0.0, -1.0):
+        assert li6_vmc.norm(m) == pytest.approx(1.0, abs=1e-5)
+
+    # the spin-blind (uniform-M) accepted fraction as a MODEL integral,
+    # which LiPolGen publishes to fifteen digits at n_phi = 32: the
+    # Hulthen value reproduces every one of them (0.024675932148827632
+    # against a printed 0.024675932148828, i.e. to 1.5e-14 relative --
+    # two independent implementations of the same integral, agreeing at
+    # the last double-precision digit) and the VMC one agrees to 7.3e-8
+    # relative (the one grid point of the docstring, plus the two
+    # libraries' own table normalizations)
+    cfg = beams.default_configs("6Li")[1]
+    optics = ff.yr_optics(cfg, "high-acceptance")
+    for model, ref, tol in ((li6, 0.024675932148828, 1e-13),
+                            (li6_vmc, 0.033810227625842, 1e-7)):
+        n_tot = sum(model.n_of_kc(m) for m in (1.0, 0.0, -1.0))
+        eps = tagged.acceptance_weights(model, cfg, optics, n_phi=32)
+        w = n_tot * model.k[:, None] ** 2
+        assert (eps * w).sum() / w.sum() == pytest.approx(ref, rel=tol,
+                                                          abs=0.0)
+
+
+def test_vmc_wave_switch_is_opt_in_and_guarded(li6):
+    """`wave` selects a radial input and nothing else; the default path is
+    bit-for-bit the analytic pair, and every way of asking for something
+    the tables cannot give is an error rather than a silent no-op."""
+    default = tagged.li6_alpha_channel()
+    explicit = tagged.li6_alpha_channel(wave="hulthen")
+    assert default == explicit                        # frozen dataclasses
+    assert all(isinstance(w, tagged.Wave) for w in default.waves)
+    m_def = tagged.TaggedModel(default)
+    m_exp = tagged.TaggedModel(explicit)
+    for m in (1.0, 0.0, -1.0):
+        assert np.array_equal(m_def._amp2_table(m), m_exp._amp2_table(m))
+        assert np.array_equal(m_def._amp2_table(m), li6._amp2_table(m))
+
+    vmc = tagged.li6_alpha_channel(wave="vmc")
+    assert all(isinstance(w, tagged.TabulatedWave) for w in vmc.waves)
+    assert vmc.base is default.base and vmc.dis_target is default.dis_target
+
+    # beta and p_d have no meaning for a table
+    with pytest.raises(ValueError, match="do not apply"):
+        tagged.li6_alpha_channel(beta=0.40, wave="vmc")
+    with pytest.raises(ValueError, match="do not apply"):
+        tagged.li6_alpha_channel(p_d=0.04, wave="vmc")
+    with pytest.raises(ValueError, match="hulthen"):
+        tagged.li6_alpha_channel(wave="av18")
+
+    # 7Li: refused, and for a stated reason -- a lone L = 1 wave has no
+    # interference and no observable relative phase, which is the one
+    # thing the ANL overlaps carry that the analytic forms cannot
+    with pytest.raises(ValueError) as err:
+        tagged.li7_alpha_channel(wave="vmc")
+    assert "no VMC table is committed" in str(err.value)
+    assert len(tagged.li7_alpha_channel().waves) == 1
+
+
+def test_vmc_li6_accepted_sign_region_fractions(li6_vmc, li6):
+    """Which sign region the accepted alpha actually sit in -- the numbers
+    the `P_D_LI6` sign paragraph states, re-measured here.
+
+    The answer depends on the density asked, and that is the point: the
+    Hulthen pair puts 21-27 % of the Yellow-Report-accepted sample ABOVE
+    the alpha-d D node, where its positive-definite forms carry the wrong
+    sign, while the VMC pair -- whose far tail is 8x softer -- puts 2-3 %
+    there.  Both numbers are on the uniform-M mixture.
+    """
+    from polli_fastsim import farforward as ff
+
+    node_lo, node_hi = tagged.li6_vmc_tables()[4]
+    expect = {                      # (below, between, above) per config
+        "vmc": {"high-acceptance": [(0.000, 0.971, 0.029),
+                                    (0.000, 0.981, 0.019),
+                                    (0.000, 0.980, 0.020)],
+                "tagging": [(0.255, 0.740, 0.005),
+                            (0.113, 0.881, 0.006),
+                            (0.206, 0.789, 0.005)]},
+        "hulthen": {"high-acceptance": [(0.000, 0.732, 0.268),
+                                        (0.000, 0.787, 0.213),
+                                        (0.000, 0.741, 0.259)],
+                    "tagging": [(0.405, 0.566, 0.029),
+                                (0.281, 0.680, 0.039),
+                                (0.367, 0.600, 0.033)]},
+    }
+    for name, model in (("vmc", li6_vmc), ("hulthen", li6)):
+        n_tot = sum(model.n_of_kc(m) for m in (1.0, 0.0, -1.0))
+        for ic, cfg in enumerate(beams.default_configs("6Li")):
+            for which in ("high-acceptance", "tagging"):
+                optics = (ff.yr_optics(cfg, which) if which != "tagging"
+                          else ff.tagging_optics(cfg))
+                eps = tagged.acceptance_weights(model, cfg, optics)
+                w = (eps * n_tot * model.k[:, None] ** 2).sum(axis=1)
+                got = (w[model.k < node_lo].sum() / w.sum(),
+                       w[(model.k >= node_lo)
+                         & (model.k <= node_hi)].sum() / w.sum(),
+                       w[model.k > node_hi].sum() / w.sum())
+                assert got == pytest.approx(expect[name][which][ic],
+                                            abs=1e-3), (name, which, ic)
+
+    # and the k = 0.325 GeV/c headline bin of money plot 4 has the SAME
+    # sign on both wave functions -- it sits inside the supported window
+    i = int(np.argmin(np.abs(li6_vmc.k - 0.325)))
+    ic90 = int(np.argmin(np.abs(li6_vmc.c)))
+    a_vmc = tagged.azz_tensor_curve(li6_vmc, ic90)[i]
+    a_hul = tagged.azz_tensor_curve(li6, ic90)[i]
+    assert a_vmc == pytest.approx(0.1698, abs=1e-3)
+    assert a_hul == pytest.approx(0.9241, abs=1e-3)
+    assert a_vmc > 0.0 and a_hul > 0.0
